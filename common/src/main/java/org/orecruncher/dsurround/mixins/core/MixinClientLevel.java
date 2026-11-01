@@ -2,6 +2,9 @@ package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.level.ChunkPos;
@@ -9,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.IChunkLoad;
 import org.orecruncher.dsurround.eventing.handlers.BlockUpdateHandler;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
+import org.orecruncher.dsurround.runtime.weather.StormSounds;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -43,5 +47,54 @@ public class MixinClientLevel {
     private void dsurround$lightningBolt(Entity entity, CallbackInfo ci) {
         if (entity instanceof LightningBolt bolt)
             MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().onBolt(bolt));
+    }
+
+    /**
+     * While particle rain is drawn, its drops splash where they land, so vanilla's splashes, scattered at random
+     * around the player as its rain is ticked (see MixinHelpers.rainTickThread), are left out. Vanilla's rain sound,
+     * played from the same tick, is kept.
+     */
+    @Inject(method = "addParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)V", at = @At("HEAD"), cancellable = true, require = 0)
+    private void dsurround$vanillaRainSplash(ParticleOptions particle, double x, double y, double z, double xd, double yd, double zd, CallbackInfo ci) {
+        if (MixinHelpers.inRainTick() && MixinHelpers.RAIN_SPLASH_GUARD.get(() -> MixinHelpers.precipitation().isActive(), false))
+            ci.cancel();
+    }
+
+    /**
+     * The rain sound, as 1.12.2 had it: the mod's calm rain, louder as the storm strengthens, with vanilla's heavier
+     * rain blended in from a moderate storm up. Both of the rain tick's sounds, the rain in the open and on a roof above,
+     * come through here (Level.playLocalSound at a BlockPos calls this); each keeps vanilla's volume and pitch for where
+     * it is, scaled. Only while vanilla's rain is ticked (see MixinHelpers.rainTickThread).
+     */
+    @Inject(method = "playLocalSound(DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V", at = @At("HEAD"), cancellable = true, require = 0)
+    private void dsurround$rainSound(double x, double y, double z, SoundEvent sound, SoundSource source, float volume, float pitch, boolean distanceDelay, CallbackInfo ci) {
+        if (!MixinHelpers.inRainTick() || !MixinHelpers.weatherOptions.enableStormSounds)
+            return;
+        var level = (ClientLevel) (Object) this;
+        // Out of the rain tick meanwhile: the world's own rain level is read, and the sounds played here come back
+        // through this method and play
+        var thread = MixinHelpers.rainTickThread;
+        MixinHelpers.rainTickThread = null;
+        try {
+            // The shares are worked out before anything plays, so a failure leaves vanilla's sound, played once
+            float calmVolume;
+            float heavy;
+            SoundEvent calm;
+            try {
+                var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
+                calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
+                calmVolume = volume * StormSounds.calmShare(rainLevel);
+                heavy = StormSounds.heavyShare(rainLevel);
+            } catch (Throwable t) {
+                MixinHelpers.RAIN_SOUND_GUARD.failed(t);
+                return;
+            }
+            level.playLocalSound(x, y, z, calm, source, calmVolume, pitch, distanceDelay);
+            if (heavy > 0F)
+                level.playLocalSound(x, y, z, sound, source, volume * heavy, pitch, distanceDelay);
+            ci.cancel();
+        } finally {
+            MixinHelpers.rainTickThread = thread;
+        }
     }
 }

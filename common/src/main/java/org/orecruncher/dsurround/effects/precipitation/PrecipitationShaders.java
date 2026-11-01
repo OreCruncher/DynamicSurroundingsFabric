@@ -64,6 +64,8 @@ public final class PrecipitationShaders {
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
     public static final RenderTimer DAMP_SPOTS_TIMER = new RenderTimer("- Damp Spots");
     public static final RenderTimer DROPS_TIMER = new RenderTimer("- Drops");
+    // Drawn among the drops, so within their time too
+    public static final RenderTimer STREAKS_TIMER = new RenderTimer("- Window Streaks");
 
     private PrecipitationShaders() {
     }

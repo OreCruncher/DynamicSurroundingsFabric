@@ -1,6 +1,7 @@
 package org.orecruncher.dsurround.effects.particles;
 
 import net.minecraft.client.particle.*;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.state.QuadParticleRenderState;
@@ -11,6 +12,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
@@ -19,8 +21,13 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
     // Fireflies, with their halos: vanilla's translucent particles with depth writes off, so halos don't hide each
     // other. The lights they cast are drawn just before them (see PointLights).
-    private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES,
-            SoftParticles.particlePipeline("pipeline/firefly", null).build());
+    private static final RenderPipeline PIPELINE = SoftParticles.particlePipeline("pipeline/firefly", null).build();
+    private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, PIPELINE);
+
+    static {
+        // Drawn with a shader pack too, with the pack's program for translucent particles
+        IrisCompat.assignPipeline(PIPELINE, IrisCompat.Program.PARTICLES_TRANSLUCENT);
+    }
     private static final float XZ_MOTION_DELTA = 0.03F; //0.04F;
     private static final float Y_MOTION_DELTA = XZ_MOTION_DELTA / 2.0F;
 

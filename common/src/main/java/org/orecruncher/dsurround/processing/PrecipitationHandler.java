@@ -368,8 +368,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
                 (vertices, count) -> this.dropDraw.drawQuads(vertices, count, pipeline, target, bind));
         this.meshes.draw(DropMeshes.Kind.FLECKS, sources, camera, partialTick, style,
                 (vertices, count) -> this.fleckDraw.drawQuads(vertices, count, pipeline, target, bind));
-        this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
-                (vertices, count) -> this.streakDraw.drawQuads(vertices, count, pipeline, target, bind));
+        if (this.windowStreaks.count() > 0) {
+            PrecipitationShaders.STREAKS_TIMER.begin();
+            PrecipitationShaders.STREAKS_TIMER.count(this.windowStreaks.count());
+            this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
+                    (vertices, count) -> this.streakDraw.drawQuads(vertices, count, pipeline, target, bind));
+            PrecipitationShaders.STREAKS_TIMER.end();
+        }
 
         if (fabulous)
             this.drawDust(pipeline, target, camera, partialTick, true, sources, style, lightmap, lightmapSampler);

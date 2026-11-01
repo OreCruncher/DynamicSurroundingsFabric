@@ -9,7 +9,7 @@
     "gamerule spawn_mobs false"
   ],
   // What the GPU draws scales with the pixels: the same size for every run to compare
-  "video": {"width": 1920, "height": 1080},
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
   "warmup": 15,
   "record": 60,
   "repeats": 2,

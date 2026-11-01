@@ -43,6 +43,8 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
 }
 ```
 
+- **Setting sets**: `"settingSets": {"off": {...}}` names a group of settings once; a run applies it with
+  `"use": "off"` (or a list, in order), then its own `settings` on top (`compat.json` turns every effect off this way).
 - **Settings** are dotted config paths, as presets use. Before each run, every path any run sets is put back to what it
   was when the session started, so runs don't leak into each other; settings needing a restart are refused up front.
 - **Commands** are typed as the player would: the server's (`time`, `weather`, `gamerule`, `summon`) run on the
@@ -63,3 +65,38 @@ What a scene needs that a biome doesn't have can often be built by its commands 
 mobs, a lava pool, water sources up in the air: see `performance-rest.json`), which needs no setting up in a new world.
 Otherwise stand there in the bench world and run `/dsbench mark <name>`, which remembers the position and where you
 look; a marked scene is used as it is, even when the scene has a biome. `/dsbench list` lists the world's scenes.
+
+## Modpacks
+
+The mod alongside a Modrinth modpack, to find what other mods break (and what breaks ours): conflicts, hooks that
+didn't apply, drawing gone wrong.
+
+    python scripts/modpack-fetch.py smp-aesthia                  fetch the pack into neoforge/run-pack/smp-aesthia
+    ./gradlew :neoforge:runClientPack -Ppack=smp-aesthia -Pscenario=scripts/bench/compat.json
+    python scripts/pack-triage.py smp-aesthia                    what needs a look
+
+- **Fetching** (`modpack-fetch.py`, its header has the details): the pack's newest version for this branch's game and
+  loader, each file checked against the pack's hash and cached in `build/modpack-cache`; the pack's config, options,
+  resource packs and shader packs come too (Iris off unless `--shaders`; a pack with no shader pack of its own gets one
+  with `--shader-pack <zip>`). Left out: the pack's copies of the mods a pack run loads itself (ours, Architectury,
+  Cloth Config), Crash Assistant and Dynamic FPS, which hold an unattended run up, and any `--leave-out <mod id>`.
+  `pack.json` in the folder says what was fetched and left out. A CurseForge pack: install it with the CurseForge app
+  and copy its instance's `mods` and `config` into a `run-pack/<name>` folder instead.
+- **On an obfuscated game (1.21.11)** the development run renames the game's lambdas (intermediary names such as
+  `method_62216`), so a published mod whose mixin targets one fails to load there, with a crash report naming the
+  mixin (C2ME, Noisium). Leave such mods out (`--leave-out`) when they don't touch what we draw; 26.2 isn't obfuscated.
+- **Running** (`runClientPack`): the pack's folder, an 8 GB heap, and none of the mods the development client
+  otherwise plays with (Biomes O' Plenty, TerraBlender, Serene Seasons, GlitchCore, Simple Voice Chat, Mod Menu), so
+  the world is the pack's. A pack made for a newer loader than `gradle.properties` has: `-Pneoforge_version=<the
+  pack's>` (the fetch says so; the first run with it sets that version up). Without `-Pscenario` it is a plain client
+  in the pack's folder. A pack's own screens before the title screen (NeoForge's list of loading warnings) are opened
+  over after 5 seconds; the manifest's `openedOver` names the screen.
+- **`compat.json`**: each scene with our effects at their defaults and with every visual one off, back to back, so a
+  pair of screenshots differs only by what we draw; short recordings. Run it without the pack too (`runClientBench`)
+  for a baseline: what looks wrong in the pack but not there is the pack's doing.
+- **Triage** (`pack-triage.py`): whether the game started (and the loader's errors if not), our startup lines
+  (features standing aside, hooks that didn't apply, shaders, drawing that failed), mixin trouble, exceptions through
+  our code apart from the rest, warnings by logger and the most repeated, crash reports, each run finished or not,
+  and the screenshot pairs. The recordings say more: a render timer missing from an "on" run means that effect never
+  drew (`jfr-summary.py`).
+

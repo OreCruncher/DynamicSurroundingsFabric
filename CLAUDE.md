@@ -48,7 +48,7 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   GPU/CPU render timers in it (`dsurround.RenderTimer` events, set against the whole frame's drawing and the frames'
   lengths in `dsurround.Frames`, once a second; a timer of something run on the tick (the clouds' field) is made with
   `perTick`, and recordings set its time a frame (20 a second over the frames) against the frame's; precipitation's
-  carry a `count` of drops/spots a frame, so two recordings can be checked for the same storm), each client tick
+  carry a `count` of drops/spots/window streaks a frame, so two recordings can be checked for the same storm), each client tick
   handler's time every tick
   (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
@@ -77,6 +77,12 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   each label's frame, render timers and tick handlers, averaged over the repeats. The code (`bench/`, started by
   reflection from `profiling/BenchHook` in development only) is left out of the published jars; `remapJar` fails if it
   gets in.
+- Modpacks (`scripts/bench/README.md`, "Modpacks"): `python scripts/modpack-fetch.py <modrinth slug>` fetches one into
+  `<platform>/run-pack/<slug>`; `./gradlew :neoforge:runClientPack -Ppack=<slug> [-Pneoforge_version=<the pack's>]
+  -Pscenario=scripts/bench/compat.json` runs it without the dev client's own extra mods (BoP, Serene Seasons...);
+  `python scripts/pack-triage.py <slug>` reports what needs a look. Compare with `compat.json` run plainly
+  (`runClientBench`): what looks wrong only in the pack is the pack's doing. A render timer missing from an "on" run
+  means that effect never drew. CurseForge packs: the user installs them and copies the instance's mods and config in.
 - Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
   `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
   pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
@@ -113,6 +119,9 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   `GroundFogVolume.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.
+  With an Iris shader pack every `ModShader` is unusable; a pipeline of ours that still draws then (the soft particles'
+  vanilla-shader fallbacks, fireflies) must be given one of the pack's programs with `IrisCompat.assignPipeline`, or
+  Iris draws it with none and it vanishes ("Missing program ... in override list" in the log).
 - Uniform blocks: `Std140Builder.putVec3` always takes 16 bytes, but std140 puts a following `float` in a `vec3`'s
   fourth slot. Write a `vec3` and the `float` after it as one `putVec4` (and `putVec4()` in the size), or every value
   after it is read 4 bytes off (ground fog drew nothing until this was found).
@@ -144,8 +153,10 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   names differ between Fabric (intermediary) and NeoForge, so none is targeted; `MixinLevelRenderer` wraps the weather
   pass's `FramePass.executes` (`addWeatherPass*`: NeoForge has two overloads, and a bare name matches only the first),
   `MixinWorldBorderRenderer` is after the weather, `MixinChunkSectionsToRender` around the translucent and tripwire
-  layers, and the rain is ticked in `WeatherEffectRenderer.tickRainParticles`. Check mixin targets against both jars
-  before launching: a target that doesn't match fails at startup, one at a time.
+  layers, and the rain is ticked in `WeatherEffectRenderer.tickRainParticles`: hooked where `LevelRenderer.tick` calls
+  it (`MixinHelpers.rainTickThread`) and on what it calls (`Level.getRainLevel`, `ClientLevel.addParticle` and
+  `playLocalSound`), not inside it, which Iris 1.10 wraps (`@WrapMethod`), leaving hooks there nothing to attach to.
+  Check mixin targets against both jars before launching: a target that doesn't match fails at startup, one at a time.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
   old values carry over on load (also rename the path in `dsconfigs/presets.json`). Translation keys follow

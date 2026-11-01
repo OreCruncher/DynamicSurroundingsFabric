@@ -8,6 +8,7 @@ import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
@@ -62,13 +63,19 @@ public final class ScenarioRunner {
 
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     // How long each wait may take before the run is given up
-    private static final int OPEN_SECONDS = 300;
+    // A modpack of a hundred mods or more can take minutes to load
+    private static final int OPEN_SECONDS = 600;
     private static final int FIND_SECONDS = 300;
     private static final int ARRIVE_SECONDS = 60;
     private static final int DRAWN_SECONDS = 90;
     // At least this long after arriving before the terrain is taken as drawn: it starts out with nothing to draw
     private static final int SETTLE_SECONDS = 3;
     private static final int TICKS_PER_SECOND = 20;
+    // How long a screen other than the title screen stays up before the world is opened over it: a modpack's own (a
+    // mod's first-run notice, a title screen of its own)
+    private static final int OTHER_SCREEN_SECONDS = 5;
+    // How long the game may take to exit once a run is over, before it is ended
+    private static final int SHUTDOWN_GRACE_SECONDS = 60;
     // How far around the player a scene's commands may build or summon (the crowd reaches 40 blocks out)
     private static final int SCENE_REACH = 40;
     private static final BlockPos FIND_FROM = new BlockPos(0, 64, 0);
@@ -81,6 +88,9 @@ public final class ScenarioRunner {
     private final Map<String, SceneLocations.Location> sessionScenes = new HashMap<>();
     private @Nullable Step current;
     private int stepTicks;
+    // The screen up while the world waits to be opened, if not the title screen, and for how many ticks
+    private @Nullable Screen waitingScreen;
+    private int waitingScreenTicks;
     private boolean finished;
     private @Nullable SceneLocations locations;
     private @Nullable ConfigPreset baseline;
@@ -100,9 +110,24 @@ public final class ScenarioRunner {
     }
 
     static void start(Path file) {
-        var mc = Minecraft.getInstance();
-        var gameFolder = mc.gameDirectory.toPath();
-        var resultsRoot = gameFolder.resolve("bench-results");
+        // NeoForge sets the mod up while mods are constructed, before the game's client exists: the scenario is read
+        // on the client's first tick
+        var state = new Object() {
+            boolean begun;
+            @Nullable ScenarioRunner runner;
+        };
+        ClientTickEvent.CLIENT_POST.register(mc -> {
+            if (!state.begun) {
+                state.begun = true;
+                state.runner = create(mc, file);
+            }
+            if (state.runner != null)
+                state.runner.tick();
+        });
+    }
+
+    private static @Nullable ScenarioRunner create(Minecraft mc, Path file) {
+        var resultsRoot = mc.gameDirectory.toPath().resolve("bench-results");
         Scenario scenario;
         try {
             scenario = Scenario.read(file);
@@ -110,12 +135,12 @@ public final class ScenarioRunner {
             Library.LOGGER.error(e, "Bench: unable to read the scenario %s", file);
             writeFailure(resultsRoot, file, e);
             mc.execute(mc::stop);
-            return;
+            return null;
         }
         var results = resultsRoot.resolve(scenario.name() + "-" + LocalDateTime.now().format(STAMP));
         var runner = new ScenarioRunner(scenario, results);
         runner.begin(file);
-        ClientTickEvent.CLIENT_POST.register(m -> runner.tick());
+        return runner;
     }
 
     private void begin(Path file) {
@@ -171,7 +196,7 @@ public final class ScenarioRunner {
 
     /**
      * Opens the scenario's world from the title screen, making it first if it isn't there; false until the title screen
-     * shows (or the first launch's accessibility screen)
+     * shows (or the first launch's accessibility screen), or another screen has stayed up {@link #OTHER_SCREEN_SECONDS}
      */
     private boolean openWorld() {
         var mc = Minecraft.getInstance();
@@ -182,8 +207,17 @@ public final class ScenarioRunner {
         mc.options.inactivityFpsLimit().set(InactivityFpsLimit.MINIMIZED);
         if (mc.getOverlay() != null || mc.level != null || mc.screen == null)
             return false;
-        if (!(mc.screen instanceof TitleScreen) && !mc.screen.getClass().getSimpleName().contains("Onboarding"))
-            return false;
+        var screen = mc.screen;
+        if (!(screen instanceof TitleScreen) && !screen.getClass().getSimpleName().contains("Onboarding")) {
+            if (screen != this.waitingScreen) {
+                this.waitingScreen = screen;
+                this.waitingScreenTicks = 0;
+            }
+            if (++this.waitingScreenTicks < OTHER_SCREEN_SECONDS * TICKS_PER_SECOND)
+                return false;
+            Library.LOGGER.info("Bench: opening the world over %s", screen.getClass().getName());
+            this.manifest.addProperty("openedOver", screen.getClass().getName());
+        }
         mc.options.save();
 
         var name = this.scenario.world();
@@ -496,6 +530,19 @@ public final class ScenarioRunner {
         this.writeManifest();
         Library.LOGGER.info("Bench: %s; results in %s", failure == null ? "done" : "failed", this.results);
         Minecraft.getInstance().stop();
+        // The game closes its window, but threads of other mods' can hold the JVM open after (Architectury's pools on
+        // 26.2), and an unattended run would never end: everything is written by now
+        var watchdog = new Thread(() -> {
+            try {
+                Thread.sleep(SHUTDOWN_GRACE_SECONDS * 1000L);
+            } catch (InterruptedException e) {
+                return;
+            }
+            Library.LOGGER.warn("Bench: the game hasn't exited %d seconds after closing; ending it", SHUTDOWN_GRACE_SECONDS);
+            Runtime.getRuntime().halt(failure == null ? 0 : 1);
+        }, "dsurround-bench-exit");
+        watchdog.setDaemon(true);
+        watchdog.start();
     }
 
     private void writeManifest() {

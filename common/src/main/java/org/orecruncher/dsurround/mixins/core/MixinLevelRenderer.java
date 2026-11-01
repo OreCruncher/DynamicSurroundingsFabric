@@ -5,7 +5,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.framegraph.FramePass;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.WeatherEffectRenderer;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.state.LevelRenderState;
@@ -87,5 +91,20 @@ public class MixinLevelRenderer {
         // snow are drawn over them
         MixinHelpers.WINDOW_FROST_GUARD.run(() -> MixinHelpers.windowFrost().renderBeforeWeather());
         MixinHelpers.GROUND_FOG_GUARD.run(() -> MixinHelpers.groundFog().renderBeforeWeather());
+    }
+
+    /**
+     * Marks vanilla's rain being ticked, for the hooks on what it calls: the rain level (MixinLevel), its splashes and
+     * its sound (MixinClientLevel). Wrapped here, where it is called, rather than hooked inside it: a mod that wraps the
+     * method (Iris on 1.21.11) moves its body, and hooks inside it were left with nothing to attach to.
+     */
+    @WrapOperation(method = "tick(Lnet/minecraft/client/Camera;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/WeatherEffectRenderer;tickRainParticles(Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/Camera;ILnet/minecraft/server/level/ParticleStatus;I)V"), require = 0)
+    private void dsurround$rainTick(WeatherEffectRenderer renderer, ClientLevel level, Camera camera, int ticks, ParticleStatus particles, int radius, Operation<Void> original) {
+        MixinHelpers.rainTickThread = Thread.currentThread();
+        try {
+            original.call(renderer, level, camera, ticks, particles, radius);
+        } finally {
+            MixinHelpers.rainTickThread = null;
+        }
     }
 }

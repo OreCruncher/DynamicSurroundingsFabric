@@ -44,14 +44,18 @@ dependencies {
     common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
 
-    modImplementation "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
-    modImplementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
-    modImplementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
-    modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
+    // Mods the development client plays with; a modpack run (-Ppack, scripts/modpack-fetch.py) leaves them to the pack,
+    // which brings its own copy or none, so they are only compiled against there
+    def devMod = rootProject.hasProperty('pack') ? 'modCompileOnly' : 'modImplementation'
+    "$devMod" "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
+    "$devMod" "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
+    "$devMod" "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
+    "$devMod" "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
 
     // Simple Voice Chat: its plugin API to remap the common classes against; the mod itself in the dev client only
     compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
-    modLocalRuntime "maven.modrinth:simple-voice-chat:${rootProject.voicechat_neoforge_version}"
+    if (!rootProject.hasProperty('pack'))
+        modLocalRuntime "maven.modrinth:simple-voice-chat:${rootProject.voicechat_neoforge_version}"
 
     modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
