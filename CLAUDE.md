@@ -176,7 +176,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     wrap shows as a jump.
   - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
     each with its own base and top, in place of vanilla's (the `renderClouds` call in `renderLevel` is wrapped, so
-    Sodium's replacement is skipped too; `OptionalHook.DYNAMIC_CLOUDS`). `runtime/weather/CloudCover` is what the
+    Sodium's replacement is skipped too; `OptionalHook.DYNAMIC_CLOUDS`; off for Distant Horizons, which turns vanilla's
+    clouds off and draws its own: `FeatureConflict.DYNAMIC_CLOUDS`). `runtime/weather/CloudCover` is what the
     weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder towers,
     high streaks. Lightning strikes start from `CloudHandler.cloudBase()` when ours are drawn. Every player sees the
     same clouds: they drift with `runtime/weather/UpperWind` and change shape by the game time alone (never a session's
