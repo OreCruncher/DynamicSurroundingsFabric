@@ -23,8 +23,8 @@
  *     {@link org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders} and
  *     {@link org.orecruncher.dsurround.effects.precipitation.Snowflakes}: drawing.
  *     {@link org.orecruncher.dsurround.effects.precipitation.DropMeshes} builds the quads of the falling drops, and of
- *     what they left (snow flecks, window streaks, damp spots), on the drops' thread as the level starts to be drawn,
- *     for the camera as it is then, so the weather's pass only draws them.</li>
+ *     what they left (snow flecks, window streaks, damp spots), on a thread of their own as the level starts to be
+ *     drawn, for the camera as it is then, so the weather's pass only draws them.</li>
  * </ul>
  * It stands aside, and vanilla's weather is drawn, when turned off, with a shader pack in use, when its shader fails,
  * and in a dimension that draws its own weather (its dimension info's {@code particleWeather}). It is off when a mod

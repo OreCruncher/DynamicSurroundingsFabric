@@ -28,7 +28,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Ground fog has its own on/off option, Ground Fog, separate from Ground Fog Quality, which no longer has an Off choice; a configuration with the fog turned off keeps it off
 * Fast ground fog takes fewer steps and costs less to draw, with no visible difference
 * In `/dsprofile` recordings and their summaries, the dynamic clouds' work done once a tick is shown as its time per frame, so it can be compared with the other effects
-* Snow flecks, damp spots and the drops running down windows are built on the precipitation thread with the falling drops, leaving the render thread only to draw them
+* Snow flecks, damp spots and the drops running down windows are built ahead with the falling drops, leaving the render thread only to draw them; the building has a thread of its own, so a frame no longer waits for it behind the drops' step at a wide precipitation range
 
 **Fixes**
 * Rain and snow were built twice a frame, the second time on the render thread, while a mod changed the camera's direction during the frame (Rainbows does, as its rainbow is drawn); they now follow the camera's rotation itself. If it happens for another reason, the log says why, once

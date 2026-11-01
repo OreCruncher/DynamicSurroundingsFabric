@@ -158,7 +158,8 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
     at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads (`DropMeshes.Kind`: drops, dust, snow flecks, window streaks, damp spots) are
-    built on the same thread as the level starts to be drawn (`DropMeshes`, from a `renderLevel` HEAD hook,
+    built on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
+    at High's range) as the level starts to be drawn (`DropMeshes`, from a `renderLevel` HEAD hook,
     `OptionalHook.PRECIPITATION_AHEAD`), for that camera and partial tick; the weather pass draws them, or builds on the
     render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops,
     or what they left, change. The step may read only
