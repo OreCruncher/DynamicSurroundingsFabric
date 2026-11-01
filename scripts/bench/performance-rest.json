@@ -1,6 +1,9 @@
 // The rest of the Performance row: waterfalls and flame jets (lights, mist, block effect range), a crowd (entity
-// effect range), and the dust storm at High's precipitation range (see README.md for the format). The waterfall and
-// crowd scenes were marked by hand with /dsbench mark.
+// effect range), and the dust storm at High's precipitation range (see README.md for the format). The waterfall scene
+// is built by its commands on a stage they clear and floor at the player's feet, the same each run whatever the ground
+// was: a wide lava pool just ahead (south) for flame jets (they are short and rare, so it takes many blocks to keep
+// some burning), and water sources 18 blocks up falling to the floor beyond it, in sunflower plains so it isn't where
+// the plains scenes (rain, crowd) are found. The crowd is in plains.
 {
   "world": "bench",
   "seed": 20261030,
@@ -8,24 +11,43 @@
     "gamemode creative",
     "gamerule advance_time false",
     "gamerule advance_weather false",
-    "gamerule spawn_mobs false"
+    "gamerule spawn_mobs false",
+    "gamerule fire_spread_radius_around_player 0"
   ],
   "video": {
     "width": 1920,
-    "height": 1080
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
   },
   "warmup": 10,
   "record": 45,
   "repeats": 2,
   "scenes": {
     "waterfall": {
+      "biome": "minecraft:sunflower_plains",
+      "yaw": 0,
+      "pitch": -10,
       "commands": [
         "time set 6000",
-        "weather clear"
+        "weather clear",
+        "fill ~-24 ~ ~-4 ~24 ~19 ~16 air",
+        "fill ~-24 ~ ~17 ~24 ~19 ~38 air",
+        "fill ~-24 ~-3 ~-4 ~24 ~-2 ~38 dirt replace air",
+        "fill ~-24 ~-1 ~-4 ~24 ~-1 ~38 grass_block",
+        "fill ~-10 ~-2 ~2 ~10 ~-2 ~6 stone",
+        "fill ~-10 ~-1 ~2 ~10 ~-1 ~6 lava",
+        "setblock ~-8 ~18 ~18 water",
+        "setblock ~0 ~18 ~16 water",
+        "setblock ~8 ~18 ~18 water",
+        "setblock ~-14 ~18 ~26 water",
+        "setblock ~14 ~18 ~26 water",
+        "setblock ~0 ~18 ~30 water"
       ],
       "profile": "general"
     },
     "crowd": {
+      "biome": "minecraft:plains",
       "commands": [
         "time set 6000",
         "weather clear",

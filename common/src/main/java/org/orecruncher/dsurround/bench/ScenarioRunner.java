@@ -68,6 +68,8 @@ public final class ScenarioRunner {
     // At least this long after arriving before the terrain is taken as drawn: it starts out with nothing to draw
     private static final int SETTLE_SECONDS = 3;
     private static final int TICKS_PER_SECOND = 20;
+    // How far around the player a scene's commands may build or summon (the crowd reaches 40 blocks out)
+    private static final int SCENE_REACH = 40;
     private static final BlockPos FIND_FROM = new BlockPos(0, 64, 0);
 
     private final Scenario scenario;
@@ -259,6 +261,7 @@ public final class ScenarioRunner {
         var arrival = new Object() {
             @Nullable CompletableFuture<SceneLocations.Location> found;
             @Nullable SceneLocations.Location location;
+            @Nullable CompletableFuture<Boolean> loaded;
             int shotTick;
             boolean shot;
             boolean recorded;
@@ -296,6 +299,12 @@ public final class ScenarioRunner {
             var player = Minecraft.getInstance().player;
             var l = arrival.location;
             if (player == null || player.distanceToSqr(l.x(), l.y(), l.z()) > 4)
+                return false;
+            // The scene's commands need the ground around loaded on the server: a fill, setblock or summon where it
+            // isn't fails, and under execute as @a it fails without a word
+            if (arrival.loaded == null || (arrival.loaded.isDone() && !arrival.loaded.join()))
+                arrival.loaded = server().submit(ScenarioRunner::sceneLoaded);
+            if (!arrival.loaded.isDone() || !arrival.loaded.join())
                 return false;
             for (var command : scene.commands())
                 this.command(command);
@@ -419,6 +428,24 @@ public final class ScenarioRunner {
             this.serverCommand("execute as @a at @s run " + text);
         else
             Minecraft.getInstance().player.connection.sendCommand(text);
+    }
+
+    /**
+     * Whether the ground within {@link #SCENE_REACH} of the player is loaded and ticking entities on the server, so
+     * a scene's commands can build and summon there; on the server's thread
+     */
+    private static boolean sceneLoaded() {
+        var players = server().getPlayerList().getPlayers();
+        if (players.isEmpty())
+            return false;
+        var player = players.getFirst();
+        var level = player.level();
+        var center = player.blockPosition();
+        for (int dx = -SCENE_REACH; dx <= SCENE_REACH; dx += SCENE_REACH)
+            for (int dz = -SCENE_REACH; dz <= SCENE_REACH; dz += SCENE_REACH)
+                if (!level.isPositionEntityTicking(center.offset(dx, 0, dz)))
+                    return false;
+        return true;
     }
 
     private void serverCommand(String command) {

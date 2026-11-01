@@ -59,5 +59,7 @@ mountain), looking toward the most of it. It is remembered in the world's folder
 and a fingerprint of the mods; a remembered scene is checked to still be in its biome (worldgen mods move biomes), and
 found again if not (the manifest says so).
 
-A scene that isn't a biome (waterfalls, flame jets, a crowd): stand there in the bench world and run
-`/dsbench mark <name>`, which remembers the position and where you look. `/dsbench list` lists the world's scenes.
+What a scene needs that a biome doesn't have can often be built by its commands where the biome is found (summoned
+mobs, a lava pool, water sources up in the air: see `performance-rest.json`), which needs no setting up in a new world.
+Otherwise stand there in the bench world and run `/dsbench mark <name>`, which remembers the position and where you
+look; a marked scene is used as it is, even when the scene has a biome. `/dsbench list` lists the world's scenes.
