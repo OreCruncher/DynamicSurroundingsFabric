@@ -103,7 +103,8 @@ public class PresetLoaderTests {
         assertFalse(config.waterfallOptions.enableMist);
 
         modPreset("high").apply(config);
-        assertEquals(GroundFogQuality.FABULOUS, config.weatherOptions.groundFogQuality);
+        // Fancy, not Fabulous: Fabulous cost about three times as much walking through the mist
+        assertEquals(GroundFogQuality.FANCY, config.weatherOptions.groundFogQuality);
         assertTrue(config.blockEffects.blockEffectRange > new Configuration().blockEffects.blockEffectRange);
     }
 

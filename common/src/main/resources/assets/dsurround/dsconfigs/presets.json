@@ -228,7 +228,10 @@
     "id": "high",
     "group": "performance",
     "values": {
-      "weatherOptions.groundFogQuality": "FABULOUS",
+      // Fancy, as Medium: walking through a swamp's mist, Fabulous cost about three times as much (bench, 2560x1369,
+      // standing in it: 2.6 ms of GPU a frame against 0.8), for a difference mostly at the mist's edges. Players who
+      // want it choose it themselves.
+      "weatherOptions.groundFogQuality": "FANCY",
       "weatherOptions.precipitationDensity": 100,
       "weatherOptions.precipitationRange": 20,
       "blockEffects.blockEffectRange": 64,
