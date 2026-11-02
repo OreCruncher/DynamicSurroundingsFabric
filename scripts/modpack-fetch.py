@@ -12,8 +12,9 @@ Fetches a Modrinth modpack into a run folder of its own, for testing the mod alo
     python scripts/modpack-fetch.py <slug> --leave-out c2me         leave out a mod the development run can't load
 
 Every file is checked against the pack's hash, and kept in build/modpack-cache so a fetch again downloads nothing
-new. The folder's mods, resource packs, shader packs and config are replaced each time; its worlds, logs and bench
-results are kept. Only the client's files are fetched.
+new. The folder's mods, resource packs, shader packs and config are replaced each time, but not the /dsprofile
+recordings in config/dsurround/profiles; its worlds, logs and bench results are kept. Only the client's files are
+fetched.
 
 Left out, by mod id (read from each jar, so a renamed file doesn't slip through):
   - mods the development run loads even for a pack (our own, and Architectury and Cloth Config, which it needs): two
@@ -54,6 +55,10 @@ UNATTENDED = {
 }
 # The folders a pack replaces each fetch; anything else in the run folder (saves, logs, bench results) is kept
 REPLACED = ["mods", "resourcepacks", "shaderpacks", "config"]
+# Inside those, kept through a fetch: /dsprofile's recordings. Set aside here meanwhile, and put back by the next fetch
+# if one was interrupted
+KEPT = ["config/dsurround/profiles"]
+SET_ASIDE = ".fetch-kept"
 
 MODS_TOML_ID = re.compile(r'^\s*modId\s*=\s*"([^"]+)"', re.MULTILINE)
 # A mods.toml table header (a comment may follow it): only [[mods]] tables declare the jar's mods; [[dependencies.x]]
@@ -82,6 +87,28 @@ def get_json(url, **params):
     if params:
         url += "?" + urllib.parse.urlencode({k: json.dumps(v) if isinstance(v, list) else v for k, v in params.items()})
     return json.loads(get(url))
+
+
+def set_aside(dest):
+    """Moves what is kept through a fetch out of the folders it replaces"""
+    for kept in KEPT:
+        source = dest / kept
+        if source.is_dir():
+            target = dest / SET_ASIDE / kept
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(source), str(target))
+
+
+def put_back(dest):
+    """Returns what was set aside, merged with anything the pack brought to the same place"""
+    aside = dest / SET_ASIDE
+    if not aside.is_dir():
+        return
+    for kept in KEPT:
+        source = aside / kept
+        if source.is_dir():
+            shutil.copytree(source, dest / kept, dirs_exist_ok=True)
+    shutil.rmtree(aside)
 
 
 def gradle_properties():
@@ -189,6 +216,9 @@ def main():
 
         dest = ROOT / args.platform / "run-pack" / slug
         dest.mkdir(parents=True, exist_ok=True)
+        # What an interrupted fetch set aside first, so it isn't lost
+        put_back(dest)
+        set_aside(dest)
         for folder in REPLACED:
             shutil.rmtree(dest / folder, ignore_errors=True)
 
@@ -227,6 +257,8 @@ def main():
                         excluded.append({"file": str(rel).replace("\\", "/"), "why": reason})
                         continue
                 fetched.append(str(rel).replace("\\", "/"))
+
+        put_back(dest)
 
     shader_pack = None
     if args.shader_pack:
