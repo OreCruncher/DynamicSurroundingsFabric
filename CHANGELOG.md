@@ -24,6 +24,10 @@ The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.
 * When Minecraft's Music Toast option shows toasts, its toast is used for music credits in place of the mod's
 * Key bindings are listed under their own Dynamic Surroundings category
 * The particle repair guard (Guards in Diagnostics) isn't needed on 1.21.11 and isn't included
+* The falling drops' tick copies them to the next set an array at a time instead of drop by drop, about a third less work for its thread
+* With the computer's processor fully busy (a large modpack catching up), the weather could hold up a frame for 10 to 30 ms waiting for the drops built ahead; it now waits at most 2 ms, then builds what isn't ready itself
+* In `/dsprofile` recordings and the diagnostics, time the weather spends waiting for the drops built ahead is shown on its own line, "Waiting for Quads"
+* The first `/dsprofile` recording since the game started waits 10 seconds longer before recording: Java Flight Recorder starts up in that time, so the seconds of slowdown its first start causes are no longer in the recording
 
 > ### DynamicSurroundings-1.21.1-0.4.8
 

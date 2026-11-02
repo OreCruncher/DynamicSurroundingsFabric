@@ -70,6 +70,14 @@ public class ProfilingTests {
     }
 
     @Test
+    void theFirstRecordingSinceTheGameStartedWaitsLongerForJfrToWarmUp() {
+        for (var scene : ProfileScene.values()) {
+            assertEquals(scene.settle() + Profiler.WARM_UP_SECONDS, Profiler.settle(scene, false), scene.name());
+            assertEquals(scene.settle(), Profiler.settle(scene, true), scene.name());
+        }
+    }
+
+    @Test
     void theGeneralSceneChangesNothing() {
         // No settings held, no server commands: the game as it is
         assertTrue(ProfileScene.GENERAL.commands().isEmpty());

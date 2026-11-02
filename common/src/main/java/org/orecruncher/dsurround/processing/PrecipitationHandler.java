@@ -320,6 +320,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // For recordings, how much there was to draw: the drops in the area, whatever the storm and range make
         PrecipitationShaders.RENDER_TIMER.count(this.field.count());
         try {
+            // Timed on its own, so a wait isn't put down to what is drawn first
+            PrecipitationShaders.WAIT_TIMER.begin();
+            this.meshes.await();
+            PrecipitationShaders.WAIT_TIMER.end();
+
             var spots = PrecipitationShaders.fabulous(fabulous, PrecipitationShaders.DAMP_SPOTS, PrecipitationShaders.DAMP_SPOTS_DEPTH);
             if (this.dampSpots.count() > 0 && spots.isUsable()) {
                 PrecipitationShaders.DAMP_SPOTS_TIMER.begin();

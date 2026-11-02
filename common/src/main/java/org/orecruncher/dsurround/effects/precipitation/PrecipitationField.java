@@ -462,15 +462,14 @@ public final class PrecipitationField {
      * Moves each drop of {@code from} a tick into {@code to}, packed at its front: those that go are left behind
      */
     private void move(Drops from, Drops to, double cameraX, double cameraY, double cameraZ, Wind.Snapshot wind) {
-        to.count = 0;
+        // Copied whole, an array at a time, then moved where they are. A drop that goes leaves the last not yet moved in
+        // its place, moved next: kept in order, every drop after the first to go was copied again, one by one. Those
+        // kept stay where they are, so the questions asked about them still point at them, in order.
+        to.copyAllOf(from);
+        to.count = from.count;
         to.dustCount = 0;
-        for (int i = 0; i < from.count; i++) {
-            int j = to.count;
-            from.copyTo(i, to, j);
-            to.prevX[j] = to.x[j];
-            to.prevY[j] = to.y[j];
-            to.prevZ[j] = to.z[j];
-
+        int j = 0;
+        while (j < to.count) {
             // Eased toward the wind where the drop is, so a passing gust shows as a ripple through the drops
             float response = switch (to.kind[j]) {
                 case SNOW -> SNOW_WIND_RESPONSE;
@@ -494,9 +493,11 @@ public final class PrecipitationField {
                     ? this.moveDust(to, j, cameraX, cameraY, cameraZ)
                     : this.fall(to, j, cameraX, cameraY, cameraZ);
             if (keep) {
-                to.count++;
                 if (to.kind[j] == DUST)
                     to.dustCount++;
+                j++;
+            } else if (j != --to.count) {
+                to.copyTo(to.count, to, j);
             }
         }
     }
@@ -953,6 +954,34 @@ public final class PrecipitationField {
         void clear() {
             this.count = 0;
             this.dustCount = 0;
+        }
+
+        /**
+         * Copies the drops of {@code from} into this set, at the same places, where they are now also where they were:
+         * the start of a tick's move. Its counts are left for the move to set.
+         */
+        void copyAllOf(Drops from) {
+            int n = from.count;
+            System.arraycopy(from.x, 0, this.prevX, 0, n);
+            System.arraycopy(from.y, 0, this.prevY, 0, n);
+            System.arraycopy(from.z, 0, this.prevZ, 0, n);
+            System.arraycopy(from.x, 0, this.x, 0, n);
+            System.arraycopy(from.y, 0, this.y, 0, n);
+            System.arraycopy(from.z, 0, this.z, 0, n);
+            System.arraycopy(from.speed, 0, this.speed, 0, n);
+            System.arraycopy(from.windX, 0, this.windX, 0, n);
+            System.arraycopy(from.windZ, 0, this.windZ, 0, n);
+            System.arraycopy(from.drift, 0, this.drift, 0, n);
+            System.arraycopy(from.phase, 0, this.phase, 0, n);
+            System.arraycopy(from.spinCos, 0, this.spinCos, 0, n);
+            System.arraycopy(from.spinSin, 0, this.spinSin, 0, n);
+            System.arraycopy(from.thinning, 0, this.thinning, 0, n);
+            System.arraycopy(from.age, 0, this.age, 0, n);
+            System.arraycopy(from.covered, 0, this.covered, 0, n);
+            System.arraycopy(from.light, 0, this.light, 0, n);
+            System.arraycopy(from.kind, 0, this.kind, 0, n);
+            System.arraycopy(from.color, 0, this.color, 0, n);
+            System.arraycopy(from.lifetime, 0, this.lifetime, 0, n);
         }
 
         /**
