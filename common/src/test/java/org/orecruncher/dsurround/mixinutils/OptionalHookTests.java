@@ -65,6 +65,18 @@ public class OptionalHookTests {
     }
 
     @Test
+    void aHandlerInCodeAnotherModsWrapMethodMovedIsFound() {
+        // Another mod's @WrapMethod moves the method's code, our injection in it, to a method of MixinExtras' that its
+        // wrapper calls (Iris's around WeatherEffectRenderer.render, in the Fresh & Smooth pack)
+        var node = classCalling("wrapMethod$fcg000$iris$disableWeather");
+        var wrapped = new MethodNode(Opcodes.ACC_PRIVATE, "render$mixinextras$wrapped$55", "()V", null, null);
+        wrapped.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "handler$zpf000$dsurround$renderPrecipitation", "()V", false));
+        wrapped.instructions.add(new InsnNode(Opcodes.RETURN));
+        node.methods.add(wrapped);
+        assertTrue(OptionalHook.calls(node, "dsurround$renderPrecipitation"));
+    }
+
+    @Test
     void callsToAnotherClassDontCount() {
         var node = classCalling();
         node.methods.getFirst().instructions.insert(new MethodInsnNode(Opcodes.INVOKESTATIC, "other/Owner", "dsurround$tintSkyColor", "()V", false));
