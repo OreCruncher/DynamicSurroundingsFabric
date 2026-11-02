@@ -108,7 +108,10 @@
   "runs": [
     {
       "label": "waterfall-default",
-      "scene": "waterfall"
+      "scene": "waterfall",
+      "settings": {
+        "blockEffects.blockEffectRange": 40
+      }
     },
     {
       "label": "waterfall-range32",
