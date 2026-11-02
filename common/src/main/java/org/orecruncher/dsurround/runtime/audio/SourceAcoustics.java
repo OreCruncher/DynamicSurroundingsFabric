@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -13,6 +14,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
+import org.orecruncher.dsurround.lib.block.ChunkCachingView;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
@@ -121,10 +123,12 @@ public final class SourceAcoustics {
     private static final ThreadLocal<TraceContexts> TRACE_CONTEXTS = ThreadLocal.withInitial(TraceContexts::new);
 
     /**
-     * A thread's trace contexts: one per block shape type, which a context can't change. Attached to the world only
-     * while tracing; a context kept by a pool thread would otherwise keep the last world loaded after leaving it.
+     * A thread's trace contexts: one per block shape type, which a context can't change, reading through the thread's
+     * own view of the blocks, which keeps the chunk its last read was in. Attached to the world only while tracing; a
+     * context kept by a pool thread would otherwise keep the last world loaded after leaving it.
      */
     private static final class TraceContexts {
+        final ChunkCachingView blocks = new ChunkCachingView();
         final ReusableRaycastContext reverb = new ReusableRaycastContext(null, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY);
         final ReusableRaycastContext occlusion = new ReusableRaycastContext(null, ClipContext.Block.VISUAL, ClipContext.Fluid.ANY);
         // The blocks between a sound and the player, traced with the occlusion context
@@ -132,14 +136,16 @@ public final class SourceAcoustics {
         // Results this thread traced recently, for other sounds in the same blocks
         final SharedTraces shared = new SharedTraces(SHARED_TRACES, AcousticFilters.CHANNELS, REVERB_RAY_BOUNCES);
 
-        void attach(BlockGetter world) {
-            this.reverb.setWorld(world);
-            this.occlusion.setWorld(world);
+        void attach(Level world) {
+            this.blocks.attach(world);
+            this.reverb.setWorld(this.blocks);
+            this.occlusion.setWorld(this.blocks);
         }
 
         void detach() {
             this.reverb.setWorld(null);
             this.occlusion.setWorld(null);
+            this.blocks.detach();
         }
     }
 
@@ -203,12 +209,12 @@ public final class SourceAcoustics {
                 TRACED.increment();
                 final boolean timed = SoundSamples.isRecording();
                 final long began = timed ? System.nanoTime() : 0;
-                traces.attach(ctx.blocks);
+                traces.attach(ctx.world);
                 try {
                     // Need to offset sound toward player if it is in a solid block or fluid
-                    this.traced.soundPos = SoundGeometry.offsetPositionIfNeeded(ctx.blocks, this.source.getPosition(), ctx.playerEyePosition);
-                    this.traced.occlusion = occlusion ? this.calculateOcclusion(ctx, traces.occlusionHits, this.traced.soundPos, ctx.playerEyePosition) : 0F;
-                    this.traceReverb(ctx, traces.reverb, this.traced.soundPos);
+                    this.traced.soundPos = SoundGeometry.offsetPositionIfNeeded(traces.blocks, this.source.getPosition(), ctx.playerEyePosition);
+                    this.traced.occlusion = occlusion ? this.calculateOcclusion(ctx, traces.blocks, traces.occlusionHits, this.traced.soundPos, ctx.playerEyePosition) : 0F;
+                    this.traceReverb(ctx, traces.blocks, traces.reverb, this.traced.soundPos);
                 } finally {
                     traces.detach();
                 }
@@ -239,7 +245,7 @@ public final class SourceAcoustics {
      * Shared airspace is checked from every reflection, or with {@code simplifiedSharedAirspace} only from each
      * ray's last one (up to a quarter as many rays with 4 bounces).
      */
-    private void traceReverb(final WorldContext ctx, final ReusableRaycastContext traceContext, final Vec3 soundPos) {
+    private void traceReverb(final WorldContext ctx, final BlockGetter blocks, final ReusableRaycastContext traceContext, final Vec3 soundPos) {
         final float[] sendGains = this.traced.sendGains;
         final float[] bounceTotals = this.traced.bounceTotals;
         Arrays.fill(sendGains, 0F);
@@ -269,7 +275,7 @@ public final class SourceAcoustics {
             // Secondary ray bounces
             for (int j = 0; j < REVERB_RAY_BOUNCES; j++) {
 
-                final float blockReflectivity = getReflectivity(ctx.blocks.getBlockState(lastHitBlock));
+                final float blockReflectivity = getReflectivity(blocks.getBlockState(lastHitBlock));
                 final float energyTowardsPlayer = blockReflectivity * ENERGY_COEFF + ENERGY_CONST;
 
                 final Vec3 newRayDir = MathStuff.reflection(lastRayDir, lastHitNormal);
@@ -356,7 +362,7 @@ public final class SourceAcoustics {
         }
     }
 
-    private float calculateOcclusion(final WorldContext ctx, final ReusableRaycastIterator hits, final Vec3 origin, final Vec3 target) {
+    private float calculateOcclusion(final WorldContext ctx, final BlockGetter blocks, final ReusableRaycastIterator hits, final Vec3 origin, final Vec3 target) {
 
         assert ctx.world != null;
         assert ctx.player != null;
@@ -364,7 +370,7 @@ public final class SourceAcoustics {
         float factor = 0F;
 
         Vec3 lastHit = origin;
-        BlockState lastState = ctx.blocks.getBlockState(BlockPos.containing(lastHit.x(), lastHit.y(), lastHit.z()));
+        BlockState lastState = blocks.getBlockState(BlockPos.containing(lastHit.x(), lastHit.y(), lastHit.z()));
         var itr = hits.restart(origin, target);
         for (int i = 0; i < OCCLUSION_SEGMENTS && itr.hasNext(); i++) {
             var result = itr.next();
@@ -373,7 +379,7 @@ public final class SourceAcoustics {
             // Occlusion is scaled by the distance traveled through the block.
             factor += (float) (occlusion * distance);
             lastHit = result.getLocation();
-            lastState = ctx.blocks.getBlockState(result.getBlockPos());
+            lastState = blocks.getBlockState(result.getBlockPos());
         }
 
         return factor;
