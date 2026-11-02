@@ -49,10 +49,24 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
   was when the session started, so runs don't leak into each other; settings needing a restart are refused up front.
 - **Commands** are typed as the player would: the server's (`time`, `weather`, `gamerule`, `summon`) run on the
   built-in server with full permission, as the player and where they stand; the mod's (`dsweather ...`) on the client.
-  1.21.11's gamerules are snake case (`advance_time`, `advance_weather`, `spawn_mobs`).
+  1.21.11's gamerules are snake case (`advance_time`, `advance_weather`, `spawn_mobs`). A server command that fails
+  (under `execute as @a` it fails without a word: a fill above the build limit) is logged and listed in the manifest's
+  `failedCommands`. A scene found where another scene built stands on what that one left (the finder reads the height
+  map): build in the air from an absolute height (`tp @s ~ 245 ~`), as `sound.json` does.
 - **Shot commands**: a scene's `"shotCommands"` run just before its screenshot, as `commands` are, and `"shotDelay"`
   is how many ticks the shot then waits for what they start to show (2 at least): `["dsweather lightning"]` with a delay
   of 6 to 10 catches a strike in the shot.
+- **Sounds**: a scene's `"sounds"` play around where the player's eyes are as the warm-up starts (after the commands
+  have moved them), through the warm-up and the recording, for enhanced sound processing to work on (`sound.json`):
+  `{"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 6, "seed": 1}` plays
+  one-shots at that rate, and `"count": 8` instead keeps that many loops playing (a sound made to loop, such as
+  `minecraft:block.beacon.ambient`), at places evenly through the shell from `minRadius` to `radius` (default 0 to 8);
+  `volume` and `pitch` default to 1. Places and variants come from `seed`, so every run of a scene hears the same. A
+  sound of volume 1 is heard out to 16 blocks, and one whose volume works out to 0 isn't played at all: the scenario's
+  `"volume"` sets the master volume for the session (0.05 is quiet). Each run's manifest says whether processing ran
+  (`enhancedSounds`: not without a sound device, or with it off), `soundsPlayed`, and `soundsMuted` if the blocks'
+  volume is 0. Enhanced sounds on or off, and the reverb rays and bounces, need a restart, so can't be compared in one
+  scenario.
 
 ## Scenes
 

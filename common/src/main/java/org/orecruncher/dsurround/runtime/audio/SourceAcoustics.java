@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.profiling.SoundSamples;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.LongAdder;
@@ -181,6 +182,8 @@ public final class SourceAcoustics {
                 || this.source.getPosition().equals(Vec3.ZERO)) {
             this.cache.invalidate();
             this.clearSettings();
+            if (SoundSamples.isRecording())
+                SoundSamples.skipped();
             return;
         }
 
@@ -194,8 +197,12 @@ public final class SourceAcoustics {
             final boolean occlusion = !skipOcclusion(this.source.getCategory());
             if (traces.shared.find(ctx.world, soundBlock, eyeBlock, generation, occlusion, this.traced)) {
                 SHARED.increment();
+                if (SoundSamples.isRecording())
+                    SoundSamples.shared();
             } else {
                 TRACED.increment();
+                final boolean timed = SoundSamples.isRecording();
+                final long began = timed ? System.nanoTime() : 0;
                 traces.attach(ctx.blocks);
                 try {
                     // Need to offset sound toward player if it is in a solid block or fluid
@@ -205,9 +212,13 @@ public final class SourceAcoustics {
                 } finally {
                     traces.detach();
                 }
+                if (timed)
+                    SoundSamples.traced(System.nanoTime() - began);
                 traces.shared.store(ctx.world, soundBlock, eyeBlock, generation, occlusion, this.traced);
             }
             this.cache.update(ctx.world, soundBlock, eyeBlock, generation);
+        } else if (SoundSamples.isRecording()) {
+            SoundSamples.reused();
         }
 
         final float airAbsorptionFactor = calculateWeatherAbsorption(ctx, this.traced.soundPos, ctx.playerEyePosition);

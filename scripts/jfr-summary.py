@@ -5,7 +5,8 @@ the optional hooks, conflicts and settings that aren't as they are out of the bo
 drawing one on the GPU and CPU), the mod's render timers (each as a share of drawing a frame), the
 client tick's handlers (and what running them in parallel could gain), the classic aurora's shape and how much of the
 screen it covered (against its GPU time), what random block effects did by distance (each
-rate against what the sampler means it to be), where each busy thread spends its time (by
+rate against what the sampler means it to be), what enhanced sound processing did (calculations as sounds start, on
+the sound engine's thread, and the worker's updates and passes), where each busy thread spends its time (by
 method and by mod package), what allocates, and GC.
 
   jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS] [--shell-width N]
@@ -371,6 +372,43 @@ def aurora_coverage(jfr, recording, timer_rows):
         print(f"  GPU {gpu:.3f} ms a frame: {1e6 * gpu / pixels:.2f} ns a covered pixel")
 
 
+def enhanced_sounds(jfr, recording):
+    seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.EnhancedSounds"], 1)]
+    if not seconds:
+        return
+    running = [f for f in seconds if f.get("available") == "true"]
+    print(f"\n== Enhanced sounds ({len(seconds)} seconds, processing running in {len(running)}; ms; "
+          f"start: a sound's calculation and upload as it starts, on the sound engine's thread; update: one handed to "
+          f"the workers; pass: the worker handing out what is due and waiting for it, 20 a second; trace: the rays of "
+          f"one calculation that traced, inside a start or update)")
+    if not running:
+        print("  not running: off in the settings, or no sound device")
+        return
+    total = lambda key: sum(int(number(f.get(key))) for f in running)
+    # A mean over the seconds, each weighted by how many there were
+    weighted = lambda key, count: (sum(number(f.get(key)) * int(number(f.get(count))) for f in running) / total(count)
+                                   if total(count) else 0.0)
+    peak = lambda key: max(number(f.get(key)) for f in running)
+    sources = weighted("sources", "passes")
+    print(f"  sources: mean {sources:.1f}, peak {int(peak('sourcesPeak'))}")
+    print(f"  {'':8} {'a second':>9} {'mean':>8} {'peak':>8} {'ms a second':>12}")
+    for label, count, mean_key, peak_key in (("start", "starts", "startMean", "startPeak"),
+                                             ("update", "updates", "updateMean", "updatePeak"),
+                                             ("pass", "passes", "passMean", "passPeak"),
+                                             ("upload", "uploads", "uploadMean", None),
+                                             ("trace", "traced", "traceMean", "tracePeak")):
+        n = total(count)
+        mean = weighted(mean_key, count)
+        top = f"{peak(peak_key):8.3f}" if peak_key else f"{'-':>8}"
+        print(f"  {label:8} {n / len(running):9.1f} {mean:8.3f} {top} {n * mean / len(running):12.3f}")
+    # Every calculation, a start's or an update's, traced, took another sound's result, reused its own, or was skipped
+    kinds = {kind: total(kind) for kind in ("traced", "shared", "reused", "skipped")}
+    calculations = sum(kinds.values())
+    if calculations:
+        print("  calculations: " + ", ".join(f"{kind} {n / len(running):.1f} a second ({100 * n / calculations:.0f}%)"
+                                             for kind, n in kinds.items()))
+
+
 def callers(jfr, recording, args):
     mods, nearest, ours, total = Counter(), Counter(), Counter(), 0
     for _, fields, frames in events(jfr, recording, ["jdk.ExecutionSample"]):
@@ -522,6 +560,7 @@ def main():
     aurora_coverage(jfr, recording, timers.get("Aurora"))
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)
+    enhanced_sounds(jfr, recording)
 
     by_thread = Counter()
     methods = defaultdict(Counter)

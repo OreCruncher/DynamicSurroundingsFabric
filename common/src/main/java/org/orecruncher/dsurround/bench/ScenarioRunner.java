@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
@@ -27,6 +28,7 @@ import org.orecruncher.dsurround.lib.config.ConfigPreset;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.profiling.ProfileScene;
 import org.orecruncher.dsurround.profiling.Profiler;
+import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -43,7 +45,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -85,6 +89,9 @@ public final class ScenarioRunner {
     private final JsonObject manifest = new JsonObject();
     private final JsonArray runResults = new JsonArray();
     private final Map<String, SceneLocations.Location> sessionScenes = new HashMap<>();
+    // Server commands that failed, from the server's thread
+    private final Queue<String> commandFailures = new ConcurrentLinkedQueue<>();
+    private final JsonArray failedCommands = new JsonArray();
     private @Nullable Step current;
     private int stepTicks;
     // The screen up while the world waits to be opened, if not the title screen, and for how many ticks
@@ -93,6 +100,8 @@ public final class ScenarioRunner {
     private boolean finished;
     private @Nullable SceneLocations locations;
     private @Nullable ConfigPreset baseline;
+    // The scene's sounds while a run warms up and records
+    private @Nullable BenchSounds sounds;
 
     private ScenarioRunner(Scenario scenario, Path results) {
         this.scenario = scenario;
@@ -153,6 +162,7 @@ public final class ScenarioRunner {
         this.manifest.addProperty("started", LocalDateTime.now().toString());
         this.manifest.addProperty("world", this.scenario.world());
         this.manifest.add("runs", this.runResults);
+        this.manifest.add("failedCommands", this.failedCommands);
         this.manifest.addProperty("finished", false);
         Library.LOGGER.info("Bench: running %s, results in %s", file, this.results);
 
@@ -172,6 +182,8 @@ public final class ScenarioRunner {
         if (this.finished)
             return;
         try {
+            if (this.sounds != null)
+                this.sounds.tick();
             if (this.current == null) {
                 this.current = this.steps.poll();
                 this.stepTicks = 0;
@@ -255,6 +267,7 @@ public final class ScenarioRunner {
         if (this.scenario.vsync() != null)
             mc.options.enableVsync().set(this.scenario.vsync());
         this.scenario.maxFps().ifPresent(fps -> mc.options.framerateLimit().set(fps));
+        this.scenario.volume().ifPresent(volume -> mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(volume));
         if (this.scenario.width().isPresent() && this.scenario.height().isPresent())
             mc.getWindow().setWindowed(this.scenario.width().getAsInt(), this.scenario.height().getAsInt());
         // Its hints would sit in every screenshot
@@ -356,7 +369,18 @@ public final class ScenarioRunner {
             }
             return false;
         }, 0);
-        this.step(tag + ": warm up", () -> this.stepTicks >= this.scenario.warmup() * TICKS_PER_SECOND, 0);
+        this.step(tag + ": warm up", () -> {
+            // The sounds from here, where the player is once the commands have moved them; and whether they can be heard
+            // and processed: a sound whose volume works out to 0 isn't played
+            if (this.stepTicks == 1 && !scene.sounds().isEmpty()) {
+                var mc = Minecraft.getInstance();
+                this.sounds = new BenchSounds(scene.sounds(), mc.player.getEyePosition());
+                result.addProperty("enhancedSounds", EnhancedSoundProcessor.isAvailable());
+                if (mc.options.getFinalSoundSourceVolume(SoundSource.BLOCKS) <= 0)
+                    result.addProperty("soundsMuted", true);
+            }
+            return this.stepTicks >= this.scenario.warmup() * TICKS_PER_SECOND;
+        }, 0);
         this.step(tag + ": record", () -> {
             if (this.stepTicks == 1) {
                 var profile = profileScene(scene.profile());
@@ -388,6 +412,10 @@ public final class ScenarioRunner {
             }
             if (!arrival.recorded)
                 return false;
+            if (this.sounds != null) {
+                result.addProperty("soundsPlayed", this.sounds.played());
+                this.stopSounds();
+            }
             result.addProperty("finished", LocalDateTime.now().toString());
             this.writeManifest();
             return true;
@@ -485,9 +513,19 @@ public final class ScenarioRunner {
         return true;
     }
 
+    /**
+     * Runs a command on the server. A failure is logged and listed in the manifest: under {@code execute as @a} it
+     * fails without a word (a fill above the build limit)
+     */
     private void serverCommand(String command) {
         var server = server();
-        server.execute(() -> server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), command));
+        var source = server.createCommandSourceStack().withCallback((success, result) -> {
+            if (!success) {
+                Library.LOGGER.warn("Bench: command failed: %s", command);
+                this.commandFailures.add(command);
+            }
+        });
+        server.execute(() -> server.getCommands().performPrefixedCommand(source, command));
     }
 
     private static MinecraftServer server() {
@@ -519,6 +557,7 @@ public final class ScenarioRunner {
         if (this.finished)
             return;
         this.finished = true;
+        this.stopSounds();
         if (this.baseline != null) {
             try {
                 ContainerManager.resolve(Configuration.class).applyPreset(this.baseline);
@@ -548,7 +587,16 @@ public final class ScenarioRunner {
         watchdog.start();
     }
 
+    private void stopSounds() {
+        if (this.sounds != null) {
+            this.sounds.stop();
+            this.sounds = null;
+        }
+    }
+
     private void writeManifest() {
+        for (String failed; (failed = this.commandFailures.poll()) != null; )
+            this.failedCommands.add(failed);
         try {
             Files.writeString(this.results.resolve("manifest.json"),
                     new GsonBuilder().setPrettyPrinting().create().toJson(this.manifest), StandardCharsets.UTF_8);

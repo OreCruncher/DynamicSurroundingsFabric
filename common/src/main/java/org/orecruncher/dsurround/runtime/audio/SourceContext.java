@@ -7,6 +7,7 @@ import org.lwjgl.openal.EXTEfx;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.profiling.SoundSamples;
 import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 import org.orecruncher.dsurround.runtime.audio.effects.LowPassData;
 import org.orecruncher.dsurround.runtime.audio.effects.SourcePropertyFloat;
@@ -129,6 +130,8 @@ public final class SourceContext implements Callable<Void> {
      */
     public void tick() {
         if (this.isEnabled()) {
+            final boolean timed = SoundSamples.isRecording();
+            final long began = timed ? System.nanoTime() : 0;
             synchronized (this.sync()) {
                 // Upload what changed since the last tick
                 this.efx.uploadIfChanged(this.sourceId, this.reverbs, this.direct);
@@ -136,6 +139,8 @@ public final class SourceContext implements Callable<Void> {
 
                 AudioUtilities.validate("SourceHandler::tick");
             }
+            if (timed)
+                SoundSamples.uploaded(System.nanoTime() - began);
         }
     }
 
@@ -151,8 +156,12 @@ public final class SourceContext implements Callable<Void> {
 
     @Override
     public Void call() {
+        final boolean timed = SoundSamples.isRecording();
+        final long began = timed ? System.nanoTime() : 0;
         this.captureState();
         this.updateImpl();
+        if (timed)
+            SoundSamples.updated(System.nanoTime() - began);
         return null;
     }
 
@@ -160,10 +169,14 @@ public final class SourceContext implements Callable<Void> {
      * Calculates and uploads straight away, when the sound starts playing. Called where {@link #tick()} is.
      */
     public void exec() {
+        final boolean timed = SoundSamples.isRecording();
+        final long began = timed ? System.nanoTime() : 0;
         this.captureState();
         this.updateImpl();
         this.updateCount = Randomizer.current().nextInt(UPDATE_FEQUENCY_TICKS);
         this.tick();
+        if (timed)
+            SoundSamples.started(System.nanoTime() - began);
     }
 
     private void updateImpl() {

@@ -57,6 +57,43 @@ public class ScenarioTests {
     }
 
     @Test
+    void scenesMayPlaySounds() {
+        var scenario = parse("""
+                {"volume": 0.05,
+                 "scenes": {"box": {"sounds": [
+                     {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 5, "seed": 7},
+                     {"id": "minecraft:block.beacon.ambient", "count": 8}]}, "plain": {}},
+                 "runs": [{"scene": "box"}]}""");
+        assertEquals(0.05, scenario.volume().orElseThrow(), 1e-9);
+        var sounds = scenario.scenes().get("box").sounds();
+        assertEquals(new Scenario.Sounds("minecraft:block.stone_button.click_on", 20, 0, 1.5, 5, 1, 1, 7), sounds.get(0));
+        // Left out: no rate, from the player out to 8 blocks, full volume and pitch, seed 1
+        assertEquals(new Scenario.Sounds("minecraft:block.beacon.ambient", 0, 8, 0, 8, 1, 1, 1), sounds.get(1));
+        assertEquals(List.of(), scenario.scenes().get("plain").sounds());
+        assertTrue(parse("{\"scenes\": {\"s\": {}}, \"runs\": [{\"scene\": \"s\"}]}").volume().isEmpty());
+    }
+
+    @Test
+    void aSoundNeedsAnIdARateOrCountAndAShell() {
+        for (var sound : List.of("{\"perSecond\": 1}", "{\"id\": \"a:b\"}", "{\"id\": \"a:b\", \"count\": 1, \"minRadius\": 9, \"radius\": 4}"))
+            assertThrows(IllegalArgumentException.class, () -> parse(
+                    "{\"scenes\": {\"s\": {\"sounds\": [" + sound + "]}}, \"runs\": [{\"scene\": \"s\"}]}"), sound);
+    }
+
+    @Test
+    void readsTheSoundScenario() throws Exception {
+        var scenario = Scenario.read(Path.of("../scripts/bench/sound.json"));
+        assertTrue(scenario.volume().orElseThrow() > 0);
+        for (var scene : scenario.scenes().values())
+            assertEquals(2, scene.sounds().size());
+        // Each run of a scene hears the same sounds: the occluded scene's from the same seeds as the box's
+        var enclosed = scenario.scenes().get("enclosed").sounds();
+        var occluded = scenario.scenes().get("occluded").sounds();
+        for (int i = 0; i < enclosed.size(); i++)
+            assertEquals(enclosed.get(i).seed(), occluded.get(i).seed());
+    }
+
+    @Test
     void repeatsAlternateTheOrder() {
         var scenario = parse("""
                 {"repeats": 3, "scenes": {"s": {}},
