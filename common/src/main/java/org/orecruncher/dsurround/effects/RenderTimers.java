@@ -22,6 +22,7 @@ public final class RenderTimers {
     public static final List<RenderTimer> ALL = List.of(
             AuroraRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
+            PrecipitationShaders.WAIT_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
             PrecipitationShaders.DROPS_TIMER,
             GroundFogVolume.RENDER_TIMER,

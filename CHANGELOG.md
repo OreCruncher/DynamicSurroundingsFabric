@@ -29,9 +29,16 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Fast ground fog takes fewer steps and costs less to draw, with no visible difference
 * In `/dsprofile` recordings and their summaries, the dynamic clouds' work done once a tick is shown as its time per frame, so it can be compared with the other effects
 * Snow flecks, damp spots and the drops running down windows are built ahead with the falling drops, leaving the render thread only to draw them; the building has a thread of its own, so a frame no longer waits for it behind the drops' step at a wide precipitation range
+* The falling drops' tick copies them to the next set an array at a time instead of drop by drop, about a third less work for its thread
+* The first `/dsprofile` recording since the game started waits 10 seconds longer before recording: Java Flight Recorder starts up in that time, so the seconds of slowdown its first start causes are no longer in the recording
+* In `/dsprofile` recordings and the diagnostics, time the weather spends waiting for the drops built ahead is shown on its own line, "Waiting for Quads", instead of being counted against the damp spots
 
 **Fixes**
 * Rain and snow were built twice a frame, the second time on the render thread, while a mod changed the camera's direction during the frame (Rainbows does, as its rainbow is drawn); they now follow the camera's rotation itself. If it happens for another reason, the log says why, once
+* With the computer's processor fully busy (a large modpack catching up), the weather could hold up a frame for 10 to 30 ms waiting for the drops built ahead; it now waits at most 2 ms, then builds what isn't ready itself
+* On NeoForge, the mod's overlays (compass, clock, diagnostics) stayed on screen when F1 hid the HUD
+* Dynamic clouds stand aside for Distant Horizons, which turns vanilla's clouds off and draws its own; `/dsconflicts` and the diagnostics say so
+* Flames on burning mobs turned themselves off with Iron's Lib installed (seen in ATM10), saying another mod had changed the game code they hook; the hook had applied, but in code that Iron's Lib wraps, where the check didn't look
 
 > ### DynamicSurroundings-1.21.1-0.4.8
 

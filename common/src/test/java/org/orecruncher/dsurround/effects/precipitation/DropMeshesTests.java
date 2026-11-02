@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.lib.threading.RecordingLog;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -225,6 +226,59 @@ public class DropMeshesTests {
         var logged = log.at(IModLog.Level.INFO);
         assertEquals(2, logged.size());
         assertTrue(logged.getFirst().message().contains("0.5 to 0.75"), logged.getFirst().message());
+    }
+
+    // A field with drops in it
+    private static PrecipitationField raining() {
+        var field = new PrecipitationField(200);
+        var random = Randomizer.create(3);
+        for (int t = 0; t < 20; t++)
+            field.tick(new Columns(), 0, CAMERA_Y, 0, 1F, 1F, new Wind(), random);
+        return field;
+    }
+
+    @Test
+    void aBuildNotDoneInTimeIsBuiltOnTheRenderThreadAndNotLogged() {
+        var log = new RecordingLog();
+        var meshes = new DropMeshes(log);
+        var sources = sources(raining());
+        var camera = new TurnedCamera(0F, 0F);
+        // A build's thread that doesn't run it until told: starved
+        var held = new ArrayList<Runnable>();
+        meshes.begin(sources, camera, 0.5F, STYLE, held::add);
+        var now = new DropMeshes.Request(sources, PrecipitationRenderer.View.of(camera), 0.5F, STYLE);
+
+        long start = System.nanoTime();
+        meshes.await();
+        long waited = System.nanoTime() - start;
+        assertTrue(waited >= DropMeshes.WAIT_NANOS, "waited " + waited + " ns");
+        assertTrue(waited < 1_000_000_000L, "gave up waiting: " + waited + " ns");
+
+        var late = meshes.mismatch(DropMeshes.Kind.DROPS, now);
+        assertNotNull(late);
+        assertEquals(DropMeshes.Behind.LATE, late.kind());
+        meshes.report(late);
+        assertTrue(log.at(IModLog.Level.INFO).isEmpty(), "a late build isn't logged");
+
+        // Once it has run, what it built is drawn
+        held.forEach(Runnable::run);
+        assertNull(meshes.mismatch(DropMeshes.Kind.DROPS, now));
+        meshes.discard();
+    }
+
+    @Test
+    void waitingForABuildDoneOrNoneDoesntWait() {
+        var meshes = new DropMeshes(new RecordingLog());
+        long start = System.nanoTime();
+        meshes.await();
+        long waited = System.nanoTime() - start;
+        // Built there and then
+        meshes.begin(sources(raining()), new TurnedCamera(0F, 0F), 0.5F, STYLE, Runnable::run);
+        start = System.nanoTime();
+        meshes.await();
+        waited += System.nanoTime() - start;
+        assertTrue(waited < DropMeshes.WAIT_NANOS, "waited " + waited + " ns");
+        meshes.discard();
     }
 
     // A camera turned as the game turns it

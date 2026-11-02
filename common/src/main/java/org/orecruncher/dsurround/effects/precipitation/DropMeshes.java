@@ -18,7 +18,10 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * The weather's quads, built ahead on another thread: as the level starts to be drawn ({@link #begin}), once the camera
@@ -27,8 +30,9 @@ import java.util.concurrent.Executor;
  * of the weather's time on the render thread.
  * <p>
  * Built for the camera and partial tick as the level began; if the weather is drawn for another (a mod drawing the level
- * again from elsewhere: a portal, a mirror), or drawn twice, they are built there and then, on the render thread, as
- * before. Each {@link Kind} is built into a buffer of its own and drawn at most once.
+ * again from elsewhere: a portal, a mirror), or drawn twice, or their build isn't done after a short wait
+ * ({@link #await}), they are built there and then, on the render thread, as before. Each {@link Kind} is built into a
+ * buffer of its own and drawn at most once.
  * <p>
  * The build reads the drops, and what they left where they landed, which only the client tick changes, when it
  * finishes the drops' step and lands them; the tick waits for a build under way, and drops it, first
@@ -38,6 +42,10 @@ public final class DropMeshes {
 
     // Room to start with, in bytes, for each kind: a few thousand drops, before the buffer grows
     private static final int INITIAL_BYTES = 256 * 1024;
+    // How long the weather's pass waits for a build under way ({@link #await}): about what building every kind on the
+    // render thread takes, so waiting longer doesn't pay. With the machine busy (90% of the CPU and more, the game
+    // catching up), the build's thread wasn't run for 10 to 30 ms while the render thread waited.
+    static final long WAIT_NANOS = 2_000_000L;
 
     /**
      * What is drawn, each in a pass of its own
@@ -125,7 +133,9 @@ public final class DropMeshes {
         CAMERA_MOVED("the camera moved after the level began to be drawn"),
         CAMERA_TURNED("the camera turned after the level began to be drawn"),
         PARTIAL_TICK("the partial tick changed after the level began to be drawn"),
-        SETTINGS("the drawing settings changed");
+        SETTINGS("the drawing settings changed"),
+        // Not logged: a busy machine does it now and then (see WAIT_NANOS)
+        LATE("their build wasn't done in time");
 
         final String reason;
 
@@ -261,17 +271,13 @@ public final class DropMeshes {
         if (!sources.hasAny(kind))
             return 0;
         var now = new Request(sources, PrecipitationRenderer.View.of(camera), partialTick, style);
-        var request = this.request;
-        Mismatch mismatch;
-        if (request == null)
-            mismatch = new Mismatch(Behind.NOT_BUILT, kind.description);
-        else if (this.taken[kind.ordinal()])
-            mismatch = new Mismatch(Behind.DRAWN_TWICE, kind.description);
-        else
-            mismatch = request.mismatch(now);
+        var mismatch = this.mismatch(kind, now);
         if (mismatch != null) {
             this.behind++;
             this.report(mismatch);
+            // What the build makes of it later isn't drawn
+            if (mismatch.kind() == Behind.LATE)
+                this.taken[kind.ordinal()] = true;
             var builder = tesselator.begin(VertexFormat.Mode.QUADS, kind.format);
             build(kind, builder, now);
             return draw(builder.build());
@@ -283,6 +289,43 @@ public final class DropMeshes {
         this.meshes[kind.ordinal()] = null;
         this.taken[kind.ordinal()] = true;
         return draw(mesh);
+    }
+
+    /**
+     * Why a kind can't be drawn from what was built ahead for the frame, or null if it can
+     */
+    @Nullable
+    Mismatch mismatch(Kind kind, Request now) {
+        var request = this.request;
+        if (request == null)
+            return new Mismatch(Behind.NOT_BUILT, kind.description);
+        if (this.taken[kind.ordinal()])
+            return new Mismatch(Behind.DRAWN_TWICE, kind.description);
+        var mismatch = request.mismatch(now);
+        if (mismatch != null)
+            return mismatch;
+        var running = this.pending;
+        return running != null && !running.isDone() ? new Mismatch(Behind.LATE, kind.description) : null;
+    }
+
+    /**
+     * Waits for the build under way to finish, if there is one, but no longer than {@link #WAIT_NANOS}: once a frame,
+     * before the first kind is drawn. Kinds drawn while it is still under way are built on the render thread instead
+     * of waiting for it, a starved build costing the frame no more than building them would.
+     */
+    public void await() {
+        var running = this.pending;
+        if (running == null || running.isDone())
+            return;
+        try {
+            running.get(WAIT_NANOS, TimeUnit.NANOSECONDS);
+        } catch (TimeoutException ignored) {
+            // Late: built on the render thread as they are drawn
+        } catch (ExecutionException ignored) {
+            // Thrown when drawn, from join
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static int draw(@Nullable MeshData mesh) {
@@ -299,7 +342,7 @@ public final class DropMeshes {
      * ahead. The diagnostics' Precipitation line says how often ("built ahead").
      */
     void report(Mismatch mismatch) {
-        if (this.reported.add(mismatch.kind()))
+        if (mismatch.kind() != Behind.LATE && this.reported.add(mismatch.kind()))
             this.logger.info("Rain and snow built ahead were built again on the render thread: %s (%s). If the diagnostics show them seldom built ahead, please report this along with your mod list.",
                     mismatch.kind().reason, mismatch.detail());
     }

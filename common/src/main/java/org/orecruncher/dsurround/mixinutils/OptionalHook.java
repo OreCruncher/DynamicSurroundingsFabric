@@ -102,6 +102,9 @@ public enum OptionalHook {
     private static final String MIXIN_PACKAGE = "org.orecruncher.dsurround.mixins.";
     // In the names of the methods MixinExtras adds
     private static final String MIXINEXTRAS = "$mixinextras$";
+    // In the name of where another mod's @WrapMethod moved the method's own code, ours with it: it runs when the
+    // wrapper calls the original (Iris wraps WeatherEffectRenderer.render)
+    private static final String WRAPPED = MIXINEXTRAS + "wrapped$";
 
     // The classes our hooks' mixins were applied to, by mixin; emptied once checked
     private static final Map<String, ClassNode> TARGETS = new ConcurrentHashMap<>();
@@ -220,13 +223,14 @@ public enum OptionalHook {
     /**
      * Whether the class's own code calls the handler: by its name, as Mixin renamed it (a prefix, then {@code $} and
      * the name), or through the bridge MixinExtras makes for a handler with sugar ({@code @Local}). The bridge calls
-     * the handler whether or not the injection found where to go, so calls from MixinExtras' methods don't count.
+     * the handler whether or not the injection found where to go, so calls from MixinExtras' methods don't count,
+     * except from the method's own code that another mod's {@code @WrapMethod} moved aside.
      */
     static boolean calls(ClassNode target, String handler) {
         var renamed = "$" + handler;
         var bridge = renamed + MIXINEXTRAS;
         for (var method : target.methods) {
-            if (method.name.contains(MIXINEXTRAS))
+            if (method.name.contains(MIXINEXTRAS) && !method.name.contains(WRAPPED))
                 continue;
             for (AbstractInsnNode insn : method.instructions) {
                 if (insn instanceof MethodInsnNode call

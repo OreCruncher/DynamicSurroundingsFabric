@@ -54,6 +54,10 @@ public final class Profiler {
         RECORDING
     }
 
+    // Added to the scene's settling the first time since the game started, for JFR to warm up in (see
+    // ProfileRecording.warmUp): the first recording's slowdown lasted about 8 seconds
+    static final int WARM_UP_SECONDS = 10;
+
     private static final AtomicBoolean BUSY = new AtomicBoolean();
     private static volatile State state = State.IDLE;
     // When what it is doing now ends, by System.nanoTime
@@ -110,8 +114,9 @@ public final class Profiler {
             return List.of(Component.translatable(KEY + "setupfailed", e.toString()));
         }
 
+        int settle = settle(scene, ProfileRecording.isWarm());
         var lines = new ArrayList<Component>();
-        lines.add(Component.translatable(KEY + "started", scene.commandName(), scene.what(), scene.settle(), seconds, scene.tip()));
+        lines.add(Component.translatable(KEY + "started", scene.commandName(), scene.what(), settle, seconds, scene.tip()));
         if (!scene.commands().isEmpty()) {
             var list = "/" + String.join(", /", scene.commands());
             var connection = mc.getConnection();
@@ -126,10 +131,10 @@ public final class Profiler {
         var folder = ContainerManager.resolve(IMinecraftDirectories.class).getModProfileDirectory();
         var file = folder.resolve(ProfileFiles.name(scene, LocalDateTime.now()));
         state = State.WAITING;
-        until = System.nanoTime() + scene.settle() * 1_000_000_000L;
+        until = System.nanoTime() + settle * 1_000_000_000L;
         var thread = new Thread(() -> {
             try {
-                record(scene, file, seconds, environment);
+                record(scene, settle, file, seconds, environment);
             } finally {
                 state = State.IDLE;
                 mc.execute(() -> {
@@ -143,9 +148,16 @@ public final class Profiler {
         return lines;
     }
 
-    private static void record(ProfileScene scene, Path file, int seconds, ProfileEnvironment environment) {
+    /**
+     * Seconds to wait before recording: the scene's, and the first time since the game started, time for JFR to warm up
+     */
+    static int settle(ProfileScene scene, boolean warm) {
+        return scene.settle() + (warm ? 0 : WARM_UP_SECONDS);
+    }
+
+    private static void record(ProfileScene scene, int settle, Path file, int seconds, ProfileEnvironment environment) {
         try {
-            Thread.sleep(scene.settle() * 1000L);
+            ProfileRecording.warmUp(Duration.ofSeconds(settle));
             state = State.RECORDING;
             until = System.nanoTime() + seconds * 1_000_000_000L;
             ProfileRecording.record(file, Duration.ofSeconds(seconds), environment);
