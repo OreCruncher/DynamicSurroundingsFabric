@@ -26,6 +26,10 @@ public final class SourceContext implements Callable<Void> {
     // Frequency of sound effect updates in thread schedule ticks.  Works out to be 3 times a second.
     private static final int UPDATE_FEQUENCY_TICKS = 7;
 
+    // Sounds starting may spend 2 ms calculating every 50 ms (a client tick): about four calculations that trace, at
+    // a hundred a second more than play usually starts, so only a burst is held back
+    private static final StartBudget START_BUDGET = new StartBudget(50_000_000L, 2_000_000L, System::nanoTime);
+
     private final Object sync = new Object();
     // One per reverb, shortest first; Efx decides which of the context's sends carries each
     private final LowPassData[] reverbs = new LowPassData[Efx.SENDS];
@@ -166,17 +170,27 @@ public final class SourceContext implements Callable<Void> {
     }
 
     /**
-     * Calculates and uploads straight away, when the sound starts playing. Called where {@link #tick()} is.
+     * Calculates and uploads straight away, when the sound starts playing, while the start budget lasts: past it, the
+     * sound starts without its effects and is due on the workers' next pass (see {@link StartBudget}). Called where
+     * {@link #tick()} is.
      */
     public void exec() {
-        final boolean timed = SoundSamples.isRecording();
-        final long began = timed ? System.nanoTime() : 0;
+        if (!START_BUDGET.mayCalculate()) {
+            // Due on the next pass: shouldExecute() is true when the count is a multiple of the frequency
+            this.updateCount = 0;
+            if (SoundSamples.isRecording())
+                SoundSamples.deferred();
+            return;
+        }
+        final long began = System.nanoTime();
         this.captureState();
         this.updateImpl();
         this.updateCount = Randomizer.current().nextInt(UPDATE_FEQUENCY_TICKS);
         this.tick();
-        if (timed)
-            SoundSamples.started(System.nanoTime() - began);
+        final long took = System.nanoTime() - began;
+        START_BUDGET.spend(took);
+        if (SoundSamples.isRecording())
+            SoundSamples.started(took);
     }
 
     private void updateImpl() {

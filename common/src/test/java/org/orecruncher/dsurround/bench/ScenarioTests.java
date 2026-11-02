@@ -85,7 +85,7 @@ public class ScenarioTests {
         var scenario = Scenario.read(Path.of("../scripts/bench/sound.json"));
         assertTrue(scenario.volume().orElseThrow() > 0);
         for (var scene : scenario.scenes().values())
-            assertEquals(2, scene.sounds().size());
+            assertFalse(scene.sounds().isEmpty());
         // Each run of a scene hears the same sounds: the occluded scene's from the same seeds as the box's
         var enclosed = scenario.scenes().get("enclosed").sounds();
         var occluded = scenario.scenes().get("occluded").sounds();

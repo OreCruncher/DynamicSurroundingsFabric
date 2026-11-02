@@ -407,6 +407,12 @@ def enhanced_sounds(jfr, recording):
     if calculations:
         print("  calculations: " + ", ".join(f"{kind} {n / len(running):.1f} a second ({100 * n / calculations:.0f}%)"
                                              for kind, n in kinds.items()))
+    # Sounds that started past the start budget: no calculation then, left to the workers' next pass
+    deferred, starts = total("deferred"), total("starts")
+    if deferred:
+        worst = max(int(number(f.get("deferred"))) for f in running)
+        print(f"  deferred starts: {deferred / len(running):.1f} a second ({100 * deferred / (deferred + starts):.0f}% of "
+              f"sounds starting), worst second {worst}")
 
 
 def callers(jfr, recording, args):

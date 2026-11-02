@@ -49,6 +49,7 @@ public final class SoundSamples {
      * Everything counted since the last take
      *
      * @param starts      calculations made as sounds started
+     * @param deferred    sounds that started past the start budget, without a calculation, left to the workers
      * @param updates     calculations the worker handed out
      * @param passes      the worker's passes, each handing out the updates due and waiting for them
      * @param uploads     filter uploads to the sources, on the thread playing them
@@ -59,11 +60,12 @@ public final class SoundSamples {
      * @param sourcesSum  the sounds being processed, added up over the passes
      * @param sourcesPeak the most sounds being processed in one pass
      */
-    record Second(Taken starts, Taken updates, Taken passes, Taken uploads, Taken traces, long shared, long reused,
+    record Second(Taken starts, long deferred, Taken updates, Taken passes, Taken uploads, Taken traces, long shared, long reused,
                   long skipped, long sourcesSum, long sourcesPeak) {
     }
 
     private static final Timed STARTS = new Timed();
+    private static final LongAdder DEFERRED = new LongAdder();
     private static final Timed UPDATES = new Timed();
     private static final Timed PASSES = new Timed();
     private static final Timed UPLOADS = new Timed();
@@ -104,6 +106,13 @@ public final class SoundSamples {
      */
     public static void started(long nanos) {
         STARTS.add(nanos);
+    }
+
+    /**
+     * A sound that started past the start budget, left to the workers
+     */
+    public static void deferred() {
+        DEFERRED.increment();
     }
 
     /**
@@ -158,7 +167,7 @@ public final class SoundSamples {
     }
 
     static Second take() {
-        return new Second(STARTS.take(), UPDATES.take(), PASSES.take(), UPLOADS.take(), TRACES.take(),
+        return new Second(STARTS.take(), DEFERRED.sumThenReset(), UPDATES.take(), PASSES.take(), UPLOADS.take(), TRACES.take(),
                 SHARED.sumThenReset(), REUSED.sumThenReset(), SKIPPED.sumThenReset(), SOURCES.sumThenReset(),
                 SOURCES_PEAK.getThenReset());
     }

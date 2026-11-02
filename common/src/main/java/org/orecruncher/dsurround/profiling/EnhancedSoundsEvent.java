@@ -44,6 +44,10 @@ public final class EnhancedSoundsEvent extends Event {
     @Description("The longest start, in milliseconds")
     double startPeak;
 
+    @Label("Deferred")
+    @Description("Sounds that started past the start budget, without a calculation, left to the worker threads")
+    int deferred;
+
     @Label("Updates")
     @Description("Calculations handed to the worker threads, each sound about three times a second")
     int updates;
@@ -109,6 +113,7 @@ public final class EnhancedSoundsEvent extends Event {
         event.starts = (int) second.starts().count();
         event.startMean = second.starts().meanMSecs();
         event.startPeak = second.starts().peakMSecs();
+        event.deferred = (int) second.deferred();
         event.updates = (int) second.updates().count();
         event.updateMean = second.updates().meanMSecs();
         event.updatePeak = second.updates().peakMSecs();

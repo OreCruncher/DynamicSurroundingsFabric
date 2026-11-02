@@ -171,6 +171,15 @@ the starts: at 20 new sounds a second, 10-12 ms of every second on the sound eng
 because most reuse their result. Frame times don't change between runs (about 1500 fps throughout): none of this is on
 the render thread.
 
+Since then, two changes (same scenario, later session):
+
+- **Chunk kept in hand between block reads** (`ChunkCachingView`): a trace 23-28% cheaper. Open 0.405 ms, enclosed
+  0.391, occluded 0.429; the sound engine's thread spends 7.5-8.5 ms a second on starts.
+- **Start budget** (`StartBudget`, 2 ms of start calculations every 50 ms): the `burst` scene starts 150 clicks a
+  second in the box. 96 a second are calculated as they start and 54 (37%) start without effects, calculated on the
+  workers' next pass; the sound engine's thread spends 30.6 ms a second on starts instead of about 48. At 20 a second
+  (`enclosed`) none are deferred.
+
 About 17 calculations a second are skipped in every scene. Six minecarts in a mineshaft about 240 blocks below play
 silent riding loops, which are skipped as out of range. The occluded scene skips about 9 more: hums 15-16 blocks
 away, just past their range.
