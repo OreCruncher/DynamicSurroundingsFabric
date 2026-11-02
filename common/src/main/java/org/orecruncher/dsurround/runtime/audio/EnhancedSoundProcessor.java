@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.threading.Tasks;
 import org.orecruncher.dsurround.lib.threading.Worker;
+import org.orecruncher.dsurround.profiling.SoundSamples;
 import org.orecruncher.dsurround.runtime.audio.effects.Efx;
 
 import java.util.concurrent.*;
@@ -42,6 +43,8 @@ public final class EnhancedSoundProcessor {
     private static Efx efx;
 
     private static Worker soundProcessor;
+    // The game's sounds being processed, counted by the last pass (the worker's thread only)
+    private static int liveSources;
     private static String diagnosticString = StringUtils.EMPTY;
 
     // Traces and shared results per client tick over the last second, and their sums (client thread only)
@@ -110,11 +113,13 @@ public final class EnhancedSoundProcessor {
         }
 
         isAvailable = true;
+        SoundSamples.setAvailable(true);
     }
 
     public static void deinitialize() {
         if (isAvailable()) {
             isAvailable = false;
+            SoundSamples.setAvailable(false);
             if (soundProcessor != null) {
                 // Waits for a run in progress to finish, so it isn't using the sources or effects cleared below
                 soundProcessor.stop();
@@ -237,6 +242,8 @@ public final class EnhancedSoundProcessor {
      * so offloading to a separate thread to keep it out of either the client tick or sound engine makes sense.
      */
     private static void processSounds() {
+        final boolean timed = SoundSamples.isRecording();
+        final long began = timed ? System.nanoTime() : 0;
         try {
             final ExecutorService pool = threadPool.get();
             assert pool != null;
@@ -249,6 +256,9 @@ public final class EnhancedSoundProcessor {
             // SourceContext catches and logs its own exceptions, so a task failing here threw an Error (a game class
             // changed under it, say)
             Tasks.awaitAll(tasks, TASK_ERRORS, "An enhanced sound task");
+
+            if (timed)
+                SoundSamples.pass(System.nanoTime() - began, liveSources);
 
         } catch (final Throwable t) {
             LOGGER.error(t, "Error in the enhanced sound processor");
@@ -264,11 +274,16 @@ public final class EnhancedSoundProcessor {
         final AtomicReferenceArray<SourceContext> current = sources;
         if (current == null)
             return;
+        int live = 0;
         for (int i = 0; i < current.length(); i++) {
             final SourceContext ctx = current.get(i);
-            if (ctx != null && ctx.shouldExecute())
-                action.accept(ctx);
+            if (ctx != null) {
+                live++;
+                if (ctx.shouldExecute())
+                    action.accept(ctx);
+            }
         }
+        liveSources = live;
     }
 
     /**

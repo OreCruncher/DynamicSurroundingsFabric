@@ -21,8 +21,9 @@ import java.util.Set;
  * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
  * ({@link FramesEvent}), each client tick handler's time every tick
- * ({@link HandlerTickEvent}) and what random block effects did by distance once a second
- * ({@link RandomBlockSamplesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * ({@link HandlerTickEvent}), what random block effects did by distance once a second
+ * ({@link RandomBlockSamplesEvent}) and what enhanced sound processing did once a second
+ * ({@link EnhancedSoundsEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
@@ -106,6 +107,8 @@ final class ProfileRecording {
         var samples = new SampleTotals();
         Runnable sampleWriter = samples::write;
         FlightRecorder.addPeriodicEvent(RandomBlockSamplesEvent.class, sampleWriter);
+        Runnable soundWriter = ProfileRecording::writeSounds;
+        FlightRecorder.addPeriodicEvent(EnhancedSoundsEvent.class, soundWriter);
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
@@ -115,14 +118,17 @@ final class ProfileRecording {
                 HandlerTicks.start(ProfileRecording::writeHandlerTick);
                 FrameTimes.start();
                 RandomBlockSamples.start(samples::add);
+                SoundSamples.start();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
                 HandlerTicks.stop();
                 FrameTimes.stop();
                 RandomBlockSamples.stop();
+                SoundSamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
+                writeSounds();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -136,9 +142,11 @@ final class ProfileRecording {
             HandlerTicks.stop();
             FrameTimes.stop();
             RandomBlockSamples.stop();
+            SoundSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
             FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
+            FlightRecorder.removePeriodicEvent(soundWriter);
             Files.deleteIfExists(unfinished);
         }
     }
@@ -192,6 +200,7 @@ final class ProfileRecording {
         FlightRecorder.register(RenderTimerEvent.class);
         FlightRecorder.register(FramesEvent.class);
         FlightRecorder.register(RandomBlockSamplesEvent.class);
+        FlightRecorder.register(EnhancedSoundsEvent.class);
     }
 
     private static void enableOurs(Recording recording) {
@@ -201,6 +210,7 @@ final class ProfileRecording {
         recording.enable(FeatureEvent.class);
         recording.enable(HandlerTickEvent.class);
         recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(EnhancedSoundsEvent.class).withPeriod(Duration.ofSeconds(1));
     }
 
     /**
@@ -230,6 +240,13 @@ final class ProfileRecording {
         var second = FrameTimes.take();
         if (second != null)
             FramesEvent.write(second);
+    }
+
+    /**
+     * An event for what enhanced sound processing did since the last
+     */
+    private static void writeSounds() {
+        EnhancedSoundsEvent.write(SoundSamples.isAvailable(), SoundSamples.take());
     }
 
     /**

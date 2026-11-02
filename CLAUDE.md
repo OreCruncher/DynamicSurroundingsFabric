@@ -45,6 +45,10 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   handler's time every tick
   (`dsurround.HandlerTick`, through `profiling/HandlerTicks`), what random block effects sampled, found, started,
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
+  what enhanced sound processing did once a second (`dsurround.EnhancedSounds`, through `profiling/SoundSamples`:
+  calculations as sounds start, on the sound engine's thread, which waits for them, and those deferred past the start
+  budget; the workers' updates and passes; uploads; each calculation traced (timed), shared, reused or skipped; whether
+  it ran at all),
   what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
@@ -125,11 +129,16 @@ Client-side Minecraft mod (MIT). Minecraft 1.21.1, Fabric and NeoForge through A
   `InstanceEmitter`, or a voice) and its OpenAL context's `Efx`. Uploads happen on the thread where that context is
   current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
   `SourceProviders` hand it. Worker threads read the world only through `WorldContext.blocks`
-  (`lib/block/NoBlockEntityView`): on the client `Level.getBlockEntity` can create a block entity from any thread,
-  and mod blocks call it from shape methods, which corrupted chunk maps (#166). Nor may they call a `SoundInstance`'s
+  (`lib/block/NoBlockEntityView`), or, for the traces, each thread's `lib/block/ChunkCachingView` (keeps the chunk in
+  hand between reads; a quarter of a trace was the level looking chunks up): on the client `Level.getBlockEntity` can
+  create a block entity from any thread, and mod blocks call it from shape methods, which corrupted chunk maps (#166).
+  Nor may they call a `SoundInstance`'s
   `getVolume()`/`getPitch()`: each draws on the instance's `LegacyRandomSource`, which the sound engine also uses on the
   client thread and which throws when two threads meet in it; take what the worker needs when the sound starts
-  (`InstanceEmitter.hearingRangeSq`).
+  (`InstanceEmitter.hearingRangeSq`). A sound's first calculation runs as it starts, on the thread playing it (the
+  sound engine's, which waits), within `StartBudget` (2 ms every 50 ms, in `SourceContext`); past it the sound starts
+  without effects and the workers' next pass calculates it. Measured on 1.21.11 and 26.2 with the bench's `sound.json`
+  (0.4.9 has no bench).
 - Simple Voice Chat (`runtime/audio/voicechat`): voices play in its own OpenAL context, so they get their own `Efx`
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the

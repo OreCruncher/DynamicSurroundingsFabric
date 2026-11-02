@@ -510,6 +510,76 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingHasTheEnhancedSounds() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        // Counted before the recording: not in it
+        SoundSamples.started(9_000_000);
+        assertFalse(SoundSamples.isRecording());
+        SoundSamples.setAvailable(true);
+        try {
+            var recorder = new Thread(() -> {
+                try {
+                    ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            recorder.start();
+            // A pass a tick, as the worker would: 4 sounds, one starting (2 ms) and two updates (1 and 3 ms); of their
+            // calculations one traced (1.5 ms), two shared, one reused its own and one was skipped
+            while (recorder.isAlive()) {
+                if (SoundSamples.isRecording()) {
+                    SoundSamples.started(2_000_000);
+                    SoundSamples.deferred();
+                    SoundSamples.updated(1_000_000);
+                    SoundSamples.updated(3_000_000);
+                    SoundSamples.traced(1_500_000);
+                    SoundSamples.shared();
+                    SoundSamples.shared();
+                    SoundSamples.reused();
+                    SoundSamples.skipped();
+                    SoundSamples.pass(5_000_000, 4);
+                }
+                Thread.sleep(50);
+            }
+            recorder.join();
+        } finally {
+            SoundSamples.setAvailable(false);
+        }
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.EnhancedSounds"))
+                .toList();
+        assertFalse(events.isEmpty());
+        int passes = 0;
+        for (var event : events) {
+            assertTrue(event.getBoolean("available"));
+            int n = event.getInt("passes");
+            passes += n;
+            assertEquals(n, event.getInt("starts"));
+            assertEquals(n, event.getInt("deferred"));
+            assertEquals(2 * n, event.getInt("updates"));
+            assertEquals(n, event.getInt("traced"));
+            assertEquals(2 * n, event.getInt("shared"));
+            assertEquals(n, event.getInt("reused"));
+            assertEquals(n, event.getInt("skipped"));
+            if (n == 0)
+                continue;
+            assertEquals(4F, event.getFloat("sources"), 1e-6);
+            assertEquals(4, event.getInt("sourcesPeak"));
+            assertEquals(2.0, event.getDouble("startMean"), 1e-9);
+            assertEquals(2.0, event.getDouble("startPeak"), 1e-9);
+            assertEquals(2.0, event.getDouble("updateMean"), 1e-9);
+            assertEquals(3.0, event.getDouble("updatePeak"), 1e-9);
+            assertEquals(5.0, event.getDouble("passMean"), 1e-9);
+            assertEquals(1.5, event.getDouble("traceMean"), 1e-9);
+            assertEquals(1.5, event.getDouble("tracePeak"), 1e-9);
+        }
+        assertTrue(passes > 0);
+        assertFalse(SoundSamples.isRecording());
+    }
+
+    @Test
     void randomBlockSamplesGoInTheirShell() {
         var center = new BlockPos(100, 64, -200);
         assertEquals(RandomBlockSamples.STARTS, RandomBlockSamples.index(center, center, RandomBlockSamples.STARTS));
@@ -564,7 +634,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

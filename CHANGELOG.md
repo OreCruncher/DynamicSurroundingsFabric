@@ -15,6 +15,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 
 **AI Disclosure**
 * Built the configuration presets, measured the performance presets' values with benchmark runs, and backported them from 1.21.11
+* Measured enhanced sound processing with benchmark runs, made its ray traces cheaper and bounded its work on the sound engine's thread, and backported the changes from 1.21.11
 
 **What's New**
 * Configuration presets: rows of buttons at the top of the config screen set groups of options in one go
@@ -32,6 +33,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * The falling drops' tick copies them to the next set an array at a time instead of drop by drop, about a third less work for its thread
 * The first `/dsprofile` recording since the game started waits 10 seconds longer before recording: Java Flight Recorder starts up in that time, so the seconds of slowdown its first start causes are no longer in the recording
 * In `/dsprofile` recordings and the diagnostics, time the weather spends waiting for the drops built ahead is shown on its own line, "Waiting for Quads", instead of being counted against the damp spots
+* Enhanced sound processing's ray traces cost about a quarter less: the blocks along a ray are read from the chunk already in hand instead of looking it up for every block
+* A burst of sounds starting at once (an explosion, a mob farm) no longer holds up the game's sound thread: sounds starting beyond about 2 ms of calculation every 50 ms play without their reverb and occlusion for their first moment, until the next update gives them their effects
+* `/dsprofile` recordings include what enhanced sound processing did each second
 
 **Fixes**
 * Rain and snow were built twice a frame, the second time on the render thread, while a mod changed the camera's direction during the frame (Rainbows does, as its rainbow is drawn); they now follow the camera's rotation itself. If it happens for another reason, the log says why, once
