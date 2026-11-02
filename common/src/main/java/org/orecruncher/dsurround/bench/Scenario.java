@@ -48,8 +48,12 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      * @param pitch    where to look up and down, if given
      * @param commands commands run once the player is there (time, weather, /dsweather)
      * @param profile  the /dsprofile scene to record with
+     * @param shotCommands commands run just before the screenshot (a strike of lightning to catch in it), as the
+     *                 player would type them, as {@code commands} are
+     * @param shotDelay ticks from those commands to the screenshot, for what they start to show
      */
-    public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands, String profile) {
+    public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands, String profile,
+                        List<String> shotCommands, int shotDelay) {
     }
 
     /**
@@ -80,7 +84,9 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                     s.has("yaw") ? s.get("yaw").getAsFloat() : null,
                     s.has("pitch") ? s.get("pitch").getAsFloat() : null,
                     strings(s, "commands"),
-                    s.has("profile") ? s.get("profile").getAsString() : "general"));
+                    s.has("profile") ? s.get("profile").getAsString() : "general",
+                    strings(s, "shotCommands"),
+                    s.has("shotDelay") ? Math.max(0, s.get("shotDelay").getAsInt()) : 0));
         }
 
         // Named groups of settings, for runs to share ("use"): such as every effect turned off

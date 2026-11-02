@@ -18,13 +18,15 @@ public class MixinLevelRenderer {
 
     /**
      * The world's entities, block entities and particles have been submitted for drawing this frame; add the
-     * footprints, the light level numbers and the health pop-offs. Outside any render pass.
+     * footprints, the light level numbers and the health pop-offs, and with a shader pack the lightning. Outside any
+     * render pass.
      */
     @Inject(method = "submitFeatures(Lnet/minecraft/client/renderer/state/level/LevelRenderState;Lnet/minecraft/client/renderer/SubmitNodeCollector;Z)V", at = @At("TAIL"))
     private void dsurround$submitLightLevels(LevelRenderState levelRenderState, SubmitNodeCollector collector, boolean renderOutline, CallbackInfo ci) {
         Footprints.submitAll(collector, levelRenderState.cameraRenderState);
         LightLevelRenderer.submit(collector, levelRenderState.cameraRenderState);
         HealthPopoffs.submit(collector, levelRenderState.cameraRenderState);
+        MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().submitForShaderPack(collector, levelRenderState.cameraRenderState));
     }
 
     /**

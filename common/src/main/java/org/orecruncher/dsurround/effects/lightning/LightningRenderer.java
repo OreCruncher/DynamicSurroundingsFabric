@@ -15,17 +15,25 @@ import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
+import org.orecruncher.dsurround.effects.RenderFailSafe;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.compat.IrisCompat;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -43,8 +51,9 @@ import java.util.function.Consumer;
  * its depth, which hides it behind hills, and cut off by the clouds'.
  * <p>
  * Ribbons are as wide as a channel looks close by, and never thinner than about a pixel far away. Without its
- * pipelines ({@link #SHADERS}) there is no lightning of the mod's, and the game's bolts are drawn. Everything here runs
- * on the render thread.
+ * pipelines ({@link #SHADERS}) there is no lightning of the mod's, and the game's bolts are drawn; with a shader pack
+ * the strikes are submitted the game's way instead (see {@link #submitForShaderPack}). Everything here runs on the
+ * render thread.
  */
 public final class LightningRenderer {
 
@@ -115,8 +124,17 @@ public final class LightningRenderer {
     private static ByteBufferBuilder meshBytes;
     private static final MeshDraw CHANNEL_DRAW = new MeshDraw("lightning");
     private static final MeshDraw GLOW_DRAW = new MeshDraw("lightning cloud glow");
+    // Submitting it the game's way, with a shader pack (see submitForShaderPack)
+    private static final RenderFailSafe SHADER_PACK_FAIL_SAFE = new RenderFailSafe("lightning with a shader pack", Library.LOGGER);
 
     private LightningRenderer() {
+    }
+
+    /**
+     * Whether the strikes are drawn the game's way, for a shader pack (see {@link #submitForShaderPack})
+     */
+    public static boolean forShaderPack() {
+        return IrisCompat.isShaderPackInUse();
     }
 
     private static RenderPipeline pipeline(String location, boolean channels, boolean fabulous) {
@@ -142,9 +160,12 @@ public final class LightningRenderer {
     }
 
     /**
-     * Whether lightning can be drawn: its pipelines compiled, drawing hasn't failed since, and no shader pack is in use
+     * Whether lightning can be drawn: its pipelines compiled and drawing hasn't failed since; or, with a shader pack in
+     * use, drawing it the game's way hasn't failed (see {@link #submitForShaderPack})
      */
     public static boolean isUsable() {
+        if (forShaderPack())
+            return !SHADER_PACK_FAIL_SAFE.isFailed();
         for (var shader : SHADERS)
             if (!shader.isUsable())
                 return false;
@@ -164,7 +185,8 @@ public final class LightningRenderer {
      */
     public static int draw(List<Strike> strikes, Camera camera, RenderTarget target, boolean fabulous, double nowTicks,
                            float fogEnd, boolean glow) {
-        if (strikes.isEmpty())
+        // With a shader pack the strikes are submitted with the frame's geometry instead (see submitForShaderPack)
+        if (strikes.isEmpty() || forShaderPack())
             return 0;
         var channels = fabulous ? CHANNELS_DEPTH : CHANNELS;
         var glowShader = fabulous ? GLOW_DEPTH : GLOW;
@@ -318,6 +340,128 @@ public final class LightningRenderer {
             prevRy = ry;
             prevRz = rz;
             prevA = alpha;
+        }
+    }
+
+    /**
+     * With a shader pack in use, no shader of ours can run, and the pack draws the world to targets of its own, which a
+     * pass of ours doesn't reach: the strikes are submitted with the frame's geometry as it is collected, the game's
+     * way, as its bolts are, with its lightning render type, which Iris draws with the pack's lightning program. The
+     * channels are plain colored ribbons, layered as the game layers its bolts to glow (a wide faint halo, a narrower
+     * glow, a white core). No cloud glow: its look is all the shader's.
+     *
+     * @return how many strikes were submitted, for the diagnostics
+     */
+    public static int submitForShaderPack(SubmitNodeCollector collector, CameraRenderState camera, List<Strike> strikes,
+                                          double nowTicks, float fogEnd) {
+        if (strikes.isEmpty() || SHADER_PACK_FAIL_SAFE.isFailed())
+            return 0;
+        // Copied: the list is the handler's, filled again next frame, and this is drawn later in the frame
+        var toDraw = List.copyOf(strikes);
+        double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
+        RENDER_TIMER.count(toDraw.size());
+        collector.submitCustomGeometry(new PoseStack(), RenderTypes.lightning(), (pose, consumer) -> SHADER_PACK_FAIL_SAFE.run(() -> {
+            var matrix = pose.pose();
+            for (var strike : toDraw) {
+                var shape = strike.shape();
+                if (shape == null)
+                    continue;
+                float age = strike.age(nowTicks);
+                if (age < 0F || strike.isDone(age))
+                    continue;
+                float ox = (float) (strike.x() - camX);
+                float oy = (float) (strike.y() - camY);
+                float oz = (float) (strike.z() - camZ);
+                float seen = Strikes.visibility(strike.distance(), fogEnd);
+                for (var channel : shape.channels())
+                    layeredRibbon(consumer, matrix, strike, channel, ox, oy, oz, age, seen);
+            }
+        }, () -> {}));
+        return toDraw.size();
+    }
+
+    // The layers of a channel drawn the game's way, from the outside in: how wide, against the ribbon's full width
+    // (the halo the shader draws); how much of the channel's light each gives as alpha (the game's lightning blend
+    // adds the color times alpha); the last is the white core
+    private static final float[] LAYER_WIDTH = {1F, 0.3F, 1.5F / HALO};
+    private static final float[] LAYER_LIGHT = {0.3F, 0.9F, 2.5F};
+    /**
+     * The narrowest a core is drawn with a shader pack, against {@link #MIN_CORE_ANGLE}: with no shader of ours to
+     * soften its edges, a line a pixel or two wide is lost to the pack's temporal anti-aliasing and fog
+     */
+    static final float PACK_MIN_CORE = 3F;
+    /**
+     * How much nearer the camera each layer drawn with a shader pack is than the one around it, against its distance
+     */
+    private static final float LAYER_NEARER = 0.003F;
+
+    /**
+     * One channel as ribbons facing the camera, as {@link #ribbon} lays it out, one ribbon a layer
+     */
+    private static void layeredRibbon(VertexConsumer builder, Matrix4f matrix, Strike strike, BoltShape.Channel channel,
+                                      float ox, float oy, float oz, float age, float seen) {
+        int n = channel.size();
+        if (n < 2)
+            return;
+        var arrival = channel.arrival();
+        int depth = channel.depth();
+        if (strike.channelBrightness(depth, arrival[0], age) * seen < MIN_LIGHT)
+            return;
+        float width = CORE_HALF_WIDTH * (float) Math.pow(BRANCH_WIDTH, depth);
+        int layers = LAYER_WIDTH.length;
+        // Each layer's last corners, left then right, and alpha
+        float[] prev = new float[layers * 7];
+        float sideX = 0F, sideY = 0F, sideZ = 1F;
+        for (int i = 0; i < n; i++) {
+            float px = ox + channel.x(i), py = oy + channel.y(i), pz = oz + channel.z(i);
+            int a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1);
+            float tx = channel.x(b) - channel.x(a), ty = channel.y(b) - channel.y(a), tz = channel.z(b) - channel.z(a);
+            float cx = ty * pz - tz * py, cy = tz * px - tx * pz, cz = tx * py - ty * px;
+            float cl = Mth.sqrt(cx * cx + cy * cy + cz * cz);
+            if (cl > 1.0E-6F) {
+                sideX = cx / cl;
+                sideY = cy / cl;
+                sideZ = cz / cl;
+            }
+            float distance = Mth.sqrt(px * px + py * py + pz * pz);
+            float along = (float) i / (n - 1);
+            float taper = depth == 0 ? 1F : 1F - 0.6F * along;
+            float fade = depth == 0 ? 1F : 1F - 0.85F * along;
+            float half = Math.max(width * taper, distance * MIN_CORE_ANGLE * PACK_MIN_CORE) * HALO;
+            float light = strike.channelBrightness(depth, arrival[i], age) * seen * fade;
+            if (light < MIN_LIGHT)
+                light = 0F;
+            for (int l = 0; l < layers; l++) {
+                float h = half * LAYER_WIDTH[l];
+                // Each layer a little nearer than the one around it, along the line of sight, so it looks the same:
+                // the game's lightning writes depth, and layers in one plane fought over it, leaving the core in dashes
+                float k = 1F - LAYER_NEARER * l;
+                float lx = (px - sideX * h) * k, ly = (py - sideY * h) * k, lz = (pz - sideZ * h) * k;
+                float rx = (px + sideX * h) * k, ry = (py + sideY * h) * k, rz = (pz + sideZ * h) * k;
+                float alpha = Math.min(light * LAYER_LIGHT[l], 1F);
+                boolean core = l == layers - 1;
+                float r = core ? 1F : CHANNEL_R, g = core ? 1F : CHANNEL_G, bl = core ? 1F : CHANNEL_B;
+                int o = l * 7;
+                // Both ways round: the game's lightning pipeline culls back faces, and where a sharp bend twists a
+                // quad, half of it faces away whichever way it is wound (one way round, every quad was culled)
+                if (i > 0 && (prev[o + 6] > 0F || alpha > 0F)) {
+                    builder.addVertex(matrix, prev[o + 3], prev[o + 4], prev[o + 5]).setColor(r, g, bl, prev[o + 6]);
+                    builder.addVertex(matrix, prev[o], prev[o + 1], prev[o + 2]).setColor(r, g, bl, prev[o + 6]);
+                    builder.addVertex(matrix, lx, ly, lz).setColor(r, g, bl, alpha);
+                    builder.addVertex(matrix, rx, ry, rz).setColor(r, g, bl, alpha);
+                    builder.addVertex(matrix, prev[o], prev[o + 1], prev[o + 2]).setColor(r, g, bl, prev[o + 6]);
+                    builder.addVertex(matrix, prev[o + 3], prev[o + 4], prev[o + 5]).setColor(r, g, bl, prev[o + 6]);
+                    builder.addVertex(matrix, rx, ry, rz).setColor(r, g, bl, alpha);
+                    builder.addVertex(matrix, lx, ly, lz).setColor(r, g, bl, alpha);
+                }
+                prev[o] = lx;
+                prev[o + 1] = ly;
+                prev[o + 2] = lz;
+                prev[o + 3] = rx;
+                prev[o + 4] = ry;
+                prev[o + 5] = rz;
+                prev[o + 6] = alpha;
+            }
         }
     }
 

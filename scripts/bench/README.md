@@ -50,6 +50,9 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
 - **Commands** are typed as the player would: the server's (`time`, `weather`, `gamerule`, `summon`) run on the
   built-in server with full permission, as the player and where they stand; the mod's (`dsweather ...`) on the client.
   1.21.11's gamerules are snake case (`advance_time`, `advance_weather`, `spawn_mobs`).
+- **Shot commands**: a scene's `"shotCommands"` run just before its screenshot, as `commands` are, and `"shotDelay"`
+  is how many ticks the shot then waits for what they start to show (2 at least): `["dsweather lightning"]` with a delay
+  of 6 to 10 catches a strike in the shot.
 
 ## Scenes
 

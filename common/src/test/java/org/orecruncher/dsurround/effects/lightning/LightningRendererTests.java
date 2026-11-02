@@ -1,5 +1,7 @@
 package org.orecruncher.dsurround.effects.lightning;
 
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -10,6 +12,12 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LightningRendererTests {
+
+    // LightningRenderer's pipelines reach Blocks through Constants
+    static {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     @Test
     void lightGoesInTheAlphaHalved() {
