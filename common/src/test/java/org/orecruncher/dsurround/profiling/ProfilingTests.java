@@ -571,6 +571,7 @@ public class ProfilingTests {
             while (recorder.isAlive()) {
                 if (SoundSamples.isRecording()) {
                     SoundSamples.started(2_000_000);
+                    SoundSamples.deferred();
                     SoundSamples.updated(1_000_000);
                     SoundSamples.updated(3_000_000);
                     SoundSamples.traced(1_500_000);
@@ -597,6 +598,7 @@ public class ProfilingTests {
             int n = event.getInt("passes");
             passes += n;
             assertEquals(n, event.getInt("starts"));
+            assertEquals(n, event.getInt("deferred"));
             assertEquals(2 * n, event.getInt("updates"));
             assertEquals(n, event.getInt("traced"));
             assertEquals(2 * n, event.getInt("shared"));

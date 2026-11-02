@@ -81,6 +81,24 @@
         {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 13, "radius": 16, "seed": 2}
       ],
       "profile": "general"
+    },
+    // The box with clicks starting 150 times a second, more than the start budget (2 ms of calculating every 50 ms)
+    // lets the sound engine's thread spend: the rest start without their effects and are left to the workers. About
+    // 120 play at once, under OpenAL's 247 sources
+    "burst": {
+      "biome": "minecraft:plains",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "tp @s ~ 245 ~",
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 150, "minRadius": 1.5, "radius": 5, "seed": 1}
+      ],
+      "profile": "general"
     }
   },
   "runs": [
@@ -89,6 +107,7 @@
     {"label": "enclosed", "scene": "enclosed", "use": "quiet"},
     {"label": "enclosed-simplified", "scene": "enclosed", "use": "quiet", "settings": {"enhancedSounds.simplifiedSharedAirspace": true}},
     {"label": "occluded", "scene": "occluded", "use": "quiet"},
-    {"label": "occluded-occlusion", "scene": "occluded", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}}
+    {"label": "occluded-occlusion", "scene": "occluded", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
+    {"label": "burst", "scene": "burst", "use": "quiet"}
   ]
 }

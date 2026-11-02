@@ -27,9 +27,10 @@ TIMER = re.compile(r"^  (\S.*?)\s+([\d.]+)\s+[\d.]+\s+[\d.]+\s+([\d.]+)\s+[\d.]+
 # A handler row: name, ran %, p50, p95, p99, max, mean a tick, share
 HANDLER = re.compile(r"^  (\S.*?)\s+\d+%\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)\s+[\d.]+%$")
 # Enhanced sounds: a row of work (a second, mean, peak, ms a second), the sources and the traces
-SOUND_ROW = re.compile(r"^  (start|update|pass|upload|trace)\s+([\d.]+)\s+([\d.]+)\s+(?:[\d.]+|-)\s+([\d.]+)$")
+SOUND_ROW = re.compile(r"^  (start|update|pass|upload|trace)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+|-)\s+([\d.]+)$")
 SOUND_SOURCES = re.compile(r"^  sources: mean ([\d.]+)")
 SOUND_KIND = re.compile(r"(traced|shared|reused|skipped) ([\d.]+) a second")
+SOUND_DEFERRED = re.compile(r"^  deferred starts: ([\d.]+) a second")
 WHOLE_TICK = re.compile(r"^  whole tick\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)$")
 
 
@@ -53,9 +54,13 @@ def summarize(recording):
         elif section == "timers" and (m := TIMER.match(line)) and m.group(1) != "effect":
             numbers["timers"][m.group(1).strip()] = (float(m.group(2)), float(m.group(3)))
         elif section == "sound" and (m := SOUND_ROW.match(line)):
-            numbers["sound"][m.group(1)] = (float(m.group(2)), float(m.group(3)), float(m.group(4)))
+            # A second, mean, ms a second, peak (none for uploads)
+            numbers["sound"][m.group(1)] = (float(m.group(2)), float(m.group(3)), float(m.group(5)),
+                                            float(m.group(4)) if m.group(4) != "-" else 0.0)
         elif section == "sound" and (m := SOUND_SOURCES.match(line)):
             numbers["sound"]["sources"] = float(m.group(1))
+        elif section == "sound" and (m := SOUND_DEFERRED.match(line)):
+            numbers["sound"]["deferred"] = float(m.group(1))
         elif section == "sound" and line.startswith("  calculations:"):
             for kind, rate in SOUND_KIND.findall(line):
                 numbers["sound"][kind] = float(rate)
@@ -134,18 +139,19 @@ def main():
         sounded = [label for label in labels if any(r["sound"] for r in runs[label])]
         if sounded:
             # Starts are on the sound engine's thread, which waits for them; updates and passes on the workers'. A trace
-            # is the rays of one calculation that traced, inside a start or an update
-            print(f"\n  {'enhanced sounds, ms':{width}} {'sources':>8} {'starts/s':>9} {'start':>8} {'start ms/s':>11} "
-                  f"{'update':>8} {'update ms/s':>12} {'pass':>8} {'trace':>8} {'traced/s':>9} {'shared/s':>9} "
-                  f"{'reused/s':>9} {'skipped/s':>10}")
+            # is the rays of one calculation that traced, inside a start or an update. Deferred: sounds that started past
+            # the start budget, left to the workers; start peak is the longest single start, its ms/s the thread's time
+            print(f"\n  {'enhanced sounds, ms':{width}} {'sources':>8} {'starts/s':>9} {'start':>8} {'start pk':>9} "
+                  f"{'start ms/s':>11} {'deferred/s':>11} {'update':>8} {'update ms/s':>12} {'pass':>8} {'trace':>8} "
+                  f"{'traced/s':>9} {'shared/s':>9} {'reused/s':>9} {'skipped/s':>10}")
             for label in sounded:
                 sound = [r["sound"] for r in runs[label]]
-                row = lambda key, i: mean([s.get(key, (0.0, 0.0, 0.0))[i] for s in sound])
+                row = lambda key, i: mean([s.get(key, (0.0, 0.0, 0.0, 0.0))[i] for s in sound])
                 value = lambda key: mean([s.get(key, 0.0) for s in sound])
                 print(f"  {label:{width}} {value('sources'):8.1f} {row('start', 0):9.1f} {row('start', 1):8.3f} "
-                      f"{row('start', 2):11.3f} {row('update', 1):8.3f} {row('update', 2):12.3f} {row('pass', 1):8.3f} "
-                      f"{row('trace', 1):8.3f} {value('traced'):9.1f} {value('shared'):9.1f} {value('reused'):9.1f} "
-                      f"{value('skipped'):10.1f}")
+                      f"{row('start', 3):9.3f} {row('start', 2):11.3f} {value('deferred'):11.1f} {row('update', 1):8.3f} "
+                      f"{row('update', 2):12.3f} {row('pass', 1):8.3f} {row('trace', 1):8.3f} {value('traced'):9.1f} "
+                      f"{value('shared'):9.1f} {value('reused'):9.1f} {value('skipped'):10.1f}")
 
         handlers = list(dict.fromkeys(h for label in labels for r in runs[label] for h in r["handlers"]))
         # The costliest first, the whole tick last

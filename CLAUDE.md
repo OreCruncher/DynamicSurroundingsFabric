@@ -193,11 +193,15 @@ checking in game.
   `InstanceEmitter`, or a voice) and its OpenAL context's `Efx`. Uploads happen on the thread where that context is
   current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
   `SourceProviders` hand it. Worker threads read the world only through `WorldContext.blocks`
-  (`lib/block/NoBlockEntityView`): on the client `Level.getBlockEntity` can create a block entity from any thread,
-  and mod blocks call it from shape methods, which corrupted chunk maps (#166). Nor may they call a `SoundInstance`'s
+  (`lib/block/NoBlockEntityView`), or, for the traces, each thread's `lib/block/ChunkCachingView` (keeps the chunk in
+  hand between reads; a quarter of a trace was the level looking chunks up): on the client `Level.getBlockEntity` can
+  create a block entity from any thread, and mod blocks call it from shape methods, which corrupted chunk maps (#166).
+  Nor may they call a `SoundInstance`'s
   `getVolume()`/`getPitch()`: each draws on the instance's `LegacyRandomSource`, which the sound engine also uses on the
   client thread and which throws when two threads meet in it; take what the worker needs when the sound starts
-  (`InstanceEmitter.hearingRangeSq`).
+  (`InstanceEmitter.hearingRangeSq`). A sound's first calculation runs as it starts, on the thread playing it (the
+  sound engine's, which waits), within `StartBudget` (2 ms every 50 ms, in `SourceContext`); past it the sound starts
+  without effects and the workers' next pass calculates it. `sound.json`'s `burst` scene goes past it.
 - Simple Voice Chat (`runtime/audio/voicechat`): voices play in its own OpenAL context, so they get their own `Efx`
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the
