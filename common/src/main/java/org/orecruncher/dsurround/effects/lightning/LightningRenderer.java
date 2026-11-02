@@ -343,12 +343,14 @@ public final class LightningRenderer {
      * pass of ours doesn't reach: the strikes are submitted with the frame's geometry as it is collected, the game's
      * way, as its bolts are, with its lightning render type, which Iris draws with the pack's lightning program. The
      * channels are plain colored ribbons, layered as the game layers its bolts to glow (a wide faint halo, a narrower
-     * glow, a white core). No cloud glow: its look is all the shader's.
+     * glow, a white core). The cloud's glow, without the shader's cloud texture, is soft discs lying along the cloud
+     * base, fading out to their rims: a flash hidden in the cloud (sheet lightning) is nothing else.
      *
+     * @param glow whether to draw the cloud's glow: not when the mod's clouds are lit by it instead
      * @return how many strikes were submitted, for the diagnostics
      */
     public static int submitForShaderPack(SubmitNodeCollector collector, CameraRenderState camera, List<Strike> strikes,
-                                          double nowTicks, float fogEnd) {
+                                          double nowTicks, float fogEnd, boolean glow) {
         if (strikes.isEmpty() || SHADER_PACK_FAIL_SAFE.isFailed())
             return 0;
         // Copied: the list is the handler's, filled again next frame, and this is drawn later in the frame
@@ -358,9 +360,6 @@ public final class LightningRenderer {
         collector.submitCustomGeometry(new PoseStack(), RenderTypes.lightning(), (pose, consumer) -> SHADER_PACK_FAIL_SAFE.run(() -> {
             var matrix = pose.pose();
             for (var strike : toDraw) {
-                var shape = strike.shape();
-                if (shape == null)
-                    continue;
                 float age = strike.age(nowTicks);
                 if (age < 0F || strike.isDone(age))
                     continue;
@@ -368,27 +367,89 @@ public final class LightningRenderer {
                 float oy = (float) (strike.y() - camY);
                 float oz = (float) (strike.z() - camZ);
                 float seen = Strikes.visibility(strike.distance(), fogEnd);
-                for (var channel : shape.channels())
-                    layeredRibbon(consumer, matrix, strike, channel, ox, oy, oz, age, seen);
+                var shape = strike.shape();
+                if (shape != null)
+                    for (var channel : shape.channels())
+                        layeredRibbon(consumer, matrix, strike, channel, ox, oy, oz, age, seen);
+                if (glow) {
+                    var cloud = strike.glow();
+                    for (int p = 0; p < cloud.count(); p++) {
+                        float alpha = Math.min(strike.glowBrightness(p, age) * seen * PACK_GLOW_LIGHT, 1F);
+                        if (alpha >= MIN_LIGHT)
+                            glowDisc(consumer, matrix, ox + cloud.x(p), oy + cloud.y(p), oz + cloud.z(p), cloud.radius(p), alpha);
+                    }
+                }
             }
         }, () -> {}));
         return toDraw.size();
     }
 
     // The layers of a channel drawn the game's way, from the outside in: how wide, against the ribbon's full width
-    // (the halo the shader draws); how much of the channel's light each gives as alpha (the game's lightning blend
-    // adds the color times alpha); the last is the white core
-    private static final float[] LAYER_WIDTH = {1F, 0.3F, 1.5F / HALO};
+    // (the halo the shader draws, fading out, where these are flat: at its full width they looked thick); how much of
+    // the channel's light each gives as alpha (the game's lightning blend adds the color times alpha); the last is the
+    // white core, as wide as the shader's
+    private static final float[] LAYER_WIDTH = {0.6F, 0.2F, 1F / HALO};
     private static final float[] LAYER_LIGHT = {0.3F, 0.9F, 2.5F};
     /**
-     * The narrowest a core is drawn with a shader pack, against {@link #MIN_CORE_ANGLE}: with no shader of ours to
-     * soften its edges, a line a pixel or two wide is lost to the pack's temporal anti-aliasing and fog
+     * How much of a glow patch's light its middle gives as alpha, drawn with a shader pack: with nothing of the shader's
+     * cloud texture to break it up, a disc lit as brightly reads as a lamp
      */
-    static final float PACK_MIN_CORE = 3F;
+    private static final float PACK_GLOW_LIGHT = 0.6F;
+    // The rings and slices of a glow disc drawn with a shader pack
+    private static final int GLOW_RINGS = 4;
+    private static final int GLOW_SLICES = 16;
+    private static final float[] GLOW_COS = new float[GLOW_SLICES + 1];
+    private static final float[] GLOW_SIN = new float[GLOW_SLICES + 1];
+
+    static {
+        for (int i = 0; i <= GLOW_SLICES; i++) {
+            GLOW_COS[i] = Mth.cos(Mth.TWO_PI * i / GLOW_SLICES);
+            GLOW_SIN[i] = Mth.sin(Mth.TWO_PI * i / GLOW_SLICES);
+        }
+    }
+
     /**
      * How much nearer the camera each layer drawn with a shader pack is than the one around it, against its distance
      */
     private static final float LAYER_NEARER = 0.003F;
+
+    /**
+     * A patch of lit cloud drawn with a shader pack: a disc lying flat along the cloud base, as {@link #cloudPatch}
+     * lies, brightest in the middle and fading out to its rim, the color's own blend standing in for the shader's soft
+     * edge. Rings of small quads, not long slices from the middle: the game's lightning writes depth, and its quads are
+     * sorted far to near by their middles, which for long slices of overlapping discs put a nearer one first, cutting
+     * dark wedges out of those behind. Written both ways round, as the ribbons are: the pipeline culls back faces, and
+     * a disc is seen from above or below.
+     */
+    private static void glowDisc(VertexConsumer builder, Matrix4f matrix, float cx, float cy, float cz, float r, float alpha) {
+        for (int ring = 0; ring < GLOW_RINGS; ring++) {
+            float in = r * ring / GLOW_RINGS, out = r * (ring + 1) / GLOW_RINGS;
+            float inAlpha = glowFade(alpha, ring), outAlpha = glowFade(alpha, ring + 1);
+            for (int i = 0; i < GLOW_SLICES; i++) {
+                float ix0 = cx + GLOW_COS[i] * in, iz0 = cz + GLOW_SIN[i] * in;
+                float ix1 = cx + GLOW_COS[i + 1] * in, iz1 = cz + GLOW_SIN[i + 1] * in;
+                float ox0 = cx + GLOW_COS[i] * out, oz0 = cz + GLOW_SIN[i] * out;
+                float ox1 = cx + GLOW_COS[i + 1] * out, oz1 = cz + GLOW_SIN[i + 1] * out;
+                builder.addVertex(matrix, ix0, cy, iz0).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.addVertex(matrix, ix1, cy, iz1).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.addVertex(matrix, ox1, cy, oz1).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.addVertex(matrix, ox0, cy, oz0).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.addVertex(matrix, ix1, cy, iz1).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.addVertex(matrix, ix0, cy, iz0).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.addVertex(matrix, ox0, cy, oz0).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.addVertex(matrix, ox1, cy, oz1).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
+            }
+        }
+    }
+
+    /**
+     * A glow disc's alpha at the inside of a ring (the rings' count at its rim): falling off as the square of the
+     * distance from the rim, softer than straight down
+     */
+    private static float glowFade(float alpha, int ring) {
+        float toRim = 1F - (float) ring / GLOW_RINGS;
+        return alpha * toRim * toRim;
+    }
 
     /**
      * One channel as ribbons facing the camera, as {@link #ribbon} lays it out, one ribbon a layer
@@ -422,7 +483,7 @@ public final class LightningRenderer {
             float along = (float) i / (n - 1);
             float taper = depth == 0 ? 1F : 1F - 0.6F * along;
             float fade = depth == 0 ? 1F : 1F - 0.85F * along;
-            float half = Math.max(width * taper, distance * MIN_CORE_ANGLE * PACK_MIN_CORE) * HALO;
+            float half = Math.max(width * taper, distance * MIN_CORE_ANGLE) * HALO;
             float light = strike.channelBrightness(depth, arrival[i], age) * seen * fade;
             if (light < MIN_LIGHT)
                 light = 0F;
