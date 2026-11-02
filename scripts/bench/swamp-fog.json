@@ -16,8 +16,10 @@
   "scenes": {
     "swamp": {
       "biome": "minecraft:swamp",
-      // Early morning, when the mist would lie; the profile scene holds it at full thickness and clears the weather
-      "commands": ["time set 23500"],
+      // Early morning, when the mist would lie; the profile scene holds it at full thickness and clears the weather.
+      // Down on the swamp floor, in the mist as a player walking through it is: the scene found is often a treetop,
+      // above the mist, where rays leave it in a few steps; standing in it, Fabulous cost about three times as much.
+      "commands": ["time set 23500", "execute positioned over motion_blocking_no_leaves run tp @s ~ ~0.1 ~"],
       "profile": "ground_fog"
     }
   },
