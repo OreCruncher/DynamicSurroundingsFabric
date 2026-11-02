@@ -25,7 +25,8 @@ Left out, by mod id (read from each jar, so a renamed file doesn't slip through)
     skews its timings); --keep <mod id> puts one back
 Set in the pack's config for the development run, where a mod is fetched (DEV_RUN_SETTINGS): options that turn off a
 part of a mod that fails only there, as Fabric runs an obfuscated game (1.21.x) under Mojang's names, where a mixin of
-a published mod can clash with a name the game has there (ModernFix's worldgen allocation optimization).
+a published mod can clash with a name the game has there (ModernFix's worldgen allocation optimization); and what a
+pack ships off that runs need on (Voxy's rendering, for the far terrain beside our effects).
 What was fetched, left out and set, and why, is written to the folder's pack.json.
 """
 
@@ -56,12 +57,16 @@ UNATTENDED = {
     "crash_assistant": "opens a window that waits for someone to close it",
     "dynamic_fps": "slows or stops drawing while the window isn't focused",
 }
-# Options set in a fetched mod's config for a Fabric run of an obfuscated game, where part of the mod fails to apply
-# under Mojang's names: mod id -> (config file, {option: value}, why). Properties files: an option's line is replaced,
-# or added
+# Options set in a fetched mod's config for the development run: mod id -> (config file, {option: value}, why, only
+# for a Fabric run of an obfuscated game, where part of the mod fails to apply under Mojang's names). Properties files:
+# an option's line is replaced, or added. JSON files: the key is set, in a file the pack has (left to the mod's
+# defaults otherwise)
 DEV_RUN_SETTINGS = {
     "modernfix": ("config/modernfix-mixins.properties", {"mixin.perf.worldgen_allocation": "false"},
-                  "its worldgen allocation mixin overwrites NoiseChunk.wrap with less visibility than Mojang's names give it"),
+                  "its worldgen allocation mixin overwrites NoiseChunk.wrap with less visibility than Mojang's names give it",
+                  True),
+    "voxy": ("config/voxy-config.json", {"enable_rendering": True},
+             "packs ship it off for players to turn on, and runs need the far terrain drawn with our effects", False),
 }
 # The folders a pack replaces each fetch; anything else in the run folder (saves, logs, bench results) is kept
 REPLACED = ["mods", "resourcepacks", "shaderpacks", "config"]
@@ -121,20 +126,27 @@ def put_back(dest):
     shutil.rmtree(aside)
 
 
-def dev_run_settings(dest, ids):
+def dev_run_settings(dest, ids, obfuscated_fabric):
     """Sets DEV_RUN_SETTINGS' options for the fetched mods among them; returns what was set"""
     done = []
-    for mod, (file, options, why) in DEV_RUN_SETTINGS.items():
-        if mod not in ids:
+    for mod, (file, options, why, obfuscated_only) in DEV_RUN_SETTINGS.items():
+        if mod not in ids or (obfuscated_only and not obfuscated_fabric):
             continue
         path = dest / file
-        text = path.read_text(encoding="utf-8") if path.exists() else ""
-        for option, value in options.items():
-            line = f"{option}={value}"
-            text, n = re.subn(rf"^{re.escape(option)}=.*$", line, text, flags=re.MULTILINE)
-            if not n:
-                text += ("" if not text or text.endswith("\n") else "\n") + line + "\n"
-            done.append({"mod": mod, "file": file, "option": option, "value": value, "why": why})
+        if path.suffix == ".json":
+            if not path.exists():
+                continue
+            config = json.loads(path.read_text(encoding="utf-8"))
+            config.update(options)
+            text = json.dumps(config, indent=2) + "\n"
+        else:
+            text = path.read_text(encoding="utf-8") if path.exists() else ""
+            for option, value in options.items():
+                line = f"{option}={value}"
+                text, n = re.subn(rf"^{re.escape(option)}=.*$", line, text, flags=re.MULTILINE)
+                if not n:
+                    text += ("" if not text or text.endswith("\n") else "\n") + line + "\n"
+        done += [{"mod": mod, "file": file, "option": o, "value": v, "why": why} for o, v in options.items()]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     return done
@@ -299,11 +311,9 @@ def main():
 
         put_back(dest)
 
-    settings = []
-    if args.platform == "fabric" and game_version.startswith("1."):
-        settings = dev_run_settings(dest, fetched_ids)
-        for s in settings:
-            print(f"  set {s['option']}={s['value']} in {s['file']} ({s['mod']}: {s['why']})")
+    settings = dev_run_settings(dest, fetched_ids, args.platform == "fabric" and game_version.startswith("1."))
+    for s in settings:
+        print(f"  set {s['option']}={json.dumps(s['value'])} in {s['file']} ({s['mod']}: {s['why']})")
 
     shader_pack = None
     if args.shader_pack:

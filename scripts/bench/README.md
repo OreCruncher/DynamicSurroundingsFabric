@@ -91,7 +91,8 @@ didn't apply, drawing gone wrong.
   Fabric runs it under Mojang's names, where a mixin can also clash with a name the game has there, or find nothing
   without its refmap (Enchantment Glint Outline, FallingTree: left out). Where only one option of a mod fails, the
   fetch turns that option off in the pack's config instead (`DEV_RUN_SETTINGS`: ModernFix's worldgen allocation), and
-  `pack.json` lists it.
+  `pack.json` lists it. The same table turns on what packs ship off and runs need, on any game: Voxy's rendering, so
+  its far terrain is drawn beside our effects (`renderClouds` in `options.txt` stays the pack's).
 - **Running** (`runClientPack`): the pack's folder, an 8 GB heap, and none of the mods the development client
   otherwise plays with (Biomes O' Plenty, TerraBlender, Serene Seasons, GlitchCore, Simple Voice Chat, Mod Menu), so
   the world is the pack's. A pack made for a newer loader than `gradle.properties` has: `-Pneoforge_version=<the
