@@ -1,7 +1,7 @@
 # Benchmarks
 
-What Dynamic Surroundings' effects cost to draw, measured by the bench runner, with the numbers the Performance presets
-(Low/Medium/High) were chosen from. Kept as a baseline: after a change to an effect, rerun its scenario and compare.
+What Dynamic Surroundings' effects cost to draw, and what enhanced sound processing costs, measured by the bench
+runner, with the numbers the Performance presets (Low/Medium/High) were chosen from. Kept as a baseline: after a change to an effect, rerun its scenario and compare.
 
 ## Method
 
@@ -142,6 +142,39 @@ close the camera is.
 The default's second repeat had a 2-second hitch (its frame GPU mean read 2.28 ms), so only the first is shown. Low
 saves about 0.2 ms of dust GPU and the clouds' 0.37 ms a tick.
 
+### Enhanced sounds (`sound.json`)
+
+Button clicks played around the player 20 times a second and 8 beacon hums kept playing, at y 245, out of the reverb
+rays' reach of the ground: in open air (sounds 1.5-6 blocks away), inside a hollow stone box 13 blocks across (1.5-5
+blocks away), and in the box with the sounds outside it (13-16 blocks away). The mod's ambient sounds are off. Measured
+at the commit that added this scenario (after `787ccf11`); master volume 5%.
+
+- **Trace** is the rays of one calculation that traced (occlusion and reverb), mean.
+- **Start** is a sound's calculation and upload as it starts. It runs on the sound engine's thread, which waits for
+  it. **Starts ms/s** is that thread's time on it each second.
+- **Update ms/s** is the worker threads' time on the recalculations, each sound about three times a second.
+- Calculations a second: **traced**; **reused**, the sound's own last result while nothing changed. Almost none took
+  another sound's result (shared), so that column is left out: the clicks rarely land on the same block.
+
+| Run | Trace ms | Start ms | Starts ms/s | Update ms/s | Traced/s | Reused/s |
+|---|---|---|---|---|---|---|
+| open | 0.528 | 0.520 | 10.5 | 3.8 | 26.2 | 45.4 |
+| open, occlusion on | 0.560 | 0.555 | 11.1 | 3.8 | 25.9 | 45.1 |
+| enclosed | 0.508 | 0.482 | 9.8 | 3.6 | 25.5 | 45.9 |
+| enclosed, simplified shared airspace | 0.366 | 0.349 | 7.1 | 2.9 | 26.2 | 45.0 |
+| occluded | 0.597 | 0.589 | 11.9 | 3.5 | 25.3 | 38.0 |
+| occluded, occlusion on | 0.615 | 0.610 | 12.3 | 3.1 | 24.2 | 39.0 |
+
+A trace costs about 0.5-0.6 ms wherever it is. Open air costs as much as the box: every ray travels its full 128
+blocks. Simplified shared airspace makes a trace about 28% cheaper, and occlusion adds 3-4%. The cost that matters is
+the starts: at 20 new sounds a second, 10-12 ms of every second on the sound engine's thread. The updates cost less
+because most reuse their result. Frame times don't change between runs (about 1500 fps throughout): none of this is on
+the render thread.
+
+About 17 calculations a second are skipped in every scene. Six minecarts in a mineshaft about 240 blocks below play
+silent riding loops, which are skipped as out of range. The occluded scene skips about 9 more: hums 15-16 blocks
+away, just past their range.
+
 ## Field recordings
 
 These are `/dsprofile` recordings from the ATM10 modpack (NeoForge, 0.4.9 on Minecraft 1.21.1), on the
@@ -158,8 +191,9 @@ same machine at 2560x1369. They are not repeatable like the bench, but show how 
 
 ## Rerunning
 
-- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. A full set (these five) takes
-  about an hour; `compat.json` is a visual check, not a measurement.
+- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. A full set (these six) takes
+  about an hour and a quarter; `compat.json` is a visual check, not a measurement. `sound.json` needs a sound device
+  (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud, quietly.
 - Check each scenario's screenshots before trusting its numbers: the camera must be where the scenario means it to be
   (in the mist, facing the glass).
 - Read `--spread`: when a label's repeats are further apart than the differences between labels, look for a hitch in

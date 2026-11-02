@@ -55,6 +55,9 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   the classic aurora's shape (bands, distance, height...) and the pixels its quads covered a frame, overdraw counted,
   once a second while drawn (`dsurround.Aurora`, through `profiling/AuroraSamples`; `AuroraCoverage` clips the quads
   with the level's projection, captured in `MixinLevelRenderer`),
+  what enhanced sound processing did once a second (`dsurround.EnhancedSounds`, through `profiling/SoundSamples`:
+  calculations as sounds start, on the sound engine's thread, which waits for them; the workers' updates and passes;
+  uploads; each calculation traced (timed), shared, reused or skipped; whether it ran at all),
   what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
@@ -62,7 +65,7 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what
   running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
   in `FIRST_HANDLERS`/`HANDLER_CHAINS`; random block effects' rate a block by distance against what
-  `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; the classic aurora's shape and coverage against its GPU time (ns a covered pixel); threads, mod packages, our frames, allocation, GC;
+  `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; the classic aurora's shape and coverage against its GPU time (ns a covered pixel); enhanced sounds' work a second; threads, mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
   fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
@@ -77,7 +80,9 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   (biomes found and remembered in the world's `dsurround-bench.json`; others marked with `/dsbench mark <name>`) with
   a screenshot, writes `bench-results/<scenario>-<time>/manifest.json` (`latest.txt` names it) and closes the game.
   Use it for comparing settings instead of asking for recordings; `python scripts/bench-summary.py [folder]` tables
-  each label's frame, render timers and tick handlers, averaged over the repeats. The code (`bench/`, started by
+  each label's frame, render timers and tick handlers (and enhanced sounds' work where recorded), averaged over the
+  repeats. A scene's `"sounds"` play seeded one-shots or loops around the player through warm-up and recording
+  (`sound.json`: open air, a stone box, sounds outside the box; needs a sound device and a master volume above 0). The code (`bench/`, started by
   reflection from `profiling/BenchHook` in development only) is left out of the published jars; `remapJar` fails if it
   gets in.
 - Modpacks (`scripts/bench/README.md`, "Modpacks"): `python scripts/modpack-fetch.py <modrinth slug>` fetches one into

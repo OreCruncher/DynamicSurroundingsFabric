@@ -24,7 +24,8 @@ import java.util.Set;
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
  * ({@link FramesEvent}), each client tick handler's time every tick
  * ({@link HandlerTickEvent}), what random block effects did by distance once a second
- * ({@link RandomBlockSamplesEvent}) and the classic aurora's shape and screen coverage once a second ({@link AuroraEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * ({@link RandomBlockSamplesEvent}), the classic aurora's shape and screen coverage once a second ({@link AuroraEvent}) and what enhanced sound
+ * processing did once a second ({@link EnhancedSoundsEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
@@ -111,6 +112,8 @@ final class ProfileRecording {
         var auroras = new AuroraTotals();
         Runnable auroraWriter = auroras::write;
         FlightRecorder.addPeriodicEvent(AuroraEvent.class, auroraWriter);
+        Runnable soundWriter = ProfileRecording::writeSounds;
+        FlightRecorder.addPeriodicEvent(EnhancedSoundsEvent.class, soundWriter);
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
@@ -121,6 +124,7 @@ final class ProfileRecording {
                 FrameTimes.start();
                 RandomBlockSamples.start(samples::add);
                 AuroraSamples.start(auroras::add);
+                SoundSamples.start();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
@@ -128,9 +132,11 @@ final class ProfileRecording {
                 FrameTimes.stop();
                 RandomBlockSamples.stop();
                 AuroraSamples.stop();
+                SoundSamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
                 auroras.write();
+                writeSounds();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -145,10 +151,12 @@ final class ProfileRecording {
             FrameTimes.stop();
             RandomBlockSamples.stop();
             AuroraSamples.stop();
+            SoundSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
             FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
             FlightRecorder.removePeriodicEvent(auroraWriter);
+            FlightRecorder.removePeriodicEvent(soundWriter);
             Files.deleteIfExists(unfinished);
         }
     }
@@ -203,6 +211,7 @@ final class ProfileRecording {
         FlightRecorder.register(FramesEvent.class);
         FlightRecorder.register(RandomBlockSamplesEvent.class);
         FlightRecorder.register(AuroraEvent.class);
+        FlightRecorder.register(EnhancedSoundsEvent.class);
     }
 
     private static void enableOurs(Recording recording) {
@@ -213,6 +222,7 @@ final class ProfileRecording {
         recording.enable(HandlerTickEvent.class);
         recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(AuroraEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(EnhancedSoundsEvent.class).withPeriod(Duration.ofSeconds(1));
     }
 
     /**
@@ -242,6 +252,13 @@ final class ProfileRecording {
         var second = FrameTimes.take();
         if (second != null)
             FramesEvent.write(second);
+    }
+
+    /**
+     * An event for what enhanced sound processing did since the last
+     */
+    private static void writeSounds() {
+        EnhancedSoundsEvent.write(SoundSamples.isAvailable(), SoundSamples.take());
     }
 
     /**

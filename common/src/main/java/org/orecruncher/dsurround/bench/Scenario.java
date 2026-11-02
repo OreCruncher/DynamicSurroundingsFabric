@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 
@@ -34,11 +35,13 @@ import java.util.OptionalLong;
  * @param width      the window's width to set for the session, if given, and {@code height} its height: what a GPU
  *                   draws scales with the pixels, so runs to compare need the same size
  * @param screenshot whether each run takes a screenshot as it starts recording
+ * @param volume     the master volume to set for the session, 0 to 1, if given: a sound whose volume works out to 0 isn't
+ *                   played at all, so isn't processed either
  * @param scenes     the scenes, by name
  * @param runs       the runs, in order
  */
 public record Scenario(String name, String world, OptionalLong seed, List<String> setup, int warmup, int record, int repeats,
-                       @Nullable Boolean vsync, OptionalInt maxFps, OptionalInt width, OptionalInt height, boolean screenshot, Map<String, Scene> scenes, List<Run> runs) {
+                       @Nullable Boolean vsync, OptionalInt maxFps, OptionalInt width, OptionalInt height, boolean screenshot, OptionalDouble volume, Map<String, Scene> scenes, List<Run> runs) {
 
     /**
      * Where a run is recorded.
@@ -51,9 +54,26 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      * @param shotCommands commands run just before the screenshot (a strike of lightning to catch in it), as the
      *                 player would type them, as {@code commands} are
      * @param shotDelay ticks from those commands to the screenshot, for what they start to show
+     * @param sounds   sounds played around the player from the end of the commands to the end of the recording
      */
     public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands, String profile,
-                        List<String> shotCommands, int shotDelay) {
+                        List<String> shotCommands, int shotDelay, List<Sounds> sounds) {
+    }
+
+    /**
+     * A sound a scene plays around the player, at random places in a shell around where they stood when it began.
+     *
+     * @param id        the sound event
+     * @param perSecond one-shots played a second, if more than 0
+     * @param count     loops kept playing, if more than 0 (a sound made to loop: a beacon's hum)
+     * @param minRadius the shell's inside, in blocks from the player's eyes
+     * @param radius    the shell's outside
+     * @param volume    each sound's volume
+     * @param pitch     each sound's pitch
+     * @param seed      where the places and variants come from, the same each run
+     */
+    public record Sounds(String id, double perSecond, int count, double minRadius, double radius, float volume, float pitch,
+                         long seed) {
     }
 
     /**
@@ -86,7 +106,8 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                     strings(s, "commands"),
                     s.has("profile") ? s.get("profile").getAsString() : "general",
                     strings(s, "shotCommands"),
-                    s.has("shotDelay") ? Math.max(0, s.get("shotDelay").getAsInt()) : 0));
+                    s.has("shotDelay") ? Math.max(0, s.get("shotDelay").getAsInt()) : 0,
+                    sounds(s)));
         }
 
         // Named groups of settings, for runs to share ("use"): such as every effect turned off
@@ -140,6 +161,7 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                 video.has("width") ? OptionalInt.of(video.get("width").getAsInt()) : OptionalInt.empty(),
                 video.has("height") ? OptionalInt.of(video.get("height").getAsInt()) : OptionalInt.empty(),
                 !json.has("screenshots") || json.get("screenshots").getAsBoolean(),
+                json.has("volume") ? OptionalDouble.of(json.get("volume").getAsDouble()) : OptionalDouble.empty(),
                 scenes, runs);
     }
 
@@ -155,6 +177,32 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
             order.addAll(pass);
         }
         return order;
+    }
+
+    private static List<Sounds> sounds(JsonObject scene) {
+        var list = new ArrayList<Sounds>();
+        if (!scene.has("sounds"))
+            return list;
+        for (var element : scene.getAsJsonArray("sounds")) {
+            var o = element.getAsJsonObject();
+            if (!o.has("id"))
+                throw new IllegalArgumentException("a scene's sound needs an id");
+            var sound = new Sounds(
+                    o.get("id").getAsString(),
+                    o.has("perSecond") ? o.get("perSecond").getAsDouble() : 0,
+                    o.has("count") ? o.get("count").getAsInt() : 0,
+                    o.has("minRadius") ? o.get("minRadius").getAsDouble() : 0,
+                    o.has("radius") ? o.get("radius").getAsDouble() : 8,
+                    o.has("volume") ? o.get("volume").getAsFloat() : 1,
+                    o.has("pitch") ? o.get("pitch").getAsFloat() : 1,
+                    o.has("seed") ? o.get("seed").getAsLong() : 1);
+            if (sound.perSecond() <= 0 && sound.count() <= 0)
+                throw new IllegalArgumentException("sound " + sound.id() + " needs a perSecond or a count");
+            if (sound.minRadius() < 0 || sound.radius() < sound.minRadius())
+                throw new IllegalArgumentException("sound " + sound.id() + " needs 0 <= minRadius <= radius");
+            list.add(sound);
+        }
+        return list;
     }
 
     private static List<String> strings(JsonObject json, String member) {

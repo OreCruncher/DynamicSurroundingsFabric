@@ -2,7 +2,8 @@
 """
 Summarizes a bench results folder (scripts/bench/README.md): each run's recording through jfr-summary.py, the runs of
 one label averaged over the scenario's repeats, as tables to compare the settings: the frame (fps, GPU and CPU time
-drawing it), each render timer (GPU and CPU ms a frame), and each client tick handler (ms a tick), with the client tick.
+drawing it), each render timer (GPU and CPU ms a frame), each client tick handler (ms a tick), with the client tick,
+and enhanced sound processing where a recording has it (scripts/bench/sound.json).
 
     python scripts/bench-summary.py <results folder>          (default: the newest, from bench-results/latest.txt)
     python scripts/bench-summary.py <folder> --spread          also each label's lowest and highest run
@@ -25,6 +26,10 @@ FPS = re.compile(r"^\s+(\d+) fps; frame mean ([\d.]+)")
 TIMER = re.compile(r"^  (\S.*?)\s+([\d.]+)\s+[\d.]+\s+[\d.]+\s+([\d.]+)\s+[\d.]+\s+[\d.]+\s+\d+\s+\S+\s+\S+\s+\S+$")
 # A handler row: name, ran %, p50, p95, p99, max, mean a tick, share
 HANDLER = re.compile(r"^  (\S.*?)\s+\d+%\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)\s+[\d.]+%$")
+# Enhanced sounds: a row of work (a second, mean, peak, ms a second), the sources and the traces
+SOUND_ROW = re.compile(r"^  (start|update|pass|upload|trace)\s+([\d.]+)\s+([\d.]+)\s+(?:[\d.]+|-)\s+([\d.]+)$")
+SOUND_SOURCES = re.compile(r"^  sources: mean ([\d.]+)")
+SOUND_KIND = re.compile(r"(traced|shared|reused|skipped) ([\d.]+) a second")
 WHOLE_TICK = re.compile(r"^  whole tick\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s+([\d.]+)$")
 
 
@@ -32,12 +37,13 @@ def summarize(recording):
     """The numbers of one recording, from jfr-summary.py's text"""
     text = subprocess.run([sys.executable, str(SCRIPTS / "jfr-summary.py"), str(recording)],
                           capture_output=True, text=True, encoding="utf-8", errors="replace").stdout
-    numbers = {"frame": {}, "timers": {}, "handlers": {}}
+    numbers = {"frame": {}, "timers": {}, "handlers": {}, "sound": {}}
     section = None
     for line in text.splitlines():
         if line.startswith("== "):
             section = "timers" if line.startswith("== Render timers") else \
-                "handlers" if line.startswith("== Client tick handlers") else None
+                "handlers" if line.startswith("== Client tick handlers") else \
+                "sound" if line.startswith("== Enhanced sounds") else None
             continue
         if m := FPS.match(line):
             numbers["frame"]["fps"] = float(m.group(1))
@@ -46,6 +52,13 @@ def summarize(recording):
             numbers["frame"]["cpu"] = float(m.group(2))
         elif section == "timers" and (m := TIMER.match(line)) and m.group(1) != "effect":
             numbers["timers"][m.group(1).strip()] = (float(m.group(2)), float(m.group(3)))
+        elif section == "sound" and (m := SOUND_ROW.match(line)):
+            numbers["sound"][m.group(1)] = (float(m.group(2)), float(m.group(3)), float(m.group(4)))
+        elif section == "sound" and (m := SOUND_SOURCES.match(line)):
+            numbers["sound"]["sources"] = float(m.group(1))
+        elif section == "sound" and line.startswith("  calculations:"):
+            for kind, rate in SOUND_KIND.findall(line):
+                numbers["sound"][kind] = float(rate)
         elif section == "handlers" and (m := WHOLE_TICK.match(line)):
             numbers["handlers"]["(whole tick)"] = float(m.group(1))
         elif section == "handlers" and (m := HANDLER.match(line)):
@@ -88,7 +101,9 @@ def main():
             continue
         runs[run["label"]].append(summarize(folder / run["recording"]))
         scenes[run["label"]] = run["scene"]
-        flags = [f for f in ("terrainNotSettled", "error") if run.get(f)]
+        flags = [f for f in ("terrainNotSettled", "error", "soundsMuted") if run.get(f)]
+        if run.get("enhancedSounds") is False:
+            flags.append("enhanced sounds not running")
         if flags:
             print(f"  {run['index']:02d} {run['label']}: {', '.join(flags)}")
 
@@ -115,6 +130,22 @@ def main():
                     values = [r["timers"].get(t, (0.0, 0.0)) for r in runs[label]]
                     cells.append(f"{mean([v[0] for v in values]):.3f}/{mean([v[1] for v in values]):.3f}")
                 print(f"  {label:{width}}" + "".join(f" {c:>20}" for c in cells))
+
+        sounded = [label for label in labels if any(r["sound"] for r in runs[label])]
+        if sounded:
+            # Starts are on the sound engine's thread, which waits for them; updates and passes on the workers'. A trace
+            # is the rays of one calculation that traced, inside a start or an update
+            print(f"\n  {'enhanced sounds, ms':{width}} {'sources':>8} {'starts/s':>9} {'start':>8} {'start ms/s':>11} "
+                  f"{'update':>8} {'update ms/s':>12} {'pass':>8} {'trace':>8} {'traced/s':>9} {'shared/s':>9} "
+                  f"{'reused/s':>9} {'skipped/s':>10}")
+            for label in sounded:
+                sound = [r["sound"] for r in runs[label]]
+                row = lambda key, i: mean([s.get(key, (0.0, 0.0, 0.0))[i] for s in sound])
+                value = lambda key: mean([s.get(key, 0.0) for s in sound])
+                print(f"  {label:{width}} {value('sources'):8.1f} {row('start', 0):9.1f} {row('start', 1):8.3f} "
+                      f"{row('start', 2):11.3f} {row('update', 1):8.3f} {row('update', 2):12.3f} {row('pass', 1):8.3f} "
+                      f"{row('trace', 1):8.3f} {value('traced'):9.1f} {value('shared'):9.1f} {value('reused'):9.1f} "
+                      f"{value('skipped'):10.1f}")
 
         handlers = list(dict.fromkeys(h for label in labels for r in runs[label] for h in r["handlers"]))
         # The costliest first, the whole tick last
