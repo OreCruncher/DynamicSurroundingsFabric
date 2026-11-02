@@ -390,7 +390,7 @@ public class LightningHandler extends AbstractClientHandler {
             this.toDraw.add(active.strike);
         var partialTick = GameUtils.getMC().getDeltaTracker().getGameTimeDeltaPartialTick(false);
         this.drawn = LightningRenderer.submitForShaderPack(collector, camera, this.toDraw, level.getGameTime() + partialTick,
-                this.fogHandler.viewReach());
+                this.fogHandler.viewReach(), !this.clouds.isLit());
     }
 
     /**
