@@ -371,13 +371,16 @@ public final class ScenarioRunner {
                 return false;
             }
             // The screenshot as recording starts, without the HUD (chat, the profile's indicator): hidden for a couple of
-            // ticks, so a frame is drawn without it, then taken and the HUD shown again
+            // ticks, so a frame is drawn without it, then taken and the HUD shown again. The scene's shot commands run
+            // as the HUD is hidden, and the shot waits their delay
             if (this.scenario.screenshot() && !arrival.shot && Profiler.state() == Profiler.State.RECORDING) {
                 var options = Minecraft.getInstance().options;
                 if (arrival.shotTick == 0) {
                     arrival.shotTick = this.stepTicks;
                     options.hideGui = true;
-                } else if (this.stepTicks >= arrival.shotTick + 2) {
+                    for (var command : scene.shotCommands())
+                        this.command(command);
+                } else if (this.stepTicks >= arrival.shotTick + Math.max(2, scene.shotDelay())) {
                     this.screenshot(tag, result);
                     options.hideGui = false;
                     arrival.shot = true;

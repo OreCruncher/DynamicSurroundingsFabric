@@ -4,7 +4,9 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.SectionPos;
@@ -349,6 +351,9 @@ public class LightningHandler extends AbstractClientHandler {
      * weather's target: with Fabulous graphics a target of its own, otherwise the main one
      */
     public void render() {
+        // With a shader pack they were submitted with the frame's geometry (see submitForShaderPack)
+        if (LightningRenderer.forShaderPack())
+            return;
         this.drawn = 0;
         if (!this.hasStrikes())
             return;
@@ -365,6 +370,28 @@ public class LightningHandler extends AbstractClientHandler {
         // mod's clouds aren't there to be lit by it (see lightClouds)
         this.drawn = LightningRenderer.draw(this.toDraw, minecraft.gameRenderer.getMainCamera(), OutputTarget.WEATHER_TARGET.getRenderTarget(),
                 fabulous, level.getGameTime() + partialTick, this.fogHandler.viewReach(), !this.clouds.isLit());
+    }
+
+    /**
+     * With a shader pack in use, submits the strikes with the frame's geometry as it is collected, the game's way, as
+     * its bolts are: the pack draws the world to targets of its own, which the weather pass's drawing doesn't reach
+     * (see LightningRenderer.submitForShaderPack)
+     */
+    public void submitForShaderPack(SubmitNodeCollector collector, CameraRenderState camera) {
+        if (!LightningRenderer.forShaderPack())
+            return;
+        this.drawn = 0;
+        if (!this.hasStrikes())
+            return;
+        var level = GameUtils.getWorld().orElse(null);
+        if (level == null)
+            return;
+        this.toDraw.clear();
+        for (var active : this.strikes)
+            this.toDraw.add(active.strike);
+        var partialTick = GameUtils.getMC().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        this.drawn = LightningRenderer.submitForShaderPack(collector, camera, this.toDraw, level.getGameTime() + partialTick,
+                this.fogHandler.viewReach());
     }
 
     /**

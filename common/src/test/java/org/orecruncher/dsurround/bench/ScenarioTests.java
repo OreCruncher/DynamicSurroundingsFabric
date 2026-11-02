@@ -46,6 +46,17 @@ public class ScenarioTests {
     }
 
     @Test
+    void scenesMayRunCommandsBeforeTheScreenshot() {
+        var scenario = parse("""
+                {"scenes": {"storm": {"shotCommands": ["dsweather lightning"], "shotDelay": 8}, "plain": {}},
+                 "runs": [{"scene": "storm"}]}""");
+        assertEquals(List.of("dsweather lightning"), scenario.scenes().get("storm").shotCommands());
+        assertEquals(8, scenario.scenes().get("storm").shotDelay());
+        assertEquals(List.of(), scenario.scenes().get("plain").shotCommands());
+        assertEquals(0, scenario.scenes().get("plain").shotDelay());
+    }
+
+    @Test
     void repeatsAlternateTheOrder() {
         var scenario = parse("""
                 {"repeats": 3, "scenes": {"s": {}},

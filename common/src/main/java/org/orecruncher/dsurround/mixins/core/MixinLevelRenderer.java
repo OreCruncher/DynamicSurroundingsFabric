@@ -61,6 +61,7 @@ public class MixinLevelRenderer {
         if (this.dsurround$cullFrustum != null)
             LightLevelRenderer.submit(collector, levelRenderState.cameraRenderState, this.dsurround$cullFrustum);
         HealthPopoffs.submit(collector, levelRenderState.cameraRenderState);
+        MixinHelpers.LIGHTNING_GUARD.run(() -> MixinHelpers.lightning().submitForShaderPack(collector, levelRenderState.cameraRenderState));
     }
 
     /**
