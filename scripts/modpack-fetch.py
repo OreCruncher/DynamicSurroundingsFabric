@@ -23,7 +23,10 @@ Left out, by mod id (read from each jar, so a renamed file doesn't slip through)
   - mods that would hold an unattended run up: Crash Assistant (a window waiting for someone to close it, on a crash
     and on some exits) and Dynamic FPS (slows or stops drawing when the window isn't focused, which stalls a run and
     skews its timings); --keep <mod id> puts one back
-What was fetched and left out, and why, is written to the folder's pack.json.
+Set in the pack's config for the development run, where a mod is fetched (DEV_RUN_SETTINGS): options that turn off a
+part of a mod that fails only there, as Fabric runs an obfuscated game (1.21.x) under Mojang's names, where a mixin of
+a published mod can clash with a name the game has there (ModernFix's worldgen allocation optimization).
+What was fetched, left out and set, and why, is written to the folder's pack.json.
 """
 
 import argparse
@@ -52,6 +55,13 @@ DEV_RUN_MODS = {
 UNATTENDED = {
     "crash_assistant": "opens a window that waits for someone to close it",
     "dynamic_fps": "slows or stops drawing while the window isn't focused",
+}
+# Options set in a fetched mod's config for a Fabric run of an obfuscated game, where part of the mod fails to apply
+# under Mojang's names: mod id -> (config file, {option: value}, why). Properties files: an option's line is replaced,
+# or added
+DEV_RUN_SETTINGS = {
+    "modernfix": ("config/modernfix-mixins.properties", {"mixin.perf.worldgen_allocation": "false"},
+                  "its worldgen allocation mixin overwrites NoiseChunk.wrap with less visibility than Mojang's names give it"),
 }
 # The folders a pack replaces each fetch; anything else in the run folder (saves, logs, bench results) is kept
 REPLACED = ["mods", "resourcepacks", "shaderpacks", "config"]
@@ -109,6 +119,25 @@ def put_back(dest):
         if source.is_dir():
             shutil.copytree(source, dest / kept, dirs_exist_ok=True)
     shutil.rmtree(aside)
+
+
+def dev_run_settings(dest, ids):
+    """Sets DEV_RUN_SETTINGS' options for the fetched mods among them; returns what was set"""
+    done = []
+    for mod, (file, options, why) in DEV_RUN_SETTINGS.items():
+        if mod not in ids:
+            continue
+        path = dest / file
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
+        for option, value in options.items():
+            line = f"{option}={value}"
+            text, n = re.subn(rf"^{re.escape(option)}=.*$", line, text, flags=re.MULTILINE)
+            if not n:
+                text += ("" if not text or text.endswith("\n") else "\n") + line + "\n"
+            done.append({"mod": mod, "file": file, "option": option, "value": value, "why": why})
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    return done
 
 
 def gradle_properties():
@@ -172,8 +201,12 @@ def mod_ids(jar):
                     pass
     except zipfile.BadZipFile:
         pass
-    # Fabric ids use '-' where NeoForge's can't
-    return {i.replace("-", "_") for i in ids}
+    return {normal_id(i) for i in ids}
+
+
+def normal_id(mod_id):
+    """Fabric ids use '-' where NeoForge's can't: compared with it as '_', given on the command line either way"""
+    return mod_id.replace("-", "_")
 
 
 def left_out(ids, keep, leave_out):
@@ -201,6 +234,8 @@ def main():
     parser.add_argument("--keep", action="append", default=[], metavar="MOD_ID",
                         help="fetch a mod left out by default for holding unattended runs up")
     args = parser.parse_args()
+    args.leave_out = [normal_id(i) for i in args.leave_out]
+    args.keep = [normal_id(i) for i in args.keep]
 
     props = gradle_properties()
     game_version = args.game_version or props["minecraft_version"]
@@ -222,7 +257,7 @@ def main():
         for folder in REPLACED:
             shutil.rmtree(dest / folder, ignore_errors=True)
 
-        fetched, excluded = [], []
+        fetched, excluded, fetched_ids = [], [], set()
         files = [f for f in index["files"] if f.get("env", {}).get("client", "required") != "unsupported"]
         print(f"  {len(files)} files")
         for entry in files:
@@ -231,10 +266,12 @@ def main():
                 sys.exit(f"{entry['path']}: a path outside the pack's folder")
             source = cached(entry["downloads"][0], entry["hashes"]["sha512"], rel.name)
             if rel.parts[0] == "mods":
-                reason = left_out(mod_ids(source), args.keep, args.leave_out)
+                ids = mod_ids(source)
+                reason = left_out(ids, args.keep, args.leave_out)
                 if reason:
                     excluded.append({"file": str(rel).replace("\\", "/"), "why": reason})
                     continue
+                fetched_ids |= ids
             (dest / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, dest / rel)
             fetched.append(str(rel).replace("\\", "/"))
@@ -251,14 +288,22 @@ def main():
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(z.read(name))
                 if rel.parts[0] == "mods" and rel.suffix == ".jar":
-                    reason = left_out(mod_ids(target), args.keep, args.leave_out)
+                    ids = mod_ids(target)
+                    reason = left_out(ids, args.keep, args.leave_out)
                     if reason:
                         target.unlink()
                         excluded.append({"file": str(rel).replace("\\", "/"), "why": reason})
                         continue
+                    fetched_ids |= ids
                 fetched.append(str(rel).replace("\\", "/"))
 
         put_back(dest)
+
+    settings = []
+    if args.platform == "fabric" and game_version.startswith("1."):
+        settings = dev_run_settings(dest, fetched_ids)
+        for s in settings:
+            print(f"  set {s['option']}={s['value']} in {s['file']} ({s['mod']}: {s['why']})")
 
     shader_pack = None
     if args.shader_pack:
@@ -299,6 +344,7 @@ def main():
         "shaderPack": shader_pack,
         "fetched": fetched,
         "excluded": excluded,
+        "devRunSettings": settings,
     }
     (dest / "pack.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
 

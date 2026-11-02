@@ -88,6 +88,10 @@ didn't apply, drawing gone wrong.
 - **On an obfuscated game (1.21.11)** the development run renames the game's lambdas (intermediary names such as
   `method_62216`), so a published mod whose mixin targets one fails to load there, with a crash report naming the
   mixin (C2ME, Noisium). Leave such mods out (`--leave-out`) when they don't touch what we draw; 26.2 isn't obfuscated.
+  Fabric runs it under Mojang's names, where a mixin can also clash with a name the game has there, or find nothing
+  without its refmap (Enchantment Glint Outline, FallingTree: left out). Where only one option of a mod fails, the
+  fetch turns that option off in the pack's config instead (`DEV_RUN_SETTINGS`: ModernFix's worldgen allocation), and
+  `pack.json` lists it.
 - **Running** (`runClientPack`): the pack's folder, an 8 GB heap, and none of the mods the development client
   otherwise plays with (Biomes O' Plenty, TerraBlender, Serene Seasons, GlitchCore, Simple Voice Chat, Mod Menu), so
   the world is the pack's. A pack made for a newer loader than `gradle.properties` has: `-Pneoforge_version=<the
