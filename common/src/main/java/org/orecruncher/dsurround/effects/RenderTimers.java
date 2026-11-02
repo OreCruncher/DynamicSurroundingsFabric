@@ -25,6 +25,7 @@ public final class RenderTimers {
             AuroraRenderer.RENDER_TIMER,
             RealisticAuroraRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
+            PrecipitationShaders.WAIT_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
             PrecipitationShaders.DROPS_TIMER,
             PrecipitationShaders.STREAKS_TIMER,

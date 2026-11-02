@@ -65,6 +65,8 @@ public final class PrecipitationShaders {
     public static final List<ModShader> SHADERS = List.of(DROPS, DROPS_DEPTH, DUST, DUST_DEPTH, DAMP_SPOTS, DAMP_SPOTS_DEPTH);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
+    // The weather's pass waiting for the quads built ahead (DropMeshes.await): a thread starved of the CPU shows here
+    public static final RenderTimer WAIT_TIMER = new RenderTimer("- Waiting for Quads");
     public static final RenderTimer DAMP_SPOTS_TIMER = new RenderTimer("- Damp Spots");
     public static final RenderTimer DROPS_TIMER = new RenderTimer("- Drops");
     // Drawn among the drops, so within their time too

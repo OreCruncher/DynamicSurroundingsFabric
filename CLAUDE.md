@@ -65,7 +65,10 @@ checking in game.
   Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
   fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
   Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
-  `ProfileRecording.PRIVATE` and `Redaction`. Record under Run, not IntelliJ's Debug (its async stack trace agent
+  `ProfileRecording.PRIVATE` and `Redaction`. The first recording since the game started waits
+  `Profiler.WARM_UP_SECONDS` longer, with a throwaway recording running (`ProfileRecording.warmUp`): JFR's first start
+  slowed the game for about 8 seconds (frames up to a second in ATM10), and later recordings showed nothing of it. A
+  recording soon after joining a world still shows the pack settling in. Record under Run, not IntelliJ's Debug (its async stack trace agent
   throws thousands of Throwables a second).
 - Bench scenarios (`scripts/bench/README.md`): `./gradlew :fabric:runClientBench -Pscenario=<file>` (or
   `runClientBenchPotatoCpu`) opens or makes a world in `<platform>/run-bench`, records each run's settings in its scene
@@ -241,7 +244,8 @@ checking in game.
     at High's range) as the level starts to be drawn (`DropMeshes`, from
     `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
     and partial tick; the weather pass uploads and draws them, or writes them on the
-    render thread when the camera differs (a mod drawing the level again). The tick discards a build before the drops,
+    render thread when the camera differs (a mod drawing the level again) or the build isn't done after
+    `DropMeshes.WAIT_NANOS` (2 ms; a starved thread made frames wait 10-30 ms; timed as "- Waiting for Quads"). The tick discards a build before the drops,
     or what they left, change. The step may read only
     the columns and `Wind.Snapshot`; what needs the world it leaves as questions that `finish` answers. Tests use
     `tick`, which is both at once.
