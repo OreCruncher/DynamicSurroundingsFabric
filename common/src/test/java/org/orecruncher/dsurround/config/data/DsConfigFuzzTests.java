@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.config.data;
 
 import com.google.gson.Gson;
@@ -410,6 +413,9 @@ class DsConfigFuzzTests {
                     var relative = assets.relativize(file).toString().replace('\\', '/');
                     var parts = relative.split("/");
                     if (parts.length < 3 || !parts[1].equals("dsconfigs"))
+                        continue;
+                    // Not read with a codec: PresetLoaderTests covers it
+                    if (parts[2].equals("presets.json"))
                         continue;
                     var kind = parts[2].equals("tags") ? TAGS : switch (parts[2]) {
                         case "biomes.json" -> BIOMES;

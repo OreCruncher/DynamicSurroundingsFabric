@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
@@ -11,6 +14,7 @@ public final class Commands {
             return;
 
         new BiomeCommand().register(dispatcher, registryAccess);
+        new ConfigCommand().register(dispatcher, registryAccess);
         new ConflictsCommand().register(dispatcher, registryAccess);
         new DumpCommand().register(dispatcher, registryAccess);
         new ReloadCommand().register(dispatcher, registryAccess);

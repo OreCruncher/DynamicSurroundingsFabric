@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround;
 
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
@@ -27,6 +30,7 @@ import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
+import org.orecruncher.dsurround.config.PresetLoader;
 import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.config.compat.ClothAPIFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -137,6 +141,7 @@ public final class Client {
                 .registerSingleton(ISoundLibrary.class, SoundLibrary.class)
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
+                .registerSingleton(PresetLoader.class)
                 .registerSingleton(IDimensionInformation.class, DimensionInformation.class)
                 // SeasonManager deferred as HANDLER is not initialized at this time
                 .registerFactory(ISeasonalInformation.class, () -> SeasonManager.HANDLER)
@@ -193,6 +198,7 @@ public final class Client {
         IReloadEvent.EVENT.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(container.resolve(IEntityEffectLibrary.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(container.resolve(IDimensionLibrary.class)::reload, HandlerPriority.HIGH);
+        IReloadEvent.EVENT.register(container.resolve(PresetLoader.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(Client::afterReload, HandlerPriority.VERY_LOW);
 
         ITagSync.EVENT.register(event -> {

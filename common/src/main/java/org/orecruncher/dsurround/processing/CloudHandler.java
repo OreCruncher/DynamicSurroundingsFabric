@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.longs.Long2FloatOpenHashMap;
@@ -19,6 +22,7 @@ import org.orecruncher.dsurround.effects.clouds.CloudSections;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.UpperWind;
@@ -125,7 +129,8 @@ public class CloudHandler extends AbstractClientHandler {
      * Whether the clouds are the mod's
      */
     public boolean isActive() {
-        return this.config.weatherOptions.enableDynamicClouds && CloudRenderer.isUsable() && GameUtils.isInGame()
+        return this.config.weatherOptions.enableDynamicClouds && !FeatureConflict.DYNAMIC_CLOUDS.isBlocked()
+                && CloudRenderer.isUsable() && GameUtils.isInGame()
                 && GameUtils.getMC().options.getCloudsType() != CloudStatus.OFF && this.dimensionInformation.dynamicClouds();
     }
 
@@ -328,6 +333,8 @@ public class CloudHandler extends AbstractClientHandler {
         String text;
         if (!this.config.weatherOptions.enableDynamicClouds)
             text = "Clouds: vanilla's";
+        else if (FeatureConflict.DYNAMIC_CLOUDS.isBlocked())
+            text = "Clouds: another mod's (" + FeatureConflict.DYNAMIC_CLOUDS.blockingMod().orElseThrow().ids().getFirst() + ")";
         else if (!CloudRenderer.isUsable())
             text = "Clouds: vanilla's (shader unavailable, failed, or a shader pack in use)";
         else if (!this.isActive())

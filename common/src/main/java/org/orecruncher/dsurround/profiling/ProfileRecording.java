@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.profiling;
 
 import jdk.jfr.Configuration;
@@ -21,8 +24,9 @@ import java.util.Set;
  * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
  * ({@link FramesEvent}), each client tick handler's time every tick
- * ({@link HandlerTickEvent}) and what random block effects did by distance once a second
- * ({@link RandomBlockSamplesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * ({@link HandlerTickEvent}), what random block effects did by distance once a second
+ * ({@link RandomBlockSamplesEvent}) and what enhanced sound processing did once a second
+ * ({@link EnhancedSoundsEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
@@ -77,6 +81,9 @@ final class ProfileRecording {
             "minecraft.PacketReceived",
             "minecraft.PacketSent");
 
+    // Set by the first warm-up, on the profile's thread; read on the render thread
+    private static volatile boolean warm;
+
     private ProfileRecording() {
     }
 
@@ -92,16 +99,8 @@ final class ProfileRecording {
      * it is called on for that long, so not the render thread: {@code environment} is captured there beforehand.
      */
     static void record(Path file, Duration length, ProfileEnvironment environment) throws IOException, ParseException, InterruptedException {
-        var settings = new HashMap<>(Configuration.getConfiguration("profile").getSettings());
-        for (var type : PRIVATE)
-            settings.put(type + "#enabled", "false");
-
-        // Registered now, so starting the recording instruments them with the JDK's, in one pause. Left to their first
-        // event, each paused every thread for its own, there and then: in a game, 100 ms, inside a tick being timed.
-        // The periodic ones are registered with their hooks below.
-        FlightRecorder.register(EnvironmentEvent.class);
-        FlightRecorder.register(FeatureEvent.class);
-        FlightRecorder.register(HandlerTickEvent.class);
+        var settings = settings();
+        register();
 
         var unfinished = file.resolveSibling(file.getFileName() + ProfileFiles.UNFINISHED);
         Runnable timers = ProfileRecording::writeTimers;
@@ -111,28 +110,28 @@ final class ProfileRecording {
         var samples = new SampleTotals();
         Runnable sampleWriter = samples::write;
         FlightRecorder.addPeriodicEvent(RandomBlockSamplesEvent.class, sampleWriter);
+        Runnable soundWriter = ProfileRecording::writeSounds;
+        FlightRecorder.addPeriodicEvent(EnhancedSoundsEvent.class, soundWriter);
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
                 recording.setToDisk(true);
-                recording.enable(RenderTimerEvent.class).withPeriod(Duration.ofSeconds(1));
-                recording.enable(FramesEvent.class).withPeriod(Duration.ofSeconds(1));
-                recording.enable(EnvironmentEvent.class);
-                recording.enable(FeatureEvent.class);
-                recording.enable(HandlerTickEvent.class);
-                recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
+                enableOurs(recording);
                 recording.start();
                 HandlerTicks.start(ProfileRecording::writeHandlerTick);
                 FrameTimes.start();
                 RandomBlockSamples.start(samples::add);
+                SoundSamples.start();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 Thread.sleep(length.toMillis());
                 HandlerTicks.stop();
                 FrameTimes.stop();
                 RandomBlockSamples.stop();
+                SoundSamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
+                writeSounds();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -146,11 +145,75 @@ final class ProfileRecording {
             HandlerTicks.stop();
             FrameTimes.stop();
             RandomBlockSamples.stop();
+            SoundSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
             FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
+            FlightRecorder.removePeriodicEvent(soundWriter);
             Files.deleteIfExists(unfinished);
         }
+    }
+
+    /**
+     * Whether a recording has run since the game started, so the next starts without the first's slowdown
+     */
+    static boolean isWarm() {
+        return warm;
+    }
+
+    /**
+     * Runs a recording with the same settings for {@code length}, kept nowhere, the first time only, so the recording
+     * after it starts as one would later in the session. The first recording since the game started slowed the game for
+     * seconds after it began (frames of up to a second in a large modpack; later ones showed nothing of the kind): JFR
+     * setting itself up and instrumenting the event classes. Made while the scene settles, it isn't recorded. Later,
+     * just waits. Not the render thread.
+     */
+    static void warmUp(Duration length) throws IOException, ParseException, InterruptedException {
+        if (warm) {
+            Thread.sleep(length.toMillis());
+            return;
+        }
+        register();
+        try (var recording = new Recording(settings())) {
+            recording.setName("Dynamic Surroundings warm-up");
+            recording.setToDisk(false);
+            enableOurs(recording);
+            recording.start();
+            Thread.sleep(length.toMillis());
+            recording.stop();
+        }
+        warm = true;
+    }
+
+    // The JDK's "profile" settings, without the private events
+    private static HashMap<String, String> settings() throws IOException, ParseException {
+        var settings = new HashMap<>(Configuration.getConfiguration("profile").getSettings());
+        for (var type : PRIVATE)
+            settings.put(type + "#enabled", "false");
+        return settings;
+    }
+
+    // Registered before the recording starts, so starting it instruments them with the JDK's, in one pause. Left to
+    // their first event, each paused every thread for its own, there and then: in a game, 100 ms, inside a tick being
+    // timed. The periodic ones are registered with their hooks, by the recording; registering them again is harmless.
+    private static void register() {
+        FlightRecorder.register(EnvironmentEvent.class);
+        FlightRecorder.register(FeatureEvent.class);
+        FlightRecorder.register(HandlerTickEvent.class);
+        FlightRecorder.register(RenderTimerEvent.class);
+        FlightRecorder.register(FramesEvent.class);
+        FlightRecorder.register(RandomBlockSamplesEvent.class);
+        FlightRecorder.register(EnhancedSoundsEvent.class);
+    }
+
+    private static void enableOurs(Recording recording) {
+        recording.enable(RenderTimerEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(FramesEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(EnvironmentEvent.class);
+        recording.enable(FeatureEvent.class);
+        recording.enable(HandlerTickEvent.class);
+        recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(EnhancedSoundsEvent.class).withPeriod(Duration.ofSeconds(1));
     }
 
     /**
@@ -168,6 +231,7 @@ final class ProfileRecording {
             event.cpuAverage = timer.getCpuMSecs();
             event.cpuPeak = timer.getCpuPeakMSecs();
             event.count = timer.getCount();
+            event.perTick = timer.isPerTick();
             event.commit();
         }
     }
@@ -179,6 +243,13 @@ final class ProfileRecording {
         var second = FrameTimes.take();
         if (second != null)
             FramesEvent.write(second);
+    }
+
+    /**
+     * An event for what enhanced sound processing did since the last
+     */
+    private static void writeSounds() {
+        EnhancedSoundsEvent.write(SoundSamples.isAvailable(), SoundSamples.take());
     }
 
     /**

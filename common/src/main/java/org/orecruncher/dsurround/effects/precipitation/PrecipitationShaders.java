@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.effects.precipitation;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -25,6 +28,8 @@ public final class PrecipitationShaders {
             "damp spots", "rain will not leave damp spots", Library.LOGGER);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
+    // The weather's pass waiting for the quads built ahead (DropMeshes.await): a thread starved of the CPU shows here
+    public static final RenderTimer WAIT_TIMER = new RenderTimer("- Waiting for Quads");
     public static final RenderTimer DAMP_SPOTS_TIMER = new RenderTimer("- Damp Spots");
     public static final RenderTimer DROPS_TIMER = new RenderTimer("- Drops");
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.profiling;
 
 import com.google.gson.JsonObject;
@@ -65,6 +68,14 @@ public class ProfilingTests {
             assertTrue(scene.settle() > 0, scene.name());
             for (var command : scene.commands())
                 assertFalse(command.startsWith("/"), scene + ": " + command);
+        }
+    }
+
+    @Test
+    void theFirstRecordingSinceTheGameStartedWaitsLongerForJfrToWarmUp() {
+        for (var scene : ProfileScene.values()) {
+            assertEquals(scene.settle() + Profiler.WARM_UP_SECONDS, Profiler.settle(scene, false), scene.name());
+            assertEquals(scene.settle(), Profiler.settle(scene, true), scene.name());
         }
     }
 
@@ -431,14 +442,26 @@ public class ProfilingTests {
 
     @Test
     void aPartLongerThanItsEffectIsTimedApart() {
-        // The clouds' field is worked out on the tick, not while they are drawn, so it is no part of their drawing time
         var summary = new ProfileSummary();
         summary.frame(new ProfileSummary.FrameSecond(100, 10, 12, 14, 4, 2));
         summary.timer("Clouds", 0.36, 0.03);
-        summary.timer("- Field", 0.001, 0.18);
+        summary.timer("- Build", 0.001, 0.18);
 
         var text = summary.text("weather");
-        assertTrue(text.contains("Clouds 0.36/0.03 (9%/2%), Clouds field 0.00/0.18 (0%/9%)"), text);
+        assertTrue(text.contains("Clouds 0.36/0.03 (9%/2%), Clouds build 0.00/0.18 (0%/9%)"), text);
+    }
+
+    @Test
+    void aPartTimedOnceATickIsGivenAsItsTimeAFrame() {
+        // The clouds' field is worked out on the tick, not while they are drawn: no part of their drawing time, and
+        // 0.18 ms a tick at 100 fps is 0.036 ms a frame (20 ticks spread over 100 frames)
+        var summary = new ProfileSummary();
+        summary.frame(new ProfileSummary.FrameSecond(100, 10, 12, 14, 4, 2));
+        summary.timer("Clouds", 0.36, 0.06);
+        summary.timer("- Field", 0.001, 0.18, true);
+
+        var text = summary.text("weather");
+        assertTrue(text.contains("Clouds 0.36/0.06 (9%/3%), Clouds field 0.00/0.04 (0%/2%)"), text);
     }
 
     @Test
@@ -487,6 +510,76 @@ public class ProfilingTests {
         }
         // Some ticks fall before the recording starts, and are dropped; none after it are lost
         assertTrue(ticks > 0 && ticks <= sent, ticks + " of " + sent);
+    }
+
+    @Test
+    void aRecordingHasTheEnhancedSounds() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        // Counted before the recording: not in it
+        SoundSamples.started(9_000_000);
+        assertFalse(SoundSamples.isRecording());
+        SoundSamples.setAvailable(true);
+        try {
+            var recorder = new Thread(() -> {
+                try {
+                    ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            recorder.start();
+            // A pass a tick, as the worker would: 4 sounds, one starting (2 ms) and two updates (1 and 3 ms); of their
+            // calculations one traced (1.5 ms), two shared, one reused its own and one was skipped
+            while (recorder.isAlive()) {
+                if (SoundSamples.isRecording()) {
+                    SoundSamples.started(2_000_000);
+                    SoundSamples.deferred();
+                    SoundSamples.updated(1_000_000);
+                    SoundSamples.updated(3_000_000);
+                    SoundSamples.traced(1_500_000);
+                    SoundSamples.shared();
+                    SoundSamples.shared();
+                    SoundSamples.reused();
+                    SoundSamples.skipped();
+                    SoundSamples.pass(5_000_000, 4);
+                }
+                Thread.sleep(50);
+            }
+            recorder.join();
+        } finally {
+            SoundSamples.setAvailable(false);
+        }
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.EnhancedSounds"))
+                .toList();
+        assertFalse(events.isEmpty());
+        int passes = 0;
+        for (var event : events) {
+            assertTrue(event.getBoolean("available"));
+            int n = event.getInt("passes");
+            passes += n;
+            assertEquals(n, event.getInt("starts"));
+            assertEquals(n, event.getInt("deferred"));
+            assertEquals(2 * n, event.getInt("updates"));
+            assertEquals(n, event.getInt("traced"));
+            assertEquals(2 * n, event.getInt("shared"));
+            assertEquals(n, event.getInt("reused"));
+            assertEquals(n, event.getInt("skipped"));
+            if (n == 0)
+                continue;
+            assertEquals(4F, event.getFloat("sources"), 1e-6);
+            assertEquals(4, event.getInt("sourcesPeak"));
+            assertEquals(2.0, event.getDouble("startMean"), 1e-9);
+            assertEquals(2.0, event.getDouble("startPeak"), 1e-9);
+            assertEquals(2.0, event.getDouble("updateMean"), 1e-9);
+            assertEquals(3.0, event.getDouble("updatePeak"), 1e-9);
+            assertEquals(5.0, event.getDouble("passMean"), 1e-9);
+            assertEquals(1.5, event.getDouble("traceMean"), 1e-9);
+            assertEquals(1.5, event.getDouble("tracePeak"), 1e-9);
+        }
+        assertTrue(passes > 0);
+        assertFalse(SoundSamples.isRecording());
     }
 
     @Test
@@ -544,7 +637,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

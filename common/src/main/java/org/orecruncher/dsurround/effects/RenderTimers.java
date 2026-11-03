@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
@@ -22,6 +25,7 @@ public final class RenderTimers {
     public static final List<RenderTimer> ALL = List.of(
             AuroraRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
+            PrecipitationShaders.WAIT_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
             PrecipitationShaders.DROPS_TIMER,
             GroundFogVolume.RENDER_TIMER,

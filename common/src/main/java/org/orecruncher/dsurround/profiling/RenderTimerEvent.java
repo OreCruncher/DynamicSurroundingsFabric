@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.profiling;
 
 import jdk.jfr.Category;
@@ -32,6 +35,10 @@ public final class RenderTimerEvent extends Event {
 
     @Label("CPU peak (ms)")
     double cpuPeak;
+
+    @Label("Per tick")
+    @Description("Measured once a client tick rather than once a frame (the clouds' field): its averages are a tick's")
+    boolean perTick;
 
     @Label("Count")
     @Description("How many of what the effect draws there were a frame, on average (Precipitation: drops in the area; "

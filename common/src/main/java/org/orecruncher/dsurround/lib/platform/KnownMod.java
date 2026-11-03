@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.lib.platform;
 
 import dev.architectury.platform.Platform;
@@ -67,7 +70,12 @@ public enum KnownMod {
      * Lights the world around burning entities (and held torches), so burning mobs' flames cast no light of the
      * mod's. RyoamicLights is its fork.
      */
-    LAMB_DYNAMIC_LIGHTS(true, "lambdynlights", "ryoamiclights");
+    LAMB_DYNAMIC_LIGHTS(true, "lambdynlights", "ryoamiclights"),
+    /**
+     * Turns vanilla's clouds off (they draw over its distant terrain) and draws clouds of its own, so the mod's dynamic
+     * clouds, which follow vanilla's cloud option, would stand aside unexplained
+     */
+    DISTANT_HORIZONS(true, "distanthorizons");
 
     private final boolean showInDiagnostics;
     private final List<String> ids;

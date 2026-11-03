@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings point light (a firefly's, a flame jet's): a small light, lighting whatever is near it on
 // screen. All four vertices of a light are at its centre; this spreads them into a square facing the camera that

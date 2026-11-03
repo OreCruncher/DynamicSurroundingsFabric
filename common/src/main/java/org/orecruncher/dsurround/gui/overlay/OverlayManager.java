@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.gui.overlay;
 
 import com.google.common.collect.ImmutableList;
@@ -29,6 +32,10 @@ public final class OverlayManager {
     }
 
     public void render(GuiGraphics context, DeltaTracker deltaTracker) {
+        // Hidden with the HUD (F1). Fabric's layer already is; NeoForge draws a layer registered above all of them even
+        // then
+        if (Minecraft.getInstance().options.hideGui)
+            return;
         var partialTick = deltaTracker.getGameTimeDeltaTicks();
         this.overlays.forEach(overlay -> overlay.render(context, partialTick));
     }

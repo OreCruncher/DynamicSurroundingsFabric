@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """
 Helps merge a 1.21.1 branch (OreCruncher/0.4.7) into the 26.2 branch, and move code between the two by hand.
 

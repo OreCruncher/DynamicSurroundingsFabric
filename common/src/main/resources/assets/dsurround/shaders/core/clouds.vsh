@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings clouds (see CloudRenderer): blocks of cloud, each vertex's color its shade, gray, and its
 // alpha how much it hides. Positions are from the corner of the cloud grid; Offset moves them to be from the camera,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.mixinutils;
 
 import com.google.gson.JsonParser;
@@ -62,6 +65,29 @@ public class OptionalHookTests {
         bridge.instructions.add(new InsnNode(Opcodes.RETURN));
         node.methods.add(bridge);
         assertFalse(OptionalHook.calls(node, "dsurround$afterSectionLayer"));
+    }
+
+    @Test
+    void aHandlerInCodeAnotherModsWrapMethodMovedIsFound() {
+        // Another mod's @WrapMethod moves the method's code, our injection in it, to a method of MixinExtras' that its
+        // wrapper calls (Iris's around WeatherEffectRenderer.render, in the Fresh & Smooth pack)
+        var node = classCalling("wrapMethod$fcg000$iris$disableWeather");
+        var wrapped = new MethodNode(Opcodes.ACC_PRIVATE, "render$mixinextras$wrapped$55", "()V", null, null);
+        wrapped.instructions.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "handler$zpf000$dsurround$renderPrecipitation", "()V", false));
+        wrapped.instructions.add(new InsnNode(Opcodes.RETURN));
+        node.methods.add(wrapped);
+        assertTrue(OptionalHook.calls(node, "dsurround$renderPrecipitation"));
+    }
+
+    @Test
+    void aHandlerWithSugarInCodeAnotherModsWrapMethodMovedIsFound() {
+        // Iron's Lib wraps EntityRenderDispatcher.render (ATM10): the moved code calls our handler's bridge
+        var node = classCalling("wrapMethod$zcl000$irons_lib$irons_spellbooks$handleTransmog");
+        var wrapped = new MethodNode(Opcodes.ACC_PRIVATE, "render$mixinextras$wrapped$36", "()V", null, null);
+        wrapped.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, TARGET, "wrapOperation$zil000$dsurround$vanillaFire$mixinextras$bridge$34", "()V", false));
+        wrapped.instructions.add(new InsnNode(Opcodes.RETURN));
+        node.methods.add(wrapped);
+        assertTrue(OptionalHook.calls(node, "dsurround$vanillaFire"));
     }
 
     @Test

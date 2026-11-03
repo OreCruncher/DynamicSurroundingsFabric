@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 package org.orecruncher.dsurround.lib.platform;
 
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -46,7 +49,11 @@ public enum FeatureConflict {
     /**
      * LambDynamicLights already lights the world around burning entities
      */
-    BURNING_MOB_LIGHT("Light from burning mobs' flames", LAMB_DYNAMIC_LIGHTS);
+    BURNING_MOB_LIGHT("Light from burning mobs' flames", LAMB_DYNAMIC_LIGHTS),
+    /**
+     * Distant Horizons draws its own clouds, and turns vanilla's off
+     */
+    DYNAMIC_CLOUDS("Dynamic clouds", DISTANT_HORIZONS);
 
     private final String feature;
     private final List<KnownMod> mods;

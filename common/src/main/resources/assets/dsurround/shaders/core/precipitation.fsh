@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Particle rain, snow and dust. A drop fades into the fog rather than taking on its colour: the ground behind it is
 // already fogged, so a fogged drop would look the same, and fading also suits drops already faint at their tops.

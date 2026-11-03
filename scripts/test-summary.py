@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """Summarizes the last test run: total, failed and errored counts, and each failure's message.
 
 Run after ./gradlew :common:test (its console output is noisy):

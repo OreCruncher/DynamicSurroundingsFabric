@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """
 Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
 the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and
 drawing one on the GPU and CPU), the mod's render timers (each as a share of drawing a frame), the
 client tick's handlers (and what running them in parallel could gain), what random block effects did by distance (each
-rate against what the sampler means it to be), where each busy thread spends its time (by
+rate against what the sampler means it to be), what enhanced sound processing did (calculations as sounds start, on
+the sound engine's thread, and the worker's updates and passes), where each busy thread spends its time (by
 method and by mod package), what allocates, and GC.
 
   jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS] [--shell-width N]
@@ -158,6 +162,9 @@ def table(title, counter, total, top, unit=""):
 
 # How the client tick's handlers could run in parallel: these first, as now, then everything else at once; a chain
 # stays in order on one thread (lightning hands the cloud handler its strikes). Names are AbstractClientHandler's
+# Render timers measured once a tick rather than once a frame, in recordings from before the events said so (perTick)
+TICK_TIMERS = ("- Field",)
+
 FIRST_HANDLERS = ("Scanners",)
 HANDLER_CHAINS = (("Lightning Handler", "Cloud Handler"),)
 
@@ -343,6 +350,49 @@ def random_block_samples(jfr, recording, args):
               f"{'  ' + '; '.join(notes) if notes else ''}")
 
 
+def enhanced_sounds(jfr, recording):
+    seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.EnhancedSounds"], 1)]
+    if not seconds:
+        return
+    running = [f for f in seconds if f.get("available") == "true"]
+    print(f"\n== Enhanced sounds ({len(seconds)} seconds, processing running in {len(running)}; ms; "
+          f"start: a sound's calculation and upload as it starts, on the sound engine's thread; update: one handed to "
+          f"the workers; pass: the worker handing out what is due and waiting for it, 20 a second; trace: the rays of "
+          f"one calculation that traced, inside a start or update)")
+    if not running:
+        print("  not running: off in the settings, or no sound device")
+        return
+    total = lambda key: sum(int(number(f.get(key))) for f in running)
+    # A mean over the seconds, each weighted by how many there were
+    weighted = lambda key, count: (sum(number(f.get(key)) * int(number(f.get(count))) for f in running) / total(count)
+                                   if total(count) else 0.0)
+    peak = lambda key: max(number(f.get(key)) for f in running)
+    sources = weighted("sources", "passes")
+    print(f"  sources: mean {sources:.1f}, peak {int(peak('sourcesPeak'))}")
+    print(f"  {'':8} {'a second':>9} {'mean':>8} {'peak':>8} {'ms a second':>12}")
+    for label, count, mean_key, peak_key in (("start", "starts", "startMean", "startPeak"),
+                                             ("update", "updates", "updateMean", "updatePeak"),
+                                             ("pass", "passes", "passMean", "passPeak"),
+                                             ("upload", "uploads", "uploadMean", None),
+                                             ("trace", "traced", "traceMean", "tracePeak")):
+        n = total(count)
+        mean = weighted(mean_key, count)
+        top = f"{peak(peak_key):8.3f}" if peak_key else f"{'-':>8}"
+        print(f"  {label:8} {n / len(running):9.1f} {mean:8.3f} {top} {n * mean / len(running):12.3f}")
+    # Every calculation, a start's or an update's, traced, took another sound's result, reused its own, or was skipped
+    kinds = {kind: total(kind) for kind in ("traced", "shared", "reused", "skipped")}
+    calculations = sum(kinds.values())
+    if calculations:
+        print("  calculations: " + ", ".join(f"{kind} {n / len(running):.1f} a second ({100 * n / calculations:.0f}%)"
+                                             for kind, n in kinds.items()))
+    # Sounds that started past the start budget: no calculation then, left to the workers' next pass
+    deferred, starts = total("deferred"), total("starts")
+    if deferred:
+        worst = max(int(number(f.get("deferred"))) for f in running)
+        print(f"  deferred starts: {deferred / len(running):.1f} a second ({100 * deferred / (deferred + starts):.0f}% of "
+              f"sounds starting), worst second {worst}")
+
+
 def callers(jfr, recording, args):
     mods, nearest, ours, total = Counter(), Counter(), Counter(), 0
     for _, fields, frames in events(jfr, recording, ["jdk.ExecutionSample"]):
@@ -393,11 +443,12 @@ def paused_in(pauses, at, peak, window_ms=2000.0):
 def frame_times(jfr, recording):
     """
     Prints the frames (dsurround.Frames, a second's each), and gives the mean time drawing a frame took on the GPU and
-    CPU, for the render timers' shares; zeros for a recording from before frames were recorded
+    CPU, for the render timers' shares, and the mean frame's length; zeros for a recording from before frames were
+    recorded
     """
     seconds = [f for _, f, _ in events(jfr, recording, ["dsurround.Frames"], 1)]
     if not seconds:
-        return 0.0, 0.0
+        return 0.0, 0.0, 0.0
     count = sum(int(number(f.get("frames"))) for f in seconds)
     # Each second's mean weighed by its frames: the recording's mean frame
     mean = sum(number(f.get("mean")) * int(number(f.get("frames"))) for f in seconds) / count
@@ -410,7 +461,7 @@ def frame_times(jfr, recording):
     print(f"  a second's 95th percentile: median {percentile(p95s, 0.5):.2f}, worst {p95s[-1]:.2f}; "
           f"longest frame {max(number(f.get('max')) for f in seconds):.2f}")
     print(f"  drawing a frame (the world and the screen over it), mean: GPU {gpu:.3f}, CPU {cpu:.3f}")
-    return gpu, cpu
+    return gpu, cpu, mean
 
 
 def main():
@@ -448,7 +499,7 @@ def main():
             for row in unusual:
                 print(f"    {row.get('name', '?').strip(chr(34))}: {row.get('state', '?').strip(chr(34))}")
 
-    frame_gpu, frame_cpu = frame_times(jfr, recording)
+    frame_gpu, frame_cpu, frame_ms = frame_times(jfr, recording)
 
     timers = defaultdict(list)
     for _, fields, _ in events(jfr, recording, ["dsurround.RenderTimer"], 1):
@@ -464,12 +515,17 @@ def main():
         print("\n== Render timers (ms; mean of the periodic averages, the running average at the end, highest peak; "
               "cpu peak leaves out those a JVM pause could make half of, and paused says how many; "
               "count: how many there were to draw a frame, mean, where the effect counts; gpu %, cpu %: the means' share "
-              "of drawing a frame, where the recording has the frames)")
+              "of drawing a frame, where the recording has the frames; * timed once a tick, not a frame: its ms are a tick's, "
+              "its shares those of its time a frame, 20 ticks a second spread over the frames)")
         print(f"  {'effect':28} {'gpu mean':>8} {'gpu end':>8} {'gpu peak':>9} "
               f"{'cpu mean':>8} {'cpu end':>8} {'cpu peak':>9} {'paused':>6} {'count':>8} {'gpu %':>6} {'cpu %':>6}")
         share = lambda part, whole: f"{100 * part / whole:6.1f}" if whole else f"{'-':>6}"
         for effect, rows in timers.items():
             rows.sort(key=lambda r: started(r.get("startTime", "")))
+            # Recordings from before the flag have the clouds' field as the only timer measured on the tick
+            per_tick = rows[-1].get("perTick") == "true" if "perTick" in rows[-1] else effect in TICK_TIMERS
+            # A tick's time as a frame's: a tick is 50 ms, so ticks a frame is the frame's length over 50
+            frame_share = (lambda part, whole: share(part * frame_ms / 50, whole)) if per_tick else share
             mean = lambda key: sum(number(r.get(key)) for r in rows) / len(rows)
             last = lambda key: number(rows[-1].get(key))
             peak = lambda key: max(number(r.get(key)) for r in rows)
@@ -480,12 +536,14 @@ def main():
             # Recordings from before the count have none; an effect that doesn't count writes NaN, which jfr prints as N/A
             counts = [number(r["count"]) for r in rows if r.get("count") and r["count"] not in ("N/A", "NaN")]
             count = f"{sum(counts) / len(counts):8.0f}" if counts else f"{'-':>8}"
-            print(f"  {effect:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
+            label = effect + " *" if per_tick else effect
+            print(f"  {label:28} {mean('gpuAverage'):8.3f} {last('gpuAverage'):8.3f} {peak('gpuPeak'):9.3f} "
                   f"{mean('cpuAverage'):8.3f} {last('cpuAverage'):8.3f} {max(kept, default=0.0):9.3f} {paused:6} {count} "
-                  f"{share(mean('gpuAverage'), frame_gpu)} {share(mean('cpuAverage'), frame_cpu)}")
+                  f"{frame_share(mean('gpuAverage'), frame_gpu)} {frame_share(mean('cpuAverage'), frame_cpu)}")
 
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)
+    enhanced_sounds(jfr, recording)
 
     by_thread = Counter()
     methods = defaultdict(Counter)
