@@ -34,9 +34,7 @@
         "time set 6000",
         "weather clear",
         "tp @s ~ 245 ~",
-        // What the box scenes left here. A stone first (where only air or the barrier can be), so the fill always has
-        // a block to clear: a fill or setblock that changes nothing fails, and is listed in the manifest's failedCommands
-        "setblock ~ ~-1 ~ stone",
+        // What the box scenes left here
         "fill ~-8 ~-7 ~-8 ~8 ~9 ~8 air",
         "setblock ~ ~-1 ~ barrier"
       ],
