@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings aurora: one curtain. UV0.x runs along the curtain, UV0.y up it (0 at its lower edge, 1 at
 // its top), and the vertex alpha fades it toward its ends. The camera's rotation is in ModelViewMat; the curtains

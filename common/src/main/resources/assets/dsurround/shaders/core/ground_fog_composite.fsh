@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Lays the ground fog, drawn and smoothed at a share of the screen's size (ground_fog_volume, ground_fog_smooth), over
 // the scene at its full size. Each pixel blends the two by two of the mist's pixels around it, by how near each is, as

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """Checks whether the compiled mod still links against another Minecraft version's game jar.
 
 Everything the mod's class files use from the game (classes, fields, methods, overridden methods) and everything its

@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Frost on windows: quads lit by the lightmap, in vanilla's particle vertex format. The colour's alpha is not an alpha
 // but how far the frost has grown there (see FrostRenderer), so the light is applied to the colour alone.

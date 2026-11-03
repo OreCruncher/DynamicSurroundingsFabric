@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """
 Fetches a Modrinth modpack into a run folder of its own, for testing the mod alongside it
 (scripts/bench/README.md, "Modpacks"): <platform>/run-pack/<slug>, which runClientPack -Ppack=<slug> runs.

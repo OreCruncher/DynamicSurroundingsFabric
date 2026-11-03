@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Smooths the ground fog drawn at a share of the screen's size (ground_fog_volume), at that size: each pixel blends the
 // three by three around it, the nearest counting the most. That smooths away the stipple of each one's steps being

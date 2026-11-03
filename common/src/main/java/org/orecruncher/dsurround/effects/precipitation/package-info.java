@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 /**
  * Particle weather: rain, snow and dust drawn as individual drops around the player, in place of vanilla's sheets.
  * What the weather is comes from {@code runtime.weather}; this draws it. The handler that runs it each tick and frame

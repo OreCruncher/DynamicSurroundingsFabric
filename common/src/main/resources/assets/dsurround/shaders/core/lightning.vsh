@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings lightning: a channel's ribbon, or a patch of the cloud's glow around a strike. UV0 is where in
 // it the vertex is, from its middle: across the ribbon (y, -1 to 1), or across the patch (x and y), with the patch's

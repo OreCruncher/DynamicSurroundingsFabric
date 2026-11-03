@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 /**
  * Lightning: what is drawn. Run by {@code processing.LightningHandler}, which adds the strikes, flashes the sky for
  * close ones, plays their thunder and stands in for the game's lightning bolts.

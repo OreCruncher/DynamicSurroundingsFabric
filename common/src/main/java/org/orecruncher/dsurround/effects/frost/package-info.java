@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 /**
  * Frost on the outside of glass windows when it is cold. Run by {@code processing.WindowFrostHandler}, which draws it
  * after the translucent blocks without Fabulous graphics, and before the weather, to its target, with it.
