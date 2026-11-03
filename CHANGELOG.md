@@ -43,6 +43,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * On NeoForge, the mod's overlays (compass, clock, diagnostics) stayed on screen when F1 hid the HUD
 * Dynamic clouds stand aside for Distant Horizons, which turns vanilla's clouds off and draws its own; `/dsconflicts` and the diagnostics say so
 * Flames on burning mobs turned themselves off with Iron's Lib installed (seen in ATM10), saying another mod had changed the game code they hook; the hook had applied, but in code that Iron's Lib wraps, where the check didn't look
+* Health pop-offs rounded damage down, so a blow of 1.9 showed as 1; they now round to the nearest whole number (1.4 shows 1, 1.5 and 1.9 show 2), and the crit word goes by the blow itself rather than the rounded number
 
 > ### DynamicSurroundings-1.21.1-0.4.8
 

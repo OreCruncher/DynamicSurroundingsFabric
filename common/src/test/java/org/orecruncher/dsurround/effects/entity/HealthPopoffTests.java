@@ -31,8 +31,37 @@ public class HealthPopoffTests {
     @Test
     void damageShowsAsAWholeNumber() {
         var change = Change.of(-4.5F, 20F);
-        assertEquals(4, change.amount());
+        assertEquals(5, change.amount());
         assertFalse(change.heal());
+        assertFalse(change.critical());
+    }
+
+    @Test
+    void damageRoundsToTheNearestWholeNumber() {
+        // Rounding up a negative change once cut 1.9 down to 1
+        assertEquals(2, Change.of(-1.9F, 20F).amount());
+        assertEquals(2, Change.of(-1.6F, 20F).amount());
+        assertEquals(2, Change.of(-1.5F, 20F).amount());
+        assertEquals(1, Change.of(-1.4F, 20F).amount());
+        // Healing rounds alike
+        assertEquals(2, Change.of(1.5F, 20F).amount());
+        assertEquals(1, Change.of(1.4F, 20F).amount());
+    }
+
+    @Test
+    void floatNoiseDoesNotMoveTheRounding() {
+        // Health is a float: a change worked out from two of them comes out a hair either side
+        assertEquals(2, Change.of(18.1F - 20F, 20F).amount());
+        assertEquals(2, Change.of(-Math.nextDown(1.5F), 20F).amount());
+        assertEquals(2, Change.of(-Math.nextUp(2F), 20F).amount());
+        assertTrue(Change.of(-Math.nextDown(8F), 20F).critical());
+    }
+
+    @Test
+    void criticalIsJudgedOnTheBlowNotWhatShows() {
+        // 7.6 shows as 8, but is less than 40% of 20
+        var change = Change.of(-7.6F, 20F);
+        assertEquals(8, change.amount());
         assertFalse(change.critical());
     }
 

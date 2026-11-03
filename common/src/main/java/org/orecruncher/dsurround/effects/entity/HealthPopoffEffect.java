@@ -5,7 +5,6 @@ package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -36,6 +35,9 @@ public class HealthPopoffEffect extends EntityEffectBase {
     private static final int DAMAGE_COLOR = color(ChatFormatting.RED);
     private static final int HEAL_COLOR = color(ChatFormatting.GREEN);
     private static final int CRITICAL_COLOR = color(ChatFormatting.GOLD);
+    // Health is a float, and a change of it comes out a hair either side: 2 as 1.9999998, or healing a whole point in
+    // sixths as a hair under 1
+    private static final float SLACK = 1.0E-4F;
 
     private final Configuration.EntityEffects config;
     private float lastHealth;
@@ -98,8 +100,6 @@ public class HealthPopoffEffect extends EntityEffectBase {
      * would add up to more than it heals.
      */
     static final class Tally {
-        // Healing a whole point in sixths can add up to a hair under 1
-        private static final float SLACK = 1.0E-4F;
         private float healed;
 
         /**
@@ -121,16 +121,18 @@ public class HealthPopoffEffect extends EntityEffectBase {
     }
 
     /**
-     * What a change of health shows: a whole number of at least 1, whether it is healing, and whether it is a heavy
-     * enough blow for a crit word.
+     * What a change of health shows: its size rounded to the nearest whole number, halves up, and at least 1; whether
+     * it is healing; and whether it is a heavy enough blow for a crit word, judged on the change itself rather than
+     * what shows.
      */
     record Change(int amount, boolean heal, boolean critical) {
 
         static Change of(float change, float maxHealth) {
-            int rounded = Mth.ceil(change);
-            int amount = Math.max(1, Math.abs(rounded));
-            boolean heal = rounded > 0;
-            return new Change(amount, heal, !heal && amount >= maxHealth * CRITICAL_SHARE);
+            // Rounding the size rather than the change, so damage and healing round alike
+            float size = Math.abs(change);
+            int amount = Math.max(1, (int) (size + 0.5F + SLACK));
+            boolean heal = change > 0F;
+            return new Change(amount, heal, !heal && size + SLACK >= maxHealth * CRITICAL_SHARE);
         }
     }
 }
