@@ -217,9 +217,19 @@ changes the picture.
 
 ## Rerunning
 
-- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. A full set (these six) takes
-  about an hour and a quarter; `compat.json` is a visual check, not a measurement. `sound.json` needs a sound device
-  (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud, quietly.
+- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. The first six scenarios take
+  about an hour and a quarter; `lightning.json`, `clouds.json` and `aurora.json` (on 1.21.11 about 45 minutes; here
+  `aurora.json` has two more runs) are not yet recorded on 26.2. `compat.json` is a visual check, not a measurement.
+  `sound.json` needs a sound device (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud,
+  quietly. Run it first in a long set: a device that sleeps when the machine is idle (wireless headphones) can be gone
+  by the end.
+- Idle means idle: summarizing one scenario's recordings while the next records showed in that run's CPU timers.
+- The first run of a session reads high (its world settling: longer GC pauses, slower frames); in an A B C, C B A set
+  it lands on the first label. Compare that label's two repeats before trusting it.
+- On the 1.21.11 bench about one recording in twenty had a stall of 2-2.8 seconds: every thread waits on the render
+  thread, which has no Java samples through it (stuck in native code: the driver or the system, not ours). It isn't
+  tied to an effect or a platform and the logs say nothing. One such frame can lift a recording's frame GPU mean by up
+  to 0.9 ms: check the longest frame (`jfr-summary.py`) of any repeat that disagrees with its twin.
 - Check each scenario's screenshots before trusting its numbers: the camera must be where the scenario means it to be
   (in the mist, facing the glass).
 - Read `--spread`: when a label's repeats are further apart than the differences between labels, look for a hitch in
