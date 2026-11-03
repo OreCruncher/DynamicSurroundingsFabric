@@ -1,3 +1,50 @@
+> ### DynamicSurroundings-1.21.1-0.4.9
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 21+
+* Architectury 13.0.8+
+
+**Fabric**
+* Fabric Loader >= 0.16.9
+* Fabric API >= 0.110.0+1.21.
+
+**NeoForge**
+* NeoForge 21.1.84+
+
+**AI Disclosure**
+* Built the configuration presets, measured the performance presets' values with benchmark runs, and backported them from 1.21.11
+* Measured enhanced sound processing with benchmark runs, made its ray traces cheaper and bounded its work on the sound engine's thread, and backported the changes from 1.21.11
+
+**What's New**
+* Configuration presets: rows of buttons at the top of the config screen set groups of options in one go
+  * Features: Vanilla+, Atmosphere, World, RPG, and Defaults. Each changes only the options it covers, so presets add up: Vanilla+ then RPG gives combat feedback in an otherwise plain world
+  * Performance: Low for slower computers, Medium as the mod comes, High for fast ones
+  * Before applying, a confirmation screen lists every setting that would change
+  * `/dsconfig preset` lists the presets, and `/dsconfig preset <name>` applies one
+  * Modpacks can add, replace, or hide presets with a `dsconfigs/presets.json` of their own, in a resource pack or `config/dsurround/configs/<namespace>/`
+
+**Changes**
+* Ground fog has its own on/off option, Ground Fog, separate from Ground Fog Quality, which no longer has an Off choice; a configuration with the fog turned off keeps it off
+* Fast ground fog takes fewer steps and costs less to draw, with no visible difference
+* In `/dsprofile` recordings and their summaries, the dynamic clouds' work done once a tick is shown as its time per frame, so it can be compared with the other effects
+* Snow flecks, damp spots and the drops running down windows are built ahead with the falling drops, leaving the render thread only to draw them; the building has a thread of its own, so a frame no longer waits for it behind the drops' step at a wide precipitation range
+* The falling drops' tick copies them to the next set an array at a time instead of drop by drop, about a third less work for its thread
+* The first `/dsprofile` recording since the game started waits 10 seconds longer before recording: Java Flight Recorder starts up in that time, so the seconds of slowdown its first start causes are no longer in the recording
+* In `/dsprofile` recordings and the diagnostics, time the weather spends waiting for the drops built ahead is shown on its own line, "Waiting for Quads", instead of being counted against the damp spots
+* Enhanced sound processing's ray traces cost about a quarter less: the blocks along a ray are read from the chunk already in hand instead of looking it up for every block
+* A burst of sounds starting at once (an explosion, a mob farm) no longer holds up the game's sound thread: sounds starting beyond about 2 ms of calculation every 50 ms play without their reverb and occlusion for their first moment, until the next update gives them their effects
+* `/dsprofile` recordings include what enhanced sound processing did each second
+
+**Fixes**
+* Rain and snow were built twice a frame, the second time on the render thread, while a mod changed the camera's direction during the frame (Rainbows does, as its rainbow is drawn); they now follow the camera's rotation itself. If it happens for another reason, the log says why, once
+* With the computer's processor fully busy (a large modpack catching up), the weather could hold up a frame for 10 to 30 ms waiting for the drops built ahead; it now waits at most 2 ms, then builds what isn't ready itself
+* On NeoForge, the mod's overlays (compass, clock, diagnostics) stayed on screen when F1 hid the HUD
+* Dynamic clouds stand aside for Distant Horizons, which turns vanilla's clouds off and draws its own; `/dsconflicts` and the diagnostics say so
+* Flames on burning mobs turned themselves off with Iron's Lib installed (seen in ATM10), saying another mod had changed the game code they hook; the hook had applied, but in code that Iron's Lib wraps, where the check didn't look
+* Health pop-offs rounded damage down, so a blow of 1.9 showed as 1; they now round to the nearest whole number (1.4 shows 1, 1.5 and 1.9 show 2), and the crit word goes by the blow itself rather than the rounded number
+
 > ### DynamicSurroundings-1.21.1-0.4.8
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

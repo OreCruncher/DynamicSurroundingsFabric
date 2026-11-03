@@ -351,13 +351,13 @@ checking in game.
 - The user commits; don't commit unless asked.
 
 ## Branches
-- `main`: the 1.21.1 line (0.4.8 was squash-merged as `21b8f91d` and recorded here with `-s ours`; each 1.21.1
+- `main`: the 1.21.1 line (0.4.9 was squash-merged as `df0c23ef` and recorded here with `-s ours`; each 1.21.1
   release branches from `main`).
 - `OreCruncher/1.21.11` (next; first release 5.0.0): a long-lived 1.21.11 line backported from this branch, branched
   from it rather than from `main`. Merge this branch into it for features and fixes; never merge it back here (that
   would bring the backport's downgrades with it): cherry-pick a fix made there.
-- 1.21.1 is frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering.
-- The current 1.21.1 release branch (none open since 0.4.8's squash): merged into this branch directly, before its squash to
+- 1.21.1 is frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering.
+- The current 1.21.1 release branch (none open since 0.4.9's squash): merged into this branch directly, before its squash to
   `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
   `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
   work by merging, resolving against 26.2's APIs (see `MIGRATION.md`); never rebase this branch.
@@ -367,7 +367,7 @@ checking in game.
     and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
-- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6, 0.4.7 and 0.4.8 (NeoForge 26.2.0.82, Architectury
+- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9 (NeoForge 26.2.0.82, Architectury
   21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
   `mod_version` is still 0.5.0 from before the 5.x numbering; set it to the 5.x release it ships as (see Versions).
 
