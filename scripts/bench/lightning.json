@@ -1,0 +1,43 @@
+// Lightning through a held thunderstorm, on and off, with the dynamic clouds (strikes light them from inside) and
+// without (the glow drawn as patches). See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 15,
+  // Sky strikes come by chance, about 0.3 a second in a full storm: a longer recording evens out how many each run gets
+  "record": 90,
+  "repeats": 2,
+  "settingSets": {
+    "noLightning": {"scaryContent.enableLightning": false},
+    "noClouds": {"weatherOptions.enableDynamicClouds": false}
+  },
+  // A beach (open, flat, and it rains there), which no other scenario builds on: plains has burning-lights.json's
+  // zombies and precipitation.json's glass
+  "scenes": {
+    "thunderstorm": {
+      "biome": "minecraft:beach",
+      "pitch": 10,
+      // Night, as the flashes are seen against a dark sky
+      "commands": ["time set 18000"],
+      // A strike of our own to catch in the screenshot
+      "shotCommands": ["dsweather lightning"],
+      "shotDelay": 8,
+      // Holds a full storm (and sends "weather thunder")
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "lightning-on", "scene": "thunderstorm"},
+    {"label": "lightning-off", "scene": "thunderstorm", "use": "noLightning"},
+    {"label": "noclouds-lightning-on", "scene": "thunderstorm", "use": "noClouds"},
+    {"label": "noclouds-lightning-off", "scene": "thunderstorm", "use": ["noClouds", "noLightning"]}
+  ]
+}

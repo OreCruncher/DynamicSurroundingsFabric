@@ -196,6 +196,85 @@ About 17 calculations a second are skipped in every scene. Six minecarts in a mi
 silent riding loops, which are skipped as out of range. The occluded scene skips about 9 more: hums 15-16 blocks
 away, just past their range.
 
+## Results, 2026-11-03: lightning, clouds, aurora, NeoForge
+
+Same machine and settings, commit `dd14609e` (no change to what is drawn since `988aa231`), NeoForge 21.11.48 beside
+Fabric. Three new scenarios: `lightning.json` and `clouds.json` on a beach (open, flat, and it rains there), and
+`aurora.json` facing north (auroras lie north, within 30 degrees). A repeat with a 2.5-second stall (see Rerunning)
+is left out where it moved the frame by more than the noise; such rows give the clean repeat alone.
+
+### Lightning (`lightning.json`)
+
+A held thunderstorm at night, 90-second recordings (sky strikes come by chance, about 0.3 a second), with dynamic
+clouds (strikes light them from inside) and without (the glow drawn as patches).
+
+| Run | Fabric frame GPU ms | NeoForge frame GPU ms | Lightning GPU peak | Lightning CPU |
+|---|---|---|---|---|
+| on | 1.472 (1.459-1.484) | 1.543 (1.539-1.548) | 0.003-0.014 | 0.02-0.07 |
+| off | 1.462 (1.458-1.467) | 1.528 (1.518-1.539) | - | - |
+| no clouds, on | 1.438 (1.435-1.442) | 1.480 (1.461-1.499) | 0.014 | 0.05-0.09 |
+| no clouds, off | 1.448 (1.445-1.450) | 1.486 (1.468-1.503) | - | - |
+
+Lightning makes no difference to the frame beyond the noise, with or without the clouds: the highest any frame's
+lightning took was 0.014 ms of GPU. Its CPU depends on how many strikes a run gets. One NeoForge recording read 0.34 ms;
+it was made while the previous scenario's recordings were being summarized on the same machine. The camera looks a
+little down at the sea, so most sky strikes are out of view; a bolt filling the screen would cost more.
+
+### Dynamic clouds (`clouds.json`)
+
+Dynamic clouds against vanilla's: fair weather in the afternoon, a held storm (its lowered deck), and `/dsprofile`'s
+clouds scene (a storm with the sky half covered by tall, broken clouds). Lightning off. Vanilla's clouds have no timer,
+so the frame's difference is ours less theirs.
+
+| Run | Fabric frame GPU ms | NeoForge frame GPU ms | Clouds GPU | Cloud Handler ms/tick |
+|---|---|---|---|---|
+| fair, dynamic | 1.205 (1.140-1.270) | 1.196 | 0.022 | 0.33-0.40 |
+| fair, vanilla | 1.188 | 1.212 | - | 0.002 |
+| storm, dynamic | 1.430 | 1.504 (one repeat) | 0.107-0.110 | 0.30-0.35 |
+| storm, vanilla | 1.364 | 1.405 | - | 0.002 |
+| tall clouds, dynamic | 1.407 (one repeat) | 1.462 | 0.117-0.122 | 0.29-0.34 |
+| tall clouds, vanilla | 1.361 | 1.407 | - | 0.002 |
+
+Drawing ours costs at most about 0.1 ms of GPU more than vanilla's, in the storm and the tall clouds. Their cost is on
+the tick: working out the field (`- Field *`) is about 0.3 ms a tick in every weather, about half of all the handlers'
+time in these scenes.
+
+### Aurora, classic (`aurora.json`)
+
+A clear winter night facing north, every night with an aurora (chance 100).
+
+| Run | Aurora GPU, Fabric / NeoForge | Screen covered | Aurora CPU |
+|---|---|---|---|
+| default (up to 3 bands; 2 that night) | 0.030 / 0.026 | 28-29% | 0.14-0.18 |
+| one band | 0.020 / 0.017 | 16-17% | 0.07-0.10 |
+
+The aurora costs about 0.05 ms of GPU per million pixels it covers. Its CPU in a recording includes the recording's own
+coverage count (`AuroraCoverage`, run only while recording, inside the timer), so players pay less than that. The two
+platforms' scenes stood in different places (Fabric's bench world remembered the scene from when it was on snowy
+plains), so only the aurora's own timer compares between them.
+
+### NeoForge against Fabric (`precipitation.json`, `swamp-fog.json`)
+
+Fabric's precipitation was run again the same day to compare with:
+
+| Run | Fabric frame GPU ms | NeoForge frame GPU ms | Precipitation GPU/CPU, Fabric / NeoForge |
+|---|---|---|---|
+| rain Low | 1.284 | 1.342 | 0.016/0.060 / 0.019/0.053 |
+| rain Medium | 1.355 | 1.345 | 0.033/0.111 / 0.035/0.091 |
+| rain High | 1.453 | 1.427 | 0.050/0.209 / 0.052/0.168 |
+| snow Low | 1.673 | 1.678 | 0.015/0.057 / 0.015/0.050 |
+| snow Medium | 1.769 | 1.719 | 0.024/0.114 / 0.022/0.098 |
+| snow High | 1.845 | 1.772 | 0.040/0.190 / 0.040/0.171 |
+
+| Ground fog | Fabric fog GPU (2026-11-02) | NeoForge fog GPU |
+|---|---|---|
+| Fast | 0.288 | 0.348 |
+| Fancy | 0.486 | 0.522 |
+| Fabulous | 1.522 | 1.500 |
+
+The two platforms draw our effects at the same cost, and the whole frame within the noise. Fabric's frames read about
+0.2 ms higher than the day before in every precipitation scene: drift between sessions, not the platform.
+
 ## Field recordings
 
 These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on
@@ -211,15 +290,26 @@ changes the picture.
   the foam's rotation was worked out once a tick): the rotation went from 6.1% of the render thread to 0.4%, and the
   foam's whole share from about 19% to 13%; the rest is writing its vertices. Both held the 120 fps limit. Not the same
   amount of foam in each, so the figures are close, not exact.
+- **Waterfall foam in ATM10** (0.4.9 with the foam's rotation once a tick, 120 fps limit, block effect range 64):
+  foam took 3.7% of the render thread (its rotation 0.4%) and the mist puffs 1.8%; the frame was held by the pack's
+  other mods and its own server, at 95 fps.
 - **The first recording after the client starts:** Java Flight Recorder's first start slowed the game for about 8
   seconds, with frames up to a second. Since 0.4.9 the first recording waits 10 seconds longer, with a throwaway
   recording running.
 
 ## Rerunning
 
-- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. A full set (these six) takes
-  about an hour and a quarter; `compat.json` is a visual check, not a measurement. `sound.json` needs a sound device
-  (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud, quietly.
+- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. The first six scenarios take
+  about an hour and a quarter, lightning, clouds and aurora about 45 minutes more; `compat.json` is a visual check, not a measurement. `sound.json` needs a sound device
+  (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud, quietly. Run it first in a long set:
+  a device that sleeps when the machine is idle (wireless headphones) can be gone by the end.
+- Idle means idle: summarizing one scenario's recordings while the next records showed in that run's CPU timers.
+- The first run of a session reads high (its world settling: longer GC pauses, slower frames); in an A B C, C B A set
+  it lands on the first label. Compare that label's two repeats before trusting it.
+- About one recording in twenty here has a stall of 2-2.8 seconds: every thread waits on the render thread, which has
+  no Java samples through it (stuck in native code: the driver or the system, not ours). It isn't tied to an effect
+  or a platform (vanilla clouds had one) and the logs say nothing. One such frame can lift a recording's frame GPU mean
+  by up to 0.9 ms: check the longest frame (`jfr-summary.py`) of any repeat that disagrees with its twin.
 - Check each scenario's screenshots before trusting its numbers: the camera must be where the scenario means it to be
   (in the mist, facing the glass).
 - Read `--spread`: when a label's repeats are further apart than the differences between labels, look for a hitch in

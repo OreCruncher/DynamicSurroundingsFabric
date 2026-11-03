@@ -80,7 +80,10 @@
       "profile": "ground_fog"
     },
     "aurora": {
-      "biome": "minecraft:snowy_plains",
+      // Not snowy plains, where precipitation.json's snow scene builds a glass wall the player could land on
+      "biome": "minecraft:ice_spikes",
+      // Auroras lie north (-Z), within 30 degrees
+      "yaw": 180,
       "pitch": -35,
       "commands": ["time set 18000", "weather clear", "season set mid_winter"],
       "profile": "general"

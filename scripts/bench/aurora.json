@@ -1,0 +1,36 @@
+// The classic aurora on a winter night, off, and with one curtain (the default allows 3, the most). Every night has
+// one (chance 100); the time is fixed, so every run has the same night's aurora. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 15,
+  "record": 60,
+  "repeats": 2,
+  "settingSets": {
+    "tonight": {"auroraOptions.chance": 100}
+  },
+  "scenes": {
+    "aurora": {
+      // Not snowy plains, where precipitation.json's snow scene builds a glass wall the player could land on
+      "biome": "minecraft:ice_spikes",
+      // Auroras lie north (-Z), within 30 degrees
+      "yaw": 180,
+      "pitch": -35,
+      "commands": ["time set 18000", "weather clear", "season set mid_winter"],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {"label": "aurora-default", "scene": "aurora", "use": "tonight"},
+    {"label": "aurora-off", "scene": "aurora", "use": "tonight", "settings": {"auroraOptions.enableAuroras": false}},
+    {"label": "aurora-bands1", "scene": "aurora", "use": "tonight", "settings": {"auroraOptions.maxBands": 1}}
+  ]
+}
