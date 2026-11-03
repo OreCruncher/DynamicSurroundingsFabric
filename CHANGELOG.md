@@ -2,7 +2,7 @@
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
 
-The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.PATCH, starting at 5.0.0: the third number is kept for bug fix releases. It carries every feature of 0.4.8 for 1.21.1 (see below).
+The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.PATCH, starting at 5.0.0: the third number is kept for bug fix releases. It carries every feature of 0.4.9 for 1.21.1 (see below).
 
 **All Loaders**
 * JAVA 21+
@@ -19,17 +19,12 @@ The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.
 * Ported the mod to Minecraft 1.21.11's rendering, from the work done for later Minecraft versions
 * Measured the effects' drawing costs in recordings, and found and removed a GPU stall behind the aurora
 
-**Changes from 0.4.8 for 1.21.1**
+**Changes from 0.4.9 for 1.21.1**
 * Dynamic clouds reach as far as Minecraft's Cloud Distance option, in place of the mod's own Cloud Distance option
 * When Minecraft's Music Toast option shows toasts, its toast is used for music credits in place of the mod's
 * Key bindings are listed under their own Dynamic Surroundings category
 * The particle repair guard (Guards in Diagnostics) isn't needed on 1.21.11 and isn't included
-* The falling drops' tick copies them to the next set an array at a time instead of drop by drop, about a third less work for its thread
-* With the computer's processor fully busy (a large modpack catching up), the weather could hold up a frame for 10 to 30 ms waiting for the drops built ahead; it now waits at most 2 ms, then builds what isn't ready itself
-* In `/dsprofile` recordings and the diagnostics, time the weather spends waiting for the drops built ahead is shown on its own line, "Waiting for Quads"
-* The first `/dsprofile` recording since the game started waits 10 seconds longer before recording: Java Flight Recorder starts up in that time, so the seconds of slowdown its first start causes are no longer in the recording
-* Health pop-offs rounded damage down, so a blow of 1.9 showed as 1; they now round to the nearest whole number (1.4 shows 1, 1.5 and 1.9 show 2), and the crit word goes by the blow itself rather than the rounded number
-* Dynamic clouds stand aside for Distant Horizons, which turns vanilla's clouds off and draws its own; `/dsconflicts` and the diagnostics say so
+* Window frost grows on stained glass as well as clear glass
 
 > ### DynamicSurroundings-1.21.1-0.4.9
 
