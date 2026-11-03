@@ -80,12 +80,19 @@
       "profile": "ground_fog"
     },
     "aurora": {
-      // Not snowy plains, where precipitation.json's snow scene builds a glass wall the player could land on
       "biome": "minecraft:ice_spikes",
       // Auroras lie north (-Z), within 30 degrees
       "yaw": 180,
       "pitch": -35,
-      "commands": ["time set 18000", "weather clear", "season set mid_winter"],
+      // Up above the spikes and the clouds, on a barrier, for the whole of the northern sky: on the ground a spike or a
+      // cloud could hide much of the aurora, and how much it covers is what it costs
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "season set mid_winter",
+        "tp @s ~ 245 ~",
+        "setblock ~ ~-1 ~ barrier"
+      ],
       "profile": "general"
     },
     "fireflies": {

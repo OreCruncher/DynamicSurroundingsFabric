@@ -241,7 +241,9 @@ time in these scenes.
 
 ### Aurora, classic (`aurora.json`)
 
-A clear winter night facing north, every night with an aurora (chance 100).
+A clear winter night facing north, every night with an aurora (chance 100), standing on the ground. The scene has
+since moved up to y 245, above the ice spikes and the clouds (on the ground they could hide much of the aurora); a
+rerun there won't compare with these.
 
 | Run | Aurora GPU, Fabric / NeoForge | Screen covered | Aurora CPU |
 |---|---|---|---|
