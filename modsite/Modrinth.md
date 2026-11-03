@@ -64,6 +64,7 @@ sound and visual effects.
   * Either can be turned off, and their textures replaced by resource packs (1.21.1-0.4.7+)
 * Light level overlay, turned on and off by key bind, showing the light on the blocks around the player colored by whether monsters can spawn there, with an on screen legend (1.21.1-0.4.7+)
 * Guards that repair problems other mods cause, such as particles drawn as squares, naming the mod responsible in the log; each can be turned off (1.21.1-0.4.8+)
+* Configuration presets: rows of buttons at the top of the config screen, and `/dsconfig preset`, set groups of options in one go, for the look of the game or for performance; modpacks can add their own (1.21.1-0.4.9+)
 * Custom debug HUD that can be accessed by key bind. Moves the Dynamic Surroundings clutter out of the traditional F3 display.
 * Dynamic Surroundings is compatible when connecting to a Vanilla servers (a feature of both Fabric and NeoForge loaders).
 
