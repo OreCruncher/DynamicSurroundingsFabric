@@ -12,6 +12,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.tutorial.TutorialSteps;
 import net.minecraft.core.BlockPos;
+import net.minecraft.commands.CommandSource;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
@@ -22,6 +25,7 @@ import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.storage.LevelResource;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.Library;
@@ -46,10 +50,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 
 /**
  * Runs a {@link Scenario} in a development client, then closes the game: opens (or makes) its world, and for each run
@@ -90,8 +95,12 @@ public final class ScenarioRunner {
     private final JsonObject manifest = new JsonObject();
     private final JsonArray runResults = new JsonArray();
     private final Map<String, SceneLocations.Location> sessionScenes = new HashMap<>();
+    // What a command says when it fails only because there was nothing to change: a scene's building commands, once
+    // the scene is built
+    private static final Set<String> NOTHING_TO_CHANGE = Set.of("commands.fill.failed", "commands.setblock.failed",
+            "commands.clone.failed");
     // Server commands that failed, from the server's thread
-    private final Queue<String> commandFailures = new ConcurrentLinkedQueue<>();
+    private final Set<String> commandFailures = ConcurrentHashMap.newKeySet();
     private final JsonArray failedCommands = new JsonArray();
     private @Nullable Step current;
     private int stepTicks;
@@ -490,7 +499,7 @@ public final class ScenarioRunner {
         var text = command.startsWith("/") ? command.substring(1) : command;
         var root = text.split(" ", 2)[0];
         if (server().getCommands().getDispatcher().getRoot().getChild(root) != null)
-            this.serverCommand("execute as @a at @s run " + text);
+            this.serverCommand(text, true);
         else
             Minecraft.getInstance().player.connection.sendCommand(text);
     }
@@ -513,19 +522,82 @@ public final class ScenarioRunner {
         return true;
     }
 
-    /**
-     * Runs a command on the server. A failure is logged and listed in the manifest: under {@code execute as @a} it
-     * fails without a word (a fill above the build limit)
-     */
     private void serverCommand(String command) {
+        this.serverCommand(command, false);
+    }
+
+    /**
+     * Runs a command on the server with its full permission, as the player and where they are if {@code asPlayer}.
+     * One that fails is logged and listed in the manifest, unless all it said was that it had nothing to change (a
+     * fill that builds a scene, on the scene's next run): its messages come back here, where under
+     * {@code execute as @a} they were lost, and a fill above the build limit failed without a word
+     */
+    private void serverCommand(String command, boolean asPlayer) {
         var server = server();
-        var source = server.createCommandSourceStack().withCallback((success, result) -> {
-            if (!success) {
-                Library.LOGGER.warn("Bench: command failed: %s", command);
-                this.commandFailures.add(command);
+        server.execute(() -> {
+            var said = new ArrayList<Component>();
+            var failed = new boolean[1];
+            var source = server.createCommandSourceStack()
+                    .withSource(new MessageCatcher(said))
+                    .withCallback((success, result) -> failed[0] |= !success);
+            var players = server.getPlayerList().getPlayers();
+            if (asPlayer && !players.isEmpty()) {
+                var player = players.getFirst();
+                source = source.withEntity(player).withLevel(player.level()).withPosition(player.position())
+                        .withRotation(player.getRotationVector());
             }
+            server.getCommands().performPrefixedCommand(source, command);
+            if (failed[0] && !nothingToChange(said) && this.commandFailures.add(command))
+                Library.LOGGER.warn("Bench: command failed: %s (%s)", command,
+                        said.stream().map(Component::getString).collect(Collectors.joining("; ")));
         });
-        server.execute(() -> server.getCommands().performPrefixedCommand(source, command));
+    }
+
+    /**
+     * Whether a failed command said only that it found nothing to change
+     */
+    static boolean nothingToChange(List<Component> said) {
+        if (said.isEmpty())
+            return false;
+        for (var message : said) {
+            var keys = new ArrayList<String>();
+            translationKeys(message, keys);
+            if (keys.stream().noneMatch(NOTHING_TO_CHANGE::contains))
+                return false;
+        }
+        return true;
+    }
+
+    private static void translationKeys(Component component, List<String> into) {
+        if (component.getContents() instanceof TranslatableContents translatable)
+            into.add(translatable.getKey());
+        for (var sibling : component.getSiblings())
+            translationKeys(sibling, into);
+    }
+
+    /**
+     * Takes the messages a command sends its source, failures only
+     */
+    private record MessageCatcher(List<Component> said) implements CommandSource {
+        @Override
+        public void sendSystemMessage(@NotNull Component message) {
+            this.said.add(message);
+        }
+
+        @Override
+        public boolean acceptsSuccess() {
+            return false;
+        }
+
+        @Override
+        public boolean acceptsFailure() {
+            return true;
+        }
+
+        @Override
+        public boolean shouldInformAdmins() {
+            return false;
+        }
     }
 
     private static MinecraftServer server() {
@@ -595,8 +667,9 @@ public final class ScenarioRunner {
     }
 
     private void writeManifest() {
-        for (String failed; (failed = this.commandFailures.poll()) != null; )
-            this.failedCommands.add(failed);
+        while (!this.failedCommands.isEmpty())
+            this.failedCommands.remove(0);
+        this.commandFailures.stream().sorted().forEach(this.failedCommands::add);
         try {
             Files.writeString(this.results.resolve("manifest.json"),
                     new GsonBuilder().setPrettyPrinting().create().toJson(this.manifest), StandardCharsets.UTF_8);

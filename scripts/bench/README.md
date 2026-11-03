@@ -50,8 +50,8 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
 - **Commands** are typed as the player would: the server's (`time`, `weather`, `gamerule`, `summon`) run on the
   built-in server with full permission, as the player and where they stand; the mod's (`dsweather ...`) on the client.
   1.21.11's gamerules are snake case (`advance_time`, `advance_weather`, `spawn_mobs`). A server command that fails
-  (under `execute as @a` it fails without a word: a fill above the build limit) is logged and listed in the manifest's
-  `failedCommands`. A scene found where another scene built stands on what that one left (the finder reads the height
+  (a fill above the build limit) is logged with what it said and listed in the manifest's `failedCommands`, unless all
+  it said was that it had nothing to change (a fill that builds a scene, on the scene's next run). A scene found where another scene built stands on what that one left (the finder reads the height
   map): build in the air from an absolute height (`tp @s ~ 245 ~`), as `sound.json` does.
 - **Shot commands**: a scene's `"shotCommands"` run just before its screenshot, as `commands` are, and `"shotDelay"`
   is how many ticks the shot then waits for what they start to show (2 at least): `["dsweather lightning"]` with a delay

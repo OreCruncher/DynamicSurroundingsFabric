@@ -1,6 +1,8 @@
 package org.orecruncher.dsurround.bench;
 
 import com.google.gson.JsonParser;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
@@ -91,6 +93,19 @@ public class ScenarioTests {
         var occluded = scenario.scenes().get("occluded").sounds();
         for (int i = 0; i < enclosed.size(); i++)
             assertEquals(enclosed.get(i).seed(), occluded.get(i).seed());
+    }
+
+    @Test
+    void aCommandThatHadNothingToChangeHasntFailed() {
+        // A scene's fill on its next run finds the scene built; sendFailure wraps the message in a styled one
+        var nothing = Component.translatable("commands.fill.failed");
+        assertTrue(ScenarioRunner.nothingToChange(List.of(nothing)));
+        assertTrue(ScenarioRunner.nothingToChange(List.of(Component.empty().append(nothing).withStyle(ChatFormatting.RED))));
+        assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("commands.setblock.failed"))));
+        // A fill above the build limit, or nothing said at all, has failed
+        assertFalse(ScenarioRunner.nothingToChange(List.of(Component.translatable("argument.pos.outofworld"))));
+        assertFalse(ScenarioRunner.nothingToChange(List.of()));
+        assertFalse(ScenarioRunner.nothingToChange(List.of(nothing, Component.literal("Unknown block type"))));
     }
 
     @Test
