@@ -1,7 +1,7 @@
 # Benchmarks
 
-What Dynamic Surroundings' effects cost to draw, measured by the bench runner, with the numbers the Performance presets
-(Low/Medium/High) were chosen from. Kept as a baseline: after a change to an effect, rerun its scenario and compare.
+What Dynamic Surroundings' effects cost to draw, and what enhanced sound processing costs, measured by the bench
+runner, with the numbers the Performance presets (Low/Medium/High) were chosen from. Kept as a baseline: after a change to an effect, rerun its scenario and compare.
 
 ## Method
 
@@ -98,6 +98,18 @@ The same scene and camera in the full `performance-rest` session an hour earlier
 of GPU and 0.4 ms of CPU cheaper (default 0.684, no mist 0.639, the others 0.675-0.679), with mist and froth saving
 0.04 ms. Compare labels within one session, not across sessions.
 
+**Foam rotation once a tick** (`988aa231`): each foam patch had worked out its rotation from its slope and spin every
+frame; it now does so once a tick and blends the last two each frame. The waterfall scene at its defaults, the old and
+the new build back to back, render thread CPU samples in two recordings each:
+
+| Build | fps | `WaterFoam` samples | of which its rotation |
+|---|---|---|---|
+| before | 870 | 199, 193 | 92, 99 |
+| after | 880 | 90, 76 | 10, 12 |
+
+The foam's share of the render thread fell from about 12% to about 5.5%. The frame rate doesn't follow in a scene this
+small, but by a large waterfall the saving is render thread time freed (see Field recordings).
+
 **Crowd** (entity effect range):
 
 | Run | Frame GPU ms | EntityEffect Handler ms/tick |
@@ -142,24 +154,72 @@ close the camera is.
 The default's second repeat had a 2-second hitch (its frame GPU mean read 2.28 ms), so only the first is shown. Low
 saves about 0.2 ms of dust GPU and the clouds' 0.37 ms a tick.
 
+### Enhanced sounds (`sound.json`)
+
+Button clicks played around the player 20 times a second and 8 beacon hums kept playing, at y 245, out of the reverb
+rays' reach of the ground: in open air (sounds 1.5-6 blocks away), inside a hollow stone box 13 blocks across (1.5-5
+blocks away), and in the box with the sounds outside it (13-16 blocks away). The mod's ambient sounds are off. Measured
+at the commit that added this scenario (after `787ccf11`); master volume 5%.
+
+- **Trace** is the rays of one calculation that traced (occlusion and reverb), mean.
+- **Start** is a sound's calculation and upload as it starts. It runs on the sound engine's thread, which waits for
+  it. **Starts ms/s** is that thread's time on it each second.
+- **Update ms/s** is the worker threads' time on the recalculations, each sound about three times a second.
+- Calculations a second: **traced**; **reused**, the sound's own last result while nothing changed. Almost none took
+  another sound's result (shared), so that column is left out: the clicks rarely land on the same block.
+
+| Run | Trace ms | Start ms | Starts ms/s | Update ms/s | Traced/s | Reused/s |
+|---|---|---|---|---|---|---|
+| open | 0.528 | 0.520 | 10.5 | 3.8 | 26.2 | 45.4 |
+| open, occlusion on | 0.560 | 0.555 | 11.1 | 3.8 | 25.9 | 45.1 |
+| enclosed | 0.508 | 0.482 | 9.8 | 3.6 | 25.5 | 45.9 |
+| enclosed, simplified shared airspace | 0.366 | 0.349 | 7.1 | 2.9 | 26.2 | 45.0 |
+| occluded | 0.597 | 0.589 | 11.9 | 3.5 | 25.3 | 38.0 |
+| occluded, occlusion on | 0.615 | 0.610 | 12.3 | 3.1 | 24.2 | 39.0 |
+
+A trace costs about 0.5-0.6 ms wherever it is. Open air costs as much as the box: every ray travels its full 128
+blocks. Simplified shared airspace makes a trace about 28% cheaper, and occlusion adds 3-4%. The cost that matters is
+the starts: at 20 new sounds a second, 10-12 ms of every second on the sound engine's thread. The updates cost less
+because most reuse their result. Frame times don't change between runs (about 1500 fps throughout): none of this is on
+the render thread.
+
+Since then, two changes (same scenario, later session):
+
+- **Chunk kept in hand between block reads** (`ChunkCachingView`): a trace 23-28% cheaper. Open 0.405 ms, enclosed
+  0.391, occluded 0.429; the sound engine's thread spends 7.5-8.5 ms a second on starts.
+- **Start budget** (`StartBudget`, 2 ms of start calculations every 50 ms): the `burst` scene starts 150 clicks a
+  second in the box. 96 a second are calculated as they start and 54 (37%) start without effects, calculated on the
+  workers' next pass; the sound engine's thread spends 30.6 ms a second on starts instead of about 48. At 20 a second
+  (`enclosed`) none are deferred.
+
+About 17 calculations a second are skipped in every scene. Six minecarts in a mineshaft about 240 blocks below play
+silent riding loops, which are skipped as out of range. The occluded scene skips about 9 more: hums 15-16 blocks
+away, just past their range.
+
 ## Field recordings
 
-These are `/dsprofile` recordings from the ATM10 modpack (NeoForge, 0.4.9 on Minecraft 1.21.1), on the
-same machine at 2560x1369. They are not repeatable like the bench, but show how a large pack changes the picture.
+These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on
+Minecraft 1.21.1) at 2560x1369. They are not repeatable like the bench, but show how a large pack or a big scene
+changes the picture.
 
 - **Ground fog, swamp:** Fabulous 4.0 ms of fog GPU. This led to the floor-level bench scene and to High using Fancy.
 - **Rain, plains:** before 0.4.9, some frames waited 10-30 ms for the quads' thread, which the busy pack starved.
   After the bounded wait, the wait peaks at about 2 ms.
 - **Burning mobs, beside a pen of zombies:** Point Lights went from about 0.18 to 1.05 ms of GPU, half the frame's GPU.
   This is parked until players report it.
+- **Waterfall foam, beside a large waterfall** (dev client, Fabric 0.4.9, 120 fps limit; 60 seconds before and after
+  the foam's rotation was worked out once a tick): the rotation went from 6.1% of the render thread to 0.4%, and the
+  foam's whole share from about 19% to 13%; the rest is writing its vertices. Both held the 120 fps limit. Not the same
+  amount of foam in each, so the figures are close, not exact.
 - **The first recording after the client starts:** Java Flight Recorder's first start slowed the game for about 8
   seconds, with frames up to a second. Since 0.4.9 the first recording waits 10 seconds longer, with a throwaway
   recording running.
 
 ## Rerunning
 
-- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. A full set (these five) takes
-  about an hour; `compat.json` is a visual check, not a measurement.
+- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. A full set (these six) takes
+  about an hour and a quarter; `compat.json` is a visual check, not a measurement. `sound.json` needs a sound device
+  (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud, quietly.
 - Check each scenario's screenshots before trusting its numbers: the camera must be where the scenario means it to be
   (in the mist, facing the glass).
 - Read `--spread`: when a label's repeats are further apart than the differences between labels, look for a hitch in
