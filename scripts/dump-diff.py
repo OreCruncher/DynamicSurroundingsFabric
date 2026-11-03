@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """
 Compares two `/dsdump biomes` files (config/dsurround/dumps/biomes.txt): what changed, not everything.
 

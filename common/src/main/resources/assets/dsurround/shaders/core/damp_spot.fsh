@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Damp spots on the ground after rain. Usually drawn with a blend that darkens what is behind by the alpha, where the
 // colour plays no part, so the fog fades the alpha: a spot deep in the fog darkens the fogged ground less, until it

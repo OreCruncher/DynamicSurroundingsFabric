@@ -80,6 +80,9 @@ processResources {
         from("$projectDir/../CREDITS.md")
         rename { 'credits.md' }
     }
+
+    // MIT asks for the notice to go with every copy, decompiled ones included
+    from("$projectDir/../LICENSE")
 }
 
 shadowJar {

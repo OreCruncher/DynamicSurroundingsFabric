@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings point light (a firefly's, a flame jet's): lights the scene already drawn, near the light. For
 // each pixel, where in the world it is comes from a copy of the scene's depth, so this lights the grass, leaves and

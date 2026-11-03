@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Particle rain and snow: quads lit by the lightmap, as vanilla's weather is, in vanilla's particle vertex format.
 // Snowflakes are textured; rain streaks are plain colour, marked by a texture coordinate below zero. fog_distance from

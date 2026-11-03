@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """Builds a resource pack of leveled copies of the mod's sounds, to compare with the originals in game.
 
 Usage: python scripts/sound-level-pack.py OUT_DIR [--spread 6] [--tolerance 3] [--ceiling -1] [--quality 6]

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """
 Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
 the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and

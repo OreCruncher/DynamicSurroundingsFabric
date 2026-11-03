@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings lightning (see LightningRenderer). Light falls off from the middle of a ribbon or a patch of
 // cloud to nothing at its edge. A channel has a white hot core along its middle; a patch of cloud is broken up by

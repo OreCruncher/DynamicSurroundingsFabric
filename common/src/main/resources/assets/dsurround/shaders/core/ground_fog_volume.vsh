@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Ground fog as a volume: a quad over the whole screen, given in normalized device coordinates
 

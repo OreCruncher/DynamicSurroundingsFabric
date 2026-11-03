@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings clouds (see CloudRenderer). The vertex's shade times the light on the clouds, which changes
 // with the time of day and the weather without the blocks being built again. Fog is measured across the ground only, not

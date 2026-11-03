@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 /**
  * Dynamic clouds: blocky clouds that change with the weather, drawn in place of vanilla's, run by
  * {@code processing.CloudHandler}. What the clouds are like for the weather is {@code runtime.weather.CloudCover}.

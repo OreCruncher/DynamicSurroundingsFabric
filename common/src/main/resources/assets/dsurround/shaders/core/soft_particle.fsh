@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Vanilla's particle fragment shader (shaders/core/particle.fsh), made "soft": the particle fades out as it nears
 // whatever is behind it (terrain, the surface of water), so where it passes into them it blends away instead of

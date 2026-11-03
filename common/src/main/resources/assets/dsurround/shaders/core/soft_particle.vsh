@@ -1,4 +1,6 @@
 #version 150
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Vanilla's particle vertex shader (shaders/core/particle.vsh), with fog_distance from fog.glsl copied in rather
 // than imported.
