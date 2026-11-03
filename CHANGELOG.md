@@ -28,6 +28,7 @@ The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.
 * With the computer's processor fully busy (a large modpack catching up), the weather could hold up a frame for 10 to 30 ms waiting for the drops built ahead; it now waits at most 2 ms, then builds what isn't ready itself
 * In `/dsprofile` recordings and the diagnostics, time the weather spends waiting for the drops built ahead is shown on its own line, "Waiting for Quads"
 * The first `/dsprofile` recording since the game started waits 10 seconds longer before recording: Java Flight Recorder starts up in that time, so the seconds of slowdown its first start causes are no longer in the recording
+* Health pop-offs rounded damage down, so a blow of 1.9 showed as 1; they now round to the nearest whole number (1.4 shows 1, 1.5 and 1.9 show 2), and the crit word goes by the blow itself rather than the rounded number
 
 > ### DynamicSurroundings-1.21.1-0.4.8
 
