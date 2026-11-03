@@ -1,7 +1,12 @@
 # Minecraft version popularity (modded, 1.21+)
 
 **Generated:** 2026-10-23, from the Modrinth public API (no API key needed). Previous refresh: 2026-10-09.
+
 **Purpose:** decide which Minecraft versions are worth targeting, and which have little following.
+
+**License:** this text and its tables are © OreCruncher, under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/):
+reuse them, with credit and a link to this file. The download counts themselves are Modrinth's public figures. The
+script that gathers them (`scripts/modrinth-version-stats.py`) is MIT.
 
 ## Summary
 
@@ -71,12 +76,11 @@ gained 45,211 (all 1.21.1; 84% Fabric, 16% NeoForge).
 
 ## How to refresh
 
-1. Save the script below (e.g. to a temp folder; it's not part of the build).
-2. Run `python modrinth_version_stats.py > tables.md` (Python 3, standard library only). Pass Modrinth slugs as
-   arguments to use other projects; the defaults are the ones below.
-3. Before replacing anything, subtract the previous raw data from the new output, per project and version, for the
+1. Run `python scripts/modrinth-version-stats.py > tables.md` (Python 3, standard library only). Pass Modrinth slugs
+   as arguments to use other projects; the defaults are the ones below.
+2. Before replacing anything, subtract the previous raw data from the new output, per project and version, for the
    "Where new downloads went" table (the share of the downloads made since the last refresh).
-4. Replace the "Raw data" section with the output. Update the summary tables, the analysis and the dates at the top.
+3. Replace the "Raw data" section with the output. Update the summary tables, the analysis and the dates at the top.
 
 Projects used (Modrinth slugs):
 
@@ -90,70 +94,6 @@ Projects used (Modrinth slugs):
 
 Data source: `GET https://api.modrinth.com/v2/project/{slug}/version` returns every file with `downloads`,
 `game_versions` and `loaders`. Only release versions 1.21.x and 26.x+ are counted.
-
-```python
-"""Download share by Minecraft version (1.21+) for a set of Modrinth projects.
-
-Usage: python modrinth_version_stats.py [slug ...]
-Prints one Markdown table per project. No API key needed.
-"""
-import json
-import re
-import sys
-import urllib.request
-from collections import defaultdict
-
-DEFAULT_SLUGS = ['dynamicsurroundingsfabric', 'fabric-api', 'sodium', 'iris', 'jei']
-LOADERS = ('fabric', 'neoforge', 'forge', 'quilt')
-
-
-def key(v):
-    return [int(x) for x in re.findall(r'\d+', v)]
-
-
-def wanted(v):
-    # Release versions only (no snapshots/pre-releases), 1.21.x and the year-based 26.x+
-    if not re.fullmatch(r'[\d.]+', v):
-        return False
-    k = key(v)
-    return k[0] >= 26 or k[:2] == [1, 21]
-
-
-def fetch(slug):
-    req = urllib.request.Request(f'https://api.modrinth.com/v2/project/{slug}/version',
-                                 headers={'User-Agent': 'OreCruncher/DynamicSurroundings version-stats'})
-    with urllib.request.urlopen(req) as r:
-        return json.load(r)
-
-
-def report(slug):
-    total = defaultdict(float)
-    loaders = defaultdict(lambda: defaultdict(float))
-    for ver in fetch(slug):
-        gvs = [g for g in ver['game_versions'] if wanted(g)]
-        if not gvs:
-            continue
-        # A file listing several game versions has its downloads split evenly between them
-        share = ver['downloads'] / len(gvs)
-        lds = [l for l in ver['loaders'] if l in LOADERS] or ['other']
-        for g in gvs:
-            total[g] += share
-            for l in lds:
-                loaders[g][l] += share / len(lds)
-    s = sum(total.values())
-    print(f'### {slug}\n\n1.21+ downloads: {s:,.0f}\n')
-    print('| Version | Downloads | Share | Loaders |')
-    print('|---|---:|---:|---|')
-    for g in sorted(total, key=key):
-        ld = ', '.join(f'{l} {v / total[g]:.0%}' for l, v in sorted(loaders[g].items(), key=lambda x: -x[1]))
-        print(f'| {g} | {total[g]:,.0f} | {total[g] / s:.1%} | {ld} |')
-    print()
-
-
-if __name__ == '__main__':
-    for slug in sys.argv[1:] or DEFAULT_SLUGS:
-        report(slug)
-```
 
 ## Raw data (2026-10-23)
 

@@ -13,6 +13,9 @@ code outside this repository:
 
 Never remove or rewrite copyright notices, license headers or `CREDITS.md` entries, here or in a copy.
 
+Documentation (the Markdown files, this one included) is CC BY 4.0, © OreCruncher: reusing or adapting it needs credit
+and a link back, as the code's notice does.
+
 Assets are not all MIT: textures are CC BY-NC 4.0 unless credited otherwise, and sounds and some textures come from
 other authors under their own licenses, listed in `CREDITS.md`. Reusing them means following those licenses, including
 non-commercial terms. `lib/version/SemanticVersion.java` is Patrick Ahlbrecht's (MIT), under his own notice.
@@ -43,6 +46,8 @@ checking in game.
   or a script's shebang). `python scripts/license-headers.py` adds missing ones and brings the copyright line in step
   with `LICENSE` (change the years there, then run it); `--check` only reports. Files with another holder's notice are
   skipped. New files: add the header (the IDE's event template has it).
+- Minecraft version popularity: `python scripts/modrinth-version-stats.py [slug ...]` prints Modrinth's download
+  share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
   whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
 - Game jar for `javap` (check real signatures rather than assuming; 26.2 is unobfuscated):

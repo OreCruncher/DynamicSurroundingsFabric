@@ -131,6 +131,16 @@ Pull requests are welcome. See [CONTRIB.md](CONTRIB.md) for the ground rules, in
 and where textures and sounds may come from.
 
 > # License
+What each part of the repository is under:
+
+* **Code** (Java, shaders, scripts): MIT, below. Each source file carries an SPDX header saying so.
+* **Documentation** (the Markdown files, this one included): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/),
+  © OreCruncher. Reuse it with credit and a link back.
+* **Textures** made for the mod: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+* **Sounds and credited textures** from other authors: under their own licenses, listed in [CREDITS.md](CREDITS.md).
+
+The MIT license, for the code:
+
 The MIT License (MIT)
 
 Copyright (c) 2023-2026 OreCruncher
