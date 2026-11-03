@@ -98,6 +98,18 @@ The same scene and camera in the full `performance-rest` session an hour earlier
 of GPU and 0.4 ms of CPU cheaper (default 0.684, no mist 0.639, the others 0.675-0.679), with mist and froth saving
 0.04 ms. Compare labels within one session, not across sessions.
 
+**Foam rotation once a tick** (`988aa231`): each foam patch had worked out its rotation from its slope and spin every
+frame; it now does so once a tick and blends the last two each frame. The waterfall scene at its defaults, the old and
+the new build back to back, render thread CPU samples in two recordings each:
+
+| Build | fps | `WaterFoam` samples | of which its rotation |
+|---|---|---|---|
+| before | 870 | 199, 193 | 92, 99 |
+| after | 880 | 90, 76 | 10, 12 |
+
+The foam's share of the render thread fell from about 12% to about 5.5%. The frame rate doesn't follow in a scene this
+small, but by a large waterfall the saving is render thread time freed (see Field recordings).
+
 **Crowd** (entity effect range):
 
 | Run | Frame GPU ms | EntityEffect Handler ms/tick |
@@ -186,14 +198,19 @@ away, just past their range.
 
 ## Field recordings
 
-These are `/dsprofile` recordings from the ATM10 modpack (NeoForge, 0.4.9 on Minecraft 1.21.1), on the
-same machine at 2560x1369. They are not repeatable like the bench, but show how a large pack changes the picture.
+These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on
+Minecraft 1.21.1) at 2560x1369. They are not repeatable like the bench, but show how a large pack or a big scene
+changes the picture.
 
 - **Ground fog, swamp:** Fabulous 4.0 ms of fog GPU. This led to the floor-level bench scene and to High using Fancy.
 - **Rain, plains:** before 0.4.9, some frames waited 10-30 ms for the quads' thread, which the busy pack starved.
   After the bounded wait, the wait peaks at about 2 ms.
 - **Burning mobs, beside a pen of zombies:** Point Lights went from about 0.18 to 1.05 ms of GPU, half the frame's GPU.
   This is parked until players report it.
+- **Waterfall foam, beside a large waterfall** (dev client, Fabric 0.4.9, 120 fps limit; 60 seconds before and after
+  the foam's rotation was worked out once a tick): the rotation went from 6.1% of the render thread to 0.4%, and the
+  foam's whole share from about 19% to 13%; the rest is writing its vertices. Both held the 120 fps limit. Not the same
+  amount of foam in each, so the figures are close, not exact.
 - **The first recording after the client starts:** Java Flight Recorder's first start slowed the game for about 8
   seconds, with frames up to a second. Since 0.4.9 the first recording waits 10 seconds longer, with a throwaway
   recording running.
