@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 """
 Triage of a modpack run (scripts/bench/README.md, "Modpacks"): what in its log, crash reports and bench results needs
 a look, most likely ours first.

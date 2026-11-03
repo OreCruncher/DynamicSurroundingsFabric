@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Frost on windows. The texture's alpha says when each texel frosts over as the frost grows (0 first, 1 never); the
 // vertex alpha says how far it has grown there. A texel is shown once the frost has grown past it, with a soft edge

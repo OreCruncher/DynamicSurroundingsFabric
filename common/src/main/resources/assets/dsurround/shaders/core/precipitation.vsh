@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Particle rain, snow and dust: quads lit by the lightmap, as vanilla's weather is, in vanilla's particle vertex
 // format. The same as vanilla's particle vertex shader (shaders/core/particle.vsh).

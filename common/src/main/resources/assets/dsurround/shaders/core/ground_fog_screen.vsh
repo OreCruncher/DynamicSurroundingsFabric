@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // The ground fog's passes: a triangle over the whole of what is drawn to, from the vertex's index alone (as vanilla's
 // screenquad), no vertex buffer. The matrices the passes need are worked out here, once for the three vertices, from

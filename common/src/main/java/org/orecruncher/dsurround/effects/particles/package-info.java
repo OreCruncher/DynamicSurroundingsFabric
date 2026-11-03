@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 /**
  * The mod's particles: flames, sparks, smoke, steam, breath, death mist, fireflies, waterfall mist, water foam and
  * ripples, lava drops. Unlike the weather in {@code effects.precipitation}, they are the game's own particles, ticked

@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Ground fog as a volume. Each pixel follows its line of sight from the camera to what it shows (from a copy of the
 // scene's depth) and adds up the mist along the way, a few steps through the part of it low enough to be in the mist.

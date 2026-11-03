@@ -1,4 +1,6 @@
 #version 330
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings realistic aurora: a triangle over the whole screen, from the vertex's index alone, no vertex
 // buffer. The camera's rotation is in ModelViewMat (the sky is drawn around the camera); the inverse of it and the

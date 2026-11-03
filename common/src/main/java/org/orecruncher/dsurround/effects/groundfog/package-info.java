@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
+
 /**
  * Ground fog: mist lying low over the ground in the biomes given it ({@code groundFog} in the biome configs), run by
  * {@code processing.GroundFogHandler}.
