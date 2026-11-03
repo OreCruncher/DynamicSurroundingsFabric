@@ -307,7 +307,7 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
     at the start of the weather pass, or with Fabulous after the weather and before the world border.
   - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
     each with its own base and top, in place of vanilla's (`MixinCloudRenderer` cancels `CloudRenderer.render` when
-    ours draw; `OptionalHook.DYNAMIC_CLOUDS`). Three pipelines in one pass to the clouds target (main without Fabulous):
+    ours draw; `OptionalHook.DYNAMIC_CLOUDS`; off for Distant Horizons, which turns vanilla's clouds off and draws its own: `FeatureConflict.DYNAMIC_CLOUDS`). Three pipelines in one pass to the clouds target (main without Fabulous):
     the settled part's depth, then its color, then the changing part fading, no depth. The grid follows the Cloud
     Distance option; the light on them is vanilla's cloud color (the environment's). `runtime/weather/CloudCover` is
     what the weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder
@@ -360,7 +360,7 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   branch back into it (that would bring the downgrades with it): cherry-pick a fix made here. The realistic aurora
   (`effects/aurora/RealisticAurora*`, `/dsaurora`, `auroraOptions.style` and its groups) stays out of this branch:
   on a merge, drop what it brings of that.
-- `main`: the 1.21.1 line, frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering.
+- `main`: the 1.21.1 line, frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
 
