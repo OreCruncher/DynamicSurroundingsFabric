@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 import java.lang.ref.WeakReference;
@@ -61,17 +62,19 @@ public class WaterFoam extends TextureSheetParticle {
     private final float peakAlpha;
     private final float rollSpeed;
 
-    // The slope of the water's surface it is lying on, as the rise per block east (x) and south (z): now, and as it
-    // was last tick, to blend between while drawing
+    // The slope of the water's surface it is lying on, as the rise per block east (x) and south (z)
     private float slopeX;
     private float slopeZ;
-    private float oSlopeX;
-    private float oSlopeZ;
     // The block of water under it, found each tick
     private final BlockPos.MutableBlockPos waterPos = new BlockPos.MutableBlockPos();
     // Its light, read every LIGHT_TICKS rather than every frame: it drifts slowly
     private int light;
     private final int lightPhase;
+    // How it lies (its slope and spin): worked out once a tick, now and as it was last tick, and blended between while
+    // drawing. Working it out every frame (a square root and two turns' worth of sines and cosines) was 6% of the
+    // render thread by a large waterfall; between ticks it turns by a degree or two, which a blend follows closely
+    private final Quaternionf orientation = new Quaternionf();
+    private final Quaternionf oOrientation = new Quaternionf();
     // Kept to be set again each frame, rather than made anew
     private final Quaternionf rotation = new Quaternionf();
 
@@ -153,6 +156,8 @@ public class WaterFoam extends TextureSheetParticle {
         this.friction = 0.96F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.06F;
+        orientation(this.slopeX, this.slopeZ, this.roll, this.orientation);
+        this.oOrientation.set(this.orientation);
 
         this.setSprite(sprites.get(random));
         this.light = super.getLightColor(0F);
@@ -172,12 +177,16 @@ public class WaterFoam extends TextureSheetParticle {
 
     @Override
     public void tick() {
+        this.oOrientation.set(this.orientation);
+        this.tickOnWater();
+        orientation(this.slopeX, this.slopeZ, this.roll, this.orientation);
+    }
+
+    private void tickOnWater() {
         // Ages it (removing it at the end of its life) and moves it
         super.tick();
         this.oRoll = this.roll;
         this.roll += this.rollSpeed;
-        this.oSlopeX = this.slopeX;
-        this.oSlopeZ = this.slopeZ;
         if (this.removed)
             return;
         if ((this.age + this.lightPhase) % LIGHT_TICKS == 0)
@@ -318,11 +327,7 @@ public class WaterFoam extends TextureSheetParticle {
         float fade = Math.min(life / FADE_IN, (1F - life) / FADE_OUT);
         this.alpha = this.peakAlpha * Mth.clamp(fade, 0F, 1F);
 
-        var rotation = orientation(
-                Mth.lerp(partialTick, this.oSlopeX, this.slopeX),
-                Mth.lerp(partialTick, this.oSlopeZ, this.slopeZ),
-                Mth.lerp(partialTick, this.oRoll, this.roll),
-                this.rotation);
+        var rotation = blend(this.oOrientation, this.orientation, partialTick, this.rotation);
         this.renderRotatedQuad(buffer, camera, rotation, partialTick);
     }
 
@@ -338,6 +343,15 @@ public class WaterFoam extends TextureSheetParticle {
      */
     static Quaternionf orientation(float slopeX, float slopeZ, float spin) {
         return orientation(slopeX, slopeZ, spin, new Quaternionf());
+    }
+
+    /**
+     * Between two orientations a tick apart, {@code partialTick} of the way, set in {@code into} and returned: a
+     * normalized blend, which for the degree or two foam turns in a tick is as good as working the orientation out
+     * from the blended slope and spin
+     */
+    static Quaternionf blend(Quaternionfc from, Quaternionfc to, float partialTick, Quaternionf into) {
+        return into.set(from).nlerp(to, partialTick);
     }
 
     /**
