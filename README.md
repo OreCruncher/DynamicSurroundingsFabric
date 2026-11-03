@@ -20,6 +20,17 @@ Online documentation: https://dynamic-surroundings.readthedocs.io/en/latest/inde
 and covers settings for players as well as modpack/resource pack authors. The repository for documentation is located at
 https://github.com/OreCruncher/DynamicSurroundingsDocs.
 
+### Minecraft 1.21.11 Requirements
+* JAVA 21+
+* Architectury 19.0.1+
+
+**Fabric**
+* Fabric Loader >= 0.19.5
+* Fabric API >= 0.141.6+1.21.11
+
+**NeoForge**
+* NeoForge 21.11.48+
+
 ### Minecraft 1.21.1 Requirements
 * JAVA 21+
 * Architectury 13.0.8+
