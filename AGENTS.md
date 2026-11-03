@@ -270,14 +270,14 @@ particles and firefly lights: shaders, `RenderSystem`, particle render types), m
 (`LevelRenderer.renderSky`, `SoundEngine.play`, `ParticleEngine` render order, `FogRenderer`) and the sound engine
 hooks. NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
 
-1.21.1 work lands on `main` (0.4.8 was squash-merged as `21b8f91d`); start each 1.21.1 release branch from `main`.
-`main` is merged into 26.2 (as of 0.4.8, `21b8f91d`, recorded with `-s ours`), so
+1.21.1 work lands on `main` (0.4.9 was squash-merged as `df0c23ef`); start each 1.21.1 release branch from `main`.
+`main` is merged into 26.2 (as of 0.4.9, `df0c23ef`, recorded with `-s ours`), so
 `git diff $(git merge-base main OreCruncher/26.2) main` lists the 1.21.1 changes still to port. The release branch in
 progress (none open) is merged into `OreCruncher/26.2` directly, in the worktree, resolving against 26.2's
 APIs (see its `MIGRATION.md`; `scripts/port-merge.py` there redoes the renames), never by rebasing the 26.2 branch.
 After its squash to `main`, record `main` in 26.2 with `git merge -s ours main`.
 
-1.21.1 is frozen at 0.4.8 (tag `1.21.1-0.4.8`); a hotfix there would be 0.4.9, the old numbering. Next release: 5.0.0
+1.21.1 is frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering. Next release: 5.0.0
 for 1.21.11, on the long-lived branch `OreCruncher/1.21.11`, backported from 26.2 (branched from `OreCruncher/26.2`,
 not `main`). 26.x work merges into it; never merge it back into 26.x (that would bring the backport's downgrades
 with it): cherry-pick a fix made there.
