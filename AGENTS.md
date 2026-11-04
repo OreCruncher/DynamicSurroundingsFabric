@@ -355,11 +355,11 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
 ## Branches
 - `OreCruncher/1.21.11` (this branch, worktree `C:\repos\DynamicSurroundingsFabric-1.21.11`): the 1.21.11 line,
   branched from `OreCruncher/26.2` (0a280a8d) and kept. Its first release is 5.0.0.
-- `OreCruncher/26.2` (worktree `C:\repos\DynamicSurroundingsFabric-26.2`): where features land first. Merge it into this
-  branch for its features and fixes, resolving against 1.21.11's APIs (the backport note above); never merge this
-  branch back into it (that would bring the downgrades with it): cherry-pick a fix made here. The realistic aurora
-  (`effects/aurora/RealisticAurora*`, `/dsaurora`, `auroraOptions.style` and its groups) stays out of this branch:
-  on a merge, drop what it brings of that.
+- `OreCruncher/26.2` (worktree `C:\repos\DynamicSurroundingsFabric-26.2`): where features land first, and they stay
+  there: 1.21.11 takes none of 26.x's features, only fixes, so it stays on 5.0.x and skips the minors 26.x makes. Don't
+  merge between the two branches, which would bring 26.x's features here or the downgrades there: cherry-pick a fix
+  either way, resolving against 1.21.11's APIs (the backport note above). The realistic aurora
+  (`effects/aurora/RealisticAurora*`, `/dsaurora`, `auroraOptions.style` and its groups) stays out of this branch.
 - `main`: the 1.21.1 line, frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
