@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "org.orecruncher.dsurround.mixins",
   "plugin": "org.orecruncher.dsurround.mixinutils.DSurroundMixinPlugin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
   ],
   "client": [

@@ -59,6 +59,16 @@ public class DSurroundMixinPluginTests {
     }
 
     @Test
+    void theMixinConfigRunsOnTheGamesJava() throws Exception {
+        // Mixin won't load a config asking for more than the running Java: 26.2's JAVA_25 stopped the game on Java 21
+        var stream = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("dsurround.mixins.json"));
+        try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+            var json = JsonParser.parseReader(reader).getAsJsonObject();
+            assertEquals("JAVA_21", json.get("compatibilityLevel").getAsString());
+        }
+    }
+
+    @Test
     void theTargetsExistInTheBuild() {
         // Cloth Config is on the build's class path, so its class is there; a typo in the name would fail this
         for (var target : DSurroundMixinPlugin.OPTIONAL.values())
