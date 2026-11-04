@@ -25,11 +25,11 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
 * Architectury 19.0.1+
 
 **Fabric**
-* Fabric Loader >= 0.19.5
+* Fabric Loader >= 0.19.3
 * Fabric API >= 0.141.6+1.21.11
 
 **NeoForge**
-* NeoForge 21.11.48+
+* NeoForge 21.11.13+
 
 ### Minecraft 1.21.1 Requirements
 * JAVA 21+

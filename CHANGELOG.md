@@ -9,11 +9,11 @@ The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.
 * Architectury 19.0.1+
 
 **Fabric**
-* Fabric Loader >= 0.19.5
+* Fabric Loader >= 0.19.3
 * Fabric API >= 0.141.6+1.21.11
 
 **NeoForge**
-* NeoForge 21.11.48+
+* NeoForge 21.11.13+
 
 **AI Disclosure**
 * Ported the mod to Minecraft 1.21.11's rendering, from the work done for later Minecraft versions
