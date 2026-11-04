@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
@@ -82,6 +83,7 @@ public final class ScenarioRunner {
     // At least this long after arriving before the terrain is taken as drawn: it starts out with nothing to draw
     private static final int SETTLE_SECONDS = 3;
     private static final int TICKS_PER_SECOND = 20;
+    private static final String SETTINGS_TO_RESTORE = "settings-to-restore.json";
     // How long a screen other than the title screen stays up before the world is opened over it: a modpack's own (a
     // mod's first-run notice, a title screen of its own)
     private static final int OTHER_SCREEN_SECONDS = 5;
@@ -100,7 +102,7 @@ public final class ScenarioRunner {
     // What a command says when it fails only because there was nothing to change: a scene's building commands, once
     // the scene is built
     private static final Set<String> NOTHING_TO_CHANGE = Set.of("commands.fill.failed", "commands.setblock.failed",
-            "commands.clone.failed");
+            "commands.clone.failed", "argument.entity.notfound.entity");
     // Server commands that failed, from the server's thread
     private final Set<String> commandFailures = ConcurrentHashMap.newKeySet();
     private final JsonArray failedCommands = new JsonArray();
@@ -298,7 +300,9 @@ public final class ScenarioRunner {
         }
         if (!problems.isEmpty())
             throw new IllegalArgumentException("settings that can't be applied: " + String.join("; ", problems));
+        this.recoverSettings(config);
         this.baseline = new ConfigPreset("baseline", null, null, false, all).current(config);
+        this.keepBaseline();
 
         var order = this.scenario.order();
         for (int i = 0; i < order.size(); i++)
@@ -382,6 +386,9 @@ public final class ScenarioRunner {
             return false;
         }, 0);
         this.step(tag + ": warm up", () -> {
+            if (this.stepTicks == 1)
+                for (var command : scene.settledCommands())
+                    this.command(command);
             // The sounds from here, where the player is once the commands have moved them; and whether they can be heard
             // and processed: a sound whose volume works out to 0 isn't played
             if (this.stepTicks == 1 && !scene.sounds().isEmpty()) {
@@ -625,6 +632,40 @@ public final class ScenarioRunner {
         return json;
     }
 
+    // Where a session keeps the settings it started with until it has put them back: one killed or crashed partway
+    // leaves its last run's in the config, every effect off perhaps, which the next session would take as its starting
+    // point without a word
+    private Path settingsToRestore() {
+        return this.results.getParent().resolve(SETTINGS_TO_RESTORE);
+    }
+
+    /**
+     * Puts back what a session that never finished left changed
+     */
+    private void recoverSettings(Configuration config) {
+        var file = this.settingsToRestore();
+        if (!Files.exists(file))
+            return;
+        try {
+            var values = new LinkedHashMap<String, JsonElement>();
+            JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject().asMap().forEach(values::put);
+            config.applyPreset(new ConfigPreset("unfinished session", null, null, false, values));
+            Library.LOGGER.warn("Bench: a session didn't finish; put its %d settings back", values.size());
+        } catch (IOException | RuntimeException e) {
+            Library.LOGGER.warn("Bench: unable to put back the settings of a session that didn't finish: %s", e);
+        }
+    }
+
+    private void keepBaseline() {
+        var values = new JsonObject();
+        this.baseline.values().forEach(values::add);
+        try {
+            Files.writeString(this.settingsToRestore(), values.toString(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            Library.LOGGER.warn("Bench: unable to write %s: %s", this.settingsToRestore(), e);
+        }
+    }
+
     /**
      * Puts the settings back, writes the manifest and closes the game
      */
@@ -638,6 +679,11 @@ public final class ScenarioRunner {
                 ContainerManager.resolve(Configuration.class).applyPreset(this.baseline);
             } catch (Exception e) {
                 Library.LOGGER.warn("Bench: unable to put the settings back: %s", e);
+            }
+            try {
+                Files.deleteIfExists(this.settingsToRestore());
+            } catch (IOException e) {
+                Library.LOGGER.warn("Bench: unable to remove %s: %s", this.settingsToRestore(), e);
             }
         }
         if (failure != null)

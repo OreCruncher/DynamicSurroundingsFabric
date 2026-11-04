@@ -136,6 +136,9 @@ def potatoRuns(Project p) {
     // A modpack run (scripts/modpack-fetch.py fetches one) uses the pack's folder, -Ppack=<slug>, with or without a
     // scenario, and the heap a pack of a hundred mods or more wants
     def pack = p.rootProject.findProperty('pack') ?: 'none'
+    // The graphics API for a bench run, -PgraphicsBackend=vulkan or opengl: a launch argument, which the game doesn't
+    // reset to its default after a failed start, as it does the option
+    def graphicsBackend = p.rootProject.findProperty('graphicsBackend')
     def variants = [
             clientPotatoCpu     : [label: 'potato CPU', vm: cpuArgs, program: [], pin: true],
             clientPotatoFill    : [label: 'potato fill', vm: [], program: fillArgs, pin: false],
@@ -158,6 +161,8 @@ def potatoRuns(Project p) {
                 if (v.bench) {
                     runDir v.pack ? "run-pack/$pack" : 'run-bench'
                     vmArg "-Ddsurround.scenario=$scenarioPath"
+                    if (graphicsBackend)
+                        programArgs '--graphicsBackend', graphicsBackend
                 }
             }
         }

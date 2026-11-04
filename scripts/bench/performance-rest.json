@@ -36,7 +36,13 @@
         "fill ~-24 ~-3 ~-4 ~24 ~-2 ~38 dirt replace air",
         "fill ~-24 ~-1 ~-4 ~24 ~-1 ~38 grass_block",
         "fill ~-10 ~-2 ~2 ~10 ~-2 ~6 stone",
-        "fill ~-10 ~-1 ~2 ~10 ~-1 ~6 lava",
+        "fill ~-10 ~-1 ~2 ~10 ~-1 ~6 lava"
+      ],
+      // Clearing under the cliff drops its gravel onto the stage, and items: both cleared once they have landed
+      "settledCommands": [
+        "fill ~-24 ~ ~-4 ~24 ~19 ~16 air",
+        "fill ~-24 ~ ~17 ~24 ~19 ~38 air",
+        "kill @e[type=item,distance=..64]",
         "setblock ~-8 ~18 ~18 water",
         "setblock ~0 ~18 ~16 water",
         "setblock ~8 ~18 ~18 water",

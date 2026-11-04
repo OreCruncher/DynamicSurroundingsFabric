@@ -53,14 +53,16 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      * @param yaw      where to look, if given; otherwise toward the most of the biome
      * @param pitch    where to look up and down, if given
      * @param commands commands run once the player is there (time, weather, /dsweather)
+     * @param settledCommands commands run as the warm-up starts, as {@code commands} are: once what those set off has
+     *                 finished, such as gravel falling into a cleared stage
      * @param profile  the /dsprofile scene to record with
      * @param shotCommands commands run just before the screenshot (a strike of lightning to catch in it), as the
      *                 player would type them, as {@code commands} are
      * @param shotDelay ticks from those commands to the screenshot, for what they start to show
      * @param sounds   sounds played around the player from the end of the commands to the end of the recording
      */
-    public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands, String profile,
-                        List<String> shotCommands, int shotDelay, List<Sounds> sounds) {
+    public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands,
+                        List<String> settledCommands, String profile, List<String> shotCommands, int shotDelay, List<Sounds> sounds) {
     }
 
     /**
@@ -107,6 +109,7 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                     s.has("yaw") ? s.get("yaw").getAsFloat() : null,
                     s.has("pitch") ? s.get("pitch").getAsFloat() : null,
                     strings(s, "commands"),
+                    strings(s, "settledCommands"),
                     s.has("profile") ? s.get("profile").getAsString() : "general",
                     strings(s, "shotCommands"),
                     s.has("shotDelay") ? Math.max(0, s.get("shotDelay").getAsInt()) : 0,

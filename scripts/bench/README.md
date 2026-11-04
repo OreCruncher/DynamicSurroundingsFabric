@@ -7,6 +7,7 @@ The code is `common/.../bench` (`ScenarioRunner`), started only in development r
 
     ./gradlew :fabric:runClientBench -Pscenario=scripts/bench/dust-low.json
     ./gradlew :fabric:runClientBenchPotatoCpu -Pscenario=...     (4 CPUs, 2 GB, pinned, as runClientPotatoCpu)
+    ./gradlew :fabric:runClientBench -PgraphicsBackend=vulkan -Pscenario=...     (a launch argument: the option is reset after a failed start)
 
 NeoForge has the same tasks. The runs use their own folder, `<platform>/run-bench` (config, options, worlds), so your
 dev settings and worlds are never touched. Results go to `<platform>/run-bench/bench-results/<scenario>-<time>/`:
@@ -46,13 +47,18 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
 - **Setting sets**: `"settingSets": {"off": {...}}` names a group of settings once; a run applies it with
   `"use": "off"` (or a list, in order), then its own `settings` on top (`compat.json` turns every effect off this way).
 - **Settings** are dotted config paths, as presets use. Before each run, every path any run sets is put back to what it
-  was when the session started, so runs don't leak into each other; settings needing a restart are refused up front.
+  was when the session started, so runs don't leak into each other, and again at the end; settings needing a restart are
+  refused up front. A session killed partway leaves `bench-results/settings-to-restore.json`, and the next one puts those
+  back first.
 - **Commands** are typed as the player would: the server's (`time`, `weather`, `gamerule`, `summon`) run on the
   built-in server with full permission, as the player and where they stand; the mod's (`dsweather ...`) on the client.
   1.21.11's gamerules are snake case (`advance_time`, `advance_weather`, `spawn_mobs`). A server command that fails
   (a fill above the build limit) is logged with what it said and listed in the manifest's `failedCommands`, unless all
   it said was that it had nothing to change (a fill that builds a scene, on the scene's next run). A scene found where another scene built stands on what that one left (the finder reads the height
   map): build in the air from an absolute height (`tp @s ~ 245 ~`), as `sound.json` does.
+- **Settled commands**: a scene's `"settledCommands"` run as the warm-up starts, as `commands` are, at least 3 seconds
+  after them: a stage cleared under a cliff drops gravel and sand onto itself, so `compat.json` clears again here, then
+  starts its water.
 - **Shot commands**: a scene's `"shotCommands"` run just before its screenshot, as `commands` are, and `"shotDelay"`
   is how many ticks the shot then waits for what they start to show (2 at least): `["dsweather lightning"]` with a delay
   of 6 to 10 catches a strike in the shot.

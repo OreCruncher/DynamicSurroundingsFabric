@@ -51,6 +51,15 @@ public class ScenarioTests {
     }
 
     @Test
+    void scenesMayRunCommandsOnceSettled() {
+        var scenario = parse("""
+                {"scenes": {"stage": {"commands": ["fill"], "settledCommands": ["fill again"]}, "plain": {}},
+                 "runs": [{"scene": "stage"}]}""");
+        assertEquals(List.of("fill again"), scenario.scenes().get("stage").settledCommands());
+        assertEquals(List.of(), scenario.scenes().get("plain").settledCommands());
+    }
+
+    @Test
     void scenesMayRunCommandsBeforeTheScreenshot() {
         var scenario = parse("""
                 {"scenes": {"storm": {"shotCommands": ["dsweather lightning"], "shotDelay": 8}, "plain": {}},
@@ -103,6 +112,7 @@ public class ScenarioTests {
         // A scene's fill on its next run finds the scene built; sendFailure wraps the message in a styled one
         var nothing = Component.translatable("commands.fill.failed");
         assertTrue(ScenarioRunner.nothingToChange(List.of(nothing)));
+        assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("argument.entity.notfound.entity"))));
         assertTrue(ScenarioRunner.nothingToChange(List.of(Component.empty().append(nothing).withStyle(ChatFormatting.RED))));
         assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("commands.setblock.failed"))));
         // A fill above the build limit, or nothing said at all, has failed
