@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.profiling;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
@@ -569,21 +570,10 @@ public class ProfilingTests {
                 }
             });
             recorder.start();
-            // A pass a tick, as the worker would: 4 sounds, one starting (2 ms) and two updates (1 and 3 ms); of their
-            // calculations one traced (1.5 ms), two shared, one reused its own and one was skipped
+            // A pass a tick, as the worker would
             while (recorder.isAlive()) {
-                if (SoundSamples.isRecording()) {
-                    SoundSamples.started(2_000_000);
-                    SoundSamples.deferred();
-                    SoundSamples.updated(1_000_000);
-                    SoundSamples.updated(3_000_000);
-                    SoundSamples.traced(1_500_000);
-                    SoundSamples.shared();
-                    SoundSamples.shared();
-                    SoundSamples.reused();
-                    SoundSamples.skipped();
-                    SoundSamples.pass(5_000_000, 4);
-                }
+                if (SoundSamples.isRecording())
+                    soundPass();
                 Thread.sleep(50);
             }
             recorder.join();
@@ -595,32 +585,74 @@ public class ProfilingTests {
                 .filter(e -> e.getEventType().getName().equals("dsurround.EnhancedSounds"))
                 .toList();
         assertFalse(events.isEmpty());
+        // A second can end partway through a pass, leaving its counts in two events: what they hold is checked in
+        // enhancedSoundsEventsHoldWhatWasCounted
         int passes = 0;
         for (var event : events) {
             assertTrue(event.getBoolean("available"));
-            int n = event.getInt("passes");
-            passes += n;
-            assertEquals(n, event.getInt("starts"));
-            assertEquals(n, event.getInt("deferred"));
-            assertEquals(2 * n, event.getInt("updates"));
-            assertEquals(n, event.getInt("traced"));
-            assertEquals(2 * n, event.getInt("shared"));
-            assertEquals(n, event.getInt("reused"));
-            assertEquals(n, event.getInt("skipped"));
-            if (n == 0)
-                continue;
-            assertEquals(4F, event.getFloat("sources"), 1e-6);
-            assertEquals(4, event.getInt("sourcesPeak"));
-            assertEquals(2.0, event.getDouble("startMean"), 1e-9);
-            assertEquals(2.0, event.getDouble("startPeak"), 1e-9);
-            assertEquals(2.0, event.getDouble("updateMean"), 1e-9);
-            assertEquals(3.0, event.getDouble("updatePeak"), 1e-9);
-            assertEquals(5.0, event.getDouble("passMean"), 1e-9);
-            assertEquals(1.5, event.getDouble("traceMean"), 1e-9);
-            assertEquals(1.5, event.getDouble("tracePeak"), 1e-9);
+            assertTrue(event.getDouble("startPeak") <= 2.0, "peak " + event.getDouble("startPeak"));
+            passes += event.getInt("passes");
         }
         assertTrue(passes > 0);
         assertFalse(SoundSamples.isRecording());
+    }
+
+    @Test
+    void enhancedSoundsEventsHoldWhatWasCounted() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        try (var recording = new Recording()) {
+            recording.enable(EnhancedSoundsEvent.class);
+            recording.start();
+            SoundSamples.start();
+            try {
+                soundPass();
+                soundPass();
+                EnhancedSoundsEvent.write(true, SoundSamples.take());
+            } finally {
+                SoundSamples.stop();
+            }
+            recording.stop();
+            recording.dump(file);
+        }
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.EnhancedSounds"))
+                .toList();
+        assertEquals(1, events.size());
+        var event = events.getFirst();
+        assertTrue(event.getBoolean("available"));
+        assertEquals(2, event.getInt("passes"));
+        assertEquals(2, event.getInt("starts"));
+        assertEquals(2, event.getInt("deferred"));
+        assertEquals(4, event.getInt("updates"));
+        assertEquals(2, event.getInt("traced"));
+        assertEquals(4, event.getInt("shared"));
+        assertEquals(2, event.getInt("reused"));
+        assertEquals(2, event.getInt("skipped"));
+        assertEquals(4F, event.getFloat("sources"), 1e-6);
+        assertEquals(4, event.getInt("sourcesPeak"));
+        assertEquals(2.0, event.getDouble("startMean"), 1e-9);
+        assertEquals(2.0, event.getDouble("startPeak"), 1e-9);
+        assertEquals(2.0, event.getDouble("updateMean"), 1e-9);
+        assertEquals(3.0, event.getDouble("updatePeak"), 1e-9);
+        assertEquals(5.0, event.getDouble("passMean"), 1e-9);
+        assertEquals(1.5, event.getDouble("traceMean"), 1e-9);
+        assertEquals(1.5, event.getDouble("tracePeak"), 1e-9);
+    }
+
+    // 4 sounds, one starting (2 ms) and two updates (1 and 3 ms); of their calculations one traced (1.5 ms), two shared,
+    // one reused its own and one was skipped
+    private static void soundPass() {
+        SoundSamples.started(2_000_000);
+        SoundSamples.deferred();
+        SoundSamples.updated(1_000_000);
+        SoundSamples.updated(3_000_000);
+        SoundSamples.traced(1_500_000);
+        SoundSamples.shared();
+        SoundSamples.shared();
+        SoundSamples.reused();
+        SoundSamples.skipped();
+        SoundSamples.pass(5_000_000, 4);
     }
 
     @Test
@@ -646,7 +678,9 @@ public class ProfilingTests {
                 .filter(e -> e.getEventType().getName().equals("dsurround.Feature"))
                 .map(e -> new ProfileFeature(e.getString("kind"), e.getString("name"), e.getString("state"), e.getBoolean("usual")))
                 .toList();
-        assertEquals(environment.features(), events);
+        // Written together, so they can share a timestamp, and JFR hands those back in any order
+        assertEquals(environment.features().size(), events.size());
+        assertEquals(new HashSet<>(environment.features()), new HashSet<>(events));
     }
 
     @Test
