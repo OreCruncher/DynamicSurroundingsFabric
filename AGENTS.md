@@ -172,7 +172,9 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
   turns pixels back into directions (the ground fog) takes them from a point far along the pixel's line (the far
   plane), not from one near the camera, or every direction swings as the player walks.
 - `RenderPipeline.Builder` defaults here to a `LEQUAL` depth test with depth writes, and back-face culling (26.2's
-  default is no depth state at all). Say `withDepthWrite(false)` (and `NO_DEPTH_TEST` where nothing should be tested)
+  default is no depth state at all). `NO_DEPTH_TEST` turns the test off in OpenGL, which turns depth writes off too,
+  `gl_FragDepth` included; there is no always-passing test here, so a pass writing its own depth uses `LEQUAL` on a
+  target cleared to 1 (26.2's `CompareOp.ALWAYS_PASS` isn't `NO_DEPTH_TEST`). Say `withDepthWrite(false)` (and `NO_DEPTH_TEST` where nothing should be tested)
   on every pipeline that shouldn't write; `ModShaderTests` checks the `*_depth`/`*_depth_write` pipelines write depth
   and their plain and `*_fabulous` siblings don't.
 - Drawing our own geometry while particles draw (`MixinParticleFeatureRenderer`): use the prepared buffers'

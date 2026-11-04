@@ -82,7 +82,8 @@ public final class GroundFogVolume {
 
     /**
      * Draws the mist, at a share of the screen's size, replacing what was there: its colour, already multiplied by its
-     * alpha, and the depth where it begins, which each pixel writes itself. Without it, there is none.
+     * alpha, and the depth where it begins, which each pixel writes itself: tested, as with no test OpenGL writes no
+     * depth, but always passing, on a target cleared to the furthest depth. Without it, there is none.
      */
     public static final ModShader SHADER = new ModShader(
             screenPass("pipeline/ground_fog_volume", "core/ground_fog_volume")
@@ -92,7 +93,7 @@ public final class GroundFogVolume {
                     .withSampler(DEPTH_SAMPLER)
                     .withSampler(FOG_GRID)
                     .withSampler(NOISE_SAMPLER)
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
                     .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**
@@ -104,7 +105,7 @@ public final class GroundFogVolume {
                     .withSampler(MIST_SAMPLER)
                     .withSampler(MIST_DEPTH_SAMPLER)
                     .withSampler(DEPTH_SAMPLER)
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
                     .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**

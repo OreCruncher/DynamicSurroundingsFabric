@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.effects;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.SharedConstants;
@@ -14,6 +15,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -139,6 +141,26 @@ public class ModShaderTests {
             checked++;
         }
         assertTrue(checked >= 7, "found only " + checked);
+    }
+
+    @Test
+    void shadersThatWriteTheirDepthAreTested() throws Exception {
+        // With the depth test off OpenGL writes no depth, gl_FragDepth included: the ground fog's stayed as far as can
+        // be, and with Fabulous graphics the scene was laid over the mist
+        int checked = 0;
+        for (var shader : ModShaders.SHADERS) {
+            var pipeline = shader.pipeline();
+            var fragment = pipeline.getFragmentShader().getPath() + ".fsh";
+            try (var stream = ModShaderTests.class.getResourceAsStream("/assets/dsurround/shaders/" + fragment)) {
+                assertNotNull(stream, fragment);
+                var source = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+                if (!pipeline.isWriteDepth() || !source.contains("gl_FragDepth"))
+                    continue;
+            }
+            assertNotEquals(DepthTestFunction.NO_DEPTH_TEST, pipeline.getDepthTestFunction(), shader.id().getPath());
+            checked++;
+        }
+        assertTrue(checked >= 3, "found only " + checked);
     }
 
     @Test
