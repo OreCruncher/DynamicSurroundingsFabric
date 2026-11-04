@@ -5,7 +5,7 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.PATCH, starting at 5.0.0: the third number is kept for bug fix releases. It carries every feature of 0.4.9 for 1.21.1 (see below).
 
 **All Loaders**
-* JAVA 21+
+* JAVA 21+  
 * Architectury 19.0.1+
 
 **Fabric**
@@ -24,7 +24,8 @@ The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.
 * When Minecraft's Music Toast option shows toasts, its toast is used for music credits in place of the mod's
 * Key bindings are listed under their own Dynamic Surroundings category
 * The particle repair guard (Guards in Diagnostics) isn't needed on 1.21.11 and isn't included
-* Window frost grows on stained glass as well as clear glass
+* Window frost grows on all glass, stained and tinted included, not only clear glass
+* With a shader pack in use, the branching lightning is drawn, with the shader pack's look, in place of Minecraft's bolts
 
 > ### DynamicSurroundings-1.21.1-0.4.9
 

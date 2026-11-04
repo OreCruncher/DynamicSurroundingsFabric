@@ -339,7 +339,7 @@ aurora; `MIGRATION.md` is 26.2's record of its port from 1.21.1, and "1.21.11 ba
     frame, passed by `LightningHandler` to `CloudHandler`) instead of being drawn as patches. Strikes dim with distance
     against the fog's reach (`Strikes.visibility`, with `FogHandler.viewReach`: the nearer of the weather's fog and the
     render distance's).
-  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
+  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of glass
     (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks), independent of particle weather.
     Drawn after the translucent blocks, its depth tested in the shader against a copy of the scene's from before them
     (`DEPTH_COPY`); with Fabulous to the weather's target, writing depth.
