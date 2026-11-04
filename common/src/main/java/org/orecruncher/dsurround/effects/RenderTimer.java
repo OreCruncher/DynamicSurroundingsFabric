@@ -38,6 +38,8 @@ public final class RenderTimer implements ITimer {
     // A start and an end timestamp for each frame, in that order
     @Nullable
     private GpuQueryPool timestamps;
+    // Nanoseconds to a tick of the timestamps: 10 on an AMD card under Vulkan
+    private float timestampPeriod = 1F;
     private final boolean[] pending = new boolean[FRAMES];
     private int frame;
     private boolean measuring;
@@ -136,14 +138,22 @@ public final class RenderTimer implements ITimer {
                 continue;
             this.pending[i] = false;
             if (end.getAsLong() >= start.getAsLong())
-                this.gpu.update(end.getAsLong() - start.getAsLong());
+                this.gpu.update(nanos(end.getAsLong() - start.getAsLong(), this.timestampPeriod));
         }
+    }
+
+    /**
+     * Ticks of the timestamps as nanoseconds: the device gives them as it counts them
+     */
+    static long nanos(long ticks, float period) {
+        return Math.round((double) ticks * period);
     }
 
     private boolean isSupported() {
         if (this.supported == null) {
             try {
                 this.timestamps = RenderSystem.getDevice().createTimestampQueryPool(FRAMES * 2);
+                this.timestampPeriod = RenderSystem.getDevice().getDeviceInfo().timestampPeriod();
             } catch (RuntimeException e) {
                 this.timestamps = null;
             }

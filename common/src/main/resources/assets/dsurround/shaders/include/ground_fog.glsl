@@ -5,6 +5,12 @@
 // What the ground fog's passes share (GroundFogVolume): their values, and turning the scene's depth into distance.
 
 layout(std140) uniform GroundFogInfo {
+    // From positions relative to the camera to the screen, and back, as the world was drawn (view bobbing and all)
+    mat4 ViewProj;
+    mat4 InvViewProj;
+    // Two rows of the projection's inverse: for a pixel at (x, y, depth) on the screen, how far along the view it is
+    vec4 DepthRowZ;
+    vec4 DepthRowW;
     // The screen's size in pixels, which the scene's depth is
     vec2 FullSize;
     // The screen's pixels each way for each of the mist's (GroundFogQuality): 1 at the screen's size, 2 at half, 3 at
@@ -49,9 +55,9 @@ float ndc_to_depth(float ndc) {
     return DepthZeroToOne > 0.5 ? ndc : ndc * 0.5 + 0.5;
 }
 
-// How far along the view the line of sight through a screen pixel goes, in blocks, from the scene's depth there and two
-// rows of the projection's inverse: enough to tell whether two pixels looked about as far
-float distance_at(sampler2D depthSampler, ivec2 pixel, vec4 depthRowZ, vec4 depthRowW) {
+// How far along the view the line of sight through a screen pixel goes, in blocks, from the scene's depth there: enough
+// to tell whether two pixels looked about as far
+float distance_at(sampler2D depthSampler, ivec2 pixel) {
     pixel = clamp(pixel, ivec2(0), ivec2(FullSize) - 1);
     float depth = texelFetch(depthSampler, pixel, 0).r;
     if (depth <= 0.0) {
@@ -59,5 +65,5 @@ float distance_at(sampler2D depthSampler, ivec2 pixel, vec4 depthRowZ, vec4 dept
     }
     vec2 uv = (vec2(pixel) + 0.5) / FullSize;
     vec4 screen = vec4(uv * 2.0 - 1.0, depth_to_ndc(depth), 1.0);
-    return min(-dot(depthRowZ, screen) / dot(depthRowW, screen), FAR_AWAY);
+    return min(-dot(DepthRowZ, screen) / dot(DepthRowW, screen), FAR_AWAY);
 }

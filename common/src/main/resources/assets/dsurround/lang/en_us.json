@@ -184,6 +184,7 @@
   "dsurround.hook.lightning_bolts": "Branching lightning in place of vanilla's bolts",
   "dsurround.hook.dynamic_clouds": "Dynamic clouds in place of vanilla's",
   "dsurround.hook.precipitation_ahead": "Building rain and snow while the world is drawn",
+  "dsurround.hook.level_projection": "View bobbing in ground fog and the realistic aurora",
   "dsurround.hook.frame_times": "Frame times in profile recordings",
   "dsurround.critword.0": "AIEEE",
   "dsurround.critword.1": "AIIEEE",

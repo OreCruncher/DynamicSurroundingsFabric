@@ -5,14 +5,14 @@
 // Dynamic Surroundings realistic aurora (RealisticAuroraRenderer), drawn over the sky with its light added to it.
 //
 // Each pixel's line of sight goes up from a viewer on the ground of a round Earth, through the layer of the sky where
-// auroras shine (SHELL_BOTTOM to SHELL_TOP kilometres up). An arc is a sheet a few kilometres thick: it runs east-west,
-// folds north and south (large folds drifting slowly, a wave and small curls travelling along it), and rises from its
+// auroras shine (SHELL_BOTTOM to SHELL_TOP kilometers up). An arc is a sheet a few kilometers thick: it runs east-west,
+// folds north and south (large folds drifting slowly, a wave and small curls traveling along it), and rises from its
 // lower edge along the magnetic field, leaning south as it goes. The
 // line of sight is stepped along looking for where it crosses each arc's sheet; at each crossing the light it sees is
 // added all at once:
 //  - how much of the sheet it goes through: its thickness, over how squarely it crosses, so a sheet seen edge on (low
 //    in the north, or where it folds toward the viewer) is far brighter than one seen face on
-//  - the light's colour by height: oxygen's green from just above a sharp lower edge, dying away upward; oxygen's red,
+//  - the light's color by height: oxygen's green from just above a sharp lower edge, dying away upward; oxygen's red,
 //    faint and high; nitrogen's pink in a thin fringe at the lower edge
 //  - rays: fine bright streaks along the field lines, the green reaching higher along the brighter ones
 // Then dimmed and reddened by the air near the horizon, and brought into range so the brightest parts turn a paler
@@ -24,20 +24,18 @@
 uniform sampler2D NoiseSampler;
 
 in vec2 screenPos;
-flat in mat4 invViewProj;
-flat in float pixelAngle;
 
 out vec4 fragColor;
 
 // The noise texture's size, which it repeats at (RealisticAuroraRenderer.NOISE_SIZE)
 const float NOISE_SIZE = 512.0;
 const float EARTH_RADIUS = 6371.0;
-// The layer the light is looked for in, in kilometres up
+// The layer the light is looked for in, in kilometers up
 const float SHELL_BOTTOM = 80.0;
 const float SHELL_TOP = 450.0;
-// How far above the lower edge the red rises to its full strength, in kilometres
+// How far above the lower edge the red rises to its full strength, in kilometers
 const float RED_RISE = 60.0;
-// How sharp the lower edge is, at its sharpest, in kilometres: the light dies away below it over about this far
+// How sharp the lower edge is, at its sharpest, in kilometers: the light dies away below it over about this far
 const float EDGE_SHARPNESS = 2.5;
 // Where all light has faded out by the top of the layer, from this far below it: nothing is cut off there
 const float TOP_FADE = 120.0;
@@ -45,35 +43,35 @@ const float TOP_FADE = 120.0;
 const float LOWEST_TOP = 200.0;
 const float HIGHEST_TOP = 400.0;
 // The most steps along the stretch of a line of sight where an arc can be, looking for where it crosses: an arc's
-// folds are a hundred kilometres and more long, far more than a step, so none is missed
+// folds are a hundred kilometers and more long, far more than a step, so none is missed
 const int STEPS = 24;
 // The fewest steps, where the line of sight barely goes east or west through an arc; and how many rounds a crossing is
 // narrowed down by
 const int MIN_STEPS = 6;
 const int REFINE = 3;
-// Kilometres along an arc to a cell of the rays' finest noise (RealisticAuroraRenderer.FINE_RAY), and of the coarser
+// Kilometers along an arc to a cell of the rays' finest noise (RealisticAuroraRenderer.FINE_RAY), and of the coarser
 const float FINE_RAY = 0.7;
 const float COARSE_RAY = 2.3;
-// The most of a sheet a line of sight is counted as going through, in kilometres: seen exactly edge on, a sheet's
+// The most of a sheet a line of sight is counted as going through, in kilometers: seen exactly edge on, a sheet's
 // height and length limit it
 const float MAX_PATH = 25.0;
-// How bright a kilometre of the light is, before it is brought into range; and how much the brightest parts pale
+// How bright a kilometer of the light is, before it is brought into range; and how much the brightest parts pale
 // toward white
 const float EXPOSURE = 0.25;
 const float WHITENING = 0.25;
-// How much the air dims each colour, looking straight up: blue most, red least, so arcs near the horizon redden
+// How much the air dims each color, looking straight up: blue most, red least, so arcs near the horizon redden
 const vec3 EXTINCTION = vec3(0.07, 0.11, 0.22);
 // How quickly an arc's large folds drift, in radians a second (RealisticAurora.FOLD_DRIFT), and how far apart its curls
-// are, in kilometres (RealisticAurora.CURL_WAVELENGTH)
+// are, in kilometers (RealisticAurora.CURL_WAVELENGTH)
 const float FOLD_DRIFT = 0.01;
 const float CURL_WAVELENGTH = 25.0;
 // How far along an arc, either way, its bow has bent it half as far as it goes (RealisticAurora.BOW_LENGTH)
 const float BOW_LENGTH = 600.0;
-// Kilometres along an arc to each of the patches that pulse as it fades
+// Kilometers along an arc to each of the patches that pulse as it fades
 const float PULSE_CELL = 60.0;
-// The ray field: samples along a line of sight through it; kilometres across the ground to a cell of the noise that
+// The ray field: samples along a line of sight through it; kilometers across the ground to a cell of the noise that
 // places its rays (RealisticAuroraRenderer.FIELD_CELL); how much of it is ray, on average, where its rays are evened
-// out; and how bright a kilometre of ray is
+// out; and how bright a kilometer of ray is
 const int FIELD_STEPS = 24;
 // Fewer samples: the fewest, where a line of sight crosses few rays; and where it crosses so many between samples that
 // they are evened out (FIELD_BLENDED of them or more apart), enough to follow the light's change with height. And how
@@ -101,22 +99,22 @@ float shell_distance(float mu, float h) {
     return -b + sqrt(b * b + h * (2.0 * EARTH_RADIUS + h));
 }
 
-// How high a line of sight going up at the sine mu is, t kilometres along it. Worked out without taking the Earth's
+// How high a line of sight going up at the sine mu is, t kilometers along it. Worked out without taking the Earth's
 // radius from a number close to it, which loses a float's precision
 float altitude_at(float t, float mu) {
     float q = t * t + 2.0 * EARTH_RADIUS * t * mu;
     return q / (sqrt(EARTH_RADIUS * EARTH_RADIUS + q) + EARTH_RADIUS);
 }
 
-// How far arc i's bow bends it north (south if negative), east kilometres east of the viewer: hardly at all near the
+// How far arc i's bow bends it north (south if negative), east kilometers east of the viewer: hardly at all near the
 // viewer, toward its full bend at its ends (RealisticAurora.Arc.bowAt)
 float arc_bow(int i, float east) {
     float e2 = east * east;
     return ArcBow[i].x * e2 / (e2 + BOW_LENGTH * BOW_LENGTH);
 }
 
-// How far north of the viewer arc i's lower edge is, east kilometres east of the viewer (RealisticAurora.Arc.northAt):
-// large folds drifting slowly, a wave travelling along it, curls travelling with its rays, and its bow
+// How far north of the viewer arc i's lower edge is, east kilometers east of the viewer (RealisticAurora.Arc.northAt):
+// large folds drifting slowly, a wave traveling along it, curls traveling with its rays, and its bow
 float arc_north(int i, float east) {
     vec4 shape = ArcShape[i];
     vec4 wave = ArcWave[i];
@@ -127,7 +125,7 @@ float arc_north(int i, float east) {
     return north + arc_bow(i, east);
 }
 
-// How fast arc i's lower edge goes south for each kilometre east, there: the slope of arc_north, negated
+// How fast arc i's lower edge goes south for each kilometer east, there: the slope of arc_north, negated
 float arc_bend(int i, float east) {
     vec4 shape = ArcShape[i];
     vec4 wave = ArcWave[i];
@@ -143,21 +141,21 @@ float arc_bend(int i, float east) {
          - ArcBow[i].x * 2.0 * east * BOW_LENGTH * BOW_LENGTH / (spread * spread);
 }
 
-// How far north of arc i's sheet a point is, in kilometres: negative south of it (its lower edge, and the lean as it
+// How far north of arc i's sheet a point is, in kilometers: negative south of it (its lower edge, and the lean as it
 // rises)
 float sheet_offset(int i, float east, float north, float altitude) {
     float arcNorth = arc_north(i, east) - (altitude - Emission.x) * Emission.y;
     return north - arcNorth;
 }
 
-// The same, t kilometres along the line of sight. The line of sight is magnetic east, up and north (see main)
+// The same, t kilometers along the line of sight. The line of sight is magnetic east, up and north (see main)
 float offset_at(int i, vec3 dir, float t, float mu) {
     return sheet_offset(i, dir.x * t, dir.z * t, altitude_at(t, mu));
 }
 
 // Where between t0 and t1 the line of sight crosses arc i's sheet, the offset from it changing sign between them. The
 // offset doesn't change evenly (the line rises along a curve, and the sheet leans), so a straight guess between the two
-// can be kilometres out, which the sharp lower edge would show; a few rounds of narrowing it down (regula falsi) are
+// can be kilometers out, which the sharp lower edge would show; a few rounds of narrowing it down (regula falsi) are
 // close enough
 float crossing(int i, vec3 dir, float mu, float t0, float g0, float t1, float g1) {
     for (int k = 0; k < REFINE; k++) {
@@ -185,7 +183,7 @@ vec3 sunlit_at(float altitude, float above) {
     return Sunlit.rgb * smoothstep(Sunlit.w - 20.0, Sunlit.w + 20.0, altitude) * exp(-max(above, 0.0) / 120.0);
 }
 
-// A value from 0 to 1 for a pixel, from a 4 by 4 ordered (Bayer) pattern: neighbouring pixels as different as can be
+// A value from 0 to 1 for a pixel, from a 4 by 4 ordered (Bayer) pattern: neighboring pixels as different as can be
 float ordered_dither(vec2 pixel) {
     const float pattern[16] = float[16](0.0, 8.0, 2.0, 10.0, 12.0, 4.0, 14.0, 6.0, 3.0, 11.0, 1.0, 9.0, 15.0, 7.0, 13.0, 5.0);
     ivec2 cell = ivec2(mod(pixel, 4.0));
@@ -193,7 +191,7 @@ float ordered_dither(vec2 pixel) {
 }
 
 // How strong the red is at a height, given how far above the lower edge it is: high up, and none below the edge,
-// rising over the first RED_RISE kilometres above it, as oxygen's red is never seen low down
+// rising over the first RED_RISE kilometers above it, as oxygen's red is never seen low down
 float red_at(float altitude, float above) {
     float d = (altitude - 230.0) / 70.0;
     return Emission.z * exp(-d * d) * smoothstep(0.0, RED_RISE, above);
@@ -206,7 +204,7 @@ float ray_top(float altitude, float top) {
          * (1.0 - smoothstep(SHELL_TOP - TOP_FADE, SHELL_TOP, altitude));
 }
 
-// How bright a stretch of arc i is as it pulses, 0 (off) to 1 (on): each PULSE_CELL kilometres along it at a pace of
+// How bright a stretch of arc i is as it pulses, 0 (off) to 1 (on): each PULSE_CELL kilometers along it at a pace of
 // its own, a few seconds to fifteen, as the patches of an aurora fading after its height pulse
 float blink(int i, float cell) {
     float pace = mix(3.0, 15.0, hash(vec2(cell, float(i) * 17.0 + 3.0)));
@@ -221,7 +219,7 @@ float pulse_at(int i, float along) {
     return mix(blink(i, first), blink(i, first + 1.0), smoothstep(0.0, 1.0, fract(cell)));
 }
 
-// The light seen where the line of sight crosses arc i's sheet, t kilometres along it
+// The light seen where the line of sight crosses arc i's sheet, t kilometers along it
 vec3 arc_light(int i, vec3 dir, float t, float mu) {
     vec4 light = ArcLight[i];
     float time = Frame.x;
@@ -245,7 +243,7 @@ vec3 arc_light(int i, vec3 dir, float t, float mu) {
     vec3 slant = dir - dot(dir, normal) * normal;
     float slantLength = length(slant);
     float alongArc = slantLength > 1e-4 ? abs(dot(slant / slantLength, lengthwise)) : 0.0;
-    float footprint = t * pixelAngle * (1.0 + (1.0 / max(square, 0.05) - 1.0) * alongArc);
+    float footprint = t * RedColor.a * (1.0 + (1.0 / max(square, 0.05) - 1.0) * alongArc);
     float fine = mix(0.5, noise(vec2(s / FINE_RAY, altitude / 40.0 + time * 0.15)),
                      1.0 - smoothstep(0.4, 1.2, footprint / FINE_RAY));
     float coarse = mix(0.5, noise(vec2(s / COARSE_RAY + 17.0, altitude / 150.0 + time * 0.03)),
@@ -264,9 +262,9 @@ vec3 arc_light(int i, vec3 dir, float t, float mu) {
                + 5.0 * (noise(vec2(s / 9.0 + 23.0, time * 0.05)) - 0.5)
                - 4.0 * (coarse - 0.5);
     float above = altitude - edge;
-    // How sharp it is: a few kilometres, or a little more than a pixel spans up and down there, so far off it doesn't
+    // How sharp it is: a few kilometers, or a little more than a pixel spans up and down there, so far off it doesn't
     // show as a hard line
-    float soft = max(EDGE_SHARPNESS, t * pixelAngle * 2.0);
+    float soft = max(EDGE_SHARPNESS, t * RedColor.a * 2.0);
     // Green from the edge up, reaching higher along the brighter rays; red high up; the fringe just at the edge
     float green = above < 0.0 ? exp(above / soft) : exp(-above / mix(18.0, 55.0, rays));
     float red = red_at(altitude, above);
@@ -327,14 +325,14 @@ vec3 ray_field(vec3 dir, float mu, float tIn, float tOut, float leanUp, float le
         if (belt <= 0.0) {
             continue;
         }
-        float sweep = stride * across + t * pixelAngle;
+        float sweep = stride * across + t * RedColor.a;
         float detail = 1.0 - smoothstep(0.5, 1.5, sweep / FIELD_CELL);
         float placed = noise(vec2(dir.x * t - RayField.w, base) / FIELD_CELL);
         float ray = mix(FIELD_MEAN, smoothstep(0.62, 0.85, placed), detail);
 
         // Each ray starting a little lower or higher, as the arcs' do, and as soft as a pixel spans there
         float rayAbove = above + 4.0 * (placed - 0.5);
-        float soft = max(EDGE_SHARPNESS, t * pixelAngle * 2.0);
+        float soft = max(EDGE_SHARPNESS, t * RedColor.a * 2.0);
         float green = rayAbove < 0.0 ? exp(rayAbove / soft) : exp(-rayAbove / 40.0);
         float red = red_at(altitude, rayAbove);
         float rim = (rayAbove + 2.0) / soft;
@@ -350,8 +348,8 @@ void main() {
     // view bobbing is in the projection, and moves the camera a little too, which next to points this close would
     // swing every direction as the player walks. Taken between two points, that cancels; its turning stays, so the
     // aurora sways as the stars do
-    vec4 near = invViewProj * vec4(screenPos, 1.0, 1.0);
-    vec4 far = invViewProj * vec4(screenPos, 0.5, 1.0);
+    vec4 near = InvViewProj * vec4(screenPos, 1.0, 1.0);
+    vec4 far = InvViewProj * vec4(screenPos, 0.5, 1.0);
     vec3 view = normalize(far.xyz / far.w - near.xyz / near.w);
     if (view.y < -0.01 || Frame.y <= 0.0) {
         discard;
@@ -363,7 +361,7 @@ void main() {
 
     float tIn = shell_distance(mu, SHELL_BOTTOM);
     float tOut = shell_distance(mu, SHELL_TOP);
-    // How fast the line of sight goes north, for each kilometre along it (south, if negative); and how far east it is
+    // How fast the line of sight goes north, for each kilometer along it (south, if negative); and how far east it is
     // as it enters the layer and as it leaves, for the bounds of the arcs' bows
     float northward = dir.z;
     float eastIn = dir.x * tIn;
@@ -378,7 +376,7 @@ void main() {
     int arcs = int(Frame.w + 0.5);
     for (int i = 0; i < arcs; i++) {
         // Only the stretch of the line of sight within the band the arc's sheet can be in, north to south, is stepped
-        // along: a few hundred kilometres of it at most, where the whole layer can be a couple of thousand. Its reach
+        // along: a few hundred kilometers of it at most, where the whole layer can be a couple of thousand. Its reach
         // is RealisticAurora.Arc.reach, the most its folds, wave and curls take it either way
         float reach = ArcShape[i].y + ArcWave[i].x + ArcWave[i].w;
         // And however far its bow bends it, where the line of sight passes: the bow only grows away from the viewer
@@ -428,8 +426,8 @@ void main() {
     float airMass = 1.0 / (mu + 0.05);
     light *= exp(-EXTINCTION * airMass);
 
-    // Into range by its brightest colour, the others scaled with it, so it keeps its colour however bright: a storm
-    // overhead, seen edge on, is many times brighter than an arc low in the north. Then a little of each colour
+    // Into range by its brightest color, the others scaled with it, so it keeps its color however bright: a storm
+    // overhead, seen edge on, is many times brighter than an arc low in the north. Then a little of each color
     // brought into range on its own, which pales the very brightest parts toward white, as a photograph does
     vec3 exposed = light * EXPOSURE;
     float peak = max(exposed.r, max(exposed.g, exposed.b));

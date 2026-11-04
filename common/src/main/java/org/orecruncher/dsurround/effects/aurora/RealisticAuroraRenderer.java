@@ -20,7 +20,6 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -28,6 +27,7 @@ import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.AuroraQuality;
+import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.RenderTimer;
@@ -42,7 +42,7 @@ import java.util.OptionalDouble;
  * sight up through the layer of the sky where auroras shine, adding the light of each arc it passes through, and of its
  * ray field if it has one. The light adds to the sky behind it; the world, drawn after the sky, covers it.
  * <p>
- * An arc is a sheet a few kilometres thick, far thinner than any step along a line of sight hundreds of kilometres
+ * An arc is a sheet a few kilometers thick, far thinner than any step along a line of sight hundreds of kilometers
  * long, so the shader doesn't sample the light along the way: it steps along looking for where the line crosses each
  * arc, and adds what it sees there all at once. How much depends on how much of the sheet the line goes through: a
  * sheet seen edge on is far brighter than one seen face on, as a real one is. The ray field, a belt of separate rays
@@ -52,12 +52,12 @@ import java.util.OptionalDouble;
  * the screen's size, to a target of its own, then laid over the sky ({@link #COMPOSITE}), read smoothly between its
  * pixels.
  * <p>
- * The colours are the light the upper air gives off: green from oxygen low in the arc, red from oxygen high above it,
+ * The colors are the light the upper air gives off: green from oxygen low in the arc, red from oxygen high above it,
  * and a pink fringe at its lower edge from nitrogen. Render thread only.
  */
 public final class RealisticAuroraRenderer {
 
-    // The shader's uniforms: three colours, the frame's values, how the light is given off, how active it is and which
+    // The shader's uniforms: the matrix turning pixels into directions, three colors, the frame's values, how the light is given off, how active it is and which
     // way magnetic north is, the ray field, the sunlit tops, and the arcs (four vec4s each, in four arrays)
     private static final String INFO = "RealisticAuroraInfo";
     private static final int INFO_SIZE;
@@ -73,7 +73,7 @@ public final class RealisticAuroraRenderer {
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
 
     static {
-        var size = new Std140SizeCalculator();
+        var size = new Std140SizeCalculator().putMat4f();
         for (int i = 0; i < 8 + RealisticAurora.MAX_ARCS * 4; i++)
             size.putVec4();
         INFO_SIZE = size.get();
@@ -88,7 +88,6 @@ public final class RealisticAuroraRenderer {
             .withLocation(Constants.asId("pipeline/aurora_realistic"))
             .withVertexShader(Constants.asId("core/aurora_realistic"))
             .withFragmentShader(Constants.asId("core/aurora_realistic"))
-            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
             .withBindGroupLayout(INFO_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADD))
             .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
@@ -118,24 +117,24 @@ public final class RealisticAuroraRenderer {
 
     /**
      * The noise texture's size, in cells, which it repeats at. The rays' finest noise has a cell to {@link #FINE_RAY}
-     * kilometres along an arc, so their pattern repeats every few hundred kilometres; the coarser noise over it repeats
+     * kilometers along an arc, so their pattern repeats every few hundred kilometers; the coarser noise over it repeats
      * at a different length, which hides it.
      */
     public static final int NOISE_SIZE = 512;
     /**
-     * Kilometres along an arc to a cell of the rays' finest noise (in the shader, FINE_RAY)
+     * Kilometers along an arc to a cell of the rays' finest noise (in the shader, FINE_RAY)
      */
     public static final float FINE_RAY = 0.7F;
     /**
-     * Kilometres along an arc to a cell of the rays' coarser noise (in the shader, COARSE_RAY)
+     * Kilometers along an arc to a cell of the rays' coarser noise (in the shader, COARSE_RAY)
      */
     public static final float COARSE_RAY = 2.3F;
     /**
-     * Kilometres across the ground to a cell of the ray field's noise, which places its rays (in the shader, FIELD_CELL)
+     * Kilometers across the ground to a cell of the ray field's noise, which places its rays (in the shader, FIELD_CELL)
      */
     public static final float FIELD_CELL = 3F;
 
-    // The colours of the light, as a photograph shows it: oxygen's green (557.7 nm) and red (630 nm), and nitrogen's
+    // The colors of the light, as a photograph shows it: oxygen's green (557.7 nm) and red (630 nm), and nitrogen's
     // pink at the lower edge
     private static final float[] GREEN = {0.25F, 1.0F, 0.45F};
     private static final float[] RED = {1.0F, 0.12F, 0.2F};
@@ -170,7 +169,7 @@ public final class RealisticAuroraRenderer {
      * @param moment     how it is at this point in its night
      * @param motion     where its waves, curls and rays have moved to
      * @param quality    how finely
-     * @param shadow     how high the Earth's shadow is over the viewer, in kilometres (see
+     * @param shadow     how high the Earth's shadow is over the viewer, in kilometers (see
      *                   {@link RealisticAurora#shadowHeight}): the tops of the rays above it are sunlit
      * @param washout    how much moonlight washes out its faint parts (see {@link RealisticAurora#moonWashout})
      * @param alpha      how strongly, 0 to 1
@@ -194,15 +193,12 @@ public final class RealisticAuroraRenderer {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
         RenderTarget target = fast ? reducedFor(screen, quality.scale()) : screen;
-        writeInfo(aurora, moment, motion, shadow, washout, alpha, time, target.height);
+        writeInfo(aurora, moment, motion, shadow, washout, alpha, viewMatrix, time, target.height);
 
         var encoder = RenderSystem.getDevice().createCommandEncoder();
-        var transforms = RenderSystem.getDynamicUniforms().writeTransform(viewMatrix);
         try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic)", target.getColorTextureView(),
                 fast ? Optional.of(CLEAR) : Optional.empty(), null, OptionalDouble.empty())) {
             pass.setPipeline(PIPELINE);
-            RenderSystem.bindDefaultUniforms(pass);
-            pass.setUniform("DynamicTransforms", transforms);
             pass.setUniform(INFO, info);
             pass.bindTexture(NOISE_SAMPLER, noiseTexture().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
             pass.draw(3, 1, 0, 0);
@@ -237,15 +233,19 @@ public final class RealisticAuroraRenderer {
      * The shader's values this frame (see shaders/include/aurora_realistic.glsl)
      */
     private static void writeInfo(RealisticAurora aurora, RealisticAurora.Moment moment, RealisticAuroraMotion motion,
-                                  float shadow, float washout, float alpha, float time, int height) {
+                                  float shadow, float washout, float alpha, Matrix4f viewMatrix, float time, int height) {
         if (info == null)
             info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings aurora (realistic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
         var arcs = aurora.arcs();
         int count = Math.min(arcs.size(), RealisticAurora.MAX_ARCS);
+        var projection = LevelProjection.get();
+        var invViewProj = new Matrix4f(projection).mul(viewMatrix).invert();
+        float pixelAngle = 2F / (projection.m11() * height);
         try (var stack = MemoryStack.stackPush()) {
             var builder = Std140Builder.onStack(stack, INFO_SIZE)
+                    .putMat4f(invViewProj)
                     .putVec4(GREEN[0] * moment.green(), GREEN[1] * moment.green(), GREEN[2] * moment.green(), washout)
-                    .putVec4(RED[0], RED[1], RED[2], 0F)
+                    .putVec4(RED[0], RED[1], RED[2], pixelAngle)
                     .putVec4(FRINGE[0], FRINGE[1], FRINGE[2], 0F)
                     .putVec4(time, Math.clamp(alpha, 0F, 1F), height, count)
                     .putVec4(moment.lowerEdge(), RealisticAurora.FIELD_TILT, moment.red(), moment.fringe())

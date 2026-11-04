@@ -19,16 +19,11 @@ uniform sampler2D DepthSampler;
 // How far along the view each of the mist's pixels' line of sight went, from the march
 uniform sampler2D DistanceSampler;
 
-// Two rows of the projection's inverse (ground_fog_screen): for a pixel at (x, y, depth) on the screen, how far along
-// the view it is
-flat in vec4 depthRowZ;
-flat in vec4 depthRowW;
-
 out vec4 fragColor;
 
 // How far along the view the line of sight through a screen pixel goes, in blocks
 float distanceAt(ivec2 pixel) {
-    return distance_at(DepthSampler, pixel, depthRowZ, depthRowW);
+    return distance_at(DepthSampler, pixel);
 }
 
 void main() {

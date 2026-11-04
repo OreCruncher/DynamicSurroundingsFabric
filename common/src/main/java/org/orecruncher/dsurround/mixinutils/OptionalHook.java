@@ -75,6 +75,8 @@ public enum OptionalHook {
             site("core.MixinCloudRenderer", "dsurround$clouds")),
     PRECIPITATION_AHEAD("Building rain and snow while the world is drawn",
             site("core.MixinGameRenderer", "dsurround$beginLevel")),
+    LEVEL_PROJECTION("View bobbing in ground fog and the realistic aurora",
+            site("core.MixinGameRenderer", "dsurround$levelProjection")),
     FRAME_TIMES("Frame times in profile recordings",
             site("core.MixinMinecraftClient", "dsurround$timeFrame"));
 

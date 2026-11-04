@@ -171,10 +171,21 @@ checking in game.
 - Realistic aurora (`effects/aurora/RealisticAurora*`, `shaders/core/aurora_realistic.*`; MIGRATION.md has the
   whole): the Java model mirrors the shader (`Arc.northAt` is `arc_north`, constants such as `FIELD_CELL`), and tests
   check the shader's text and constants against it, so change both. Its uniform block is in
-  `shaders/include/aurora_realistic.glsl`, as both stages declare it and a block must match across them. Anything that
+  `shaders/include/aurora_realistic.glsl`. Anything that
   moves at a speed that changes goes through `RealisticAuroraMotion`, never `time × speed`. `/dsaurora activity|phase|
   colour` holds a look to check it; a GLSL error (a redeclared name, say) turns the whole effect off, so check the log
   for `Loaded the dsurround:pipeline/aurora_realistic shader` after any shader change.
+- Vulkan: never pass a matrix or array between shader stages. `IntermediaryShaderModule.rebind` gives each fragment
+  input one location, but a `mat4` takes four, so they overlap and don't match the vertex side: that crashed AMD's driver
+  (26.10.1, RX 7600) in `vkCreateGraphicsPipelines` at startup. A fragment shader must also declare every output of its
+  vertex shader, in order, as locations are counted over the ones it declares. With two color targets, write
+  `location = 0` first: ground fog wrote its `sceneDistance` before `fragColor`, and the color was lost, with the
+  timers looking healthy. Vanilla does none of these, so none of it shows there. Work matrices out in Java and put them
+  in the effect's own block;
+  `effects/LevelProjection` holds the frame's projection, view bobbing included, which `RenderSystem` only has as a
+  GPU buffer. Timestamps are ticks: `RenderTimer` scales them by `DeviceInfo.timestampPeriod`. NeoForge's early window
+  is OpenGL, so Vulkan needs `earlyWindowControl = false` in `config/fml.toml`. A failed start resets the game's
+  Vulkan option to default: `-PgraphicsBackend=vulkan` on a bench run is a launch argument, which holds.
 - View bobbing is in 26.2's projection matrix, and moves the camera a little as well as turning it. A screen pass that
   turns pixels back into directions (the realistic aurora) takes each one between two unprojected points along the
   pixel's line, not from the camera to one point near it, or every direction swings as the player walks.
@@ -300,7 +311,7 @@ checking in game.
     `MOTION_BLOCKING` heightmap: the server never sends `MOTION_BLOCKING_NO_LEAVES`, so on the client it is empty.
     Noise positions wrap at `GroundFogVolume.NOISE_WRAP`, a whole number of every noise's cells (a test checks), or a
     wrap shows as a jump. Three fullscreen passes (march, smooth, composite) share `shaders/include/ground_fog.glsl`;
-    their vertex shader inverts the matrices the world was drawn with (26.2 puts view bobbing in the projection). Drawn
+    the matrices the world was drawn with (26.2 puts view bobbing in the projection) reach them through their block. Drawn
     at the start of the weather pass, or with Fabulous after the weather and before the world border.
   - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
     each with its own base and top, in place of vanilla's (`MixinCloudRenderer` cancels `CloudRenderer.render` when
