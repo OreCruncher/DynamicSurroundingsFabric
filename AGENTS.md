@@ -354,8 +354,9 @@ checking in game.
 - `main`: the 1.21.1 line (0.4.9 was squash-merged as `df0c23ef` and recorded here with `-s ours`; each 1.21.1
   release branches from `main`).
 - `OreCruncher/1.21.11` (next; first release 5.0.0): a long-lived 1.21.11 line backported from this branch, branched
-  from it rather than from `main`. Merge this branch into it for features and fixes; never merge it back here (that
-  would bring the backport's downgrades with it): cherry-pick a fix made there.
+  from it rather than from `main`. It takes no features from here, only fixes, so it stays on 5.0.x and skips the
+  minors this branch makes. Don't merge between the two (that would bring this branch's features there, or the
+  backport's downgrades here): cherry-pick a fix either way.
 - 1.21.1 is frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering.
 - The current 1.21.1 release branch (none open since 0.4.9's squash): merged into this branch directly, before its squash to
   `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
