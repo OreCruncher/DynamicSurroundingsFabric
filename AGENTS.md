@@ -26,8 +26,9 @@ without the notice, breaks the license.
 
 ## About the mod
 Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
-`gradle.properties`. This branch is the 26.2 port, carrying 0.4.8; `MIGRATION.md` records what changed and what still needs
-checking in game.
+`gradle.properties`. This branch is the 26.2 port, carrying 0.4.9 and 1.21.11's 5.0.0 fixes, and where features land first; `MIGRATION.md`
+records what changed and what still needs checking in game. 26.2 itself won't be released: the next release, 5.1.0, is
+for 26.3.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -346,7 +347,7 @@ checking in game.
     frame, passed by `LightningHandler` to `CloudHandler`) instead of being drawn as patches. Strikes dim with distance
     against the fog's reach (`Strikes.visibility`, with `FogHandler.viewReach`: the nearer of the weather's fog and the
     render distance's).
-  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of clear glass
+  - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of glass
     (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks), independent of particle weather.
     Drawn after the translucent blocks, its depth tested in the shader against a copy of the scene's from before them
     (`DEPTH_COPY`); with Fabulous to the weather's target, writing depth.
@@ -364,7 +365,7 @@ checking in game.
 ## Branches
 - `main`: the 1.21.1 line (0.4.9 was squash-merged as `df0c23ef` and recorded here with `-s ours`; each 1.21.1
   release branches from `main`).
-- `OreCruncher/1.21.11` (next; first release 5.0.0): a long-lived 1.21.11 line backported from this branch, branched
+- `OreCruncher/1.21.11` (5.0.0 released, tag `1.21.11-5.0.0`): a long-lived 1.21.11 line backported from this branch, branched
   from it rather than from `main`. It takes no features from here, only fixes, so it stays on 5.0.x and skips the
   minors this branch makes. Don't merge between the two (that would bring this branch's features there, or the
   backport's downgrades here): cherry-pick a fix either way.
@@ -381,7 +382,7 @@ checking in game.
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
 - `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9 (NeoForge 26.2.0.82, Architectury
   21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
-  `mod_version` is still 0.5.0 from before the 5.x numbering; set it to the 5.x release it ships as (see Versions).
+  `mod_version` is 5.1.0: this branch has the realistic aurora, which 1.21.11 doesn't (see Versions).
 
 ## Versions
 - `MAJOR.MINOR.PATCH` from 5.0.0, the first 1.21.11 release. The 0.x releases used the third number for every release,

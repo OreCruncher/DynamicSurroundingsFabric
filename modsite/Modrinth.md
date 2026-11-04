@@ -27,7 +27,7 @@ sound and visual effects.
     * Hugs the ground, and drifts a bit based on wind
     * Intense rain will diminish the effect, but will come back once rain has finished
 * Frost on the outside of windows in cold weather (1.21.1-0.4.7+)
-    * Grows in from the window's edges on clear glass blocks and panes, thickest before sunrise
+    * Grows in from the window's edges on glass blocks and panes, thickest before sunrise
     * The sun melts it from the windows it shines on
 * Sky fog density changes driven by biome, time of day, and weather.
 * Waterfall sound and visual effects - will trigger when flowing water is detected nearby

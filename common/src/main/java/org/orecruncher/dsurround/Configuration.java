@@ -561,7 +561,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableWindowStreaks = true;
 
         @Property
-        @Comment("Frost forms on the outside of clear glass windows when it is cold")
+        @Comment("Frost forms on the outside of glass windows when it is cold")
         public boolean enableWindowFrost = true;
 
         // 0.4.8 kept the switch as the quality's NONE: declared before the quality, and its NONE (no longer one of
