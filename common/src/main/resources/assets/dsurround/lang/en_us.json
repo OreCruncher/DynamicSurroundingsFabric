@@ -185,6 +185,7 @@
   "dsurround.hook.dynamic_clouds": "Dynamic clouds in place of vanilla's",
   "dsurround.hook.precipitation_ahead": "Building rain and snow while the world is drawn",
   "dsurround.hook.level_projection": "View bobbing in ground fog and the realistic aurora",
+  "dsurround.hook.globals_at_start": "Global shader values before the first frame",
   "dsurround.hook.frame_times": "Frame times in profile recordings",
   "dsurround.critword.0": "AIEEE",
   "dsurround.critword.1": "AIIEEE",

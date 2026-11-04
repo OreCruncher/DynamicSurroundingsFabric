@@ -77,6 +77,8 @@ public enum OptionalHook {
             site("core.MixinGameRenderer", "dsurround$beginLevel")),
     LEVEL_PROJECTION("View bobbing in ground fog and the realistic aurora",
             site("core.MixinGameRenderer", "dsurround$levelProjection")),
+    GLOBALS_AT_START("Global shader values before the first frame",
+            site("core.MixinGameRenderer", "dsurround$globalsAtStart")),
     FRAME_TIMES("Frame times in profile recordings",
             site("core.MixinMinecraftClient", "dsurround$timeFrame"));
 
