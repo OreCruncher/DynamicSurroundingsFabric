@@ -459,7 +459,33 @@ one-off scenarios from `aurora.json`, 30-second recordings), NeoForge, OpenGL, A
 | 3840x2160 | 0.933 | 2.410 | 0.648 | 2.865 (2.850-2.879) |
 
 A storm costs about 2.5 times an ordinary night, and Fast a quarter to a third of Fancy, so Low uses it. Fabric at 2560x1369
-is the same (0.391, 0.979). Fast was measured before its composite took four reads in place of one.
+is the same (0.391, 0.979). Fast was measured before its composite took four reads in place of one and before it
+doubled its samples of the ray field, below; the numbers below are what it costs now.
+
+**Grain on Fast:** dark gaps between a storm's rays were grainy, and the grain wasn't the dither. A frame captured with
+RenderDoc and redrawn with edited shaders (`aurora_realistic.fsh`, same frame, storm at breakup, 960x540 march) showed
+it. Noise in the gaps, rms of 255, and how they looked once composited:
+
+| March shader | Noise in the gaps | Composited |
+|---|---|---|
+| as it was | 28 | grain |
+| dither off | 25 | large blotches |
+| ray field samples x2 | 21 | faint texture |
+| ray field samples x4 | 17 | smooth |
+
+A line of sight's samples hit a narrow ray or miss it, and in the gaps that decides the pixel. The dither only turns that
+into grain, so changing it wouldn't help. Fast now samples the ray field twice over (`AuroraQuality.fieldSamples`), and
+in game the grain is gone. Aurora GPU ms, NeoForge, OpenGL, before and after in one session, two repeats:
+
+| Frame size | Storm, Fast | Ordinary night, Fast | Storm, Fancy (unchanged) |
+|---|---|---|---|
+| 1920x1080 | 0.163 to 0.232 | 0.109 to 0.114 | 0.558 to 0.558 |
+| 2560x1369 | 0.279 to 0.395 | 0.139 to 0.141 | 0.985 to 0.983 |
+| 3840x2160 | 0.665 to 0.952 | 0.332 to 0.334 | 2.410 to 2.401 |
+
+That is 42% more in a storm, still about 40% of Fancy, and nothing on an ordinary night, when the ray field does almost
+no work. Replay times are no guide to a change like this (x2 read the same as the original, x4 2.4 times it): bench it.
+Fancy shows some grain too; it wasn't tested and is left as it was.
 
 **The 26.2 number:** the realistic aurora measured 2.09 ms of GPU on 26.2 (Fabric, 2560x1369), about twice this worst
 case at that size, which isn't explained; the recording is gone. It was made minutes before `a469ef76` took

@@ -123,6 +123,10 @@ release, 5.1.0, is for 26.3.
   `python scripts/pack-triage.py <slug>` reports what needs a look. Compare with `compat.json` run plainly
   (`runClientBench`): what looks wrong only in the pack is the pack's doing. A render timer missing from an "on" run
   means that effect never drew. CurseForge packs: the user installs them and copies the instance's mods and config in.
+- What a frame drew (`scripts/bench/README.md`, "RenderDoc"): `python scripts/renderdoc-frame.py capture <scenario>`
+  takes a frame of a bench scene, and `list`, `save` and `swap` read it from a script: each draw, any target, a pass
+  redrawn with an edited shader (OpenGL captures). For what's wrong in a picture, not for costs: replay times aren't
+  the game's, so a change's cost comes from the bench.
 - Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
   `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
   pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).

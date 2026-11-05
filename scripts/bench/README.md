@@ -128,3 +128,31 @@ didn't apply, drawing gone wrong.
   and the screenshot pairs. The recordings say more: a render timer missing from an "on" run means that effect never
   drew (`jfr-summary.py`).
 
+## RenderDoc
+
+A bench run measures what things cost; RenderDoc shows what a frame drew: every draw, its shader, its target, and any
+target at any point in the frame. `scripts/renderdoc-frame.py` drives it, with no change to the mod. Install RenderDoc
+first (`RENDERDOC_HOME` if it isn't in `C:\Program Files\RenderDoc`), and open it once by hand: its first-run screen
+holds up anything scripted, and looks like a hang.
+
+    python scripts/renderdoc-frame.py capture scripts/bench/aurora.json --run realistic-fast
+    python scripts/renderdoc-frame.py list <capture> --shader ordered_dither
+    python scripts/renderdoc-frame.py save <capture> --shader ordered_dither --next --name march
+    python scripts/renderdoc-frame.py swap <capture> --shader ordered_dither --edits edits.json
+
+`capture` builds through Gradle, starts the game under RenderDoc, takes a frame `--wait` seconds into the run's
+recording, and closes the game. A scenario can be short, as the recording is only what holds the scene: `"record": 60`
+and `"repeats": 1` are plenty. `--backend vulkan` works too (on NeoForge, with `earlyWindowControl = false`, as for any
+Vulkan run). Captures go in `<platform>/run-bench/renderdoc`, 25 MB on OpenGL and 60 MB on Vulkan at 1920x1080.
+
+`list` also writes each fragment shader out as the capture has it. On OpenGL that is generated source (`float start =
+ordered_dither(param);`), which is what edits have to match. `--shader` finds a draw by text in that source, as event
+numbers change from one capture to the next.
+
+- Keep it apart from the bench. A game under RenderDoc runs slower, so nothing from that run belongs next to a bench
+  number, and it adds nothing to a results table: use it when a table can't say why.
+- Replay times aren't the game's: each draw is timed alone, with no waits, fences or sync, so a stall such as the ring
+  buffer's fence (`BENCHMARKS.md`) doesn't show, and a shader edit's cost isn't what the bench finds. For the grain on Fast,
+  double the samples read the same as the original in replay; the bench said 42% more. Bench anything worth keeping.
+- `swap` needs an OpenGL capture: Vulkan's replay wants SPIR-V, not source. `list` and `save` work on both.
+- A `base` variant comes first in `swap`: it should match the frame exactly, which shows a difference is the edit's.
