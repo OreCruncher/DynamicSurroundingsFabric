@@ -232,9 +232,10 @@ release, 5.1.0, is for 26.3.
     phase: there is no gap to copy this frame's in, with Improved Transparency off. The copy is one frame old in a fast
     turn; the fade hides most of it. With it on they read this frame's, copied before its stages
     (`SoftParticles.captureBeforeTransparency`), and so does everything else that reads the copy: point lights, ground
-    fog, dust. So those see solid things only: with it on, fog behind glass is drawn over the glass, untinted by stained
-    glass, and point lights fall on what is behind water or glass (seen in game, 2026-11-05; accepted, as the depth can't
-    tell glass from particles once the stages have run).
+    fog, dust. That copy also goes back to the main target before our effects draw, or mist in the depth hides clouds and
+    weather behind it in a hole of its shape. So all of them see solid things only: with it on, clouds, rain and fog
+    behind glass or water are drawn over it, untinted by stained glass, and point lights fall on what is behind it (seen
+    in game, 2026-11-05; accepted, as the depth can't tell glass from particles once the stages have run).
   - Frost tests against the depth the main pass left, translucent blocks in it, so water or stained glass in front of
     frost hides it.
   - With Improved Transparency off, our rain and clouds behind stained or tinted glass aren't seen, as vanilla's aren't
@@ -243,7 +244,9 @@ release, 5.1.0, is for 26.3.
   - With Improved Transparency on, the main target's depth holds only solid things until its composite, which writes
     the nearest translucent thing wherever anything was drawn, a particle's faintest edge included: seen with
     RenderDoc, those edges lit up as rings of specks under the point lights, and ground fog stopped at them. So a depth
-    copy is made before the stages, or a particle fades out against where it just was. Particle layers need a set for the stages (or `drawLayers`
+    copy is made before the stages, or a particle fades out against where it just was. All three stages
+    must drop the same pixels: one only the depth bounds stage drops (under 0.01 alpha) gets the far plane from the
+    composite, a hole in the depth that clouds show through (seen as rings at the edge of mist). Particle layers need a set for the stages (or `drawLayers`
     throws): `RenderPipelines.OIT_PARTICLE`, or ours in `SoftParticles`, the same shader with `OIT` and, for added
     light, `OIT_ADDITIVE`. Vanilla's weather and clouds have theirs (`renderOit`, cancelled for ours).
 - Shaders: every stage is compiled to SPIR-V, so `#version 330`, `#extension GL_ARB_separate_shader_objects : require`,

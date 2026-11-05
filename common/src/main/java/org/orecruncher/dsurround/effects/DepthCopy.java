@@ -46,6 +46,14 @@ public final class DepthCopy {
     }
 
     /**
+     * Copies this back to {@code target}, which it was made from. Outside any render pass.
+     */
+    public void copyTo(RenderTarget target) {
+        if (this.copy != null)
+            target.copyDepthFrom(this.copy);
+    }
+
+    /**
      * The copy, to bind; null before the first {@link #copyFrom}
      */
     @Nullable

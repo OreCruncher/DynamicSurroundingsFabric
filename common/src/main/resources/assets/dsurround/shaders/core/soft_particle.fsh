@@ -58,6 +58,14 @@ void main() {
     float particleDistance = view_distance(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SOFT_DISTANCE, 0.0, 1.0);
 
+    #ifdef OIT
+    // Every stage has to drop what the depth bounds stage does (executeAlphaOnlyPhase): where only that one does, the
+    // composite writes the far plane to the depth, a hole in the terrain that clouds show through
+    if (color.a < 0.01) {
+        discard;
+    }
+    #endif
+
     #ifdef OIT_ALPHA_ONLY
     #ifdef OIT_ADDITIVE
     // At full alpha the depth bounds would take it for something opaque, and what is behind it would be dropped

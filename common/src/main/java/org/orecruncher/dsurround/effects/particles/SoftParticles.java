@@ -250,12 +250,15 @@ public final class SoftParticles {
      * Once the level's translucent things are drawn: the depth they left, for the next frame's soft particles (their
      * own render pass is open from the solid world on, so a copy can't be made before them this frame), and the lights
      * and streaks, which are drawn apart from the particles. With Improved Transparency on, the copy made before its
-     * stages stands ({@link #captureBeforeTransparency}).
+     * stages stands ({@link #captureBeforeTransparency}), and goes back to the target for everything of ours drawn from
+     * here: mist in the depth would otherwise hide the clouds and weather behind it, in a hole of its shape.
      */
     public static void renderWorld() {
         var target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         if (!improvedTransparency())
             captureSceneDepth(target);
+        else if (hasSceneDepth())
+            SHADER.run(() -> DEPTH_COPY.copyTo(target), () -> {});
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
         PointLights.draw(target, transforms);
         Streaks.draw(target, transforms);
@@ -265,7 +268,8 @@ public final class SoftParticles {
      * With Improved Transparency on, as its stages are about to start: this frame's depth, for the particles in them and
      * everything after them. A copy made later won't do: by then the stages have written the nearest translucent thing
      * to the depth, the faintest edge of a particle included. A particle would fade out against where it just was, the
-     * lights would pick out those edges as specks in the air, and ground fog would stop at them, as if at a wall.
+     * lights would pick out those edges as specks in the air, and ground fog and clouds would stop at them, as if at a
+     * wall.
      */
     public static void captureBeforeTransparency() {
         captureSceneDepth(Minecraft.getInstance().gameRenderer.mainRenderTarget());
