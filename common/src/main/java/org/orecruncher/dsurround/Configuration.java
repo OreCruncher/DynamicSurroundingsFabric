@@ -293,6 +293,7 @@ public class Configuration extends ConfigurationData {
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
 
         @Property
+        @Experimental
         @Comment("Enable/disable waves lapping on the shores of oceans and large lakes, bigger in a storm")
         public boolean enableBeachWaves = true;
     }

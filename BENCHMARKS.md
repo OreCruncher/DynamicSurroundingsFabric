@@ -536,9 +536,22 @@ the render thread.
   second, so one change every third of a second ends every result. Summer took reuse from 5 a second to about 27.
   Killing every entity first moved it from 5-6 to 7-8.
 
-**Open:** reuse is still below 1.21.11's 45 a second, so updates cost 5-12 ms a second against 3.8; the changes behind
-that weren't logged at the new spot. Counting only changes near the player would save most of this, in any world where
-grass spreads or crops grow: the workers' time, not the render thread's.
+**Closed the same day:** reuse was still below 1.21.11's 45 a second, so updates cost 5-12 ms a second against 3.8.
+`WorldChangeTracker` now counts only changes within 64 blocks of the player. `sound.json` again, the same spot and
+season, before and after:
+
+| Run | Reused/s | Traced/s | Update ms/s |
+|---|---|---|---|
+| open | 21 to 50 | 50 to 20 | 12.5 to 0.47 |
+| open, occlusion | 26 to 50 | 44 to 20 | 10.2 to 0.30 |
+| enclosed | 31 to 50 | 40 to 20 | 7.5 to 0.41 |
+| enclosed, simplified | 33 to 50 | 39 to 20 | 5.2 to 0.29 |
+| occluded | 26 to 42 | 37 to 22 | 7.0 to 0.82 |
+| occluded, occlusion | 27 to 42 | 35 to 21 | 6.4 to 0.58 |
+| burst | 111 to 182 | 213 to 142 | 45 to 19 |
+
+The 20 traces a second left are the 20 sounds a second starting, whose first calculation is always a trace. Starts cost
+what they did, about 8 ms a second. The workers' time, not the render thread's.
 
 ## Results, 2026-11-05: boats (`boats.json`)
 
