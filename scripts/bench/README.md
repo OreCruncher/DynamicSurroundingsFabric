@@ -63,6 +63,8 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
 - **Shot commands**: a scene's `"shotCommands"` run just before its screenshot, as `commands` are, and `"shotDelay"`
   is how many ticks the shot then waits for what they start to show (2 at least): `["dsweather lightning"]` with a delay
   of 6 to 10 catches a strike in the shot.
+- **Boats**: a scene's `"boatSpeed"` keeps the boats near the player going around them, in blocks a tick, from the
+  warm-up on, on the built-in server, as no one is there to row them (`boats.json`).
 - **Sounds**: a scene's `"sounds"` play around where the player's eyes are as the warm-up starts (after the commands
   have moved them), through the warm-up and the recording, for enhanced sound processing to work on (`sound.json`):
   `{"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 6, "seed": 1}` plays

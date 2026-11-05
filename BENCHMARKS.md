@@ -540,6 +540,27 @@ the render thread.
 that weren't logged at the new spot. Counting only changes near the player would save most of this, in any world where
 grass spreads or crops grow: the workers' time, not the render thread's.
 
+## Results, 2026-11-05: boats (`boats.json`)
+
+Eight boats kept going around the player at 0.35 blocks a tick (`"boatSpeed"`) on a pool built in the air, each leaving
+a wake of rings and shedding foam from its stern. NeoForge, OpenGL, 1920x1080, two repeats:
+
+| Run | Frame GPU ms | Frame CPU ms | Boat Rings, ms a tick |
+|---|---|---|---|
+| rings off | 0.768 (0.764-0.771) | 0.489 | 0.001 |
+| wake, no foam | 0.777 (0.772-0.782) | 0.491 | 0.015 |
+| wake and foam | 0.783 | 0.496 | 0.028 |
+
+The wake and foam row is its second repeat: the first was the session's first run, still settling (1.099 ms). An earlier
+session, with some of the boats stopped, read the same 0.028 ms a tick, and 864 fps against 879 with rings off, about 2%.
+
+Eight boats cost about 0.015 ms of GPU and under 0.01 ms of CPU a frame, and 0.028 ms a tick for the handler, half of it
+the foam. Finding the boats every tick doesn't show apart from that. Not in these numbers: the game ticks particles on
+its own time, outside the handlers' timers, and each boat keeps about 70 patches of foam going.
+
+Set the season in a scene with water: `aurora.json` leaves the bench world in winter, the pool froze even at a warm
+biome's spot, and the boats ended up on the bottom.
+
 ## Field recordings
 
 These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on

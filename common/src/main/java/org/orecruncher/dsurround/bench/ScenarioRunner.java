@@ -28,6 +28,7 @@ import net.minecraft.world.level.WorldDataConfiguration;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
@@ -103,6 +104,9 @@ public final class ScenarioRunner {
     // the scene is built
     private static final Set<String> NOTHING_TO_CHANGE = Set.of("commands.fill.failed", "commands.setblock.failed",
             "commands.clone.failed", "argument.entity.notfound.entity");
+    // The boats kept going in this scene, how fast and around where
+    private double boatSpeed;
+    private Vec3 boatMiddle = Vec3.ZERO;
     // Server commands that failed, from the server's thread
     private final Set<String> commandFailures = ConcurrentHashMap.newKeySet();
     private final JsonArray failedCommands = new JsonArray();
@@ -198,6 +202,8 @@ public final class ScenarioRunner {
         try {
             if (this.sounds != null)
                 this.sounds.tick();
+            if (this.boatSpeed > 0D)
+                BenchBoats.tick(server(), this.boatMiddle, this.boatSpeed);
             if (this.current == null) {
                 this.current = this.steps.poll();
                 this.stepTicks = 0;
@@ -391,6 +397,11 @@ public final class ScenarioRunner {
             if (this.stepTicks == 1)
                 for (var command : scene.settledCommands())
                     this.command(command);
+            // Boats go around where the player stands
+            if (this.stepTicks == 1) {
+                this.boatSpeed = scene.boatSpeed();
+                this.boatMiddle = Minecraft.getInstance().player.position();
+            }
             // The sounds from here, where the player is once the commands have moved them; and whether they can be heard
             // and processed: a sound whose volume works out to 0 isn't played
             if (this.stepTicks == 1 && !scene.sounds().isEmpty()) {
