@@ -558,8 +558,8 @@ Eight boats cost about 0.015 ms of GPU and under 0.01 ms of CPU a frame, and 0.0
 the foam. Finding the boats every tick doesn't show apart from that. Not in these numbers: the game ticks particles on
 its own time, outside the handlers' timers, and each boat keeps about 70 patches of foam going.
 
-Set the season in a scene with water: `aurora.json` leaves the bench world in winter, the pool froze even at a warm
-biome's spot, and the boats ended up on the bottom.
+Set the season in a scene with water: `aurora.json` leaves the bench world in winter, the pool froze, and the boats ended
+up on the bottom.
 
 ## Field recordings
 
