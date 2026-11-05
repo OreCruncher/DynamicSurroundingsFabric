@@ -405,6 +405,10 @@ public class Configuration extends ConfigurationData {
         public boolean enableFootprints = true;
 
         @Property
+        @Comment("Enable/disable feet tracking snow, mud, sand and water onto hard ground; needs footprints on")
+        public boolean enableTrackedFootprints = true;
+
+        @Property
         @Comment("The look of players' footprints")
         public FootprintStyle footprintStyle = FootprintStyle.SQUARE;
     }

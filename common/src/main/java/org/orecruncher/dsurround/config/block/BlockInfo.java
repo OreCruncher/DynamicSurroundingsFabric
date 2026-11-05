@@ -7,6 +7,7 @@ import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.ConfigServices;
+import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.effects.IBlockEffectProducer;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
@@ -33,6 +34,8 @@ public final class BlockInfo {
     private final float soundReflectivity;
     private final float soundOcclusion;
     private final boolean takesFootprints;
+    private final @Nullable TrackedGround tracks;
+    private final boolean tracksMudWhenWet;
 
     BlockInfo(BlockInfoBuilder builder, Collection<IBlockEffectProducer> blockEffects) {
         this.version = builder.version;
@@ -44,6 +47,8 @@ public final class BlockInfo {
         this.soundReflectivity = builder.soundReflectivity;
         this.soundOcclusion = builder.soundOcclusion;
         this.takesFootprints = builder.takesFootprints;
+        this.tracks = builder.tracks;
+        this.tracksMudWhenWet = builder.tracksMudWhenWet;
     }
 
     public int getVersion() {
@@ -63,6 +68,20 @@ public final class BlockInfo {
      */
     public boolean takesFootprints() {
         return this.takesFootprints;
+    }
+
+    /**
+     * What feet carry away from it onto hard ground, whatever the weather; null if nothing
+     */
+    public @Nullable TrackedGround tracks() {
+        return this.tracks;
+    }
+
+    /**
+     * Whether feet carry mud away from it when rain has soaked it
+     */
+    public boolean tracksMudWhenWet() {
+        return this.tracksMudWhenWet;
     }
 
     public boolean hasSoundsOrEffects() {

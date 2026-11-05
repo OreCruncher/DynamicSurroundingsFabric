@@ -33,6 +33,7 @@
       "entityEffects.enableBurningEffect": false,
       "entityEffects.enableDeathPuffs": false,
       "entityEffects.enableFootprints": false,
+      "entityEffects.enableTrackedFootprints": false,
 
       "weatherOptions.enableStormSimulation": false,
       "weatherOptions.enableParticlePrecipitation": false,
@@ -125,6 +126,7 @@
       "entityEffects.enableBurningEffect": true,
       "entityEffects.enableDeathPuffs": true,
       "entityEffects.enableFootprints": true,
+      "entityEffects.enableTrackedFootprints": true,
       "blockEffects.skullFlamesEnabled": true,
       "particleTweaks.suppressProjectileParticleTrails": false
     }
@@ -143,6 +145,7 @@
       "entityEffects.enableBurningEffect": true,
       "entityEffects.enableDeathPuffs": true,
       "entityEffects.enableFootprints": true,
+      "entityEffects.enableTrackedFootprints": true,
       "particleTweaks.suppressProjectileParticleTrails": false,
 
       "weatherOptions.enableStormSimulation": true,

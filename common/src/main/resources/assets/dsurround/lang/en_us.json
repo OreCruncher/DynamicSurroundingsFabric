@@ -418,6 +418,8 @@
   "dsurround.config.entityEffects.showCritWords.tooltip": "Enable/disable a comic book word over a heavy blow's damage number.",
   "dsurround.config.entityEffects.enableFootprints": "Footprints",
   "dsurround.config.entityEffects.enableFootprints.tooltip": "Enable/disable footprints left by players and mobs walking on soft ground: dirt, sand, gravel, snow and mud. They fade after a while, last longer in snow, and wash away faster in the rain. None while sneaking, with Particles on Minimal, or while a shader pack is in use.",
+  "dsurround.config.entityEffects.enableTrackedFootprints": "Tracked Footprints",
+  "dsurround.config.entityEffects.enableTrackedFootprints.tooltip": "Enable/disable feet tracking what they walked through onto hard ground: snow, mud, sand, soul sand and water, fainter with each step. Walking on grass or dirt in the rain picks up mud. Needs Footprints on.",
   "dsurround.config.entityEffects.footprintStyle": "Footprint Style",
   "dsurround.config.entityEffects.footprintStyle.tooltip": "The look of players' footprints. Mobs' depend on their feet: square, paw, hoof or bird.",
   "dsurround.config.footstepAccents": "Footstep Accent Options",

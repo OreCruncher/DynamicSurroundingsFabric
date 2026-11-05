@@ -1,3 +1,25 @@
+> ### DynamicSurroundings-26.3-5.1.0
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+**All Loaders**
+* JAVA 25+  
+* Architectury 22.0.5+
+
+**Fabric**
+* Fabric Loader >= 0.20.1
+* Fabric API >= 0.165.2+26.3
+
+**NeoForge**
+* NeoForge 26.3.0.101+
+
+**What's New**
+* Tracked footprints: feet carry what they walk through, and players and mobs leave colored prints that fade with each step
+  * Snow, mud, sand, red sand, soul sand and water track onto hard ground; snow and mud show on soft ground too, then give way to normal prints
+  * Walking on grass or dirt in the rain leaves mud prints, and picks up mud to track onward
+  * On by default, and needs Footprints on: Tracked Footprints in Entity Effect Options, also set by the RPG, Vanilla+ and Defaults presets
+  * Mods and modpacks can add their blocks with the `tracks_*` block tags
+
 > ### DynamicSurroundings-1.21.11-5.0.0
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

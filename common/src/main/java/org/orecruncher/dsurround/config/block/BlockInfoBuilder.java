@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.ConfigServices;
+import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -71,6 +72,8 @@ public final class BlockInfoBuilder {
     final float soundReflectivity;
     final float soundOcclusion;
     final boolean takesFootprints;
+    final @Nullable TrackedGround tracks;
+    final boolean tracksMudWhenWet;
     private boolean built;
 
     /**
@@ -83,6 +86,8 @@ public final class BlockInfoBuilder {
         this.soundReflectivity = Reflectance.DEFAULT;
         this.soundOcclusion = Occlusion.DEFAULT;
         this.takesFootprints = false;
+        this.tracks = null;
+        this.tracksMudWhenWet = false;
     }
 
     /**
@@ -95,6 +100,8 @@ public final class BlockInfoBuilder {
         this.soundReflectivity = getSoundReflectionSetting(state, services.tagLibrary());
         this.stepSound = state.getSoundType().getStepSound().location();
         this.takesFootprints = takesFootprints(state, services.tagLibrary());
+        this.tracks = tracks(state, services.tagLibrary());
+        this.tracksMudWhenWet = services.tagLibrary().is(BlockEffectTags.TRACKS_MUD_WHEN_WET, state);
     }
 
     /**
@@ -109,7 +116,9 @@ public final class BlockInfoBuilder {
         return this.sounds.isEmpty() && this.blockEffects.isEmpty()
                 && this.soundReflectivity == Reflectance.DEFAULT
                 && this.soundOcclusion == Occlusion.DEFAULT
-                && !this.takesFootprints;
+                && !this.takesFootprints
+                && this.tracks == null
+                && !this.tracksMudWhenWet;
     }
 
     public void apply(BlockConfigRule config) {
@@ -162,6 +171,23 @@ public final class BlockInfoBuilder {
         return sound == SoundType.SAND || sound == SoundType.GRAVEL || sound == SoundType.SNOW
                 || sound == SoundType.POWDER_SNOW || sound == SoundType.MUD || sound == SoundType.SOUL_SAND
                 || sound == SoundType.SOUL_SOIL || sound == SoundType.SUSPICIOUS_SAND || sound == SoundType.SUSPICIOUS_GRAVEL;
+    }
+
+    /**
+     * What feet carry away from it, whatever the weather; null if nothing
+     */
+    static @Nullable TrackedGround tracks(BlockState state, ITagLibrary tags) {
+        if (tags.is(BlockEffectTags.TRACKS_SNOW, state))
+            return TrackedGround.SNOW;
+        if (tags.is(BlockEffectTags.TRACKS_MUD, state))
+            return TrackedGround.MUD;
+        if (tags.is(BlockEffectTags.TRACKS_SAND, state))
+            return TrackedGround.SAND;
+        if (tags.is(BlockEffectTags.TRACKS_RED_SAND, state))
+            return TrackedGround.RED_SAND;
+        if (tags.is(BlockEffectTags.TRACKS_SOUL_SAND, state))
+            return TrackedGround.SOUL_SAND;
+        return null;
     }
 
     private static float getSoundReflectionSetting(BlockState state, ITagLibrary tags) {

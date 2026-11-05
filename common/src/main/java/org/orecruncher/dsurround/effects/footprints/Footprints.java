@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.FootprintStyle;
+import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
@@ -29,7 +30,8 @@ import java.util.ArrayDeque;
 /**
  * The footprints on the ground: flat prints from the footprint texture, lit as the ground they are on, fading away.
  * They last {@link #LIFE} ticks, {@link #SNOW_LIFE} in snow, wash away faster where it is raining on them, and go when
- * the ground under them changes (dug up, melted, covered). At most {@link #MAX}; past that the oldest go.
+ * the ground under them changes (dug up, melted, covered). At most {@link #MAX}; past that the oldest go. Prints of what
+ * feet tracked onto hard ground are kept with them, drawn in color from a white copy of the texture.
  * <p>
  * Not particles: they don't move, last long and can be many, so they are kept here and drawn together as decals
  * (nudged toward the camera by a polygon offset, as sign text is, so they don't flicker into the ground), submitted with the level's features ({@code MixinLevelRenderer}). Client thread only.
@@ -37,6 +39,8 @@ import java.util.ArrayDeque;
 public final class Footprints {
 
     public static final Identifier TEXTURE = Constants.asId("textures/footprints.png");
+    // The same prints in white, for tracked prints' colors: a color only darkens what it tints
+    public static final Identifier TRACKED_TEXTURE = Constants.asId("textures/footprints_tracked.png");
 
     // Their life, in ticks: 10 seconds, or a minute in snow
     static final float LIFE = 200F;
@@ -45,6 +49,8 @@ public final class Footprints {
     static final float RAIN_AGING = 3F;
     // How dark a fresh print is, 0 to 1; it fades from there
     static final float PEAK_ALPHA = 0.45F;
+    // How strong a fresh tracked print is next to that: light ones on pale stone need it
+    static final float TRACKED_STRENGTH = 1.6F;
     // A print's half width and half length, in blocks, at scale 1
     private static final float HALF_WIDTH = 0.125F;
     private static final float HALF_LENGTH = 0.25F;
@@ -82,10 +88,15 @@ public final class Footprints {
         // How much the rain washes it: 0 under cover or where it doesn't rain, to 1 in the open
         final float washing;
         final float life;
+        // Its color, and how strong it is: 0xFFFFFF and 1 for a print pressed into the ground, drawn from TEXTURE
+        final int color;
+        final float strength;
+        final boolean tracked;
         float age;
 
         Print(double x, double y, double z, float yawDegrees, float scale, FootprintStyle style, boolean rightFoot,
-              int light, BlockPos ground, BlockState groundState, float washing, float life) {
+              int light, BlockPos ground, BlockState groundState, float washing, float life, int color, float strength,
+              boolean tracked) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -96,6 +107,9 @@ public final class Footprints {
             this.groundState = groundState;
             this.washing = washing;
             this.life = life;
+            this.color = color;
+            this.strength = strength;
+            this.tracked = tracked;
             layOut(this.corners, yawDegrees, HALF_WIDTH * scale, HALF_LENGTH * scale);
         }
     }
@@ -130,16 +144,51 @@ public final class Footprints {
      */
     void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
              boolean rightFoot, BlockPos ground, BlockState state) {
+        this.add(level, x, y, z, yawDegrees, scale, style, rightFoot, ground, state,
+                state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE, 0xFFFFFF, 1F, false);
+    }
+
+    /**
+     * Leaves a print of what feet carried onto hard ground.
+     *
+     * @param y        the top of the ground
+     * @param ground   the block it is on
+     * @param state    that block
+     * @param carried  what it is a print of
+     * @param strength how much is left of it, 1 for the first step
+     */
+    void addTracked(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
+                    boolean rightFoot, BlockPos ground, BlockState state, TrackedGround carried, float strength) {
+        this.add(level, x, y, z, yawDegrees, scale, style, rightFoot, ground, state, carried.life(), carried.color(),
+                strength * TRACKED_STRENGTH, true);
+    }
+
+    private void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
+                     boolean rightFoot, BlockPos ground, BlockState state, float life, int color, float strength,
+                     boolean tracked) {
         this.inLevel(level);
         if (this.prints.size() >= MAX)
             this.prints.pollFirst();
         // Where the print is: above a full block, in a snow layer
         var above = BlockPos.containing(x, y, z);
         int light = LightCoordsUtil.getLightCoords(level, above);
-        boolean rains = level.getBiome(above).value().getPrecipitationAt(above, level.getSeaLevel()) == Biome.Precipitation.RAIN;
-        float washing = rains ? Shelter.exposure(level, above) : 0F;
         this.prints.addLast(new Print(x, y + LIFT, z, yawDegrees, scale, style, rightFoot, light, ground.immutable(),
-                state, washing, state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE));
+                state, openToRain(level, above), life, color, strength, tracked));
+    }
+
+    /**
+     * How open a place is to rain: 0 under cover or where it doesn't rain, to 1 in the open
+     */
+    private static float openToRain(Level level, BlockPos pos) {
+        boolean rains = level.getBiome(pos).value().getPrecipitationAt(pos, level.getSeaLevel()) == Biome.Precipitation.RAIN;
+        return rains ? Shelter.exposure(level, pos) : 0F;
+    }
+
+    /**
+     * How soaked the ground at a place is by the rain falling on it now, 0 to 1
+     */
+    float wetness(Level level, BlockPos pos) {
+        return this.weather.rainLevel(level.getRainLevel(1F)) * openToRain(level, pos);
     }
 
     /**
@@ -210,17 +259,29 @@ public final class Footprints {
         if (this.prints.isEmpty() || IrisCompat.isShaderPackInUse())
             return;
 
+        this.submit(collector, camera, false);
+        for (var print : this.prints) {
+            if (print.tracked) {
+                this.submit(collector, camera, true);
+                return;
+            }
+        }
+    }
+
+    private void submit(SubmitNodeCollector collector, CameraRenderState camera, boolean tracked) {
         double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
-        collector.submitCustomGeometry(new PoseStack(), RenderTypes.textPolygonOffset(TEXTURE), (pose, consumer) -> {
+        collector.submitCustomGeometry(new PoseStack(), RenderTypes.textPolygonOffset(tracked ? TRACKED_TEXTURE : TEXTURE), (pose, consumer) -> {
             Matrix4f matrix = pose.pose();
             for (var print : this.prints) {
+                if (print.tracked != tracked)
+                    continue;
                 double dx = print.x - camX, dz = print.z - camZ;
                 if (dx * dx + dz * dz > DRAW_RANGE_SQ)
                     continue;
-                int alpha = (int) (alphaAt(print.age / print.life) * 255F);
+                int alpha = Math.min(255, (int) (alphaAt(print.age / print.life) * print.strength * 255F));
                 if (alpha <= 0)
                     continue;
-                int color = (alpha << 24) | 0xFFFFFF;
+                int color = (alpha << 24) | print.color;
                 float x = (float) dx, y = (float) (print.y - camY), z = (float) dz;
                 float[] c = print.corners;
                 vertex(consumer, matrix, x + c[0], y, z + c[1], color, print.u0, 0F, print.light);
