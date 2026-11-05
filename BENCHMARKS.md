@@ -356,6 +356,27 @@ higher on Vulkan even with nothing to draw (Precipitation 0.006 ms against 0.031
 in the frame's CPU, which is lower on Vulkan in rain and snow and within 0.1 ms either way elsewhere. Point Lights took
 0.009 ms in dust on Vulkan alone; not explained.
 
+### Is the gap ours?
+
+Uploads in the middle of a frame, passes of a few draws and many small draws all cost more on Vulkan than on OpenGL, and
+we do some of each. Turning what we draw off tells how much of the gap that is. Two scenes on each backend, NeoForge at
+1920x1080, two repeats: effects as shipped, then every effect's switch off (weather, clouds, fog, aurora, block and
+entity effects; the storm's rain is then vanilla's).
+
+| Scene | OpenGL frame GPU ms | Vulkan frame GPU ms | Gap | fps, OpenGL / Vulkan |
+|---|---|---|---|---|
+| fair weather, effects on | 0.609 | 0.754 | 0.145 | 1048 / 797 |
+| fair weather, effects off | 0.603 | 0.724 | 0.121 | 1072 / 840 |
+| full storm, effects on | 0.611 | 0.831 | 0.220 | 884 / 688 |
+| full storm, effects off | 0.433 | 0.642 | 0.209 | 1271 / 895 |
+
+Off takes 0.024 ms from the gap in fair weather and 0.011 ms in the storm: 83-95% of it is there with nothing of ours
+drawing. The storm's effects cost about the same on both, 0.178 ms on OpenGL and 0.189 ms on Vulkan. So batching our
+uploads or merging our passes could save 0.01-0.02 ms a frame at most, which isn't worth doing.
+
+Off isn't the mod absent: handlers and timers still run, and no run without the mod was made. They are mostly CPU work,
+and this gap is GPU time. The scenes were made for this test and aren't in `scripts/bench`.
+
 ### Firefly lights (`fireflies.json`)
 
 New: the worst case for lights. A 49 by 49 field of poppies at night in a cleared birch forest, the player among them.
