@@ -1,6 +1,6 @@
 // Waves on a shore, calm and in a storm, and what looking for them costs. A pool in the air with a sandstone rim (sand
 // would fall) level with the water, nearly 190 blocks of shore in range of the player: more than most beaches. The same
-// spot as boats.json, // whose pool it rebuilds. The season is set because one left by another scenario stays, and in winter the pool freezes.
+// spot as boats.json, whose pool it rebuilds. The season is set because one left by another scenario stays, and in winter the pool freezes.
 {
   "world": "bench",
   "seed": 20261030,
