@@ -1,0 +1,75 @@
+// Firefly lights, their worst case: the player standing in a field of poppies at night, fireflies all around, many
+// within a light's reach of the camera, where it covers the whole screen. The field is built by the commands on a stage
+// they clear and floor at the player's feet (see performance-rest.json), the same each run whatever the ground was, in
+// birch forest so it isn't where another scenario's scene is found. Fireflies aren't seeded, so which lights are near
+// the camera differs from run to run: compare with --spread. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "field": {
+      "biome": "minecraft:birch_forest",
+      "pitch": 5,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "fill ~-24 ~ ~-24 ~24 ~19 ~-1 air",
+        "fill ~-24 ~ ~0 ~24 ~19 ~24 air",
+        "fill ~-24 ~-3 ~-24 ~24 ~-2 ~24 dirt replace air",
+        "fill ~-24 ~-1 ~-24 ~24 ~-1 ~24 grass_block"
+      ],
+      // Clearing the trees drops what was in them onto the stage: cleared once it has landed, then the flowers. A block's
+      // effects are made as the config loads, so enableFireflies needs the reload, each run, as the next one must undo it
+      "settledCommands": [
+        "fill ~-24 ~ ~-24 ~24 ~19 ~-1 air",
+        "fill ~-24 ~ ~0 ~24 ~19 ~24 air",
+        "kill @e[type=item,distance=..64]",
+        "fill ~-24 ~ ~-24 ~24 ~ ~24 poppy",
+        "dsreload"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "fireflies-default",
+      "scene": "field"
+    },
+    {
+      "label": "fireflies-nolights",
+      "scene": "field",
+      "settings": {
+        "fireflyOptions.enableLight": false
+      }
+    },
+    {
+      "label": "fireflies-noglow",
+      "scene": "field",
+      "settings": {
+        "fireflyOptions.enableGlow": false
+      }
+    },
+    {
+      "label": "fireflies-off",
+      "scene": "field",
+      "settings": {
+        "fireflyOptions.enableFireflies": false
+      }
+    }
+  ]
+}

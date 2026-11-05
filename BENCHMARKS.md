@@ -277,6 +277,167 @@ Fabric's precipitation was run again the same day to compare with:
 The two platforms draw our effects at the same cost, and the whole frame within the noise. Fabric's frames read about
 0.2 ms higher than the day before in every precipitation scene: drift between sessions, not the platform.
 
+## Results, 2026-11-04: 26.3, OpenGL against Vulkan
+
+The first baseline on 26.3 and the first on Vulkan: every scenario on each, in one evening, the two back to back. Enhanced sounds are missing: see below. Each session's `dsurround.Environment` event was checked for its backend
+and each scenario's screenshots compared between the two: no effect was missing from either.
+
+| | |
+|---|---|
+| GPU | AMD Radeon RX 7600, driver 26.10.1.261008 |
+| Game | Minecraft 26.3, NeoForge 26.3.0.101, Architectury 22.0.5 |
+| Mod | 5.1.0 in development, commit `de723b88` on `OreCruncher/26.2`, with `scripts/bench/fireflies.json` added |
+| Video | 1920x1080, Fancy graphics, Improved Transparency off, render distance 16, vsync off, no frame limit (260) |
+
+CPU, memory, OS and Java as above. Not measured: Fabric, Improved Transparency on, any other graphics card.
+
+    ./gradlew :neoforge:runClientBench -PgraphicsBackend=vulkan -Pscenario=scripts/bench/<scenario>.json
+
+NeoForge's early window is OpenGL, so a Vulkan run needs `earlyWindowControl = false` in
+`neoforge/run-bench/config/fml.toml`.
+
+Frames here read much lower than 1.21.11's in the same scenarios (rain Medium 0.633 ms against 1.345 on NeoForge). That
+wasn't looked into, and sessions drift (see Rerunning), so compare within this section.
+
+### Vulkan against OpenGL
+
+| Scene | OpenGL frame GPU ms | Vulkan frame GPU ms | Difference | fps, OpenGL / Vulkan |
+|---|---|---|---|---|
+| rain Low | 0.536 (0.528-0.543) | 0.691 (0.683-0.699) | +0.155 | 1006 / 828 |
+| rain Medium | 0.633 (0.630-0.637) | 0.829 (0.816-0.841) | +0.196 | 844 / 698 |
+| rain High | 0.775 (0.729-0.821) | 1.015 (0.969-1.061) | +0.240 | 539 / 499 |
+| snow Low | 0.812 (0.812-0.813) | 0.999 (0.992-1.006) | +0.187 | 744 / 618 |
+| snow Medium | 0.909 (0.905-0.913) | 1.119 (1.115-1.123) | +0.210 | 668 / 551 |
+| snow High | 1.219 (1.210-1.228) | 1.395 (1.394-1.396) | +0.176 | 478 / 440 |
+| swamp, fog off | 0.771 (0.770-0.772) | 0.912 (0.910-0.914) | +0.141 | 906 / 854 |
+| swamp, Fast | 0.993 (0.990-0.996) | 1.150 (1.145-1.155) | +0.157 | 754 / 722 |
+| swamp, Fancy | 1.203 (1.192-1.213) | 1.369 (1.359-1.378) | +0.166 | 653 / 636 |
+| swamp, Fabulous | 2.197 (2.184-2.209) | 2.330 (2.318-2.342) | +0.133 | 395 / 387 |
+| waterfall | 0.512 (0.487-0.536) | 0.676 (0.662-0.691) | +0.164 | 1106 / 863 |
+| crowd (range 32) | 0.353 (0.353-0.353) | 0.512 (0.506-0.518) | +0.159 | 1477 / 1074 |
+| burning mobs | 0.360 (0.353-0.368) | 0.526 (0.520-0.531) | +0.166 | 1495 / 1071 |
+| fireflies | 1.388 (1.366-1.410) | 1.601 (1.584-1.617) | +0.213 | 578 / 553 |
+| dust (`performance-rest`) | 1.339 (1.333-1.345) | 1.293 (1.095-1.491) | -0.046 | 580 / 654 |
+| dust (`dust-low`) | 1.131 (0.978-1.284) | 1.196 (1.153-1.238) | +0.065 | 674 / 688 |
+| dust, Low | 0.697 (0.651-0.743) | 0.784 (0.773-0.796) | +0.087 | 999 / 837 |
+| thunderstorm | 0.891 (0.885-0.897) | 1.065 (1.055-1.074) | +0.174 | 676 / 573 |
+| clouds, fair | 0.581 (0.579-0.582) | 0.718 (0.712-0.724) | +0.137 | 1118 / 836 |
+| clouds, overcast | 0.823 (0.798-0.847) | 1.070 (1.054-1.085) | +0.247 | 726 / 567 |
+| clouds, towers | 0.778 (0.770-0.785) | 1.032 (1.020-1.045) | +0.254 | 766 / 586 |
+| aurora off | 0.246 (0.240-0.252) | 0.317 (0.316-0.317) | +0.071 | 1624 / 1488 |
+| aurora, realistic Fancy | 0.351 (0.351-0.351) | 0.419 (0.418-0.420) | +0.068 | 1494 / 1382 |
+
+Vulkan's frame costs 0.07-0.25 ms more GPU in every scene but dust, where the two are about even and the repeats are
+further apart than the difference, with no stall in either. Fps falls most where it is highest, and the gap closes as
+the scene gets heavier. The extra is mostly not in our effects: it is there with them off.
+
+What our own effects cost, GPU ms, OpenGL / Vulkan:
+
+| Effect | OpenGL | Vulkan |
+|---|---|---|
+| Ground fog Fast | 0.213 | 0.224 |
+| Ground fog Fancy | 0.408 | 0.421 |
+| Ground fog Fabulous | 1.380 | 1.368 |
+| Drops, rain Medium | 0.024 | 0.071 |
+| Drops, rain High | 0.057 | 0.139 |
+| Drops, snow High | 0.039 | 0.130 |
+| Damp spots, rain High | 0.033 | 0.072 |
+| Dust (`dust-low`) | 0.596 | 0.516 |
+| Dust (`performance-rest`) | 0.802 | 0.614 |
+| Window frost, snow High | 0.119 | 0.113 |
+| Clouds, snow High | 0.133 | 0.076 |
+| Clouds, overcast | 0.127 | 0.112 |
+| Aurora, classic | 0.028 | 0.036 |
+| Aurora, realistic Fancy | 0.224 | 0.226 |
+
+Fog, frost and the aurora cost the same on both. Drops and damp spots cost two to three times as much on Vulkan,
+though still under 0.15 ms. Dust and clouds are a little cheaper. CPU timers of small things that run every frame read
+higher on Vulkan even with nothing to draw (Precipitation 0.006 ms against 0.031 in a clear swamp); it doesn't add up
+in the frame's CPU, which is lower on Vulkan in rain and snow and within 0.1 ms either way elsewhere. Point Lights took
+0.009 ms in dust on Vulkan alone; not explained.
+
+### Firefly lights (`fireflies.json`)
+
+New: the worst case for lights. A 49 by 49 field of poppies at night in a cleared birch forest, the player among them.
+Point lights are capped at 64 drawn, of radius 1.75, and a light within reach of the camera is a full-screen quad, so
+what counts is how many are near it. Fireflies aren't seeded, so that differs a little from run to run.
+
+| Run | OpenGL frame GPU ms | Vulkan frame GPU ms | Point Lights GPU, OpenGL / Vulkan |
+|---|---|---|---|
+| default | 1.388 (1.366-1.410) | 1.601 (1.584-1.617) | 0.487 / 0.540 |
+| no lights | 0.899 (0.899-0.900) | 1.049 (1.047-1.051) | 0 / 0 |
+| no glow | 1.421 (1.421-1.421) | 1.609 (1.583-1.635) | 0.522 / 0.552 |
+| off | 0.891 (0.887-0.896) | 1.046 (1.039-1.052) | 0 / 0 |
+
+The lights take about 0.5 ms, a third of the frame. The fireflies themselves and their glow are too small to measure.
+Lowering the cap or skipping lights close to the camera are the places to save; recordings don't yet carry how many
+lights were drawn. A block's effects are made as the config loads, so the scene runs `dsreload` for `enableFireflies`
+to take effect, and to undo it in the next run.
+
+### Rain and snow on 26.3
+
+| Run | Precipitation GPU/CPU, OpenGL | Vulkan | Waiting for Quads CPU, OpenGL / Vulkan | Precipitation Handler ms/tick |
+|---|---|---|---|---|
+| rain Low | 0.018/0.134 | 0.059/0.077 | 0.041 / 0.011 | 0.117 |
+| rain Medium | 0.042/0.475 | 0.112/0.294 | 0.346 / 0.201 | 0.159 |
+| rain High | 0.089/1.068 | 0.212/0.767 | 0.867 / 0.623 | 0.297 |
+| snow Low | 0.013/0.069 | 0.042/0.070 | 0.002 / 0.008 | 0.097 |
+| snow Medium | 0.020/0.299 | 0.078/0.165 | 0.168 / 0.076 | 0.171 |
+| snow High | 0.040/0.815 | 0.138/0.579 | 0.608 / 0.448 | 0.295 |
+
+**Open:** waiting for the quads' thread has grown. Precipitation's CPU on NeoForge 1.21.11 was 0.091 ms at rain Medium
+and 0.168 at High; here 0.475 and 1.068, and at High the wait is over half of the frame's CPU. The step's own time
+has grown far less (Precipitation Handler at High, 0.246 ms a tick on Fabric 1.21.11, 0.297 here). The cause isn't
+confirmed; the first thing to check is where in the frame the quads are now collected.
+
+### The rest
+
+| Run | OpenGL frame GPU ms | Vulkan frame GPU ms | Timer or handler, OpenGL / Vulkan |
+|---|---|---|---|
+| waterfall, default (block range 40) | 0.512 (0.487-0.536) | 0.676 (0.662-0.691) | Area Block Effects 0.233 / 0.223 ms a tick |
+| waterfall, block range 32 | 0.530 (0.530-0.530) | 0.657 (0.656-0.659) | 0.202 / 0.193 |
+| waterfall, block range 64 | 0.506 (0.492-0.521) | 0.658 (0.658-0.658) | 0.373 / 0.365 |
+| waterfall, no flame or firefly lights | 0.510 (0.505-0.514) | 0.653 (0.653-0.654) | 0.222 / 0.209 |
+| waterfall, no mist or froth | 0.397 (0.392-0.401) | 0.563 (0.563-0.564) | 0.193 / 0.186 |
+| crowd, range 16 | 0.353 (0.347-0.360) | 0.514 (0.508-0.519) | EntityEffect Handler 0.022 / 0.021 |
+| crowd, range 48 | 0.355 (0.347-0.364) | 0.520 (0.519-0.521) | 0.025 / 0.017 |
+| burning mobs, default | 0.360 (0.353-0.368) | 0.526 (0.520-0.531) | Point Lights GPU 0.027 / 0.034 |
+| burning mobs, no light | 0.359 (0.351-0.368) | 0.516 (0.510-0.521) | - |
+| burning mobs, no flames | 0.340 (0.337-0.343) | 0.492 (0.492-0.493) | - |
+| dust, range 20 (High) | 1.454 (1.395-1.513) | 1.350 (1.331-1.369) | Dust GPU 0.912 / 0.661 |
+| lightning on | 0.891 (0.885-0.897) | 1.065 (1.055-1.074) | Lightning CPU 0.035 / 0.033 |
+| lightning off | 0.879 (0.868-0.889) | 1.050 (1.045-1.055) | - |
+| no clouds, lightning on | 0.851 (0.841-0.861) | 1.006 (1.006-1.006) | Lightning CPU 0.042 / 0.042 |
+| no clouds, lightning off | 0.847 (0.847-0.848) | 1.007 (1.004-1.010) | - |
+| clouds, fair, vanilla | 0.582 (0.578-0.586) | 0.701 (0.700-0.702) | - |
+| clouds, overcast, vanilla | 0.754 (0.751-0.758) | 0.992 (0.986-0.997) | - |
+| clouds, towers, vanilla | 0.753 (0.742-0.764) | 0.987 (0.981-0.993) | - |
+
+The findings of 1.21.11 hold: mist and froth are the waterfall's costly part (about 0.11 ms on both), block range
+64 costs about 0.17 ms a tick more than 32, the entity effect range changes nothing, and neither do lightning's
+strikes. Dynamic clouds cost at most 0.08 ms of frame GPU over vanilla's, and Cloud Handler 0.33-0.42 ms a tick.
+
+### Aurora on 26.3 (`aurora.json`, at y 245)
+
+| Run | OpenGL frame GPU ms | Vulkan frame GPU ms | Aurora GPU, OpenGL / Vulkan |
+|---|---|---|---|
+| realistic Fancy | 0.351 (0.351-0.351) | 0.419 (0.418-0.420) | 0.224 / 0.226 |
+| realistic Fast | 0.295 (0.293-0.297) | 0.350 (0.346-0.354) | 0.119 / 0.110 |
+| classic, default | 0.300 (0.266-0.335) | 0.366 (0.349-0.383) | 0.028 / 0.036 |
+| classic, one band | 0.292 (0.278-0.306) | 0.353 (0.351-0.355) | 0.021 / 0.028 |
+| off | 0.246 (0.240-0.252) | 0.317 (0.316-0.317) | - |
+
+**Open:** the realistic aurora measured 2.09 ms of GPU on 26.2 (Fabric, 2560x1369), and 0.22 here. Screen size accounts
+for about 1.7 of that factor of 9.3. It was drawn (seen in the screenshots), and no change to its shaders since would
+explain the rest; the old recording is gone. Measure it at 2560x1369 and 3840x2160, with `/dsaurora activity` held high,
+before tuning it. The frame also rises less than the timer reads, about 0.1 ms.
+
+### Enhanced sounds: not recorded
+
+`sound.json` ran with no sound device (`Failed to open OpenAL device` in the log; every run's manifest says
+`enhancedSounds: false`), so its 14 runs measured nothing. The headphones had most likely gone idle. The 2026-11-02
+numbers stand until it is rerun.
+
 ## Field recordings
 
 These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on
@@ -301,12 +462,13 @@ changes the picture.
 
 ## Rerunning
 
-- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. The first six scenarios take
-  about an hour and a quarter; `lightning.json`, `clouds.json` and `aurora.json` (on 1.21.11 about 45 minutes; here
-  `aurora.json` has two more runs) are not yet recorded on 26.2. `compat.json` is a visual check, not a measurement.
+- Run every scenario from a clean tree, the machine otherwise idle, and note the commit. On 26.3 `sound.json` once
+  and every other scenario on OpenGL and Vulkan took four and a half hours. `compat.json` is a visual check, not a
+  measurement.
   `sound.json` needs a sound device (each run's manifest says `enhancedSounds: true`) and plays its clicks aloud,
-  quietly. Run it first in a long set: a device that sleeps when the machine is idle (wireless headphones) can be gone
-  by the end.
+  quietly. The session finishes normally without one, so check the manifest as soon as it ends. Run it first in a long
+  set, while someone is there: a device that sleeps when the machine is idle (wireless headphones) can be gone by the
+  end, or before it starts.
 - Idle means idle: summarizing one scenario's recordings while the next records showed in that run's CPU timers.
 - The first run of a session reads high (its world settling: longer GC pauses, slower frames); in an A B C, C B A set
   it lands on the first label. Compare that label's two repeats before trusting it.
