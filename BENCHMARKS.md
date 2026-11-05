@@ -435,39 +435,48 @@ before tuning it. The frame also rises less than the timer reads, about 0.1 ms.
 ### Enhanced sounds (`sound.json`)
 
 The evening's session ran with no sound device (`Failed to open OpenAL device`; every run's manifest said
-`enhancedSounds: false`), so it measured nothing. Rerun on 2026-11-05 on OpenGL at commit `be8cdf70`, with a device
-(every run `enhancedSounds: true`). Columns as in the first sound table above.
+`enhancedSounds: false`), so it measured nothing. Rerun on 2026-11-05 on OpenGL with a device (every run
+`enhancedSounds: true`), after moving `sound.json` to savanna and setting the season (below). Columns as in the first
+sound table above.
 
 | Run | Trace ms | Start ms | Starts ms/s | Update ms/s | Traced/s | Reused/s |
 |---|---|---|---|---|---|---|
-| open | 0.298 | 0.273 | 5.6 | 15.4 | 68.7 | 5.3 |
-| open, occlusion on | 0.301 | 0.273 | 5.6 | 15.7 | 69.3 | 4.9 |
-| enclosed | 0.326 | 0.309 | 6.3 | 16.8 | 69.7 | 5.2 |
-| enclosed, simplified shared airspace | 0.235 | 0.224 | 4.6 | 11.9 | 68.9 | 5.3 |
-| occluded | 0.320 | 0.295 | 6.1 | 14.0 | 61.2 | 4.7 |
-| occluded, occlusion on | 0.322 | 0.295 | 6.1 | 13.9 | 60.9 | 5.0 |
-| burst | 0.307 | 0.283 | 30.5 | 69.0 | 321.9 | 23.7 |
+| open | 0.418 | 0.402 | 8.1 | 12.5 | 49.7 | 20.7 |
+| open, occlusion on | 0.409 | 0.402 | 8.0 | 10.2 | 44.3 | 26.2 |
+| enclosed | 0.371 | 0.372 | 7.4 | 7.5 | 39.6 | 30.5 |
+| enclosed, simplified shared airspace | 0.263 | 0.260 | 5.3 | 5.2 | 38.8 | 32.5 |
+| occluded | 0.409 | 0.410 | 8.3 | 7.0 | 36.8 | 26.4 |
+| occluded, occlusion on | 0.417 | 0.417 | 8.3 | 6.4 | 34.7 | 26.6 |
+| burst | 0.347 | 0.331 | 29.2 | 45.4 | 213.2 | 111.0 |
 
-A trace in the box costs 0.32-0.33 ms, against 0.39-0.43 on 1.21.11 with the chunk kept in hand, and the sound engine's
-thread spends about 6 ms a second on starts instead of 8. Simplified shared airspace is still about 28% cheaper;
-occlusion now adds about 1%. In `burst`, 108 sounds a second are calculated as they start and 43 (28%, was 37%) start
-without effects. Frames stay at about 1750 fps: none of this is on the render thread.
+Costs are about as on 1.21.11 with the chunk kept in hand (0.39-0.43 ms a trace, 8 ms a second on starts). Simplified
+shared airspace is about 29% cheaper, and occlusion adds nothing measurable. In `burst`, 88 sounds a second are
+calculated as they start and 62 (41%, was 37%) start without effects. Frames stay at about 1700 fps: none of this is on
+the render thread.
 
-**`open` isn't open air here.** The plains scenes share one spot, one above another, and what they leave stays. Burning
-zombies from `burning-lights.json` stood on a dirt stage left at y 245, within a few blocks of the player, and `open`
-clears only 8 blocks around it, so rays find the stage. Its row doesn't compare with 1.21.11's. The zombies add about
-0.5 sound starts a second (20.5 fell to 20.0 once they were killed) and 0.02-0.03 ms of Point Lights to these recordings.
-`burning-lights.json` ran after `precipitation.json` and `performance-rest.json` in the evening's set, and their rain and
-crowd recordings show no Point Lights, so only this rerun is affected.
+**What moved.** This set took three tries, and each changed the picture:
 
-**Reuse is nearly gone, and the mobs aren't why.** 1.21.11 reused 45 results a second and traced 26; here it is 5 and 69,
-which puts the workers' updates at about 15 ms a second instead of 3.8. A short run that logged what changed found 13
-block changes a second in this world, standing still: water freezing (9 a second, y 62) and dirt turning to grass
-(3.7), most of them 170 blocks from the player and none nearer than 69, with a little amethyst and sulfur spike growth.
-`WorldChangeTracker` counts a change anywhere, and each sound updates about three times a second, so one change every
-third of a second ends every result. Killing all the entities barely moved it (reused 5-6 a second to 7-8). Water
-freezing on plains is probably the dev client's Serene Seasons, which Fabric's bench doesn't have; that isn't confirmed.
-Counting only changes near the player would save most of this: the workers' time, not the render thread's.
+| `sound.json` run | Trace ms, open / enclosed | Reused/s, enclosed | Update ms/s, enclosed |
+|---|---|---|---|
+| plains, winter, zombies beside the player | 0.298 / 0.326 | 5.2 | 16.8 |
+| plains, summer, zombies gone | 0.331 / 0.345 | 26.6 | 9.5 |
+| savanna, summer | 0.418 / 0.371 | 30.5 | 7.5 |
+
+- **The stage.** The plains scenes share one spot, one above another, and what they leave stays: `compat.json`'s dirt
+  stage at y 245, with `burning-lights.json`'s zombies on it. `open` clears only 8 blocks around the player, so its rays
+  found the stage. In real open air a trace costs more, as every ray runs its full 128 blocks. The zombies also added
+  about 0.5 sound starts a second and 0.02-0.03 ms of Point Lights. Only this morning's plains runs are affected:
+  `burning-lights.json` ran after the rain and crowd scenes in the evening's set, whose recordings show no Point Lights.
+- **Winter.** A season set by one scenario stays in the world: `aurora.json`'s `mid_winter` was still on, through Serene
+  Seasons (NeoForge's dev client only). A short run that logged what changed found 13 block changes a second with the
+  player standing still: water freezing (9 a second) and dirt turning to grass (3.7), most of them about 170 blocks away
+  and none nearer than 69. `WorldChangeTracker` counts a change anywhere, and each sound updates about three times a
+  second, so one change every third of a second ends every result. Summer took reuse from 5 a second to about 27.
+  Killing every entity first moved it from 5-6 to 7-8.
+
+**Open:** reuse is still below 1.21.11's 45 a second, so updates cost 5-12 ms a second against 3.8; the changes behind
+that weren't logged at the new spot. Counting only changes near the player would save most of this, in any world where
+grass spreads or crops grow: the workers' time, not the render thread's.
 
 ## Field recordings
 
@@ -511,6 +520,9 @@ changes the picture.
   (in the mist, facing the glass).
 - Read `--spread`: when a label's repeats are further apart than the differences between labels, look for a hitch in
   that run (`python scripts/jfr-summary.py <zip>`: the longest frame, GC) and rerun it rather than averaging it in.
+- Scenes of a biome share a spot, and what they build or summon stays, as does a season set by the last scenario. Give
+  a scene that needs a clean spot a biome of its own, and set the season in any scene it matters to. A scene is
+  remembered by name, biome change or not: moving one means renaming it.
 - Have each run set what it compares explicitly, the default included: the bench folder's config
   (`fabric/run-bench/config/dsurround/dsurround.json`) is not guaranteed to be at the defaults.
 - Absolute numbers drift between sessions (the waterfall scene by about a third of its frame time in one day), so

@@ -1,13 +1,15 @@
 // Enhanced sound processing (reverb, occlusion): button clicks played around the player 20 times a second, and
 // beacon hums kept playing, through the warm-up and the recording (the scene's "sounds"), in three places at y 245,
-// out of the reverb rays' reach (128) of plains ground: open air, where every ray runs its full length and finds nothing;
+// out of the reverb rays' reach (128) of savanna ground: open air, where every ray runs its full length and finds nothing;
 // inside a hollow stone box, where every ray bounces; and in the box with the sounds outside it, for occlusion (off out
 // of the box). The mod's ambient sounds are turned down to nothing so only these are processed. Needs a sound device:
 // each run's manifest says whether processing ran ("enhancedSounds") and how many sounds were played. Ray counts and
-// bounces need a restart, so can't be compared here. In the bench world six minecarts in a mineshaft far below play
-// their silent riding loops: counted in "sources" and skipped as out of range, about 17 calculations a second. The height is absolute, not above the scene: a scene found after
-// another built here stands on what that one left (the finder reads the height map), which put the box above the
-// build limit, where it can't be placed. See README.md for the format.
+// bounces need a restart, so can't be compared here. Savanna because no other scenario builds there: every plains scene
+// shares one spot, and what they leave stayed (compat.json's stage, burning-lights.json's zombies beside the player). The
+// season is set because the last scenario's stays, and water freezing in a winter ends results' reuse (see
+// WorldChangeTracker). The height is absolute, not above the scene: a scene found after another built here stands on what
+// that one left (the finder reads the height map), which put the box above the build limit, where it can't be placed.
+// See README.md for the format.
 {
   "world": "bench",
   "seed": 20261030,
@@ -27,11 +29,12 @@
     "quiet": {"soundOptions.ambientVolumeScaling": 0}
   },
   "scenes": {
-    "open": {
-      "biome": "minecraft:plains",
+    "sound-open": {
+      "biome": "minecraft:savanna",
       "pitch": 0,
       "commands": [
         "time set 6000",
+        "season set mid_summer",
         "weather clear",
         "tp @s ~ 245 ~",
         // What the box scenes left here
@@ -44,11 +47,12 @@
       ],
       "profile": "general"
     },
-    "enclosed": {
-      "biome": "minecraft:plains",
+    "sound-enclosed": {
+      "biome": "minecraft:savanna",
       "pitch": 0,
       "commands": [
         "time set 6000",
+        "season set mid_summer",
         "weather clear",
         "tp @s ~ 245 ~",
         // Inside 13 blocks each way, the player's eyes near its middle
@@ -61,11 +65,12 @@
       ],
       "profile": "general"
     },
-    "occluded": {
-      "biome": "minecraft:plains",
+    "sound-occluded": {
+      "biome": "minecraft:savanna",
       "pitch": 0,
       "commands": [
         "time set 6000",
+        "season set mid_summer",
         "weather clear",
         "tp @s ~ 245 ~",
         "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
@@ -83,11 +88,12 @@
     // The box with clicks starting 150 times a second, more than the start budget (2 ms of calculating every 50 ms)
     // lets the sound engine's thread spend: the rest start without their effects and are left to the workers. About
     // 120 play at once, under OpenAL's 247 sources
-    "burst": {
-      "biome": "minecraft:plains",
+    "sound-burst": {
+      "biome": "minecraft:savanna",
       "pitch": 0,
       "commands": [
         "time set 6000",
+        "season set mid_summer",
         "weather clear",
         "tp @s ~ 245 ~",
         "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
@@ -100,12 +106,12 @@
     }
   },
   "runs": [
-    {"label": "open", "scene": "open", "use": "quiet"},
-    {"label": "open-occlusion", "scene": "open", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
-    {"label": "enclosed", "scene": "enclosed", "use": "quiet"},
-    {"label": "enclosed-simplified", "scene": "enclosed", "use": "quiet", "settings": {"enhancedSounds.simplifiedSharedAirspace": true}},
-    {"label": "occluded", "scene": "occluded", "use": "quiet"},
-    {"label": "occluded-occlusion", "scene": "occluded", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
-    {"label": "burst", "scene": "burst", "use": "quiet"}
+    {"label": "open", "scene": "sound-open", "use": "quiet"},
+    {"label": "open-occlusion", "scene": "sound-open", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
+    {"label": "enclosed", "scene": "sound-enclosed", "use": "quiet"},
+    {"label": "enclosed-simplified", "scene": "sound-enclosed", "use": "quiet", "settings": {"enhancedSounds.simplifiedSharedAirspace": true}},
+    {"label": "occluded", "scene": "sound-occluded", "use": "quiet"},
+    {"label": "occluded-occlusion", "scene": "sound-occluded", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
+    {"label": "burst", "scene": "sound-burst", "use": "quiet"}
   ]
 }
