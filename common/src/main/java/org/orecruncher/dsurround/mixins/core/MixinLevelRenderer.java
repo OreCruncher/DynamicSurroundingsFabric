@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.state.level.LevelRenderState;
 import org.orecruncher.dsurround.effects.entity.HealthPopoffs;
 import org.orecruncher.dsurround.effects.footprints.Footprints;
+import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelRenderer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -40,6 +41,14 @@ public class MixinLevelRenderer {
     @Inject(method = "lambda$addMainPass$0", at = @At("HEAD"), require = 0)
     private void dsurround$enterMainPass(CallbackInfo ci) {
         MixinHelpers.inLevelMainPass = true;
+    }
+
+    /**
+     * Improved Transparency's stages are next, and the solid world's pass is closed: the soft particles' depth.
+     */
+    @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;executeOit(Lnet/minecraft/client/renderer/chunk/ChunkSectionsToRender;Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;)V"), require = 0)
+    private void dsurround$beforeTransparency(CallbackInfo ci) {
+        SoftParticles.captureBeforeTransparency();
     }
 
     /**

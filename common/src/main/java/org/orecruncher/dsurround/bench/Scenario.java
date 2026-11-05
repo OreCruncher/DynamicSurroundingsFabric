@@ -34,6 +34,7 @@ import java.util.OptionalLong;
  * @param repeats    how many times the runs are made, every other time in reverse order (A B, B A...), so a drift over
  *                   the session doesn't look like a setting's cost
  * @param vsync      vsync to set for the session, if given
+ * @param improvedTransparency Improved Transparency to set for the session, if given
  * @param maxFps     the frame rate limit to set for the session, if given (260 is none)
  * @param width      the window's width to set for the session, if given, and {@code height} its height: what a GPU
  *                   draws scales with the pixels, so runs to compare need the same size
@@ -44,7 +45,7 @@ import java.util.OptionalLong;
  * @param runs       the runs, in order
  */
 public record Scenario(String name, String world, OptionalLong seed, List<String> setup, int warmup, int record, int repeats,
-                       @Nullable Boolean vsync, OptionalInt maxFps, OptionalInt width, OptionalInt height, boolean screenshot, OptionalDouble volume, Map<String, Scene> scenes, List<Run> runs) {
+                       @Nullable Boolean vsync, @Nullable Boolean improvedTransparency, OptionalInt maxFps, OptionalInt width, OptionalInt height, boolean screenshot, OptionalDouble volume, Map<String, Scene> scenes, List<Run> runs) {
 
     /**
      * Where a run is recorded.
@@ -163,6 +164,7 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                 json.has("record") ? json.get("record").getAsInt() : 60,
                 json.has("repeats") ? Math.max(1, json.get("repeats").getAsInt()) : 1,
                 video.has("vsync") ? video.get("vsync").getAsBoolean() : null,
+                video.has("improvedTransparency") ? video.get("improvedTransparency").getAsBoolean() : null,
                 video.has("maxFps") ? OptionalInt.of(video.get("maxFps").getAsInt()) : OptionalInt.empty(),
                 video.has("width") ? OptionalInt.of(video.get("width").getAsInt()) : OptionalInt.empty(),
                 video.has("height") ? OptionalInt.of(video.get("height").getAsInt()) : OptionalInt.empty(),

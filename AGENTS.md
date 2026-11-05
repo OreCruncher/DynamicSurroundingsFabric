@@ -230,15 +230,22 @@ release, 5.1.0, is for 26.3.
   pass:
   - Soft particles are drawn inside the open pass, so they read the previous frame's depth, copied in the particle lights
     phase: there is no gap to copy this frame's in, with Improved Transparency off. The copy is one frame old in a fast
-    turn; the fade hides most of it.
+    turn; the fade hides most of it. With it on they read this frame's, copied before its stages
+    (`SoftParticles.captureBeforeTransparency`), and so does everything else that reads the copy: point lights, ground
+    fog, dust. So those see solid things only: with it on, fog behind glass is drawn over the glass, untinted by stained
+    glass, and point lights fall on what is behind water or glass (seen in game, 2026-11-05; accepted, as the depth can't
+    tell glass from particles once the stages have run).
   - Frost tests against the depth the main pass left, translucent blocks in it, so water or stained glass in front of
     frost hides it.
   - With Improved Transparency off, our rain and clouds behind stained or tinted glass aren't seen, as vanilla's aren't
     (seen in game, 2026-11-04): that glass leaves its depth; through clear glass they are.
   - Point lights and streaks are drawn after the translucent particles, not before them; rain over the world border.
-  - With Improved Transparency on, the main target's depth has no translucent things, so what we draw is in front of
-    water and stained glass it is really behind. Known; particle layers need a set for its stages (`RenderPipelines.
-    OIT_PARTICLE`, or `drawLayers` throws) and vanilla's weather and clouds have theirs (`renderOit`, cancelled for ours).
+  - With Improved Transparency on, the main target's depth holds only solid things until its composite, which writes
+    the nearest translucent thing wherever anything was drawn, a particle's faintest edge included: seen with
+    RenderDoc, those edges lit up as rings of specks under the point lights, and ground fog stopped at them. So a depth
+    copy is made before the stages, or a particle fades out against where it just was. Particle layers need a set for the stages (or `drawLayers`
+    throws): `RenderPipelines.OIT_PARTICLE`, or ours in `SoftParticles`, the same shader with `OIT` and, for added
+    light, `OIT_ADDITIVE`. Vanilla's weather and clouds have theirs (`renderOit`, cancelled for ours).
 - Shaders: every stage is compiled to SPIR-V, so `#version 330`, `#extension GL_ARB_separate_shader_objects : require`,
   `#include` (not `#moj_import`), `layout(location = N)` on every input and output (a vertex shader's attributes in the
   vertex format's order), `gl_VertexIndex`. An include has no `#version`. Pipelines are compiled on demand through

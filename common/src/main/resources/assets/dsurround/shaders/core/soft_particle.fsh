@@ -9,10 +9,14 @@
 //
 // SOFT_DISTANCE, set by the pipeline, is how far in front of what is behind it, in blocks, the particle is at full
 // strength.
+//
+// The same shader draws in Improved Transparency's stages (OIT, set by the pipeline), as vanilla's does. A flame's
+// pipeline also sets OIT_ADDITIVE: it adds its light and hides nothing behind it.
 
 #include <minecraft:fog.glsl>
 #include <minecraft:dynamictransforms.glsl>
 #include <minecraft:projection.glsl>
+#include <minecraft:oit.glsl>
 
 uniform sampler2D Sampler0;
 // A copy of the scene's depth, made just before the particles are drawn
@@ -28,7 +32,9 @@ layout(location = 1) in float cylindricalVertexDistance;
 layout(location = 2) in vec2 texCoord0;
 layout(location = 3) in vec4 vertexColor;
 
+#ifndef OIT_ALPHA_ONLY
 layout(location = 0) out vec4 fragColor;
+#endif
 
 // A depth buffer value as a distance from the camera in blocks, along the view direction. Inverts the perspective
 // projection: for a view space z, ndc = (m22 * z + m32) / -z. Holds whichever way round the depth range runs.
@@ -52,5 +58,19 @@ void main() {
     float particleDistance = view_distance(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SOFT_DISTANCE, 0.0, 1.0);
 
-    fragColor = apply_fog(color, sphericalVertexDistance, cylindricalVertexDistance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd, FogColor);
+    #ifdef OIT_ALPHA_ONLY
+    #ifdef OIT_ADDITIVE
+    // At full alpha the depth bounds would take it for something opaque, and what is behind it would be dropped
+    color.a = min(color.a, 0.98);
+    #endif
+    executeAlphaOnlyPhase(gl_FragCoord.z, color.a);
+    #else
+    #ifdef OIT_ACCUMULATE
+    color = sampleColorForAccumulation(color);
+    vec4 fogColor = vec4(FogColor.rgb * color.a, FogColor.a);
+    #else
+    vec4 fogColor = FogColor;
+    #endif
+    fragColor = apply_fog(color, sphericalVertexDistance, cylindricalVertexDistance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd, fogColor);
+    #endif
 }

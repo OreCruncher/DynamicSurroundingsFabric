@@ -280,6 +280,8 @@ public final class ScenarioRunner {
 
         if (this.scenario.vsync() != null)
             mc.options.enableVsync().set(this.scenario.vsync());
+        if (this.scenario.improvedTransparency() != null)
+            mc.options.improvedTransparency().set(this.scenario.improvedTransparency());
         this.scenario.maxFps().ifPresent(fps -> mc.options.framerateLimit().set(fps));
         this.scenario.volume().ifPresent(volume -> mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(volume));
         if (this.scenario.width().isPresent() && this.scenario.height().isPresent())

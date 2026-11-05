@@ -28,7 +28,8 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
   "warmup": 15,                // seconds after the terrain is drawn, before recording
   "record": 60,                // seconds recorded a run
   "repeats": 2,                // the runs this many times, every other time reversed (A B, B A)
-  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},   // each optional; 260 is no limit
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260,    // each optional; 260 is no limit
+            "improvedTransparency": true},                                  // stays set: say false in the next scenario
   "screenshots": true,         // one a run, as recording starts, without the HUD
   "scenes": {
     "swamp": {

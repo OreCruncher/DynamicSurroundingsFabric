@@ -3,6 +3,8 @@
 
 package org.orecruncher.dsurround.config;
 
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,6 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * weather and clouds renderers (set by the NeoForge platform); nothing replaces a dimension's on Fabric.
  */
 public class DimensionWeatherTests {
+
+    static {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     @Test
     void withoutAPlatformSayingOtherwiseEveryDimensionGetsParticleWeather() {

@@ -177,6 +177,7 @@
   "dsurround.hook.rain_sounds": "Storm rain sounds",
   "dsurround.hook.rain_splashes": "Hiding vanilla's rain splashes under particle rain",
   "dsurround.hook.world_effects": "Effects drawn over the world: ground fog, frost, particle weather and lightning",
+  "dsurround.hook.soft_particles_transparency": "Soft particles with Improved Transparency",
   "dsurround.hook.wind_blown_particles": "Wind blowing particles",
   "dsurround.hook.burning_entities": "Flames on burning mobs",
   "dsurround.hook.death_puffs": "Dark mist when mobs die",

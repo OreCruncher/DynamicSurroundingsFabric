@@ -29,7 +29,7 @@ public final class ModShaders {
                     AuroraRenderer.SHADER,
                     PointLights.SHADER),
             Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS, RealisticAuroraRenderer.SHADERS,
-                    LightningRenderer.SHADERS, CloudRenderer.SHADERS).flatMap(List::stream)).toList();
+                    LightningRenderer.SHADERS, CloudRenderer.SHADERS, SoftParticles.oitShaders()).flatMap(List::stream)).toList();
 
     private ModShaders() {
     }
