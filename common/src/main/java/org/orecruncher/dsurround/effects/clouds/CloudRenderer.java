@@ -3,21 +3,21 @@
 
 package org.orecruncher.dsurround.effects.clouds;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import org.jetbrains.annotations.Nullable;
@@ -37,8 +37,7 @@ import java.util.OptionalDouble;
  * change, and drawn each frame moved to where the clouds have drifted. The settled part twice: first only its depth
  * ({@link #DEPTH}), then its color where it is nearest ({@link #SETTLED}), so a cloud's faces behind its front don't
  * show through it. The changing part after ({@link #CHANGING}), fading in or out in the shader as the game's time goes
- * on, writing no depth: a part fading out would otherwise hide what is behind it once it is all but gone. With
- * Fabulous graphics to the clouds' own target, as vanilla's clouds are, which the transparency pass lays over the scene.
+ * on, writing no depth: a part fading out would otherwise hide what is behind it once it is all but gone.
  * Render thread only.
  */
 public final class CloudRenderer {
@@ -120,7 +119,8 @@ public final class CloudRenderer {
                 .withVertexShader(Constants.asId("core/clouds"))
                 .withFragmentShader(Constants.asId("core/clouds"))
                 .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+                .withBindGroupLayout(BindGroupLayouts.PROJECTION)
                 .withBindGroupLayout(BindGroupLayouts.FOG)
                 .withBindGroupLayout(CLOUD_INFO_LAYOUT)
                 .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
@@ -190,8 +190,7 @@ public final class CloudRenderer {
         }
 
         var minecraft = Minecraft.getInstance();
-        var cloudsTarget = minecraft.levelRenderer.cloudsTarget();
-        var target = cloudsTarget != null ? cloudsTarget : minecraft.gameRenderer.mainRenderTarget();
+        var target = minecraft.gameRenderer.mainRenderTarget();
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
         var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         var indexBuffer = indices.getBuffer(6 * Math.max(settledQuads, changingQuads));
@@ -206,15 +205,15 @@ public final class CloudRenderer {
             if (settledQuads > 0 && settled != null) {
                 // Their depth, then their color where they are nearest
                 pass.setVertexBuffer(0, settled.slice());
-                pass.setPipeline(DEPTH.pipeline());
+                pass.setPipeline(RenderSystem.getCompiledPipeline(DEPTH.pipeline()));
                 pass.drawIndexed(6 * settledQuads, 1, 0, 0, 0);
-                pass.setPipeline(SETTLED.pipeline());
+                pass.setPipeline(RenderSystem.getCompiledPipeline(SETTLED.pipeline()));
                 pass.drawIndexed(6 * settledQuads, 1, 0, 0, 0);
             }
             if (changingQuads > 0 && changing != null) {
                 // Over them, fading, writing no depth
                 pass.setVertexBuffer(0, changing.slice());
-                pass.setPipeline(CHANGING.pipeline());
+                pass.setPipeline(RenderSystem.getCompiledPipeline(CHANGING.pipeline()));
                 pass.drawIndexed(6 * changingQuads, 1, 0, 0, 0);
             }
         }

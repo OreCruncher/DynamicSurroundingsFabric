@@ -3,21 +3,19 @@
 
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.util.LightCoordsUtil;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogConditions;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogField;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
@@ -26,8 +24,10 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IBlockUpdates;
 import org.orecruncher.dsurround.eventing.IChunkLoad;
 import org.orecruncher.dsurround.eventing.ILightUpdate;
+import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 import org.orecruncher.dsurround.runtime.weather.Wind;
@@ -40,7 +40,7 @@ import java.util.Optional;
  * Ground fog: mist lying low over the ground in biomes given it ({@code groundFog} in the biome configs), as strong as
  * the conditions allow ({@link GroundFogConditions}: the time of day, the wind, rain, and being out in it), drifting with
  * the wind. Worked out for each column of blocks around the camera ({@link GroundFogField}) and drawn as a volume
- * ({@link GroundFogVolume}), in the weather pass, before the rain.
+ * ({@link GroundFogVolume}), before the rain (see IWorldRender).
  * <p>
  * Off with a shader pack, when its shader didn't load or failed, and in a dimension without it ({@code groundFog} in
  * the dimension configs; by default, those without a sky).
@@ -87,6 +87,7 @@ public class GroundFogHandler extends AbstractClientHandler {
         this.source = new LevelSource(biomeLibrary);
         // Columns are looked at again only when something in them changes
         IBlockUpdates.EVENT.register(this::blockUpdates);
+        IWorldRender.EVENT.register(this::render, IWorldRender.GROUND_FOG);
         IChunkLoad.EVENT.register(this::chunkLoaded);
         ILightUpdate.EVENT.register(this::lightUpdated);
     }
@@ -170,36 +171,16 @@ public class GroundFogHandler extends AbstractClientHandler {
     }
 
     /**
-     * Draws the mist, at the start of the weather pass: before the rain, so the rain is drawn over it, except with
-     * Fabulous graphics, where it is drawn after (see {@link #renderAfterWeather})
+     * Draws the mist, before the rain, so the rain is drawn over it
      */
-    public void renderBeforeWeather() {
-        if (!fabulous())
-            this.render(false);
-    }
-
-    /**
-     * Draws the mist after the rain, with Fabulous graphics: there it writes the depth vanilla's transparency pass sorts
-     * the weather by, and rain drawn after it would be hidden behind it. Drawn over the rain, the rain behind the mist
-     * is misted, as it should be.
-     */
-    public void renderAfterWeather() {
-        if (fabulous())
-            this.render(true);
-    }
-
-    private static boolean fabulous() {
-        return GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
-    }
-
-    private void render(boolean fabulous) {
+    private void render() {
         if (!this.isActive() || this.field.isEmpty() || this.strength < MIN_STRENGTH)
             return;
         var minecraft = GameUtils.getMC();
         var camera = minecraft.gameRenderer.mainCamera();
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         float seconds = ((this.ticks % 72000) + partialTick) / 20F;
-        GroundFogVolume.render(this.field, camera, OutputTarget.WEATHER_TARGET.getRenderTarget(), fabulous,
+        GroundFogVolume.render(this.field, camera, minecraft.gameRenderer.mainRenderTarget(),
                 this.config.weatherOptions.groundFogQuality, this.strength, this.driftX, this.driftZ, seconds);
     }
 

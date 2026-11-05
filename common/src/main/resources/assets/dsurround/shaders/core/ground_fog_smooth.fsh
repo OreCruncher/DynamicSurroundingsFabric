@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -11,14 +12,13 @@
 //
 // How far each of its pixels' lines of sight went, the march wrote alongside the mist (DistanceSampler).
 
-#moj_import <dsurround:ground_fog.glsl>
+#include <dsurround:ground_fog.glsl>
 
 uniform sampler2D MistSampler;
-uniform sampler2D MistDepthSampler;
 // How far along the view each of the mist's pixels' line of sight went, from the march
 uniform sampler2D DistanceSampler;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // How far along the view the line of sight through one of the mist's pixels went, in blocks
 float distanceAt(ivec2 at) {
@@ -73,24 +73,16 @@ void main() {
     // closest few are blended
     vec4 sum = vec4(0.0);
     float weights = 0.0;
-    // Where the mist begins, from the one counting most toward the mist here
-    float most = -1.0;
-    ivec2 mostAt = at;
     for (int k = 0; k < 9; k++) {
         vec2 offset = vec2(k % 3 - 1, k / 3 - 1);
         float w = exp(-dot(offset, offset) * 0.6) * exp(-(differences[k] - least) / tolerance);
         sum += mists[k] * w;
         weights += w;
-        if (w * mists[k].a > most) {
-            most = w * mists[k].a;
-            mostAt = taps[k];
-        }
     }
     vec4 mist = sum / weights;
     if (mist.a <= 0.002) {
         discard;
     }
 
-    gl_FragDepth = texelFetch(MistDepthSampler, mostAt, 0).r;
     fragColor = mist;
 }

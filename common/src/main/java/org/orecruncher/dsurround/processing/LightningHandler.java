@@ -7,17 +7,15 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.SectionPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -29,6 +27,7 @@ import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
 import org.orecruncher.dsurround.effects.lightning.Strike;
 import org.orecruncher.dsurround.effects.lightning.Strikes;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -114,6 +113,7 @@ public class LightningHandler extends AbstractClientHandler {
         this.clouds = clouds;
         this.fogHandler = fogHandler;
         clouds.setLightSource(this::lightClouds);
+        IWorldRender.EVENT.register(this::render, IWorldRender.LIGHTNING);
     }
 
     /**
@@ -302,7 +302,7 @@ public class LightningHandler extends AbstractClientHandler {
     private static float cloudHeight(ClientLevel level) {
         var attributes = level.environmentAttributes();
         var at = cameraPosition();
-        if (ARGB.alpha(attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, at)) == 0)
+        if (attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, at).w() == 0F)
             return Float.NaN;
         return attributes.getValue(EnvironmentAttributes.CLOUD_HEIGHT, at);
     }
@@ -341,18 +341,16 @@ public class LightningHandler extends AbstractClientHandler {
     }
 
     /**
-     * Whether there is lightning to draw this frame: the weather's target is given the scene's depth for it, with
-     * Fabulous graphics (see WeatherDepth)
+     * Whether there is lightning to draw this frame
      */
     public boolean hasStrikes() {
         return !this.strikes.isEmpty() && this.isActive();
     }
 
     /**
-     * Draws the strikes in the weather pass, after the weather and the ground fog, outside any render pass, to the
-     * weather's target: with Fabulous graphics a target of its own, otherwise the main one
+     * Draws the strikes after the weather and the ground fog, outside any render pass, to the main target
      */
-    public void render() {
+    private void render() {
         // With a shader pack they were submitted with the frame's geometry (see submitForShaderPack)
         if (LightningRenderer.forShaderPack())
             return;
@@ -367,11 +365,10 @@ public class LightningHandler extends AbstractClientHandler {
             this.toDraw.add(active.strike);
         var minecraft = GameUtils.getMC();
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        var fabulous = minecraft.gameRenderer.gameRenderState().useShaderTransparency();
         // How far the view reaches in this frame's fog, which dims far strikes. And the cloud's glow drawn only when the
         // mod's clouds aren't there to be lit by it (see lightClouds)
-        this.drawn = LightningRenderer.draw(this.toDraw, minecraft.gameRenderer.mainCamera(), OutputTarget.WEATHER_TARGET.getRenderTarget(),
-                fabulous, level.getGameTime() + partialTick, this.fogHandler.viewReach(), !this.clouds.isLit());
+        this.drawn = LightningRenderer.draw(this.toDraw, minecraft.gameRenderer.mainCamera(), minecraft.gameRenderer.mainRenderTarget(),
+                level.getGameTime() + partialTick, this.fogHandler.viewReach(), !this.clouds.isLit());
     }
 
     /**

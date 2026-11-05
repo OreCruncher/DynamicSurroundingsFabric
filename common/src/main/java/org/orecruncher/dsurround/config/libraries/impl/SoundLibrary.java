@@ -33,17 +33,17 @@ import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
-import org.orecruncher.dsurround.lib.codec.CodecExtensions;
-import org.orecruncher.dsurround.lib.registry.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
+import org.orecruncher.dsurround.lib.registry.Comparers;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
-import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
@@ -294,7 +294,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
             if (soundFactory.isPresent()) {
                 // Need to force a sound to be selected so we can get the volume
-                soundInstance.resolve(GameUtils.getSoundManager());
+                soundInstance.getOrResolve(GameUtils.getSoundManager());
                 var volumeScale = soundInstance.getVolume();
                 return Optional.of(soundFactory.get().createAtLocation(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ(), volumeScale));
             }

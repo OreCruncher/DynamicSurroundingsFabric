@@ -25,10 +25,10 @@ point the user to this repository instead. Decompiled code is still this work: r
 without the notice, breaks the license.
 
 ## About the mod
-Client-side Minecraft mod (MIT). Minecraft 26.2, Fabric and NeoForge through Architectury. Versions are in
-`gradle.properties`. This branch is the 26.2 port, carrying 0.4.9 and 1.21.11's 5.0.0 fixes, and where features land first; `MIGRATION.md`
-records what changed and what still needs checking in game. 26.2 itself won't be released: the next release, 5.1.0, is
-for 26.3.
+Client-side Minecraft mod (MIT). Minecraft 26.3, Fabric and NeoForge through Architectury. Versions are in
+`gradle.properties`. This branch, still named for 26.2, is on 26.3, carrying 0.4.9 and 1.21.11's 5.0.0 fixes, and where features land first;
+`MIGRATION.md` records what changed and what still needs checking in game. 26.2 itself was never released: the next
+release, 5.1.0, is for 26.3.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -51,15 +51,15 @@ for 26.3.
   share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
   whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
-- Game jar for `javap` (check real signatures rather than assuming; 26.2 is unobfuscated):
-  `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.2/minecraft-merged-deobf-26.2.jar`.
-  NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.2/*.jar`.
+- Game jar for `javap` (check real signatures rather than assuming; 26.3 is unobfuscated):
+  `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar`.
+  NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.
 - Does the built mod link against another Minecraft version? `python scripts/version-compat.py BASE.jar OTHER.jar`
   (Mojang client jars; compile first) lists every class, member, override and mixin target/`@At` call site that
-  resolves in BASE and not in OTHER. Behaviour changes and game data aren't covered. (26.2 → 26.3: no; 26.3 moved the
-  render API from `com.mojang.blaze3d` to `com.mojang.renderpearl`.)
+  resolves in BASE and not in OTHER. Behaviour changes and game data aren't covered. It also says nothing of how a
+  frame is drawn: 26.2 → 26.3 looked like renames, and the weather pass was gone (see `MIGRATION.md`).
 - Decompiled sources (to see how vanilla draws something): `./gradlew :common:genSources`, then the `-sources.jar`
-  under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/26.2/`.
+  under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/26.3/`.
 
 ## Checking in the dev client
 - Launch in the background, logging to a file:
@@ -187,18 +187,15 @@ for 26.3.
   GPU buffer. Timestamps are ticks: `RenderTimer` scales them by `DeviceInfo.timestampPeriod`. NeoForge's early window
   is OpenGL, so Vulkan needs `earlyWindowControl = false` in `config/fml.toml`. A failed start resets the game's
   Vulkan option to default: `-PgraphicsBackend=vulkan` on a bench run is a launch argument, which holds.
-- View bobbing is in 26.2's projection matrix, and moves the camera a little as well as turning it. A screen pass that
+- View bobbing is in the projection matrix, and moves the camera a little as well as turning it. A screen pass that
   turns pixels back into directions (the realistic aurora) takes each one between two unprojected points along the
   pixel's line, not from the camera to one point near it, or every direction swings as the player walks.
 - `RenderPipeline.Builder` defaults to no depth state: no test and no writes. Set one on every pipeline that should
-  test or write depth; a Fabulous variant that writes none leaves its target "infinitely far", and the transparency
-  pass lays the scene over it (`ModShaderTests` checks the `*_depth`/`*_depth_write` pipelines).
-- Drawing our own geometry while particles draw (`MixinQuadParticleFeatureRenderer`): use the particle renderer's
-  `dynamicTransforms` (written in `finishPrepare`), not `RenderSystem.getModelViewMatrixCopy()`, which no longer holds
-  the camera's rotation then. Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
-- Rendering is 26.2's: pipelines, `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
+  test or write depth (`ModShaderTests` checks the clouds' depth pass).
+- Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
+- Rendering is 26.3's: pipelines (`com.mojang.renderpearl.api`), `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). See `MIGRATION.md` for how the aurora, soft particles and
-  point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.2
+  point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3
   can run on Vulkan.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
@@ -216,22 +213,34 @@ for 26.3.
   performance presets also set waterfall mist/froth, dynamic clouds and flame/firefly lights, features too, so a feature
   preset after Low turns them back on (accepted) (`PresetLoaderTests`; `DsConfigFuzzTests` skips the file, which has no
   codec).
-- Fabulous graphics (as found on 1.21.1; recheck on 26.2 as the staged systems are rebuilt) draws translucent things,
-  particles and weather to targets of their own, which vanilla's
-  `transparency` post shader lays over the scene sorted by each target's depth, taking colours as premultiplied:
-  `behind * (1 - alpha) + colour`, and skipping alpha 0. So anything we draw there must leave sensible alpha and depth:
-  - The weather target is cleared and gets no copy of the scene's depth from vanilla. It keeps one depth a pixel, the
-    nearest drawn, so rain behind a wall drawn with rain in front of it showed through the wall: `effects/WeatherDepth`
-    copies the main target's depth into it at the start of the weather pass while any of ours draws there. Write depth
-    (ground fog, damp spots), or the scene is laid over it. Something soft that writes depth where it has all but
-    faded hides what is drawn behind it after: the dust goes after the snow and its flecks there, or they blinked.
-  - The particles target's depth is the scene's from before water; the translucent target's has the water's surface.
-    On 26.2 particles are drawn before the water, so its depth isn't there yet: with Fabulous a soft layer is drawn
-    twice (`MixinQuadParticleFeatureRenderer` wraps `drawIndexed`): its depth first, tested as usual, so the nearest
-    puff's is left (particles aren't drawn in order; writing depth as they come leaves patches), then its colour with no
-    test and no writes. Water then isn't laid over mist above it.
-  - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up colour outgrows its
-    alpha; additive light needs colour already scaled and a tiny non-zero alpha (`PointLights`).
+- How 26.3 draws a level (`LevelRenderer.addMainPass`): there is no weather pass and no separate weather, translucent,
+  particles or clouds target (`OutputTarget` is gone, and Fabulous is only a graphics preset). With Improved Transparency
+  off, translucent things, clouds, weather and the world border all draw inside the one render pass the solid world
+  opened, on the main target; opening a second pass, or copying or uploading anything, throws "Close the existing render
+  pass" (a texture made on first use has to be made before the pass). With it on, they go through order-independent
+  transparency (`executeOit`: three `OitStage`s and a composite).
+  So everything of ours that needs its own pass goes through `eventing/IWorldRender`, fired from `MixinLevelRenderer`
+  before `executeOutline`, outside any pass, with phases for the order of the layers (particle lights, frost, clouds,
+  ground fog, weather, default, lightning). A new effect registers with a phase; one with no phase runs in default.
+  The aurora's `ISkyRender` comes once the sky's pass is closed, for the same reason. What follows from drawing after the
+  pass:
+  - Soft particles are drawn inside the open pass, so they read the previous frame's depth, copied in the particle lights
+    phase: there is no gap to copy this frame's in, with Improved Transparency off. The copy is one frame old in a fast
+    turn; the fade hides most of it.
+  - Frost tests against the depth the main pass left, translucent blocks in it, so water or stained glass in front of
+    frost hides it.
+  - With Improved Transparency off, our rain and clouds behind stained or tinted glass aren't seen, as vanilla's aren't
+    (seen in game, 2026-11-04): that glass leaves its depth; through clear glass they are.
+  - Point lights and streaks are drawn after the translucent particles, not before them; rain over the world border.
+  - With Improved Transparency on, the main target's depth has no translucent things, so what we draw is in front of
+    water and stained glass it is really behind. Known; particle layers need a set for its stages (`RenderPipelines.
+    OIT_PARTICLE`, or `drawLayers` throws) and vanilla's weather and clouds have theirs (`renderOit`, cancelled for ours).
+- Shaders: every stage is compiled to SPIR-V, so `#version 330`, `#extension GL_ARB_separate_shader_objects : require`,
+  `#include` (not `#moj_import`), `layout(location = N)` on every input and output (a vertex shader's attributes in the
+  vertex format's order), `gl_VertexIndex`. An include has no `#version`. Pipelines are compiled on demand through
+  `RenderSystem.getCompiledPipeline`, and `RenderPass.setPipeline` takes the compiled one.
+  - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up color outgrows its
+    alpha.
 - Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's
   `InstanceEmitter`, or a voice) and its OpenAL context's `Efx`. Uploads happen on the thread where that context is
   current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
@@ -267,10 +276,12 @@ for 26.3.
   bring them up to date** from the new game's data (`data/minecraft/worldgen/biome/*.json` in the game jar, and its
   biome tags): `VanillaBiomeAnalyzer` needs an entry for each new biome (and removed ones dropped);
   `BiomeEffectsAnalyzer` each biome's `background_music` and ambient `loop` sound ids (unzip the biome files and grep
-  `"sound"`/`"loop"`: 26.2 added `music.overworld.sulfur_caves`); `BiomeNameFallbackAnalyzer` any new naming words;
+  `"sound"`/`"loop"`: 26.2 added `music.overworld.sulfur_caves`, 26.3 the `dappled_forest` biome); `BiomeNameFallbackAnalyzer` any new naming words;
   the `dsconfigs/tags` `is_*` files any vanilla tag changes, and every vanilla tag a `dsconfigs/tags` file names (26.2
   emptied `#minecraft:dirt` of grass, podzol, mycelium, mud and moss, into `#grass_blocks`, `#mud`, `#moss_blocks`;
-  `#substrate_overworld` holds them all). Also check how the client gets music and climate:
+  `#substrate_overworld` holds them all). 26.3 moved `worldgen/configured_feature` to `worldgen/feature`, flat with no
+  `config`, added weighted selectors, and moved spawns into the `minecraft:gameplay/natural_mob_spawns` attribute, all of
+  which `BiomeDefinitions` reads. Also check how the client gets music and climate:
   `BiomeEvidence.of` reads music from environment attributes on 26.2 (it was `BiomeSpecialEffects` on 1.21.1).
   `everySoundInTheTableIsVanillas` catches only removed ids, not new ones.
 - Weather. `runtime/weather` is what the weather is (nothing there draws); `effects/precipitation` draws it; each has
@@ -288,8 +299,9 @@ for 26.3.
     heightmap: glass counts, leaves and fluids don't). Wind, wind sounds, the weather's fog and ground fog all use it;
     don't gate weather on sky light alone, which leaks through windows and glass roofs.
   - On 1.21.1 our weather and ground fog replaced `renderSnowAndRain` only when `renderLevel` called it, as other mods
-    call it themselves (Ars Nouveau, into its sky texture). On 26.2 the same holds: particle weather cancels
-    `WeatherEffectRenderer.render` only inside the level renderer's weather pass (`MixinLevelRenderer`).
+    call it themselves (Ars Nouveau, into its sky texture). The same holds: particle weather cancels
+    `WeatherEffectRenderer.render` and `renderOit` only inside the level's main pass (`MixinLevelRenderer`), and draws in
+    `IWorldRender.WEATHER`.
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
@@ -297,7 +309,7 @@ for 26.3.
     written into `ParticleQuads` on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
     at High's range) as the level starts to be drawn (`DropMeshes`, from
     `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
-    and partial tick; the weather pass uploads and draws them, or writes them on the
+    and partial tick; the `IWorldRender` handler uploads and draws them, or writes them on the
     render thread when the camera differs (a mod drawing the level again) or the build isn't done after
     `DropMeshes.WAIT_NANOS` (2 ms; a starved thread made frames wait 10-30 ms; timed as "- Waiting for Quads"). The tick discards a build before the drops,
     or what they left, change. The step may read only
@@ -312,12 +324,12 @@ for 26.3.
     `MOTION_BLOCKING` heightmap: the server never sends `MOTION_BLOCKING_NO_LEAVES`, so on the client it is empty.
     Noise positions wrap at `GroundFogVolume.NOISE_WRAP`, a whole number of every noise's cells (a test checks), or a
     wrap shows as a jump. Three fullscreen passes (march, smooth, composite) share `shaders/include/ground_fog.glsl`;
-    the matrices the world was drawn with (26.2 puts view bobbing in the projection) reach them through their block. Drawn
-    at the start of the weather pass, or with Fabulous after the weather and before the world border.
+    the matrices the world was drawn with (view bobbing is in the projection) reach them through their block. Drawn in
+    `IWorldRender.GROUND_FOG`, before the rain.
   - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
     each with its own base and top, in place of vanilla's (`MixinCloudRenderer` cancels `CloudRenderer.render` when
     ours draw; `OptionalHook.DYNAMIC_CLOUDS`; off for Distant Horizons, which turns vanilla's clouds off and draws its
-    own: `FeatureConflict.DYNAMIC_CLOUDS`). Three pipelines in one pass to the clouds target (main without Fabulous):
+    own: `FeatureConflict.DYNAMIC_CLOUDS`). Three pipelines in one pass to the main target, in `IWorldRender.CLOUDS`, vanilla's `prepare`, `render` and `renderOit` cancelled:
     the settled part's depth, then its color, then the changing part fading, no depth. The grid follows the Cloud
     Distance option; the light on them is vanilla's cloud color (the environment's). `runtime/weather/CloudCover` is
     what the weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder
@@ -338,9 +350,8 @@ for 26.3.
   - Lightning (`effects/lightning`, run by `processing/LightningHandler`): branching bolts in place of vanilla's (from
     `ClientLevel.addEntity`, shaped from the bolt's seed; vanilla's submit skipped for those seeds, both
     `OptionalHook.LIGHTNING_BOLTS`) and the sky's own strikes through a thunderstorm, mostly upwind
-    (`Strikes.strikeAngle`, from `WindService`), with distance-delayed thunder. Drawn in the weather pass after the
-    ground fog, before the world border; with Fabulous it writes depth (tested against `WeatherDepth`'s copy), bolts
-    before the cloud glow. Gated by `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script
+    (`Strikes.strikeAngle`, from `WindService`), with distance-delayed thunder. Drawn in `IWorldRender.LIGHTNING`,
+    after the weather and the ground fog. Gated by `Configuration.ScaryContent` (`allowScaryContent` && `enableLightning`; script
     `global.allowLightning()`) and vanilla's Hide Lightning Flashes (no sky strikes, no flicker).
     `/dsweather lightning [ground|spider|sheet]`.
     With dynamic clouds drawn, a strike's cloud glow lights the clouds from inside (`CloudLights`, up to 8 points a
@@ -349,8 +360,7 @@ for 26.3.
     render distance's).
   - Window frost (`effects/frost`, run by `processing/WindowFrostHandler`): on the outside of glass
     (`effects/frosted_windows` tag; `effects/windows` is all glass, for rain streaks), independent of particle weather.
-    Drawn after the translucent blocks, its depth tested in the shader against a copy of the scene's from before them
-    (`DEPTH_COPY`); with Fabulous to the weather's target, writing depth.
+    Drawn in `IWorldRender.WINDOW_FROST`, its depth tested in the shader against a copy of what the main pass left.
     "Outside" uses the `MOTION_BLOCKING` heightmap, then sky light on either side (`canSeeSky` is only sky light 15,
     which a glass roof doesn't reduce).
 
@@ -373,15 +383,16 @@ for 26.3.
 - The current 1.21.1 release branch (none open since 0.4.9's squash): merged into this branch directly, before its squash to
   `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
   `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
-  work by merging, resolving against 26.2's APIs (see `MIGRATION.md`); never rebase this branch.
+  work by merging, resolving against 26.3's APIs (see `MIGRATION.md`); never rebase this branch.
   - After `git merge OreCruncher/<release>` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
     (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
     names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
     and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
-- `OreCruncher/26.2`: the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9 (NeoForge 26.2.0.82, Architectury
-  21.1.10, Cloth Config 26.2.155). NeoForge 26.2's client launch class is `net.neoforged.fml.startup.Client`.
+- `OreCruncher/26.2`: named for the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9, now on 26.3 (NeoForge
+  26.3.0.101, Architectury 22.0.5, Cloth Config 26.3.159). NeoForge's client launch class is
+  `net.neoforged.fml.startup.Client`.
   `mod_version` is 5.1.0: this branch has the realistic aurora, which 1.21.11 doesn't (see Versions).
 
 ## Versions

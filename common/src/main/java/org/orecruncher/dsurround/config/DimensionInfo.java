@@ -3,10 +3,9 @@
 
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.util.ARGB;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.resources.Identifier;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -112,7 +111,7 @@ public class DimensionInfo {
      */
     private static int vanillaCloudHeight(final Level world) {
         var attributes = world.environmentAttributes();
-        if (ARGB.alpha(attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, Vec3.ZERO)) == 0)
+        if (attributes.getValue(EnvironmentAttributes.CLOUD_COLOR, Vec3.ZERO).w() == 0F)
             return NO_CLOUDS;
         return Mth.floor(attributes.getValue(EnvironmentAttributes.CLOUD_HEIGHT, Vec3.ZERO));
     }

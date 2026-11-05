@@ -1,20 +1,20 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings lightning (see LightningRenderer). Light falls off from the middle of a ribbon or a patch of
 // cloud to nothing at its edge. A channel (CORE defined) has a white hot core along its middle; a patch of cloud is
-// broken up by noise into the cloud's own texture. Drawn with additive blending. With Fabulous graphics (ADD_ONLY
-// defined), the light comes with next to no alpha, for the transparency pass to add as it is.
+// broken up by noise into the cloud's own texture. Drawn with additive blending.
 
 #ifndef CORE
 uniform sampler2D NoiseSampler;
 #endif
 
-in vec2 texCoord0;
-in vec4 vertexColor;
+layout(location = 0) in vec2 texCoord0;
+layout(location = 1) in vec4 vertexColor;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // The core's half width, as a share of the ribbon's: one over LightningRenderer.HALO
 const float CORE_WIDTH = 0.125;
@@ -59,13 +59,9 @@ void main() {
     vec3 light = vertexColor.rgb * falloff * mix(0.15, 1.5, lumps) * brightness;
 #endif
 
-    // Too faint to show: left alone, so no depth is written for it
+    // Too faint to show: left alone
     if (max(light.r, max(light.g, light.b)) < 0.004) {
         discard;
     }
-#ifdef ADD_ONLY
-    fragColor = vec4(light, 1.0 / 255.0);
-#else
     fragColor = vec4(light, 0.0);
-#endif
 }

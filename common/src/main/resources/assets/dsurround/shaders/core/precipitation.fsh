@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -10,9 +11,9 @@
 // out as it nears whatever is behind it, so where it passes into the ground it blends away instead of ending in a hard
 // line. SOFT_DISTANCE is how far in front of what is behind it, in blocks, a puff is at full strength.
 
-#moj_import <minecraft:fog.glsl>
-#moj_import <minecraft:dynamictransforms.glsl>
-#moj_import <minecraft:projection.glsl>
+#include <minecraft:fog.glsl>
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
 
 uniform sampler2D Sampler0;
 
@@ -33,12 +34,12 @@ float view_distance(float depth) {
 }
 #endif
 
-in float sphericalVertexDistance;
-in float cylindricalVertexDistance;
-in vec2 texCoord0;
-in vec4 vertexColor;
+layout(location = 0) in float sphericalVertexDistance;
+layout(location = 1) in float cylindricalVertexDistance;
+layout(location = 2) in vec2 texCoord0;
+layout(location = 3) in vec4 vertexColor;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // How much of a drop shows through the fog: all of it before the fog starts, none past where it ends
 float fog_fade() {

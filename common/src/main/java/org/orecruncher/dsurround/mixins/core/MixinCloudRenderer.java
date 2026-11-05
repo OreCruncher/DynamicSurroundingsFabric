@@ -16,14 +16,23 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinCloudRenderer {
 
     /**
-     * The mod's clouds in place of vanilla's: drawn where vanilla's would be, in the frame's clouds pass, and vanilla's
-     * left out. When ours can't be drawn, vanilla's are, as they would have been. On the renderer itself rather than
-     * where the level calls it, which is a lambda in the frame's clouds pass.
+     * The mod's clouds in place of vanilla's. As vanilla's are prepared, the color and camera they would have had are
+     * kept for ours, drawn once the pass vanilla's would have been drawn in is closed (see CloudHandler), and vanilla's
+     * are left out. When ours can't be drawn, vanilla's are, as they would have been.
      */
-    @Inject(method = "render(ILnet/minecraft/client/CloudStatus;FILnet/minecraft/world/phys/Vec3;JF)V", at = @At("HEAD"), cancellable = true, require = 0)
-    private void dsurround$clouds(int color, CloudStatus cloudStatus, float bottomY, int range, Vec3 cameraPosition, long gameTime,
-                                  float partialTicks, CallbackInfo ci) {
-        if (MixinHelpers.CLOUDS_GUARD.get(() -> MixinHelpers.clouds().render(color, cameraPosition, partialTicks), false))
+    @Inject(method = "prepare(ILnet/minecraft/client/CloudStatus;FILnet/minecraft/world/phys/Vec3;JF)V", at = @At("HEAD"), cancellable = true, require = 0)
+    private void dsurround$cloudsPrepared(int color, CloudStatus cloudStatus, float bottomY, int range, Vec3 cameraPosition, long gameTime,
+                                          float partialTicks, CallbackInfo ci) {
+        if (MixinHelpers.CLOUDS_GUARD.get(() -> MixinHelpers.clouds().prepare(color, cameraPosition, partialTicks), false))
+            ci.cancel();
+    }
+
+    @Inject(method = {
+            "render(Lnet/minecraft/client/CloudStatus;Lcom/mojang/renderpearl/api/commands/RenderPass;)V",
+            "renderOit(Lnet/minecraft/client/CloudStatus;Lnet/minecraft/client/renderer/oit/OitStage;Lcom/mojang/renderpearl/api/textures/GpuTextureView;Lnet/minecraft/client/renderer/oit/OitRenderPassProvider$Parameters;)V"
+    }, at = @At("HEAD"), cancellable = true, require = 0)
+    private void dsurround$clouds(CallbackInfo ci) {
+        if (MixinHelpers.CLOUDS_GUARD.get(() -> MixinHelpers.clouds().replacesClouds(), false))
             ci.cancel();
     }
 }

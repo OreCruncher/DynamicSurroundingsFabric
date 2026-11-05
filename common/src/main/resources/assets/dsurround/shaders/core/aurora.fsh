@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -24,10 +25,10 @@ layout(std140) uniform AuroraInfo {
 // A random value a texel, read smoothly between texels and repeating (NoiseTexture)
 uniform sampler2D NoiseSampler;
 
-in vec2 texCoord0;
-in float vertexAlpha;
+layout(location = 0) in vec2 texCoord0;
+layout(location = 1) in float vertexAlpha;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // The noise texture's size, which it repeats at (AuroraRenderer.NOISE_SIZE): wider than a curtain's finest noise
 const float NOISE_SIZE = 512.0;

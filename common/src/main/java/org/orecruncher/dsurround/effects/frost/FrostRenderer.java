@@ -3,17 +3,18 @@
 
 package org.orecruncher.dsurround.effects.frost;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.core.Direction;
@@ -25,7 +26,6 @@ import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
  * Draws the frost on windows: each frosted face as a grid of small quads just off the glass, with the frost texture
@@ -33,39 +33,31 @@ import java.util.function.Predicate;
  * carries how far the frost has grown there, in its alpha: more near the window's edges, where frost starts, and its
  * bottom, where it gathers, than in its middle. The shader ({@code window_frost}) shows the texels of the
  * {@link FrostTexture} that have frosted by then. Positions are relative to the camera. Render thread only.
- * <p>
- * Two pipelines: as vanilla's weather, depth is written only with Fabulous graphics, where the frost is drawn to the
- * weather's own target, which the transparency pass lays over the scene by depth.
  */
 public final class FrostRenderer {
 
-    private static final BindGroupLayout DEPTH_COPY_LAYOUT = BindGroupLayout.builder().withSampler("DepthSampler").build();
+    private static final BindGroupLayout DEPTH_COPY_LAYOUT = BindGroupLayout.builder().withUniform("DepthSampler", UniformType.COMBINED_IMAGE_SAMPLER).build();
 
     /**
-     * Drawn after the translucent blocks (without Fabulous graphics all frost, with it the frost on stained glass), its
-     * depth tested in the shader against the scene's from before them (DEPTH_COPY, bound as DepthSampler), not by the
-     * depth buffer, which has the water and stained glass in it by then. Writes no depth.
+     * Drawn after the translucent blocks, its depth tested in the shader against a copy of what they left, bound as
+     * DepthSampler. Writes no depth.
      */
     public static final ModShader SHADER = new ModShader(
             pipeline("pipeline/window_frost")
-                    .withShaderDefine("DEPTH_COPY")
                     .withBindGroupLayout(DEPTH_COPY_LAYOUT)
                     .withDepthStencilState(new DepthStencilState(CompareOp.ALWAYS_PASS, false))
                     .build(),
             "window frost", "windows will not frost", Library.LOGGER);
-    public static final ModShader SHADER_DEPTH = new ModShader(
-            pipeline("pipeline/window_frost_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
-            "window frost (Fabulous)", "windows will not frost", Library.LOGGER);
 
     /**
      * Both, for {@code ModShaders}
      */
-    public static final List<ModShader> SHADERS = List.of(SHADER, SHADER_DEPTH);
+    public static final List<ModShader> SHADERS = List.of(SHADER);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Window Frost");
 
     /**
-     * The sampler the copy of the scene's depth is bound as, without Fabulous graphics
+     * The sampler the copy of the scene's depth is bound as
      */
     public static final String DEPTH_SAMPLER = "DepthSampler";
 
@@ -87,10 +79,10 @@ public final class FrostRenderer {
     }
 
     /**
-     * Whether the frost can be drawn: both pipelines compiled, drawing hasn't failed, and no shader pack is in use
+     * Whether the frost can be drawn: its pipeline compiled, drawing hasn't failed, and no shader pack is in use
      */
     public static boolean isAvailable() {
-        return SHADER.isUsable() && SHADER_DEPTH.isUsable();
+        return SHADER.isUsable();
     }
 
     // Premultiplied, "over" (see the shader); seen from both sides
@@ -101,7 +93,8 @@ public final class FrostRenderer {
                 .withFragmentShader(Constants.asId("core/window_frost"))
                 .withShaderDefine("FADE_DISTANCE", (float) FrostField.RANGE)
                 .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+                .withBindGroupLayout(BindGroupLayouts.PROJECTION)
                 .withBindGroupLayout(BindGroupLayouts.FOG)
                 .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
                 .withVertexBinding(0, DefaultVertexFormat.PARTICLE)
@@ -116,14 +109,14 @@ public final class FrostRenderer {
      *
      * @return how many faces were drawn
      */
-    public static int draw(FrostField field, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera, Predicate<FrostFace> which) {
+    public static int draw(FrostField field, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera) {
         var cam = camera.position();
         float range = FrostField.RANGE;
         float rangeSq = range * range;
         BufferBuilder builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
         int[] drawn = {0};
         field.forEachFace(face -> {
-            if (face.shown < MIN_SHOWN || !which.test(face))
+            if (face.shown < MIN_SHOWN)
                 return;
             double dx = face.x + 0.5D - cam.x, dy = face.y + 0.5D - cam.y, dz = face.z + 0.5D - cam.z;
             if (dx * dx + dy * dy + dz * dz > rangeSq)

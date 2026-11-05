@@ -3,8 +3,8 @@
 
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.systems.GpuQueryPool;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.commands.GpuQueryPool;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.math.EMA;
 import org.orecruncher.dsurround.lib.math.ITimer;

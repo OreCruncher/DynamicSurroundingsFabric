@@ -3,12 +3,12 @@
 
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.PrimitiveTopology;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;
@@ -106,10 +106,9 @@ public final class DropMeshes implements AutoCloseable {
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's color, the drops on windows' too
      * @param spot       the damp spots' sprite, from the particle atlas
-     * @param darkening  true when the damp spots darken the ground by their alpha; false to lay a dark color over it
      */
     public record Style(List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
-                        RainColor rainColor, TextureAtlasSprite spot, boolean darkening) {
+                        RainColor rainColor, TextureAtlasSprite spot) {
 
         List<String> differences(Style other) {
             var changed = new ArrayList<String>();
@@ -125,8 +124,6 @@ public final class DropMeshes implements AutoCloseable {
                 changed.add("rain color %s to %s".formatted(this.rainColor, other.rainColor));
             if (this.spot != other.spot)
                 changed.add("damp spot sprite");
-            if (this.darkening != other.darkening)
-                changed.add("damp spots darkening %s to %s".formatted(this.darkening, other.darkening));
             return changed;
         }
     }
@@ -292,7 +289,7 @@ public final class DropMeshes implements AutoCloseable {
             case FLECKS -> PrecipitationRenderer.build(sources.flecks(), builder, cam, partialTick, style.snowflakes(),
                     style.largest(), style.scales().snow());
             case STREAKS -> PrecipitationRenderer.build(sources.streaks(), builder, cam, partialTick, style.rainColor());
-            case SPOTS -> PrecipitationRenderer.build(sources.spots(), builder, cam, partialTick, style.spot(), style.darkening());
+            case SPOTS -> PrecipitationRenderer.build(sources.spots(), builder, cam, partialTick, style.spot());
             default -> throw new IllegalArgumentException(kind + " is written straight into ParticleQuads");
         }
         return builder.build();

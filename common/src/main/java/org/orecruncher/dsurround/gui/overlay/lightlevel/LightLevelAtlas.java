@@ -3,19 +3,19 @@
 
 package org.orecruncher.dsurround.gui.overlay.lightlevel;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.font.TextRenderable;
 import net.minecraft.client.renderer.Projection;
@@ -211,11 +211,11 @@ final class LightLevelAtlas {
                     var indexBuffer = indices.getBuffer(indexCount);
                     try (RenderPass pass = device.createCommandEncoder()
                             .createRenderPass(() -> "Dynamic Surroundings light level numbers", this.texture.getTextureView(), Optional.empty())) {
-                        pass.setPipeline(pipeline);
+                        pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
                         RenderSystem.bindDefaultUniforms(pass);
                         pass.setUniform("Projection", projection);
                         pass.setUniform("DynamicTransforms", transforms);
-                        pass.bindTexture("Sampler0", batch.getKey().texture(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+                        pass.setUniform("Sampler0", batch.getKey().texture(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
                         pass.setVertexBuffer(0, vertexBuffer.slice());
                         pass.setIndexBuffer(indexBuffer, indices.type());
                         pass.drawIndexed(indexCount, 1, 0, 0, 0);

@@ -14,7 +14,7 @@
  *     <li>{@link org.orecruncher.dsurround.effects.clouds.CloudMesh} turns the columns into quads, shaded darker
  *     underneath the thicker the cloud above.</li>
  *     <li>{@link org.orecruncher.dsurround.effects.clouds.CloudRenderer} uploads the quads when the clouds change and
- *     draws them, depth first and then color, as vanilla's are; with Fabulous graphics to the clouds' target.</li>
+ *     draws them, depth first and then color, as vanilla's are.</li>
  * </ul>
  * Off with a shader pack, when its shader fails, with vanilla's clouds turned off, and in a dimension without them
  * ({@code dynamicClouds} in the dimension configs; by default, those that draw vanilla's clouds).

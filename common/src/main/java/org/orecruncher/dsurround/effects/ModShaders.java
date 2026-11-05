@@ -25,13 +25,7 @@ public final class ModShaders {
     public static final List<ModShader> SHADERS = Stream.concat(Stream.of(
                     SoftParticles.SHADER,
                     SoftParticles.FLAME_SHADER,
-                    SoftParticles.DEPTH_SHADER,
-                    SoftParticles.FABULOUS_SHADER,
-                    SoftParticles.FLAME_DEPTH_SHADER,
-                    SoftParticles.FLAME_FABULOUS_SHADER,
                     SoftParticles.EYE_FLAME_SHADER,
-                    SoftParticles.EYE_FLAME_DEPTH_SHADER,
-                    SoftParticles.EYE_FLAME_FABULOUS_SHADER,
                     AuroraRenderer.SHADER,
                     PointLights.SHADER),
             Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS, RealisticAuroraRenderer.SHADERS,

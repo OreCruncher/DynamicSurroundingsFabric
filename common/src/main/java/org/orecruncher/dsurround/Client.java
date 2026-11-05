@@ -12,8 +12,8 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.SkyRenderer;
 import net.minecraft.client.renderer.WeatherEffectRenderer;
 import net.minecraft.client.renderer.entity.LightningBoltRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
@@ -22,20 +22,22 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
+import org.orecruncher.dsurround.config.PresetLoader;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
+import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.eventing.ClientState;
 import org.orecruncher.dsurround.eventing.IClientConnect;
 import org.orecruncher.dsurround.eventing.IClientStarted;
 import org.orecruncher.dsurround.eventing.IConfigChangedEvent;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.eventing.ITagSync;
-import org.orecruncher.dsurround.gui.overlay.OverlayManager;
+import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.gui.keyboard.KeyBindings;
+import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigurationData;
-import org.orecruncher.dsurround.config.PresetLoader;
 import org.orecruncher.dsurround.lib.config.IConfigScreenFactoryProvider;
 import org.orecruncher.dsurround.lib.config.compat.ClothAPIFactoryProvider;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -67,9 +69,9 @@ import org.orecruncher.dsurround.runtime.oracle.impl.MinecraftClock;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
+import org.orecruncher.dsurround.sound.AudioPlayer;
 import org.orecruncher.dsurround.sound.AudioPlayerDebug;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
-import org.orecruncher.dsurround.sound.AudioPlayer;
 
 import java.util.List;
 import java.util.Optional;
@@ -145,6 +147,7 @@ public final class Client {
         // Do the handlers
         Handlers.registerHandlers();
 
+        IWorldRender.EVENT.register(SoftParticles::renderWorld, IWorldRender.PARTICLE_LIGHTS);
         IClientStarted.EVENT.register(Client::onComplete, HandlerPriority.VERY_HIGH);
         IClientConnect.EVENT.register(Client::onConnect, HandlerPriority.LOW);
 

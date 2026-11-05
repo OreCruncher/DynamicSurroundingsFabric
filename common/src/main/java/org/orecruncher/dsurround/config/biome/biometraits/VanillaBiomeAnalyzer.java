@@ -32,6 +32,7 @@ public final class VanillaBiomeAnalyzer implements IBiomeTraitAnalyzer {
             entry("forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
             entry("flower_forest", traits(OVERWORLD, FOREST, FLOWER_FOREST, TEMPERATE, DECIDUOUS, FLORAL, DENSE_VEGETATION)),
             entry("birch_forest", traits(OVERWORLD, FOREST, BIRCH_FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
+            entry("dappled_forest", traits(OVERWORLD, FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION)),
             entry("dark_forest", traits(OVERWORLD, FOREST, DARK_FOREST, TEMPERATE, DECIDUOUS, DENSE_VEGETATION, SPOOKY)),
             entry("old_growth_birch_forest", traits(OVERWORLD, FOREST, BIRCH_FOREST, OLD_GROWTH, TEMPERATE, DECIDUOUS, DENSE_VEGETATION, RARE)),
             entry("old_growth_pine_taiga", traits(OVERWORLD, FOREST, TAIGA, OLD_GROWTH, COLD, CONIFEROUS, DENSE_VEGETATION, RARE)),

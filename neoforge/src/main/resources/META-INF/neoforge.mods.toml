@@ -18,21 +18,21 @@ bannerFile = "assets/dsurround/icon.png"
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26.2.0,)"
+versionRange = "[26.3.0,26.4)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.2,)"
+versionRange = "[26.3,26.4)"
 ordering = "NONE"
 side = "CLIENT"
 
 [[dependencies.${mod_id}]]
 modId = "architectury"
 type = "required"
-versionRange = "[21.1.10,)"
+versionRange = "[22.0.5,)"
 ordering = "AFTER"
 side = "CLIENT"
 

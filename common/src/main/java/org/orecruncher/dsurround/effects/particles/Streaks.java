@@ -3,10 +3,10 @@
 
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -14,8 +14,8 @@ import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.RenderFailSafe;
 import org.orecruncher.dsurround.effects.RenderTimer;
-import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
+import org.orecruncher.dsurround.lib.Library;
 
 /**
  * Particles drawn as streaks: a thin quad from where each is back along the way it came, bright at its head and fading
@@ -23,16 +23,14 @@ import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
  * <p>
  * A particle on 26.2 hands the particle engine a square facing the camera; a streak is a long quad along a path, with
  * its ends colored differently. So a streak is {@link #add added} here as its particle is extracted for drawing,
- * relative to the camera, and all of them are drawn together just before the translucent particles ({@link #draw},
- * from MixinQuadParticleFeatureRenderer, as the point lights are), the way the flames are: soft, adding their light,
- * and with Fabulous graphics their depth first. Render thread only.
+ * relative to the camera, and all of them are drawn together once the level's translucent things are ({@link #draw},
+ * from SoftParticles.renderWorld, as the point lights are), the way the flames are: soft, adding their light, Render thread only.
  */
 public final class Streaks {
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Streaks");
 
     private static final ParticleQuads QUADS = new ParticleQuads();
-    private static final MeshDraw DEPTH_DRAW = new MeshDraw("streak depth");
     private static final MeshDraw COLOR_DRAW = new MeshDraw("streaks");
     private static final RenderFailSafe FAIL_SAFE = new RenderFailSafe("spark and droplet streaks", Library.LOGGER);
     // Whether streaks have been added this frame
@@ -100,7 +98,7 @@ public final class Streaks {
      * Draws the streaks recorded this frame into {@code target}, then forgets them. Called outside any render pass,
      * after the scene's depth has been captured.
      *
-     * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
+     * @param transforms the camera's, as the particles are drawn with them (see SoftParticles.renderWorld)
      */
     public static void draw(RenderTarget target, GpuBufferSlice transforms) {
         if (!begun)
@@ -111,25 +109,16 @@ public final class Streaks {
             return;
 
         // Drawn as the flames are this frame: soft and adding their light, or the vanilla way without the scene's depth,
-        // and with Fabulous graphics their depth first
         var color = SoftParticles.choosePipeline(SoftParticles.FLAME.pipeline());
-        var depth = SoftParticles.depthPassFor(color);
         var minecraft = Minecraft.getInstance();
         var atlas = minecraft.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
         var lightmap = minecraft.gameRenderer.lightmap();
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
         RENDER_TIMER.begin();
         FAIL_SAFE.run(() -> {
-            if (depth != null) {
-                DEPTH_DRAW.drawQuads(QUADS.vertices(), vertices, depth, target, transforms, pass -> {
-                    pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
-                    pass.bindTexture("Sampler2", lightmap, lightmapSampler);
-                    SoftParticles.bind(pass, depth);
-                });
-            }
             COLOR_DRAW.drawQuads(QUADS.vertices(), vertices, color, target, transforms, pass -> {
-                pass.bindTexture("Sampler0", atlas.getTextureView(), atlas.getSampler());
-                pass.bindTexture("Sampler2", lightmap, lightmapSampler);
+                pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
+                pass.setUniform("Sampler2", lightmap, lightmapSampler);
                 SoftParticles.bind(pass, color);
             });
         }, () -> {});

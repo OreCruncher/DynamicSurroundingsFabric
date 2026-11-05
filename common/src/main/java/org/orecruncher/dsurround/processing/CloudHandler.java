@@ -15,15 +15,16 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
 import org.orecruncher.dsurround.effects.clouds.CloudLights;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudSections;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.UpperWind;
@@ -47,6 +48,11 @@ import java.util.Optional;
  * {@code /dsweather clouds} holds their coverage, and the thickness of the thickest, for seeing how they look.
  */
 public class CloudHandler extends AbstractClientHandler {
+
+    private boolean prepared;
+    private int preparedColor;
+    private Vec3 preparedCamera;
+    private float preparedPartialTick;
 
     /**
      * What /dsweather clouds holds: the coverage, 0 to 1, and the thickness of the thickest in blocks, or NaN for the
@@ -124,6 +130,8 @@ public class CloudHandler extends AbstractClientHandler {
         this.weatherSimulation = weatherSimulation;
         this.dimensionInformation = dimensionInformation;
         this.covers = new LevelCovers(biomeLibrary);
+
+        IWorldRender.EVENT.register(this::render, IWorldRender.CLOUDS);
     }
 
     /**
@@ -212,15 +220,36 @@ public class CloudHandler extends AbstractClientHandler {
     }
 
     /**
-     * Draws the clouds, as vanilla's would be (see MixinCloudRenderer)
+     * Whether the clouds drawn this frame are ours, not vanilla's (see MixinCloudRenderer)
+     */
+    public boolean replacesClouds() {
+        return this.isActive() && this.started && this.field.radius() >= 0 && GameUtils.getWorld().orElse(null) instanceof ClientLevel;
+    }
+
+    /**
+     * Keeps what the frame's clouds need, as vanilla prepares its own
      *
      * @param color  vanilla's cloud color, 0xAARRGGBB: the light on them for the time of day, from the environment
      * @param camera where the camera is
-     * @return true if they were drawn, in place of vanilla's
+     * @return true if ours are drawn in place of vanilla's
      */
-    public boolean render(int color, Vec3 camera, float partialTick) {
-        if (!this.isActive() || !this.started || this.field.radius() < 0 || !(GameUtils.getWorld().orElse(null) instanceof ClientLevel level))
+    public boolean prepare(int color, Vec3 camera, float partialTick) {
+        this.prepared = this.replacesClouds();
+        if (!this.prepared)
             return false;
+        this.preparedColor = color;
+        this.preparedCamera = camera;
+        this.preparedPartialTick = partialTick;
+        return true;
+    }
+
+    private void render() {
+        if (!this.prepared || !(GameUtils.getWorld().orElse(null) instanceof ClientLevel level))
+            return;
+        this.prepared = false;
+        int color = this.preparedColor;
+        Vec3 camera = this.preparedCamera;
+        float partialTick = this.preparedPartialTick;
         double camX = camera.x, camY = camera.y, camZ = camera.z;
 
         // The quads of the cells that changed, every few ticks: a change's fade is timed from when it happened, so
@@ -252,7 +281,7 @@ public class CloudHandler extends AbstractClientHandler {
         var source = this.lightSource;
         if (source != null)
             source.offer(this.lights, partialTick, camX, camY, camZ);
-        return CloudRenderer.render(this.sections, offsetX, offsetY, offsetZ, red, green, blue,
+        CloudRenderer.render(this.sections, offsetX, offsetY, offsetZ, red, green, blue,
                 this.ticks + partialTick - this.sections.epoch(), this.field.radius() * CloudField.CELL, this.lights);
     }
 

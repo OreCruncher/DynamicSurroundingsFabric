@@ -28,15 +28,12 @@ public final class FrostFace {
     final int light;
     final float skyShare;
     final float temperature;
-    // Whether its glass is drawn with the translucent blocks (stained glass)
-    final boolean translucent;
     // How much frost it should have, and how much it has, 0 to 1
     float target;
     float shown;
 
     FrostFace(int x, int y, int z, Direction side, double plane, double u0, double u1, float v0, float v1,
-              double edgeU0, double edgeU1, float edgeV0, float edgeV1, int light, float skyShare, float temperature,
-              boolean translucent) {
+              double edgeU0, double edgeU1, float edgeV0, float edgeV1, int light, float skyShare, float temperature) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -53,7 +50,6 @@ public final class FrostFace {
         this.light = light;
         this.skyShare = skyShare;
         this.temperature = temperature;
-        this.translucent = translucent;
     }
 
     /**
@@ -61,13 +57,6 @@ public final class FrostFace {
      */
     long key() {
         return BlockPos.asLong(this.x, this.y, this.z) * 31L + this.side.get2DDataValue();
-    }
-
-    /**
-     * Whether its glass is drawn with the translucent blocks (stained glass), not cut out as clear glass is
-     */
-    public boolean translucent() {
-        return this.translucent;
     }
 
     public float shown() {

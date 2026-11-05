@@ -102,7 +102,7 @@ public class DropMeshesTests {
 
     private static final TextureAtlasSprite[] NO_DUST = new TextureAtlasSprite[0];
     private static final DropMeshes.Style STYLE = new DropMeshes.Style(List.of(), 1, NO_DUST, DropScales.USUAL,
-            RainColor.ofTint(15), null, true);
+            RainColor.ofTint(15), null);
 
     private static DropMeshes.Sources sources(PrecipitationField field) {
         return new DropMeshes.Sources(field, new SnowFlecks(10), new WindowStreaks(10), new DampSpots(10));
@@ -113,7 +113,7 @@ public class DropMeshesTests {
         var sources = sources(new PrecipitationField(10));
         var view = new PrecipitationRenderer.View(VIEW.position(), new Vector3f(VIEW.left()), new Vector3f(VIEW.up()),
                 new Vector3f(VIEW.look()));
-        var style = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(1F, 1F), RainColor.ofTint(15), null, true);
+        var style = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(1F, 1F), RainColor.ofTint(15), null);
         var built = new DropMeshes.Request(sources, VIEW, 0.5F, STYLE);
         assertNull(built.mismatch(new DropMeshes.Request(new DropMeshes.Sources(sources.field(), sources.flecks(),
                 sources.streaks(), sources.spots()), view, 0.5F, style)));
@@ -140,13 +140,8 @@ public class DropMeshesTests {
         assertEquals(DropMeshes.Behind.PARTIAL_TICK, mismatch.kind());
         assertEquals("0.5 to 0.75", mismatch.detail());
 
-        var bigger = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(2F, 1F), STYLE.rainColor(), null, true);
+        var bigger = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(2F, 1F), STYLE.rainColor(), null);
         mismatch = built.mismatch(new DropMeshes.Request(sources, VIEW, 0.5F, bigger));
-        assertNotNull(mismatch);
-        assertEquals(DropMeshes.Behind.SETTINGS, mismatch.kind());
-
-        var overlaid = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, DropScales.USUAL, STYLE.rainColor(), null, false);
-        mismatch = built.mismatch(new DropMeshes.Request(sources, VIEW, 0.5F, overlaid));
         assertNotNull(mismatch);
         assertEquals(DropMeshes.Behind.SETTINGS, mismatch.kind());
 

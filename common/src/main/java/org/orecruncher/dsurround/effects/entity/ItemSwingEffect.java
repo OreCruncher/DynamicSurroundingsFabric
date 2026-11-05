@@ -3,10 +3,10 @@
 
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.boat.Boat;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -33,12 +33,12 @@ public class ItemSwingEffect extends EntityEffectBase {
 
         // Don't use entity.isBlocking() - it has a 5 tick delay which would cause the
         // animation and the sound play to be out of sync.
-        var isTriggered = entity.getAttackAnim(1F) > 0 || looksToBeBlocking(entity);
+        var isTriggered = entity.getSwingAnimation(1F) > 0 || looksToBeBlocking(entity);
 
         if (isTriggered) {
             if (!this.isSwinging) {
                 ItemStack currentItem;
-                if (entity.swinging)
+                if (entity.isSwinging())
                     currentItem = entity.getItemInHand(InteractionHand.MAIN_HAND);
                 else
                     currentItem = entity.getUseItem();

@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -18,14 +19,14 @@
 // Then dimmed and reddened by the air near the horizon, and brought into range so the brightest parts turn a paler
 // green rather than cutting off.
 
-#moj_import <dsurround:aurora_realistic.glsl>
+#include <dsurround:aurora_realistic.glsl>
 
 // A random value a texel, read smoothly between texels and repeating (NoiseTexture)
 uniform sampler2D NoiseSampler;
 
-in vec2 screenPos;
+layout(location = 0) in vec2 screenPos;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // The noise texture's size, which it repeats at (RealisticAuroraRenderer.NOISE_SIZE)
 const float NOISE_SIZE = 512.0;

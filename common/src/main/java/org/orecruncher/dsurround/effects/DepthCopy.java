@@ -3,10 +3,10 @@
 
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.textures.GpuTextureView;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
@@ -103,7 +103,7 @@ public final class DepthCopy {
                     // off; but this only happens if reflection breaks
                 }
             }
-            return new TextureTarget(label, width, height, true, GpuFormat.RGBA8_UNORM);
+            return new TextureTarget(label, width, height, GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
         }
     }
 }

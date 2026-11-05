@@ -4,8 +4,6 @@
 package org.orecruncher.dsurround.mixins.core;
 
 import net.minecraft.client.renderer.ShaderManager;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.profiling.ProfilerFiller;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.ModShaders;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,8 +19,8 @@ public class MixinShaderManager {
      * so each effect knows whether it can be drawn. Not reached if vanilla's own shaders failed, in which case the
      * game reloads again with its default resources.
      */
-    @Inject(method = "apply(Lnet/minecraft/client/renderer/ShaderManager$Configs;Lnet/minecraft/server/packs/resources/ResourceManager;Lnet/minecraft/util/profiling/ProfilerFiller;)V", at = @At("TAIL"))
-    private void dsurround$compileModShaders(ShaderManager.Configs preparations, ResourceManager manager, ProfilerFiller profiler, CallbackInfo ci) {
+    @Inject(method = "apply(Lcom/mojang/renderpearl/api/device/GpuDevice;Lnet/minecraft/client/renderer/ShaderManager$PendingResults;)V", at = @At("TAIL"))
+    private void dsurround$compileModShaders(CallbackInfo ci) {
         ModShaders.SHADERS.forEach(ModShader::validate);
     }
 }

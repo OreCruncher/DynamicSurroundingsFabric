@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.mixins.core;
 
-import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.GlobalSettingsUniform;
 import net.minecraft.world.phys.Vec3;
@@ -33,7 +33,7 @@ public class MixinGameRenderer {
      */
     @Inject(method = "<init>", at = @At("TAIL"), require = 0)
     private void dsurround$globalsAtStart(CallbackInfo ci) {
-        this.globalSettingsUniform.update(1, 1, 0D, 0L, DeltaTracker.ONE, 0, Vec3.ZERO, false);
+        this.globalSettingsUniform.update(1, 1, 0D, 0L, 1F, 0, Vec3.ZERO, false);
     }
 
     /**
@@ -41,18 +41,18 @@ public class MixinGameRenderer {
      * the frame (by update and extract, before render), so it is ready by the weather's pass (see DropMeshes).
      * Optional: without it they are built in that pass, as they were.
      */
-    @Inject(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;)V", at = @At("HEAD"), require = 0)
-    private void dsurround$beginLevel(DeltaTracker deltaTracker, CallbackInfo ci) {
+    @Inject(method = "renderLevel()V", at = @At("HEAD"), require = 0)
+    private void dsurround$beginLevel(CallbackInfo ci) {
         var camera = ((GameRenderer) (Object) this).mainCamera();
-        MixinHelpers.PRECIPITATION_AHEAD_GUARD.run(() -> MixinHelpers.precipitation().beginFrame(camera, deltaTracker.getGameTimeDeltaPartialTick(false)));
+        MixinHelpers.PRECIPITATION_AHEAD_GUARD.run(() -> MixinHelpers.precipitation().beginFrame(camera, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)));
     }
 
     /**
      * Keeps the level's projection on its way to its GPU buffer, for what needs it in Java (see LevelProjection).
      * Optional: without it those use the camera's, without view bobbing.
      */
-    @ModifyArg(method = "renderLevel(Lnet/minecraft/client/DeltaTracker;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lorg/joml/Matrix4f;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"),
+    @ModifyArg(method = "renderLevel()V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ProjectionMatrixBuffer;getBuffer(Lorg/joml/Matrix4f;)Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;"),
             require = 0)
     private Matrix4f dsurround$levelProjection(Matrix4f projection) {
         LevelProjection.capture(projection);

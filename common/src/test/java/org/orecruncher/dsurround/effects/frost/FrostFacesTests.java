@@ -73,11 +73,6 @@ public class FrostFacesTests {
         }
 
         @Override
-        public boolean translucent(BlockState state) {
-            return state.is(Blocks.STAINED_GLASS.red());
-        }
-
-        @Override
         public boolean seesSky(BlockPos pos) {
             for (var entry : this.blocks.entrySet()) {
                 var at = entry.getKey();
@@ -150,15 +145,6 @@ public class FrostFacesTests {
         assertEquals(1F, face.u1, 1.0E-5F);
         assertEquals(65F, face.v0, 1.0E-5F);
         assertEquals(66F, face.v1, 1.0E-5F);
-    }
-
-    @Test
-    void facesKnowWhetherTheirGlassIsTranslucent() {
-        // Stained glass is drawn with the translucent blocks: with Fabulous graphics its frost is drawn with them too
-        assertFalse(houseWall().faces(0, 65, 0).getFirst().translucent());
-        var stained = houseWall().set(0, 65, 0, Blocks.STAINED_GLASS.red().defaultBlockState()).faces(0, 65, 0);
-        assertEquals(1, stained.size());
-        assertTrue(stained.getFirst().translucent());
     }
 
     @Test

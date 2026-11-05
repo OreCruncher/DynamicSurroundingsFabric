@@ -5,7 +5,6 @@ package org.orecruncher.dsurround.mixins.core;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.renderer.GameRenderer;
@@ -85,11 +84,11 @@ public class MixinMinecraftClient {
      * {@link FrameTimes}); does nothing while nothing records. Optional: only profiling is lost if another mod changed
      * the frame.
      */
-    @WrapOperation(method = "renderFrame(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render(Lnet/minecraft/client/DeltaTracker;Z)V"), require = 0)
-    private void dsurround$timeFrame(GameRenderer renderer, DeltaTracker deltaTracker, boolean renderLevel, Operation<Void> original) {
+    @WrapOperation(method = "renderFrame(Z)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render()V"), require = 0)
+    private void dsurround$timeFrame(GameRenderer renderer, Operation<Void> original) {
         FrameTimes.begin();
         try {
-            original.call(renderer, deltaTracker, renderLevel);
+            original.call(renderer);
         } finally {
             FrameTimes.end();
         }

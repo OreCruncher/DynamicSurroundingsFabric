@@ -14,7 +14,6 @@ import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Draws a {@link PrecipitationField}: rain as thin streaks along the way each drop falls, slanted by the wind and
@@ -86,8 +85,6 @@ final class PrecipitationRenderer {
     static final float STREAK_BEAD_ALPHA = 0.6F;
     static final float STREAK_TRAIL_WIDTH = 0.45F;
     static final float STREAK_TRAIL_ALPHA = 0.5F;
-    // A damp spot's color where the ground can't be darkened, so it is laid over it instead
-    static final float DAMP_RED = 0.08F, DAMP_GREEN = 0.08F, DAMP_BLUE = 0.1F;
 
     private PrecipitationRenderer() {
     }
@@ -427,13 +424,9 @@ final class PrecipitationRenderer {
     /**
      * Writes the damp spots as {@link DefaultVertexFormat#POSITION_TEX_COLOR} quads, around the camera at {@code cam},
      * to be drawn with {@link PrecipitationShaders#DAMP_SPOTS} and the particle atlas bound. Any thread, while nothing
-     * changes the spots.
-     *
-     * @param darkening true when the blend darkens the ground by the spot's alpha, so its color doesn't matter;
-     *                  false to lay a dark color over the ground with an ordinary blend
+     * changes the spots. The blend darkens the ground by the spot's alpha, so its color doesn't matter.
      */
-    static void build(DampSpots spots, BufferBuilder builder, Vec3 cam, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
-        float r = darkening ? 1F : DAMP_RED, g = darkening ? 1F : DAMP_GREEN, b = darkening ? 1F : DAMP_BLUE;
+    static void build(DampSpots spots, BufferBuilder builder, Vec3 cam, float partialTick, TextureAtlasSprite sprite) {
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
 
         for (int i = 0; i < spots.count; i++) {
@@ -445,10 +438,10 @@ final class PrecipitationRenderer {
             float z = (float) (spots.z[i] - cam.z);
             // The corners, each a quarter turn from the last
             float cx = spots.cornerX[i], cz = spots.cornerZ[i];
-            builder.addVertex(x + cx, y, z + cz).setUv(u0, v0).setColor(r, g, b, a);
-            builder.addVertex(x - cz, y, z + cx).setUv(u0, v1).setColor(r, g, b, a);
-            builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(r, g, b, a);
-            builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(r, g, b, a);
+            builder.addVertex(x + cx, y, z + cz).setUv(u0, v0).setColor(1F, 1F, 1F, a);
+            builder.addVertex(x - cz, y, z + cx).setUv(u0, v1).setColor(1F, 1F, 1F, a);
+            builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(1F, 1F, 1F, a);
+            builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(1F, 1F, 1F, a);
         }
     }
 }

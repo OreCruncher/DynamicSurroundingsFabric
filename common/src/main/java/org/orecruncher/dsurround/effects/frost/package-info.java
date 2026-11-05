@@ -3,7 +3,7 @@
 
 /**
  * Frost on the outside of glass windows when it is cold. Run by {@code processing.WindowFrostHandler}, which draws it
- * after the translucent blocks without Fabulous graphics, and before the weather, to its target, with it.
+ * after the translucent blocks.
  * <ul>
  *     <li>{@link org.orecruncher.dsurround.effects.frost.FrostFaces}: which sides of a window frost (the outside), where
  *     the glass is, and how far the window reaches beyond each, as {@link org.orecruncher.dsurround.effects.frost.FrostFace}s.

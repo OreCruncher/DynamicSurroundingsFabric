@@ -1,3 +1,29 @@
+# 26.2 → 26.3
+
+The branch moved to 26.3 without a release on 26.2, on what Modrinth's numbers said about where players are. 26.3 is
+more than the rename from `com.mojang.blaze3d` to `com.mojang.renderpearl`; `AGENTS.md` ("How 26.3 draws a level") has
+what the code must keep to. What changed:
+
+- **The frame.** No weather pass, no separate targets, translucent things drawn inside the solid world's open pass, and
+  Improved Transparency is now order-independent transparency. Everything of ours that opened a pass there moved to the
+  new `eventing/IWorldRender`, after the main pass closes. Fabulous's code (depth writing pipelines, `WeatherDepth`, two
+  draws of a soft layer, the stained glass frost, the damp spots' dark color, ground fog's depth) has no use now and is gone.
+- **Differences to check in game**: soft particles read the last frame's depth; frost is hidden by water or stained glass
+  in front of it; lights and streaks are over the translucent particles; rain is over the world border. With Improved
+  Transparency on, what we draw shows in front of water and stained glass it is behind.
+- **The sky.** Its pass is open as the sun and moon are drawn, so `ISkyRender` comes after it closes.
+- **Shaders** are compiled to SPIR-V: `#include`, explicit locations, `gl_VertexIndex`.
+- **Pipelines** are compiled on demand; `setPipeline` takes the compiled one; `bindTexture` is `setUniform`; layouts name
+  samplers as uniforms of `COMBINED_IMAGE_SAMPLER`.
+- **Game data.** `dappled_forest`, poplar leaf particles; features in `worldgen/feature`, flat, with weighted selectors;
+  spawns under the biome's attributes; sky colors are vectors. `BlockState.blocksMotion()` is gone (a tag now); `Shelter`
+  keeps its old rule.
+- **NeoForge** doesn't call `CreativeModeTabs.searchTab` in `handleUpdateTags`, so the tag hook is at the method's tail.
+
+To check in game (both platforms, Improved Transparency on and off, and on Vulkan): frost on clear and stained glass;
+waterfall mist and flames against what is behind them; firefly lights; rain against the world border; clouds; lightning
+behind hills; the aurora; all of "To check in game" below.
+
 # 0.4.6 → 26.2 port
 
 Branch `OreCruncher/26.2`: the 26.2 port of 0.4.5 with `OreCruncher/0.4.6` merged in, and `OreCruncher/0.4.7` merged

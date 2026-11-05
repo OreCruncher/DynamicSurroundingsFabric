@@ -3,8 +3,8 @@
 
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -56,7 +56,7 @@ public final class ModShader {
     public void validate() {
         boolean valid;
         try {
-            valid = RenderSystem.getDevice().precompilePipeline(this.pipeline).isValid();
+            valid = RenderSystem.getCompiledPipelineNullable(this.pipeline) != null;
         } catch (Throwable t) {
             this.onFailed(t);
             return;

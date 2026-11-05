@@ -11,8 +11,8 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.Guard;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.processing.FogHandler;
 import org.orecruncher.dsurround.processing.CloudHandler;
+import org.orecruncher.dsurround.processing.FogHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
@@ -44,10 +44,10 @@ public class MixinHelpers {
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
     public static final Guard RAIN_SOUND_GUARD = Guard.named("Storm rain sound");
     /**
-     * Whether the level renderer's weather pass is running: particle weather is drawn in place of vanilla's only then
+     * Whether the level renderer's main pass is running: particle weather is drawn in place of vanilla's only then
      * (see MixinLevelRenderer). Render thread only.
      */
-    public static boolean inLevelWeatherPass;
+    public static boolean inLevelMainPass;
     /**
      * The thread ticking vanilla's rain (ClientLevel.tickWeatherEffects, wrapped where ClientLevel.tick calls it, see
      * MixinClientLevel) while it does, otherwise null. The rain's hooks (its level in MixinLevel, its splashes and sound
@@ -57,7 +57,6 @@ public class MixinHelpers {
     public static volatile Thread rainTickThread;
     public static final Guard GROUND_FOG_GUARD = Guard.named("Drawing ground fog");
     public static final Guard WINDOW_FROST_GUARD = Guard.named("Drawing window frost");
-    public static final Guard WEATHER_DEPTH_GUARD = Guard.named("Giving the weather the scene's depth");
     public static final Guard PRECIPITATION_GUARD = Guard.named("Drawing particle rain and snow");
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");

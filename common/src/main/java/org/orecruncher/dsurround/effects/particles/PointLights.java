@@ -3,23 +3,23 @@
 
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFactor;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +44,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * doesn't change Minecraft's lighting, and it can't cast shadows.
  * <p>
  * Particles {@link #add} their light as they are extracted for drawing, and the lights are all drawn together just
- * before the translucent particles ({@link #draw}), in a pass of their own (see MixinQuadParticleFeatureRenderer).
+ * once the level's translucent things are ({@link #draw}), in a pass of their own (see SoftParticles.renderWorld).
  * <p>
  * Without the shader ({@link #SHADER}), or while an Iris shader pack is in use, there are no lights. Everything here
  * runs on the render thread.
@@ -55,20 +55,18 @@ public final class PointLights {
     private static final int POINT_LIGHT_INFO_SIZE = new Std140SizeCalculator().putFloat().get();
     private static final BindGroupLayout POINT_LIGHT_LAYOUT = BindGroupLayout.builder()
             .withUniform(POINT_LIGHT_INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(SoftParticles.DEPTH_SAMPLER)
+            .withUniform(SoftParticles.DEPTH_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
 
     // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares may face
-    // either way. The shader gives its light already scaled by its strength, with next to no alpha, and both are
-    // simply added: with Fabulous graphics the particles' target is laid over the scene as behind * (1 - alpha) +
-    // color, and an alpha that piled up would replace the lit ground with the light's color, a flat white. Not no
-    // alpha at all, or that pass skips the pixel.
+    // either way. The shader gives its light already scaled by its strength, and both are simply added.
     private static final RenderPipeline PIPELINE = RenderPipeline.builder()
             .withLocation(Constants.asId("pipeline/point_light"))
             .withVertexShader(Constants.asId("core/point_light"))
             .withFragmentShader(Constants.asId("core/point_light"))
             .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+            .withBindGroupLayout(BindGroupLayouts.PROJECTION)
             .withBindGroupLayout(POINT_LIGHT_LAYOUT)
             .withColorTargetState(new ColorTargetState(new BlendFunction(BlendFactor.ONE, BlendFactor.ONE)))
             .withCull(false)
@@ -214,7 +212,7 @@ public final class PointLights {
      * Draws the lights recorded since the last call into {@code target}, then forgets them. Called outside any render
      * pass, after the scene's depth has been captured.
      *
-     * @param transforms the camera's, as the particles are drawn with them (see MixinQuadParticleFeatureRenderer)
+     * @param transforms the camera's, as the particles are drawn with them (see SoftParticles.renderWorld)
      */
     public static void draw(RenderTarget target, GpuBufferSlice transforms) {
         // Lights gathered elsewhere during the frame, to be added now that it is known which are wanted
@@ -275,7 +273,7 @@ public final class PointLights {
 
         try (RenderPass pass = device.createCommandEncoder()
                 .createRenderPass(() -> "Dynamic Surroundings point lights", target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            pass.setPipeline(PIPELINE);
+            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
             SoftParticles.bindSceneDepth(pass);

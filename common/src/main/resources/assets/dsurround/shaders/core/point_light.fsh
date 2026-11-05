@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -6,7 +7,7 @@
 // each pixel, where in the world it is comes from a copy of the scene's depth, so this lights the grass, leaves and
 // ground around the light rather than a flat disc. Added to what is there (see PointLights).
 
-#moj_import <minecraft:projection.glsl>
+#include <minecraft:projection.glsl>
 
 uniform sampler2D DepthSampler;
 
@@ -15,11 +16,11 @@ layout(std140) uniform PointLightInfo {
     float DepthZeroToOne;
 };
 
-flat in vec3 lightCenter;
-flat in vec4 lightColor;
-flat in float lightRadius;
+layout(location = 0) flat in vec3 lightCenter;
+layout(location = 1) flat in vec4 lightColor;
+layout(location = 2) flat in float lightRadius;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 void main() {
     float depth = texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r;

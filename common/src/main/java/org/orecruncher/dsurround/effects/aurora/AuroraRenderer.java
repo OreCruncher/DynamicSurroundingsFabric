@@ -3,22 +3,22 @@
 
 package org.orecruncher.dsurround.effects.aurora;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFactor;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -27,9 +27,9 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
+import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.profiling.AuroraSamples;
 
@@ -52,7 +52,7 @@ public final class AuroraRenderer {
     private static final String NOISE_SAMPLER = "NoiseSampler";
     private static final BindGroupLayout AURORA_INFO_LAYOUT = BindGroupLayout.builder()
             .withUniform(AURORA_INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(NOISE_SAMPLER)
+            .withUniform(NOISE_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
 
     // Light adds to the sky behind it. Curtains are seen from both sides, and nothing is tested against or written to
@@ -62,7 +62,8 @@ public final class AuroraRenderer {
             .withVertexShader(Constants.asId("core/aurora"))
             .withFragmentShader(Constants.asId("core/aurora"))
             .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-            .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+            .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+            .withBindGroupLayout(BindGroupLayouts.PROJECTION)
             .withBindGroupLayout(AURORA_INFO_LAYOUT)
             .withColorTargetState(new ColorTargetState(new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE)))
             .withCull(false)
@@ -175,13 +176,15 @@ public final class AuroraRenderer {
         var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
         var indexBuffer = indices.getBuffer(indexCount);
 
+        // Made the first time it is used, which can't be while a render pass is open
+        var noiseTexture = noise();
         try (RenderPass pass = device.createCommandEncoder()
                 .createRenderPass(() -> "Dynamic Surroundings aurora", target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            pass.setPipeline(PIPELINE);
+            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", transforms);
             pass.setUniform(AURORA_INFO, auroraInfo);
-            pass.bindTexture(NOISE_SAMPLER, noise().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+            pass.setUniform(NOISE_SAMPLER, noiseTexture.getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
             pass.setVertexBuffer(0, vertexBuffer.slice());
             pass.setIndexBuffer(indexBuffer, indices.type());
             pass.drawIndexed(indexCount, 1, 0, 0, 0);

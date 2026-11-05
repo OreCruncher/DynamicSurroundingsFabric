@@ -4,10 +4,10 @@
 package org.orecruncher.dsurround.effects.frost;
 
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.random.IRandomizer;

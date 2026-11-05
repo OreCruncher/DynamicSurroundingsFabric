@@ -3,22 +3,22 @@
 
 package org.orecruncher.dsurround.effects.aurora;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFactor;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
@@ -65,10 +65,10 @@ public final class RealisticAuroraRenderer {
     private static final String AURORA_SAMPLER = "AuroraSampler";
     private static final BindGroupLayout INFO_LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(NOISE_SAMPLER)
+            .withUniform(NOISE_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
     private static final BindGroupLayout COMPOSITE_LAYOUT = BindGroupLayout.builder()
-            .withSampler(AURORA_SAMPLER)
+            .withUniform(AURORA_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
 
@@ -195,12 +195,14 @@ public final class RealisticAuroraRenderer {
         RenderTarget target = fast ? reducedFor(screen, quality.scale()) : screen;
         writeInfo(aurora, moment, motion, shadow, washout, alpha, viewMatrix, time, target.height);
 
+        // Made the first time it is used, which can't be while a render pass is open
+        var noiseView = noiseTexture().getTextureView();
         var encoder = RenderSystem.getDevice().createCommandEncoder();
         try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic)", target.getColorTextureView(),
                 fast ? Optional.of(CLEAR) : Optional.empty(), null, OptionalDouble.empty())) {
-            pass.setPipeline(PIPELINE);
+            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
             pass.setUniform(INFO, info);
-            pass.bindTexture(NOISE_SAMPLER, noiseTexture().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+            pass.setUniform(NOISE_SAMPLER, noiseView, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
             pass.draw(3, 1, 0, 0);
         }
 
@@ -208,8 +210,8 @@ public final class RealisticAuroraRenderer {
             COMPOSITE.run(() -> {
                 try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic) composite", screen.getColorTextureView(),
                         Optional.empty(), null, OptionalDouble.empty())) {
-                    pass.setPipeline(COMPOSITE_PIPELINE);
-                    pass.bindTexture(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+                    pass.setPipeline(RenderSystem.getCompiledPipeline(COMPOSITE_PIPELINE));
+                    pass.setUniform(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
                     pass.draw(3, 1, 0, 0);
                 }
             }, () -> {});
@@ -223,7 +225,7 @@ public final class RealisticAuroraRenderer {
         int width = (screen.width + scale - 1) / scale;
         int height = (screen.height + scale - 1) / scale;
         if (reduced == null)
-            reduced = new TextureTarget("Dynamic Surroundings aurora (realistic)", width, height, false, GpuFormat.RGBA8_UNORM);
+            reduced = new TextureTarget("Dynamic Surroundings aurora (realistic)", width, height, GpuFormat.RGBA8_UNORM, null);
         else if (reduced.width != width || reduced.height != height)
             reduced.resize(width, height);
         return reduced;

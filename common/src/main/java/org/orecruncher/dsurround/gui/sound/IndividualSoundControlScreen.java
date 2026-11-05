@@ -164,7 +164,7 @@ public class IndividualSoundControlScreen extends Screen {
         }
         if (entry != null && this.tooltipDelay.ready()) {
             var toolTip = entry.getToolTip(mouseX, mouseY).stream().map(ClientTooltipComponent::create).toList();
-            context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null);
+            context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null, false);
         }
     }
 

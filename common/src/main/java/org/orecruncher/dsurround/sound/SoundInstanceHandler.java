@@ -13,8 +13,8 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
-import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.threading.IClientTasking;
 
 import java.util.Objects;
@@ -122,7 +122,7 @@ public final class SoundInstanceHandler {
         if (sound.getSound() == null) {
             try {
                 // Ensure we do this on the render thread
-                CLIENT_TASKING.execute(() -> sound.resolve(GameUtils.getSoundManager()));
+                CLIENT_TASKING.execute(() -> sound.getOrResolve(GameUtils.getSoundManager()));
             } catch (Throwable t) {
                 Library.LOGGER.error(t, "Unable to set sound on sound instance");
             }

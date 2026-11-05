@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.lib.compat;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.function.ThrottledBooleanSupplier;

@@ -30,7 +30,7 @@ import java.util.Objects;
  * @param gpuType        the kind of graphics card: discrete, integrated, virtual, cpu or other
  * @param driver         the driver's version, as the backend reports it
  * @param backend        the graphics backend the game runs on: OpenGL or Vulkan
- * @param graphics       the graphics preset, and whether improved transparency (Fabulous's layering) is on
+ * @param graphics       the graphics preset, and whether improved transparency is on
  * @param shaderPack     whether a shader pack is in use
  * @param renderDistance the render distance in chunks, as the game uses it
  * @param width          the frame's width in pixels, as drawn (the window's, not scaled for the screen's settings)

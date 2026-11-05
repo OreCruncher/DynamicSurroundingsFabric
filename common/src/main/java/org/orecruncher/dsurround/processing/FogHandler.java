@@ -5,7 +5,10 @@ package org.orecruncher.dsurround.processing;
 
 import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.util.ARGB;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IFogRender;
@@ -81,27 +84,27 @@ public class FogHandler extends AbstractClientHandler {
      * The sky's color, 0xAARRGGBB, turned toward the dust's in a dust storm as the fog's is. Called as the sky is
      * set up for drawing.
      */
-    public int tintSkyColor(int color, float partialTick) {
+    public Vector3fc tintSkyColor(Vector3fc color, float partialTick) {
         var rgb = this.skyColor;
-        rgb[0] = ARGB.redFloat(color);
-        rgb[1] = ARGB.greenFloat(color);
-        rgb[2] = ARGB.blueFloat(color);
+        rgb[0] = color.x();
+        rgb[1] = color.y();
+        rgb[2] = color.z();
         this.fogCalculator.tintFogColor(rgb, partialTick);
-        return ARGB.colorFromFloat(ARGB.alphaFloat(color), rgb[0], rgb[1], rgb[2]);
+        return new Vector3f(rgb[0], rgb[1], rgb[2]);
     }
 
     /**
      * The glow of sunrise and sunset, 0xAARRGGBB, turned toward the dust's color in a dust storm and dimmed. Called as
      * the sky is set up for drawing.
      */
-    public int tintSunsetColor(int color, float partialTick) {
+    public Vector4fc tintSunsetColor(Vector4fc color, float partialTick) {
         var rgba = this.sunsetColor;
-        rgba[0] = ARGB.redFloat(color);
-        rgba[1] = ARGB.greenFloat(color);
-        rgba[2] = ARGB.blueFloat(color);
-        rgba[3] = ARGB.alphaFloat(color);
+        rgba[0] = color.x();
+        rgba[1] = color.y();
+        rgba[2] = color.z();
+        rgba[3] = color.w();
         this.fogCalculator.tintSunsetColor(rgba, partialTick);
-        return ARGB.colorFromFloat(rgba[3], rgba[0], rgba[1], rgba[2]);
+        return new Vector4f(rgba[0], rgba[1], rgba[2], rgba[3]);
     }
 
     /**

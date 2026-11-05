@@ -3,10 +3,11 @@
 
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -25,7 +26,7 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     // Fireflies, with their halos: vanilla's translucent particles with depth writes off, so halos don't hide each
     // other. The lights they cast are drawn just before them (see PointLights).
     private static final RenderPipeline PIPELINE = SoftParticles.particlePipeline("pipeline/firefly", null).build();
-    private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, PIPELINE);
+    private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, PIPELINE, RenderPipelines.OIT_PARTICLE);
 
     static {
         // Drawn with a shader pack too, with the pack's program for translucent particles

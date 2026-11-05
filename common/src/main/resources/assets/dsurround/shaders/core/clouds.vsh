@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -8,8 +9,8 @@
 // out over FadeTicks: UV0 is when its change began (x, in ticks, from when the blocks were built) and which way (y: 1
 // in, -1 out, 0 for a settled part, which doesn't fade).
 
-#moj_import <minecraft:dynamictransforms.glsl>
-#moj_import <minecraft:projection.glsl>
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
 
 // Kept the same as in clouds.fsh
 layout(std140) uniform DSCloudInfo {
@@ -24,15 +25,15 @@ layout(std140) uniform DSCloudInfo {
     vec4 Lights[8];
 };
 
-in vec3 Position;
-in vec2 UV0;
-in vec4 Color;
+layout(location = 0) in vec3 Position;
+layout(location = 1) in vec2 UV0;
+layout(location = 2) in vec4 Color;
 
 // How far from the camera across the ground, for the fog and for fading out before the grid's edge
-out float flatDistance;
+layout(location = 0) out float flatDistance;
 // Where it is, from the camera, for the light of lightning inside the clouds
-out vec3 cloudPos;
-out vec4 vertexColor;
+layout(location = 1) out vec3 cloudPos;
+layout(location = 2) out vec4 vertexColor;
 
 void main() {
     vec3 pos = Position + OffsetNow.xyz;

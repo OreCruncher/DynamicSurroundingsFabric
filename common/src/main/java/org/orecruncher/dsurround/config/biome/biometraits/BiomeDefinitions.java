@@ -84,7 +84,16 @@ public final class BiomeDefinitions {
     }
 
     private static boolean spawnsWaterCreatures(JsonObject biome) {
-        var spawners = biome.get("spawners");
+        var attributes = biome.get("attributes");
+        if (attributes == null || !attributes.isJsonObject())
+            return false;
+        var spawns = attributes.getAsJsonObject().get("minecraft:gameplay/natural_mob_spawns");
+        if (spawns == null || !spawns.isJsonObject())
+            return false;
+        var argument = spawns.getAsJsonObject().has("argument") ? spawns.getAsJsonObject().get("argument") : spawns;
+        if (!argument.isJsonObject())
+            return false;
+        var spawners = argument.getAsJsonObject().get("spawns_by_category");
         if (spawners == null || !spawners.isJsonObject())
             return false;
         var creatures = spawners.getAsJsonObject().get("water_creature");
@@ -127,7 +136,7 @@ public final class BiomeDefinitions {
             return false;
         if (configuredId != null && configuredId.getPath().contains("tree"))
             return true;
-        var configured = feature.isJsonObject() ? feature.getAsJsonObject() : this.object("configured_feature", configuredId);
+        var configured = feature.isJsonObject() ? feature.getAsJsonObject() : this.object("feature", configuredId);
         return configured != null && this.isTreeConfigured(configured, depth);
     }
 
@@ -147,21 +156,20 @@ public final class BiomeDefinitions {
         var type = configured.get("type");
         if (type != null && type.isJsonPrimitive() && type.getAsString().contains("tree"))
             return true;
-        var config = configured.get("config");
-        if (config == null || !config.isJsonObject())
-            return false;
         var choices = new ArrayList<JsonElement>();
-        var features = config.getAsJsonObject().get("features");
+        var features = configured.get("features");
         if (features != null) {
             for (var choice : features.isJsonArray() ? features.getAsJsonArray().asList() : List.of(features)) {
-                // A random selector's choices carry a chance with the feature
+                // A random selector's choices carry a chance with the feature, a weighted one's a weight with it
                 if (choice.isJsonObject() && choice.getAsJsonObject().has("chance"))
                     choice = choice.getAsJsonObject().get("feature");
+                else if (choice.isJsonObject() && choice.getAsJsonObject().has("weight"))
+                    choice = choice.getAsJsonObject().get("data");
                 choices.add(choice);
             }
         }
         for (var key : List.of("default", "feature_true", "feature_false")) {
-            var choice = config.getAsJsonObject().get(key);
+            var choice = configured.get(key);
             if (choice != null)
                 choices.add(choice);
         }

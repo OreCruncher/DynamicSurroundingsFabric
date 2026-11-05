@@ -5,10 +5,10 @@ package org.orecruncher.dsurround.gui.overlay.plugins;
 
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.RenderTimers;
-import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.Cacheable;
 
 /**
@@ -24,13 +24,9 @@ public final class RenderTimersPlugin implements IDiagnosticPlugin {
 
     @Override
     public void onCollect(CollectDiagnosticsEvent event) {
-        // The graphics mode: Fabulous's improved transparency draws translucent things, particles and weather to targets
-        // of their own, laid over the scene by depth, which the mod's effects draw differently for
         var options = GameUtils.getGameSettings();
-        boolean layered = GameUtils.getMC().gameRenderer.gameRenderState().useShaderTransparency();
-        event.add(CollectDiagnosticsEvent.Section.Render, "Graphics: %s, improved transparency %s%s".formatted(
-                options.graphicsPreset().get(), options.improvedTransparency().get() ? "on" : "off",
-                layered ? " (layered by depth)" : ""));
+        event.add(CollectDiagnosticsEvent.Section.Render, "Graphics: %s, improved transparency %s".formatted(
+                options.graphicsPreset().get(), options.improvedTransparency().get() ? "on" : "off"));
         boolean labelled = false;
         for (var timer : RenderTimers.ALL) {
             if (timer.isStale())

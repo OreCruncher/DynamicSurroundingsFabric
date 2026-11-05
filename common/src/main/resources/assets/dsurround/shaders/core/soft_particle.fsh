@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -8,13 +9,10 @@
 //
 // SOFT_DISTANCE, set by the pipeline, is how far in front of what is behind it, in blocks, the particle is at full
 // strength.
-//
-// WRITE_DEPTH, set by the pipelines that draw only the particles' depth, first, with Fabulous graphics (see
-// SoftParticles): what has faded to nothing (behind the scene) is dropped, so it writes no depth.
 
-#moj_import <minecraft:fog.glsl>
-#moj_import <minecraft:dynamictransforms.glsl>
-#moj_import <minecraft:projection.glsl>
+#include <minecraft:fog.glsl>
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
 
 uniform sampler2D Sampler0;
 // A copy of the scene's depth, made just before the particles are drawn
@@ -25,12 +23,12 @@ layout(std140) uniform SoftParticleInfo {
     float DepthZeroToOne;
 };
 
-in float sphericalVertexDistance;
-in float cylindricalVertexDistance;
-in vec2 texCoord0;
-in vec4 vertexColor;
+layout(location = 0) in float sphericalVertexDistance;
+layout(location = 1) in float cylindricalVertexDistance;
+layout(location = 2) in vec2 texCoord0;
+layout(location = 3) in vec4 vertexColor;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // A depth buffer value as a distance from the camera in blocks, along the view direction. Inverts the perspective
 // projection: for a view space z, ndc = (m22 * z + m32) / -z. Holds whichever way round the depth range runs.
@@ -53,11 +51,6 @@ void main() {
     float sceneDistance = view_distance(texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r);
     float particleDistance = view_distance(gl_FragCoord.z);
     color.a *= clamp((sceneDistance - particleDistance) / SOFT_DISTANCE, 0.0, 1.0);
-#ifdef WRITE_DEPTH
-    if (color.a <= 0.0) {
-        discard;
-    }
-#endif
 
     fragColor = apply_fog(color, sphericalVertexDistance, cylindricalVertexDistance, FogEnvironmentalStart, FogEnvironmentalEnd, FogRenderDistanceStart, FogRenderDistanceEnd, FogColor);
 }

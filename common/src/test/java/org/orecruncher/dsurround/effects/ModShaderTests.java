@@ -3,9 +3,9 @@
 
 package org.orecruncher.dsurround.effects;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.SharedConstants;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
@@ -120,28 +120,18 @@ public class ModShaderTests {
         for (var shader : ModShaders.SHADERS) {
             assertTrue(ids.add(shader.id()), "listed twice: " + shader.id());
             var pipeline = shader.pipeline();
-            assertResource(pipeline.getVertexShader(), ".vsh");
-            assertResource(pipeline.getFragmentShader(), ".fsh");
+            assertResource(pipeline.getShaders().get(com.mojang.renderpearl.api.pipeline.ShaderType.VERTEX), ".vsh");
+            assertResource(pipeline.getShaders().get(com.mojang.renderpearl.api.pipeline.ShaderType.FRAGMENT), ".fsh");
         }
         assertEquals(ModShaders.SHADERS.size(), ids.size());
     }
 
     @Test
-    void thoseForFabulousGraphicsWriteDepth() {
-        // With Fabulous graphics a target is laid over the scene by its depth; a pipeline that is meant to write it
-        // there and doesn't (a builder's default is no depth test and no writes) leaves its target as far as can be,
-        // and the scene is laid over everything it drew: rain only against the sky, damp spots not at all
-        int checked = 0;
-        for (var shader : ModShaders.SHADERS) {
-            var path = shader.id().getPath();
-            if (!path.endsWith("_depth_write") && !path.endsWith("_depth"))
-                continue;
-            var depth = shader.pipeline().getDepthStencilState();
-            assertNotNull(depth, path + " has no depth state");
-            assertTrue(depth.writeDepth(), path + " doesn't write depth");
-            checked++;
-        }
-        assertTrue(checked >= 7, "found only " + checked);
+    void theCloudsDepthPassWritesDepth() {
+        // A builder's default is no depth state: no test and no writes. Without depth the clouds' far faces show through
+        var depth = org.orecruncher.dsurround.effects.clouds.CloudRenderer.DEPTH.pipeline().getDepthStencilState();
+        assertNotNull(depth, "the clouds' depth pass has no depth state");
+        assertTrue(depth.writeDepth(), "the clouds' depth pass doesn't write depth");
     }
 
     @Test

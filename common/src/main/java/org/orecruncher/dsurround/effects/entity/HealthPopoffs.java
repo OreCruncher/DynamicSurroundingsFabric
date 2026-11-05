@@ -110,7 +110,7 @@ public final class HealthPopoffs {
                     popoff.x + popoff.driftX * age - camX,
                     popoff.y + heightAt(age) - camY,
                     popoff.z + popoff.driftZ * age - camZ);
-            poseStack.mulPose(camera.orientation);
+            poseStack.rotate(camera.orientation);
             poseStack.scale(scale, -scale, scale);
             collector.submitText(poseStack, -popoff.halfWidth, -lineMiddle, popoff.text, false, Font.DisplayMode.NORMAL,
                     FULL_BRIGHT, (alpha << 24) | popoff.color, 0, (alpha << 24) | (OUTLINE & 0xFFFFFF));

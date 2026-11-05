@@ -1,12 +1,10 @@
-#version 330
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // What the ground fog's passes share (GroundFogVolume): their values, and turning the scene's depth into distance.
 
 layout(std140) uniform GroundFogInfo {
-    // From positions relative to the camera to the screen, and back, as the world was drawn (view bobbing and all)
-    mat4 ViewProj;
+    // From the screen to positions relative to the camera, as the world was drawn (view bobbing and all)
     mat4 InvViewProj;
     // Two rows of the projection's inverse: for a pixel at (x, y, depth) on the screen, how far along the view it is
     vec4 DepthRowZ;
@@ -37,9 +35,6 @@ layout(std140) uniform GroundFogInfo {
     float Thickness;
     // 1 if clip space depth runs 0 to 1, 0 if it runs -1 to 1
     float DepthZeroToOne;
-    // With Fabulous graphics, 1: the composite writes the depth where the mist begins along the line of sight, which
-    // vanilla's transparency pass sorts the weather's target by. Otherwise 0, and nothing is written.
-    float WriteDepth;
 };
 
 // How far nothing is: the sky, whose depth is 0 (the depth is reversed: near is 1), can't be turned into a distance
@@ -48,11 +43,6 @@ const float FAR_AWAY = 1.0e6;
 // A depth buffer value as normalized device coordinates' z
 float depth_to_ndc(float depth) {
     return DepthZeroToOne > 0.5 ? depth : depth * 2.0 - 1.0;
-}
-
-// Normalized device coordinates' z as a depth buffer value
-float ndc_to_depth(float ndc) {
-    return DepthZeroToOne > 0.5 ? ndc : ndc * 0.5 + 0.5;
 }
 
 // How far along the view the line of sight through a screen pixel goes, in blocks, from the scene's depth there: enough

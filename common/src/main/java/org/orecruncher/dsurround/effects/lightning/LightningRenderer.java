@@ -3,23 +3,24 @@
 
 package org.orecruncher.dsurround.effects.lightning;
 
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.BlendFactor;
-import com.mojang.blaze3d.platform.CompareOp;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFactor;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.textures.FilterMode;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -48,10 +49,8 @@ import java.util.function.Consumer;
  * from inside instead. The light adds to what is behind it. A far strike shows less, the more so the closer the fog
  * (see {@link Strikes#visibility}).
  * <p>
- * Drawn in the weather pass, after the ground fog, to the weather's target: with Fabulous graphics a target of its
- * own, given the scene's depth at the start of the pass (see WeatherDepth), into which depth is written so the
- * transparency pass lays the lightning over the scene where it is in front; otherwise the main target, tested against
- * its depth, which hides it behind hills, and cut off by the clouds'.
+ * Drawn after the ground fog and the weather (see IWorldRender), to the main target, tested against its depth, which
+ * hides it behind hills, and cut off by the clouds'.
  * <p>
  * Ribbons are as wide as a channel looks close by, and never thinner than about a pixel far away. Without its
  * pipelines ({@link #SHADERS}) there is no lightning of the mod's, and the game's bolts are drawn; with a shader pack
@@ -61,28 +60,22 @@ import java.util.function.Consumer;
 public final class LightningRenderer {
 
     private static final String NOISE_SAMPLER = "NoiseSampler";
-    private static final BindGroupLayout NOISE_LAYOUT = BindGroupLayout.builder().withSampler(NOISE_SAMPLER).build();
+    private static final BindGroupLayout NOISE_LAYOUT = BindGroupLayout.builder().withUniform(NOISE_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER).build();
     // Light, added to what is there
     private static final BlendFunction ADD = new BlendFunction(BlendFactor.ONE, BlendFactor.ONE);
     private static final DepthStencilState TEST_ONLY = new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false);
 
-    // Channels, with their white core, and the cloud's glow, without; each as is, and for Fabulous graphics, where the
-    // light comes with next to no alpha (not none, or the transparency pass skips the pixel) and depth is written so
-    // that pass can sort it
-    private static final RenderPipeline CHANNELS_PIPELINE = pipeline("pipeline/lightning_channels", true, false);
-    private static final RenderPipeline CHANNELS_DEPTH_PIPELINE = pipeline("pipeline/lightning_channels_depth_write", true, true);
-    private static final RenderPipeline GLOW_PIPELINE = pipeline("pipeline/lightning_glow", false, false);
-    private static final RenderPipeline GLOW_DEPTH_PIPELINE = pipeline("pipeline/lightning_glow_depth_write", false, true);
+    // Channels, with their white core, and the cloud's glow, without
+    private static final RenderPipeline CHANNELS_PIPELINE = pipeline("pipeline/lightning_channels", true);
+    private static final RenderPipeline GLOW_PIPELINE = pipeline("pipeline/lightning_glow", false);
 
     public static final ModShader CHANNELS = new ModShader(CHANNELS_PIPELINE, "lightning", "lightning will be vanilla's", Library.LOGGER);
-    public static final ModShader CHANNELS_DEPTH = new ModShader(CHANNELS_DEPTH_PIPELINE, "lightning (Fabulous)", "lightning will be vanilla's", Library.LOGGER);
     public static final ModShader GLOW = new ModShader(GLOW_PIPELINE, "lightning's cloud glow", "lightning will be vanilla's", Library.LOGGER);
-    public static final ModShader GLOW_DEPTH = new ModShader(GLOW_DEPTH_PIPELINE, "lightning's cloud glow (Fabulous)", "lightning will be vanilla's", Library.LOGGER);
 
     /**
      * All of them, for {@code ModShaders}
      */
-    public static final List<ModShader> SHADERS = List.of(CHANNELS, CHANNELS_DEPTH, GLOW, GLOW_DEPTH);
+    public static final List<ModShader> SHADERS = List.of(CHANNELS, GLOW);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Lightning");
 
@@ -140,25 +133,24 @@ public final class LightningRenderer {
         return IrisCompat.isShaderPackInUse();
     }
 
-    private static RenderPipeline pipeline(String location, boolean channels, boolean fabulous) {
+    private static RenderPipeline pipeline(String location, boolean channels) {
         var builder = RenderPipeline.builder()
                 .withLocation(Constants.asId(location))
                 .withVertexShader(Constants.asId("core/lightning"))
                 .withFragmentShader(Constants.asId("core/lightning"))
                 .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-                .withBindGroupLayout(BindGroupLayouts.MATRICES_PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+                .withBindGroupLayout(BindGroupLayouts.PROJECTION)
                 .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
                 .withPrimitiveTopology(PrimitiveTopology.QUADS)
                 .withColorTargetState(new ColorTargetState(ADD))
-                .withDepthStencilState(fabulous ? DepthStencilState.DEFAULT : TEST_ONLY)
+                .withDepthStencilState(TEST_ONLY)
                 .withCull(false);
         // The cloud's glow reads noise for its texture; the channels need nothing more
         if (channels)
             builder.withShaderDefine("CORE");
         else
             builder.withBindGroupLayout(NOISE_LAYOUT);
-        if (fabulous)
-            builder.withShaderDefine("ADD_ONLY");
         return builder.build();
     }
 
@@ -178,28 +170,24 @@ public final class LightningRenderer {
     /**
      * Draws the strikes, each as it is at {@code nowTicks}, outside any render pass
      *
-     * @param target   where: the weather's target
-     * @param fabulous whether Fabulous graphics are on
+     * @param target   where: the main target
      * @param nowTicks the game time, in ticks, with the part of a tick
      * @param fogEnd   where the fog is thickest, in blocks, for how much of a far strike shows (see
      *                 {@link Strikes#visibility})
      * @param glow     whether to draw the cloud's glow: not when the mod's clouds are lit by it instead
      * @return how many strikes were drawn, for the diagnostics
      */
-    public static int draw(List<Strike> strikes, Camera camera, RenderTarget target, boolean fabulous, double nowTicks,
+    public static int draw(List<Strike> strikes, Camera camera, RenderTarget target, double nowTicks,
                            float fogEnd, boolean glow) {
         // With a shader pack the strikes are submitted with the frame's geometry instead (see submitForShaderPack)
         if (strikes.isEmpty() || forShaderPack())
             return 0;
-        var channels = fabulous ? CHANNELS_DEPTH : CHANNELS;
-        var glowShader = fabulous ? GLOW_DEPTH : GLOW;
         int[] drawn = {0};
         RENDER_TIMER.begin();
         RENDER_TIMER.count(strikes.size());
-        // The channels first: with depth written, the cloud's glow drawn first would hide them behind it
-        channels.run(() -> drawn[0] += drawChannels(channels.pipeline(), strikes, camera, target, nowTicks, fogEnd), () -> {});
+        CHANNELS.run(() -> drawn[0] += drawChannels(CHANNELS_PIPELINE, strikes, camera, target, nowTicks, fogEnd), () -> {});
         if (glow)
-            glowShader.run(() -> drawn[0] += drawGlow(glowShader.pipeline(), strikes, camera, target, nowTicks, fogEnd), () -> {});
+            GLOW.run(() -> drawn[0] += drawGlow(GLOW_PIPELINE, strikes, camera, target, nowTicks, fogEnd), () -> {});
         RENDER_TIMER.end();
         return drawn[0];
     }
@@ -208,7 +196,7 @@ public final class LightningRenderer {
         if (noise == null)
             noise = NoiseTexture.create(NOISE_SIZE, 0x6C69676EL);
         var view = noise.getTextureView();
-        return pass -> pass.bindTexture(NOISE_SAMPLER, view, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+        return pass -> pass.setUniform(NOISE_SAMPLER, view, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
     }
 
     private static BufferBuilder builder() {

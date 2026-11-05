@@ -56,14 +56,13 @@ public final class FrostFaces {
             int light = world.packedLight(front);
             float skyShare = world.skyLight(front) / 15F;
             float temperature = world.temperature(front);
-            boolean translucent = world.translucent(state);
             for (var box : boxes) {
                 if (extentAcross(box, side) < MIN_EXTENT || box.maxY - box.minY < MIN_EXTENT)
                     continue;
                 double plane = plane(box, side);
                 if (isCovered(boxes, box, side, plane))
                     continue;
-                out.accept(face(world, pos, side, box, plane, light, skyShare, temperature, translucent));
+                out.accept(face(world, pos, side, box, plane, light, skyShare, temperature));
             }
         }
     }
@@ -91,7 +90,7 @@ public final class FrostFaces {
         return state.getFluidState().isEmpty() && state.getCollisionShape(blocks, pos).isEmpty();
     }
 
-    private static FrostFace face(IFrostWorld world, BlockPos pos, Direction side, AABB box, double plane, int light, float skyShare, float temperature, boolean translucent) {
+    private static FrostFace face(IFrostWorld world, BlockPos pos, Direction side, AABB box, double plane, int light, float skyShare, float temperature) {
         var across = acrossAxis(side);
         var lower = Direction.fromAxisAndDirection(across, Direction.AxisDirection.NEGATIVE);
         var upper = lower.getOpposite();
@@ -107,7 +106,7 @@ public final class FrostFaces {
                 u1 + reach(world, pos, side, box, plane, upper),
                 v0 - reach(world, pos, side, box, plane, Direction.DOWN),
                 v1 + reach(world, pos, side, box, plane, Direction.UP),
-                light, skyShare, temperature, translucent);
+                light, skyShare, temperature);
     }
 
     /**

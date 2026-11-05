@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -7,16 +8,16 @@
 // covers the light's sphere on screen. When the camera is in or right next to the sphere, the square covers the whole
 // screen instead.
 
-#moj_import <minecraft:dynamictransforms.glsl>
-#moj_import <minecraft:projection.glsl>
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
 
-in vec3 Position;  // the light's centre, relative to the camera
-in vec2 UV0;       // which corner, at the light's radius: -radius or radius on each axis
-in vec4 Color;     // the light's colour; alpha is its strength
+layout(location = 0) in vec3 Position;  // the light's centre, relative to the camera
+layout(location = 1) in vec2 UV0;       // which corner, at the light's radius: -radius or radius on each axis
+layout(location = 2) in vec4 Color;     // the light's colour; alpha is its strength
 
-flat out vec3 lightCenter;  // in view space
-flat out vec4 lightColor;
-flat out float lightRadius;
+layout(location = 0) flat out vec3 lightCenter;  // in view space
+layout(location = 1) flat out vec4 lightColor;
+layout(location = 2) flat out float lightRadius;
 
 void main() {
     vec3 center = (ModelViewMat * vec4(Position, 1.0)).xyz;

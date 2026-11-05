@@ -3,27 +3,25 @@
 
 package org.orecruncher.dsurround.effects.groundfog;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.PrimitiveTopology;
-import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.ColorTargetState;
-import com.mojang.blaze3d.pipeline.DepthStencilState;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.CompareOp;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.systems.RenderPassDescriptor;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
+import com.mojang.renderpearl.api.textures.FilterMode;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -71,49 +69,43 @@ public final class GroundFogVolume {
     // Each vec3 of the block and the float after it are written as one vec4: in std140 the float takes the vec3's
     // fourth slot, but Std140Builder.putVec3 always takes sixteen bytes, which would put everything after it out by four
     private static final int INFO_SIZE = new Std140SizeCalculator()
-            .putMat4f().putMat4f()
+            .putMat4f()
             .putVec4().putVec4()
             .putVec2().putFloat().putFloat()
             .putVec4()
             .putVec2().putFloat().putFloat()
             .putVec4()
             .putVec2().putFloat().putFloat()
-            .putFloat()
             .get();
     private static final String DEPTH_SAMPLER = "DepthSampler";
     private static final String FOG_GRID = "FogGrid";
     private static final String NOISE_SAMPLER = "NoiseSampler";
     private static final String MIST_SAMPLER = "MistSampler";
-    private static final String MIST_DEPTH_SAMPLER = "MistDepthSampler";
     private static final String DISTANCE_SAMPLER = "DistanceSampler";
     private static final BindGroupLayout MARCH_LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(DEPTH_SAMPLER)
-            .withSampler(FOG_GRID)
-            .withSampler(NOISE_SAMPLER)
+            .withUniform(DEPTH_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform(FOG_GRID, UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform(NOISE_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
     private static final BindGroupLayout SMOOTH_LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(MIST_SAMPLER)
-            .withSampler(MIST_DEPTH_SAMPLER)
-            .withSampler(DISTANCE_SAMPLER)
+            .withUniform(MIST_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform(DISTANCE_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
     private static final BindGroupLayout COMPOSITE_LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
-            .withSampler(MIST_SAMPLER)
-            .withSampler(MIST_DEPTH_SAMPLER)
-            .withSampler(DEPTH_SAMPLER)
-            .withSampler(DISTANCE_SAMPLER)
+            .withUniform(MIST_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform(DEPTH_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
+            .withUniform(DISTANCE_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
     // Far off, where nothing was drawn (no pixel is left so: the march writes every one)
     private static final Vector4f CLEAR_DISTANCE = new Vector4f(1.0e6F, 0F, 0F, 0F);
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
-    // Each pass writes every pixel's depth itself, where the mist begins along its line of sight
-    private static final DepthStencilState WRITE_DEPTH = new DepthStencilState(CompareOp.ALWAYS_PASS, true);
 
     /**
      * Draws the mist, at a share of the screen's size, replacing what was there: its color, already multiplied by its
-     * alpha, and the depth where it begins; and, to a target of its own, how far each pixel's line of sight goes, which
+     * alpha; and, to a target of its own, how far each pixel's line of sight goes, which
      * the smoothing and the composite read rather than work it out from the depth for each pixel around theirs.
      * Without it, there is none.
      */
@@ -124,7 +116,6 @@ public final class GroundFogVolume {
                     .withBindGroupLayout(MARCH_LAYOUT)
                     .withColorTargetState(ColorTargetState.DEFAULT)
                     .withColorTargetState(1, new ColorTargetState(Optional.empty(), GpuFormat.R32_FLOAT, ColorTargetState.WRITE_RED))
-                    .withDepthStencilState(WRITE_DEPTH)
                     .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**
@@ -134,30 +125,19 @@ public final class GroundFogVolume {
             screenPass("pipeline/ground_fog_smooth", "core/ground_fog_smooth")
                     .withBindGroupLayout(SMOOTH_LAYOUT)
                     .withColorTargetState(ColorTargetState.DEFAULT)
-                    .withDepthStencilState(WRITE_DEPTH)
                     .build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**
-     * Lays the smoothed mist over the scene. Its color is already multiplied by its alpha, so "over": with Fabulous
-     * graphics the weather's target keeps an alpha the transparency pass can use, as it takes the target's colors as
-     * already multiplied. Without it, there is no ground fog either.
+     * Lays the smoothed mist over the scene. Its color is already multiplied by its alpha, so "over". Without it, there
+     * is no ground fog either.
      */
     public static final ModShader COMPOSITE = new ModShader(
             composite("pipeline/ground_fog_composite").withDepthStencilState(Optional.empty()).build(),
             "ground fog", "there will be no ground fog", Library.LOGGER);
     /**
-     * The same, with Fabulous graphics, writing the depth where the mist begins along each line of sight, which the
-     * transparency pass sorts the layers by: with none, the weather's target is as far as can be, and the scene is laid
-     * over it. Tested against the rain and snow already there, so drops in front of the mist stay in front.
-     */
-    public static final ModShader COMPOSITE_DEPTH = new ModShader(
-            composite("pipeline/ground_fog_composite_depth_write").withDepthStencilState(DepthStencilState.DEFAULT).build(),
-            "ground fog (Fabulous)", "there will be no ground fog", Library.LOGGER);
-
-    /**
      * All of them, for {@code ModShaders}
      */
-    public static final List<ModShader> SHADERS = List.of(SHADER, SMOOTH, COMPOSITE, COMPOSITE_DEPTH);
+    public static final List<ModShader> SHADERS = List.of(SHADER, SMOOTH, COMPOSITE);
 
     /**
      * How long the GPU takes over all the passes, for the diagnostics overlay, and over each: the march (with the depth
@@ -232,23 +212,21 @@ public final class GroundFogVolume {
      * Whether the ground fog can be drawn: its pipelines compiled, drawing hasn't failed, and no shader pack is in use
      */
     public static boolean isUsable() {
-        return SHADER.isUsable() && SMOOTH.isUsable() && COMPOSITE.isUsable() && COMPOSITE_DEPTH.isUsable();
+        return SHADER.isUsable() && SMOOTH.isUsable() && COMPOSITE.isUsable();
     }
 
     /**
-     * Draws the mist where the weather is drawn, reading a copy of the scene's depth to know how far each pixel's line
-     * of sight goes. Outside any render pass.
+     * Draws the mist, reading a copy of the scene's depth to know how far each pixel's line of sight goes. Outside any
+     * render pass.
      *
-     * @param target   where the weather is being drawn
+     * @param target   where it is drawn: the main target
      * @param quality  how finely: the share of the screen's size the mist is drawn at, and the most steps
-     * @param fabulous whether Fabulous graphics are on: the weather's target is then laid over the scene by vanilla's
-     *                 transparency pass, by its depth, and the mist is drawn after the rain (see the handler)
      * @param strength how strong the mist is for the conditions, 0 to 1
      * @param driftX   how far the mist has drifted east-west, in blocks, and {@code driftZ} north-south
      * @param seconds  a running time, for the mist to churn
      * @return true if it was drawn, or there was nothing to draw
      */
-    public static boolean render(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
+    public static boolean render(GroundFogField field, Camera camera, RenderTarget target,
                                  GroundFogQuality quality, float strength,
                                  float driftX, float driftZ, float seconds) {
         if (field.isEmpty() || !isUsable())
@@ -256,13 +234,13 @@ public final class GroundFogVolume {
 
         RENDER_TIMER.begin();
         try {
-            return SHADER.run(() -> draw(field, camera, target, fabulous, quality, strength, driftX, driftZ, seconds), () -> {});
+            return SHADER.run(() -> draw(field, camera, target, quality, strength, driftX, driftZ, seconds), () -> {});
         } finally {
             RENDER_TIMER.end();
         }
     }
 
-    private static void draw(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
+    private static void draw(GroundFogField field, Camera camera, RenderTarget target,
                              GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
         if (grid == null || gridSize != field.size() || gridVersion != field.version()) {
             gridBaseY = Mth.floor(lowestGround(field)) - HEIGHT_BASE_MARGIN;
@@ -270,61 +248,58 @@ public final class GroundFogVolume {
             gridVersion = field.version();
         }
 
-        // How far each pixel's line of sight goes: the scene's depth, water's surface included, which with Fabulous
-        // graphics isn't in the weather's target; the translucent target has it. All the passes read it
-        var depthSource = fabulous ? GameUtils.getMC().levelRenderer.translucentTarget() : target;
-        if (depthSource == null || !SoftParticles.captureDepth(depthSource))
+        // How far each pixel's line of sight goes: the scene's depth, water's surface included. All the passes read it
+        if (!SoftParticles.captureDepth(target))
             return;
 
         int scale = quality.scale();
         var reduced = marched = reducedFor(marched, "Dynamic Surroundings ground fog", target, scale);
         var smoothedReduced = smoothed = reducedFor(smoothed, "Dynamic Surroundings ground fog, smoothed", target, scale);
         var distance = distancesFor(reduced);
-        writeInfo(field, camera, target, fabulous, quality, strength, driftX, driftZ, seconds);
+        writeInfo(field, camera, target, quality, strength, driftX, driftZ, seconds);
+        // Made the first time it is used, which can't be while a render pass is open
+        var noiseView = noiseTexture().getTextureView();
         var encoder = RenderSystem.getDevice().createCommandEncoder();
         var linear = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
         var nearest = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
 
-        // The mist at a share of the screen's size, replacing what was there: its color and where it begins
+        // The mist at a share of the screen's size, replacing what was there
         MARCH_TIMER.begin();
-        try (RenderPass pass = encoder.createRenderPass(RenderPassDescriptor.create(() -> "Dynamic Surroundings ground fog march")
+        try (RenderPass pass = encoder.createRenderPass(RenderPassDescriptor.builder(() -> "Dynamic Surroundings ground fog march")
                 .withColorAttachment(reduced.getColorTextureView(), Optional.of(CLEAR))
                 .withColorAttachment(distance, Optional.of(CLEAR_DISTANCE))
-                .withDepthAttachment(reduced.getDepthTextureView(), OptionalDouble.of(0D))
-                .withRenderArea(new RenderPass.RenderArea(0, 0, reduced.width, reduced.height)))) {
+                .withRenderArea(new RenderPass.RenderArea(0, 0, reduced.width, reduced.height)).build())) {
             begin(pass, SHADER.pipeline());
             SoftParticles.bindSceneDepth(pass);
             // Read smoothly between columns, ground heights and thickness both: the mist rounds off over ledges
-            pass.bindTexture(FOG_GRID, grid.getTextureView(), linear);
-            pass.bindTexture(NOISE_SAMPLER, noiseTexture().getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
-            pass.bindTexture("Sampler2", GameUtils.getMC().gameRenderer.lightmap(), linear);
+            pass.setUniform(FOG_GRID, grid.getTextureView(), linear);
+            pass.setUniform(NOISE_SAMPLER, noiseView, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+            pass.setUniform("Sampler2", GameUtils.getMC().gameRenderer.lightmap(), linear);
             pass.draw(3, 1, 0, 0);
         } finally {
             MARCH_TIMER.end();
         }
 
-        // Smoothed at that size, replacing what was there: its color and where it begins, as before
+        // Smoothed at that size, replacing what was there
         SMOOTH_TIMER.begin();
         try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings ground fog smoothing", smoothedReduced.getColorTextureView(),
-                Optional.of(CLEAR), smoothedReduced.getDepthTextureView(), OptionalDouble.of(0D))) {
+                Optional.of(CLEAR), null, OptionalDouble.empty())) {
             begin(pass, SMOOTH.pipeline());
-            pass.bindTexture(MIST_SAMPLER, reduced.getColorTextureView(), nearest);
-            pass.bindTexture(MIST_DEPTH_SAMPLER, reduced.getDepthTextureView(), nearest);
-            pass.bindTexture(DISTANCE_SAMPLER, distance, nearest);
+            pass.setUniform(MIST_SAMPLER, reduced.getColorTextureView(), nearest);
+            pass.setUniform(DISTANCE_SAMPLER, distance, nearest);
             pass.draw(3, 1, 0, 0);
         } finally {
             SMOOTH_TIMER.end();
         }
 
-        // Laid over the scene at full size; with Fabulous graphics, writing where the mist begins
+        // Laid over the scene at full size
         COMPOSITE_TIMER.begin();
         try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings ground fog composite", target.getColorTextureView(),
-                Optional.empty(), fabulous ? target.getDepthTextureView() : null, OptionalDouble.empty())) {
-            begin(pass, (fabulous ? COMPOSITE_DEPTH : COMPOSITE).pipeline());
-            pass.bindTexture(MIST_SAMPLER, smoothedReduced.getColorTextureView(), nearest);
-            pass.bindTexture(MIST_DEPTH_SAMPLER, smoothedReduced.getDepthTextureView(), nearest);
+                Optional.empty(), null, OptionalDouble.empty())) {
+            begin(pass, COMPOSITE.pipeline());
+            pass.setUniform(MIST_SAMPLER, smoothedReduced.getColorTextureView(), nearest);
             SoftParticles.bindSceneDepth(pass);
-            pass.bindTexture(DISTANCE_SAMPLER, distance, nearest);
+            pass.setUniform(DISTANCE_SAMPLER, distance, nearest);
             pass.draw(3, 1, 0, 0);
         } finally {
             COMPOSITE_TIMER.end();
@@ -335,7 +310,7 @@ public final class GroundFogVolume {
      * Sets a pass's pipeline and binds what all of them read
      */
     private static void begin(RenderPass pass, RenderPipeline pipeline) {
-        pass.setPipeline(pipeline);
+        pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
         RenderSystem.bindDefaultUniforms(pass);
         pass.setUniform(INFO, info);
     }
@@ -343,7 +318,7 @@ public final class GroundFogVolume {
     /**
      * The values the passes share, this frame (see shaders/include/ground_fog.glsl)
      */
-    private static void writeInfo(GroundFogField field, Camera camera, RenderTarget target, boolean fabulous,
+    private static void writeInfo(GroundFogField field, Camera camera, RenderTarget target,
                                   GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
         if (info == null)
             info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings ground fog UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
@@ -355,12 +330,10 @@ public final class GroundFogVolume {
         float fadeWidth = field.radius() * GroundFogField.EDGE_FADE;
         var zeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
         var projection = LevelProjection.get();
-        var viewProj = new Matrix4f(projection).mul(RenderSystem.getModelViewMatrixCopy());
-        var invViewProj = new Matrix4f(viewProj).invert();
+        var invViewProj = new Matrix4f(projection).mul(RenderSystem.getModelViewMatrixCopy()).invert();
         var invProj = new Matrix4f(projection).invert();
         try (var stack = MemoryStack.stackPush()) {
             var data = Std140Builder.onStack(stack, INFO_SIZE)
-                    .putMat4f(viewProj)
                     .putMat4f(invViewProj)
                     .putVec4(invProj.m02(), invProj.m12(), invProj.m22(), invProj.m32())
                     .putVec4(invProj.m03(), invProj.m13(), invProj.m23(), invProj.m33())
@@ -378,7 +351,6 @@ public final class GroundFogVolume {
                     .putVec2(field.radius() - 1F, fadeWidth)
                     .putFloat(THICKNESS * strength)
                     .putFloat(zeroToOne ? 1F : 0F)
-                    .putFloat(fabulous ? 1F : 0F)
                     .get();
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), data);
         }
@@ -410,7 +382,7 @@ public final class GroundFogVolume {
         int width = (target.width + scale - 1) / scale;
         int height = (target.height + scale - 1) / scale;
         if (existing == null)
-            existing = new TextureTarget(label, width, height, true, GpuFormat.RGBA8_UNORM);
+            existing = new TextureTarget(label, width, height, GpuFormat.RGBA8_UNORM, null);
         else if (existing.width != width || existing.height != height)
             existing.resize(width, height);
         return existing;

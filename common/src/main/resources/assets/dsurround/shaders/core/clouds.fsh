@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -10,8 +11,8 @@
 // are gone before the edge of the cloud grid, wherever the fog is. Lightning lights them from inside: up to eight points
 // of light (CloudLights), each brightening the cloud around it, most where it is and none past its reach.
 
-#moj_import <minecraft:fog.glsl>
-#moj_import <minecraft:dynamictransforms.glsl>
+#include <minecraft:fog.glsl>
+#include <minecraft:dynamictransforms.glsl>
 
 // Kept the same as in clouds.vsh
 layout(std140) uniform DSCloudInfo {
@@ -23,11 +24,11 @@ layout(std140) uniform DSCloudInfo {
     vec4 Lights[8];
 };
 
-in float flatDistance;
-in vec3 cloudPos;
-in vec4 vertexColor;
+layout(location = 0) in float flatDistance;
+layout(location = 1) in vec3 cloudPos;
+layout(location = 2) in vec4 vertexColor;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // The color of lightning's light in the cloud: LightningRenderer's glow
 const vec3 GLOW = vec3(0.62, 0.64, 0.86);

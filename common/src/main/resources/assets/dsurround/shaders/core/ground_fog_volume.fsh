@@ -1,4 +1,5 @@
 #version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -19,8 +20,8 @@
 // camera in whole blocks, alpha the part of a block over; the ground is smoothed over a few blocks, so the mist banks
 // up against a step and thins toward a ledge. Green is the mist's thickness, blue the block and sky light (16 each).
 
-#moj_import <minecraft:fog.glsl>
-#moj_import <dsurround:ground_fog.glsl>
+#include <minecraft:fog.glsl>
+#include <dsurround:ground_fog.glsl>
 
 uniform sampler2D DepthSampler;
 uniform sampler2D FogGrid;
@@ -184,8 +185,7 @@ float mist(vec3 p, float fromCamera, float stepLength) {
 // The mist seen along the line of sight from the camera, the way dir goes for length_ blocks, and where it begins as
 // a depth (as far as can be, 0, where there is none). Returned rather than written where there is none: Veil's
 // parser fails on a return without a value, and every pixel must still write the scene's distance
-vec4 mist_along(vec3 dir, float length_, out float mistDepth) {
-    mistDepth = 0.0;
+vec4 mist_along(vec3 dir, float length_) {
     if (length_ <= 0.0) {
         return vec4(0.0);
     }
@@ -221,8 +221,6 @@ vec4 mist_along(vec3 dir, float length_, out float mistDepth) {
         mistSums[s] = vec3(0.0);
         amounts[s] = 0.0;
     }
-    // Where along the line the mist begins
-    float begins = -1.0;
     int steps = int(clamp(ceil(span * STEPS_PER_BLOCK), float(MIN_STEPS), min(MaxSteps, float(STEPS))));
     float stepCount = float(steps);
     // How far along the line, 0 to 1, this step begins: where the last ended
@@ -241,19 +239,11 @@ vec4 mist_along(vec3 dir, float length_, out float mistDepth) {
         int stretch = min(i * LIGHT_POINTS / steps, LIGHT_POINTS - 1);
         mistSums[stretch] += p * (m * stepLength);
         amounts[stretch] += m * stepLength;
-        if (begins < 0.0 && m > 0.0) {
-            begins = t;
-        }
     }
     float alpha = 1.0 - exp(-amount * Thickness);
     if (alpha <= 0.002) {
         return vec4(0.0);
     }
-
-    // Where the mist begins: with Fabulous graphics, the composite writes it to the weather's target, which vanilla's
-    // transparency pass sorts by
-    vec4 clipAt = ViewProj * vec4(dir * max(begins, t0), 1.0);
-    mistDepth = clamp(ndc_to_depth(clipAt.z / clipAt.w), 0.0, 1.0);
 
     // Lit where the mist passed is on the whole, in each stretch, blended by how much each is seen: as much as it
     // hides, less what the mist in front of it hides. Not at any one point along the way: each pixel's steps are offset
@@ -292,10 +282,7 @@ void main() {
         vec4 viewed = InvViewProj * vec4(screenNdc, depth_to_ndc(depth), 1.0);
         length_ = length(viewed.xyz / viewed.w);
     }
-    // Where the mist would begin is as far as can be where there is none (the depth is reversed)
-    float mistDepth;
-    fragColor = mist_along(dir, length_, mistDepth);
-    gl_FragDepth = mistDepth;
+    fragColor = mist_along(dir, length_);
     // After fragColor: written the other way around, fragColor is lost on Vulkan (seen on AMD, driver 26.10.1)
     sceneDistance = distance_at(DepthSampler, pixel);
 }

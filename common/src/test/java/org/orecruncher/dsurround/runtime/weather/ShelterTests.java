@@ -6,11 +6,11 @@ package org.orecruncher.dsurround.runtime.weather;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.EmptyBlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.LeavesBlock;
@@ -111,7 +111,7 @@ public class ShelterTests {
         var world = new World();
         world.put(0, 0, 0, Blocks.CAMPFIRE);
         world.put(1, 0, 0, Blocks.WATER);
-        assertTrue(Blocks.CAMPFIRE.defaultBlockState().blocksMotion(), "the campfire is the top of its column");
+        assertTrue(Shelter.blocksMotion(Blocks.CAMPFIRE.defaultBlockState()), "the campfire is the top of its column");
         assertEquals(1F, Shelter.roofShare(world, new BlockPos(0, 0, 0)));
         assertEquals(1F, Shelter.roofShare(world, new BlockPos(1, 0, 0)));
     }
@@ -194,7 +194,7 @@ public class ShelterTests {
             for (var entry : this.blocks.entrySet()) {
                 var pos = entry.getKey();
                 var state = entry.getValue();
-                if (pos.getX() == x && pos.getZ() == z && (state.blocksMotion() || !state.getFluidState().isEmpty()))
+                if (pos.getX() == x && pos.getZ() == z && (Shelter.blocksMotion(state) || !state.getFluidState().isEmpty()))
                     top = Math.max(top, pos.getY() + 1);
             }
             return top;
