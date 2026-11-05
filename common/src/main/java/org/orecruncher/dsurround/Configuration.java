@@ -330,6 +330,10 @@ public class Configuration extends ConfigurationData {
         @MovedFrom({"particleEffects.enableWaterStepFroth", "worksInProgressOptions.enableWaterStepFroth"})
         @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
         public boolean enableFroth = true;
+
+        @Property
+        @Comment("Enable/disable rings spreading on the water where a waterfall lands; follows the Water Ripple Style")
+        public boolean enableRings = true;
     }
 
     public static class FireflyOptions {
@@ -407,6 +411,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable feet tracking snow, mud, sand and water onto hard ground; needs footprints on")
         public boolean enableTrackedFootprints = true;
+
+        @Property
+        @Comment("Enable/disable rings spreading on the water where players and mobs fall in; follows the Water Ripple Style")
+        public boolean enableSplashRings = true;
 
         @Property
         @Comment("The look of players' footprints")

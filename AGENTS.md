@@ -214,7 +214,7 @@ release, 5.1.0, is for 26.3.
   `dsconfigs/presets.json` (resource pack or `config/dsurround/configs/<ns>/`): ours are read first, a same id replaces,
   `"hidden": true` removes, inline `name`/`description` beat the lang keys. Bad values, Scary Content and
   restart-needing settings are dropped and logged at load. Feature presets never touch the HUD, quality or ranges;
-  performance presets also set waterfall mist/froth, dynamic clouds and flame/firefly lights, features too, so a feature
+  performance presets also set waterfall mist/froth/rings, dynamic clouds and flame/firefly lights, features too, so a feature
   preset after Low turns them back on (accepted) (`PresetLoaderTests`; `DsConfigFuzzTests` skips the file, which has no
   codec).
 - How 26.3 draws a level (`LevelRenderer.addMainPass`): there is no weather pass and no separate weather, translucent,

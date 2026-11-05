@@ -55,6 +55,8 @@ public enum OptionalHook {
     RAIN_SOUNDS("Storm rain sounds",
             site("core.MixinClientLevel", "dsurround$rainTick"),
             site("core.MixinClientLevel", "dsurround$rainSound")),
+    SPRAY_RIPPLES("Ripples where spray falls on water",
+            site("core.MixinWaterDropParticle", "dsurround$landed")),
     RAIN_SPLASHES("Hiding vanilla's rain splashes under particle rain",
             site("core.MixinClientLevel", "dsurround$rainTick"),
             site("core.MixinClientLevel", "dsurround$vanillaRainSplash")),

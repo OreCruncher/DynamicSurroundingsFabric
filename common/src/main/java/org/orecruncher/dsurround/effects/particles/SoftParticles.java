@@ -203,6 +203,14 @@ public final class SoftParticles {
     }
 
     /**
+     * Whether a layer has to be drawn after the others: puffs write no depth, so what is drawn after them lands on top,
+     * whatever is really nearer
+     */
+    public static boolean drawsLast(SingleQuadParticle.Layer layer) {
+        return layer == WATERFALL_MIST || layer == WATERFALL_MIST_FALLBACK;
+    }
+
+    /**
      * A translucent particle pipeline: vanilla's particle shader unless {@code shader} names another.
      */
     static RenderPipeline.Builder particlePipeline(String location, @Nullable net.minecraft.resources.Identifier shader) {

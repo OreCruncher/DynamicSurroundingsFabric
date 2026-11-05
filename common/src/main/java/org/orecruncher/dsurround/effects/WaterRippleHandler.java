@@ -31,6 +31,28 @@ public class WaterRippleHandler {
         return compatibleEnvironment && CONFIG.waterRippleStyle != WaterRippleStyle.NONE;
     }
 
+    /**
+     * A ring on the water where something strikes it, if ripples are on
+     *
+     * @param surfaceY the height of the surface as it is drawn
+     * @param size     how many times as fast as a raindrop's it spreads
+     */
+    public static Optional<Particle> createRing(ClientLevel world, double x, double surfaceY, double z, float size) {
+        if (!doRipples())
+            return Optional.empty();
+        return Optional.of(WaterRippleParticle.createRing(CONFIG.waterRippleStyle, world, x, surfaceY, z, size));
+    }
+
+    /**
+     * A ripple where spray comes down on water, if ripples are on: on the surface, so not under falling water, where
+     * the fluid's height is the block's and above the surface that is drawn
+     */
+    public static Optional<Particle> createSprayRipple(ClientLevel world, double x, double y, double z) {
+        if (!world.getFluidState(BlockPos.containing(x, y, z).above()).isEmpty())
+            return Optional.empty();
+        return createRippleParticle(world, new Vec3(x, y, z));
+    }
+
     public static Optional<Particle> createRippleParticle(ClientLevel world, Vec3 position) {
         if (doRipples()) {
             var pos = BlockPos.containing(position);

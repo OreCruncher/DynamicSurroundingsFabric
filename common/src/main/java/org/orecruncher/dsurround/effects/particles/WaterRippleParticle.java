@@ -20,8 +20,10 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
  * hide it from above.
  * <p>
  * It is drawn from one side only, as particles are, so seen from under the water it is turned to face down, and drawn
- * just below the surface, in front of the water's underside rather than behind it. From below it is dimmer: it lights
- * itself, and would otherwise glow under the dark water.
+ * just below the surface, in front of the water's underside rather than behind it. From below it is dimmer, or it would
+ * glow under the dark water.
+ * <p>
+ * Bigger ones are the rings where something strikes the water ({@link #createRing}): a waterfall, a body falling in.
  */
 public class WaterRippleParticle extends SingleQuadParticle {
 
@@ -34,18 +36,31 @@ public class WaterRippleParticle extends SingleQuadParticle {
     static final double UNDERSIDE_DROP = 0.025D;
     static final float UNDERSIDE_BRIGHTNESS = 0.8F;
     static final float UNDERSIDE_ALPHA = 0.7F;
+    // How far above its place on the surface a ripple starts: the constructor lowers it, leaving it just over the water
+    private static final double ABOVE_SURFACE = 0.21D;
 
     private final WaterRippleStyle rippleStyle;
     private final SpriteSet spriteProvider;
     private final LifetimeAlpha lifetimeAlpha;
 
     private final float growthRate;
+    // Its light, read once: it stays where it is, and is gone in a second
+    private final int light;
 
     public static Particle create(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
-        return new WaterRippleParticle(rippleStyle, world, x, y, z, DSurroundParticleSprites.forRippleStyle(rippleStyle));
+        return new WaterRippleParticle(rippleStyle, world, x, y, z, 1F, DSurroundParticleSprites.forRippleStyle(rippleStyle));
     }
 
-    protected WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, SpriteSet spriteProvider) {
+    /**
+     * A ring on the water, spreading this many times as fast as a raindrop's
+     *
+     * @param surfaceY the height of the surface as it is drawn
+     */
+    public static Particle createRing(WaterRippleStyle rippleStyle, ClientLevel world, double x, double surfaceY, double z, float size) {
+        return new WaterRippleParticle(rippleStyle, world, x, surfaceY + ABOVE_SURFACE, z, size, DSurroundParticleSprites.forRippleStyle(rippleStyle));
+    }
+
+    protected WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, float size, SpriteSet spriteProvider) {
         super(world, x, y, z, 0.0, 0.0, 0.0, spriteProvider.first());
 
         this.rippleStyle = rippleStyle;
@@ -53,7 +68,7 @@ public class WaterRippleParticle extends SingleQuadParticle {
         this.lifetime = rippleStyle.getMaxAge();
 
         if (rippleStyle.doScaling()) {
-            this.growthRate = this.lifetime / 500F;
+            this.growthRate = size * this.lifetime / 500F;
             this.quadSize = this.growthRate;
         } else {
             this.growthRate = 0F;
@@ -75,6 +90,7 @@ public class WaterRippleParticle extends SingleQuadParticle {
         }
 
         this.alpha = this.lifetimeAlpha.startAlpha();
+        this.light = super.getLightCoords(0F);
         this.setSpriteFromAge(this.spriteProvider);
     }
 
@@ -121,7 +137,7 @@ public class WaterRippleParticle extends SingleQuadParticle {
 
     @Override
     public int getLightCoords(float partialTick) {
-        return 15728880;
+        return this.light;
     }
 
     @Override

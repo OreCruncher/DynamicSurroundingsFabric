@@ -223,6 +223,8 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_HOOF, entityType)
                 || this.tagLibrary.is(EntityEffectTags.FOOTPRINTS_BIRD, entityType))
             effectTypes.add(EntityEffectType.FOOTPRINTS);
+        // Anything can fall in; the small ones make no rings
+        effectTypes.add(EntityEffectType.WATER_SPLASH);
 
         return effectTypes;
     }

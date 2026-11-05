@@ -7,7 +7,9 @@ import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import org.orecruncher.dsurround.effects.WaterRippleHandler;
 import org.orecruncher.dsurround.effects.particles.WaterFoam;
 import org.orecruncher.dsurround.effects.particles.WaterfallMist;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -15,13 +17,17 @@ import org.orecruncher.dsurround.lib.random.IRandomizer;
 import java.util.function.Consumer;
 
 /**
- * The mist and foam where a waterfall lands. With decreased particles, or far from the camera, there is half as much
+ * The mist, foam and rings where a waterfall lands. With decreased particles, or far from the camera, there is half as much
  * (but always some).
  */
 final class WaterfallSpray {
 
     // Mist puffs added each time particles are made, whatever the waterfall's strength
     static final int MIST_PUFFS = 4;
+    // Rings spreading from the impact each time particles are made
+    static final int RINGS = 2;
+    private static final float RING_SIZE = 3F;
+    private static final float MAX_RING_SIZE = 6F;
 
     private WaterfallSpray() {
     }
@@ -46,6 +52,48 @@ final class WaterfallSpray {
      */
     static double foamMinSpeed(int strength) {
         return 0.06D + strength * 0.01D;
+    }
+
+    /**
+     * How fast a ring spreads, next to a raindrop's: faster from a bigger waterfall
+     */
+    static float ringSize(int strength) {
+        return Math.min(MAX_RING_SIZE, RING_SIZE + strength * 0.3F);
+    }
+
+    /**
+     * Adds rings spreading on the water from around where the waterfall lands, each on the surface where it starts: the
+     * water spreading from the impact lies lower than where it lands. Only on still water, open to the sky above it.
+     *
+     * @param position where the waterfall lands
+     * @param far      whether the waterfall is far from the camera
+     */
+    static void addRings(ClientLevel level, BlockPos position, int strength, ParticleStatus status,
+                         boolean far, IRandomizer random, Consumer<Particle> particles) {
+        int count = reduced(RINGS, status, far);
+        var at = new BlockPos.MutableBlockPos();
+        for (int i = 0; i < count; i++) {
+            double angle = random.nextDouble() * Mth.TWO_PI;
+            double radius = 0.7D + random.nextDouble() * 0.7D;
+            double x = position.getX() + 0.5D + Math.cos(angle) * radius;
+            double z = position.getZ() + 0.5D + Math.sin(angle) * radius;
+
+            at.set(x, position.getY(), z);
+            var fluid = level.getFluidState(at);
+            if (fluid.isEmpty()) {
+                at.move(Direction.DOWN);
+                fluid = level.getFluidState(at);
+                if (fluid.isEmpty())
+                    continue;
+            }
+            // Still water only, as rain's ripples are: not the flowing steps down a cascade, each a landing of its own,
+            // nor under the falling water, where the height is the block's, above the surface that is drawn
+            if (!fluid.isSource() || !level.getFluidState(at.above()).isEmpty())
+                continue;
+
+            float size = ringSize(strength) * (0.8F + random.nextFloat() * 0.4F);
+            WaterRippleHandler.createRing(level, x, at.getY() + fluid.getHeight(level, at), z, size).ifPresent(particles);
+        }
     }
 
     private static int reduced(int count, ParticleStatus status, boolean far) {

@@ -75,7 +75,7 @@ public class PresetLoaderTests {
     // What the performance presets set that the feature presets may set too: details that are features as well
     // (accepted: a feature preset after Low turns them back on). Quality and ranges are the performance presets' alone
     private static final List<String> SHARED_WITH_FEATURES = List.of("waterfallOptions.enableMist",
-            "waterfallOptions.enableFroth", "weatherOptions.enableDynamicClouds", "flameJetOptions.enableLight",
+            "waterfallOptions.enableFroth", "waterfallOptions.enableRings", "weatherOptions.enableDynamicClouds", "flameJetOptions.enableLight",
             "fireflyOptions.enableLight");
 
     @Test

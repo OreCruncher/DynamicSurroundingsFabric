@@ -38,6 +38,7 @@
     "core.MixinParticleEngine",
     "core.MixinWeatherEffectRenderer",
     "core.MixinRainSplashParticle",
+    "core.MixinWaterDropParticle",
     "core.MixinSoundOptionsScreen",
     "core.MixinClientPacketListener",
     "core.MixinRegistryDataCollector"

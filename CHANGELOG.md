@@ -19,6 +19,13 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * Walking on grass or dirt in the rain leaves mud prints, and picks up mud to track onward
   * On by default, and needs Footprints on: Tracked Footprints in Entity Effect Options, also set by the RPG, Vanilla+ and Defaults presets
   * Mods and modpacks can add their blocks with the `tracks_*` block tags
+* Rings on the water: they spread where a waterfall lands in still water, and where players and mobs fall in, bigger for taller falls and bigger bodies
+  * On by default, and they follow Water Ripple Render Style: Waterfall rings in Waterfall Options, Splash Rings in Entity Effect Options. Waterfall rings are off in the Low preset
+* Spray from waterfalls and splashes leaves a ripple where it falls back on the water, as rain does
+
+**Changes**
+* Water ripples take the light of where they are, rather than always being full-bright, so they are dim at night
+* Mist, steam and smoke are always drawn after other particles, so ripples and foam under them no longer show on top of them, depending on the launch
 
 > ### DynamicSurroundings-1.21.11-5.0.0
 
