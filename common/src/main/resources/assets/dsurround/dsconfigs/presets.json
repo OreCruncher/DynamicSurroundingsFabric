@@ -195,6 +195,9 @@
     "group": "performance",
     "values": {
       "weatherOptions.groundFogQuality": "FAST",
+      // Fast cost a quarter to a third of Fancy at each size measured (bench, a held storm: 2.4 ms of GPU a frame against 0.65
+      // at 3840x2160)
+      "auroraOptions.realistic.quality": "FAST",
       "weatherOptions.precipitationDensity": 50,
       "weatherOptions.precipitationRange": 10,
       "blockEffects.blockEffectRange": 32,
@@ -212,6 +215,7 @@
     "group": "performance",
     "values": {
       "weatherOptions.groundFogQuality": "FANCY",
+      "auroraOptions.realistic.quality": "FANCY",
       "weatherOptions.precipitationDensity": 100,
       "weatherOptions.precipitationRange": 14,
       "blockEffects.blockEffectRange": 40,
@@ -232,6 +236,7 @@
       // standing in it: 2.6 ms of GPU a frame against 0.8), for a difference mostly at the mist's edges. Players who
       // want it choose it themselves.
       "weatherOptions.groundFogQuality": "FANCY",
+      "auroraOptions.realistic.quality": "FANCY",
       "weatherOptions.precipitationDensity": 100,
       "weatherOptions.precipitationRange": 20,
       "blockEffects.blockEffectRange": 64,

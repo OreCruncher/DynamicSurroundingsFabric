@@ -298,7 +298,7 @@
   "dsurround.config.preset.defaults": "Defaults",
   "dsurround.config.preset.defaults.tooltip": "Puts every feature the presets cover back as the mod comes, the jump sound off. Leaves performance settings (Medium does those), the HUD and Scary Content as they are.",
   "dsurround.config.preset.low": "Low",
-  "dsurround.config.preset.low.tooltip": "For slower computers: fast ground fog, half the rain, snow and dust, nearer, block effects out to 32 blocks, and no waterfall mist, dynamic clouds, or light from flames and fireflies.",
+  "dsurround.config.preset.low.tooltip": "For slower computers: fast ground fog and aurora, half the rain, snow and dust, nearer, block effects out to 32 blocks, and no waterfall mist, dynamic clouds, or light from flames and fireflies.",
   "dsurround.config.preset.medium": "Medium",
   "dsurround.config.preset.medium.tooltip": "Quality and ranges as the mod comes, with waterfall mist, dynamic clouds and the light from flames and fireflies on.",
   "dsurround.config.preset.high": "High",

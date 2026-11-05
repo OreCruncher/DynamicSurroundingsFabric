@@ -427,10 +427,25 @@ strikes. Dynamic clouds cost at most 0.08 ms of frame GPU over vanilla's, and Cl
 | classic, one band | 0.292 (0.278-0.306) | 0.353 (0.351-0.355) | 0.021 / 0.028 |
 | off | 0.246 (0.240-0.252) | 0.317 (0.316-0.317) | - |
 
-**Open:** the realistic aurora measured 2.09 ms of GPU on 26.2 (Fabric, 2560x1369), and 0.22 here. Screen size accounts
-for about 1.7 of that factor of 9.3. It was drawn (seen in the screenshots), and no change to its shaders since would
-explain the rest; the old recording is gone. Measure it at 2560x1369 and 3840x2160, with `/dsaurora activity` held high,
-before tuning it. The frame also rises less than the timer reads, about 0.1 ms.
+Those are an ordinary night at 1920x1080, which understates the worst case. The cost follows the pixels and how active
+the aurora is. Measured again on 2026-11-05 by frame size, with a storm held (`/dsaurora activity storm`, `phase breakup`;
+one-off scenarios from `aurora.json`, 30-second recordings), NeoForge, OpenGL, Aurora GPU ms:
+
+| Frame size | Ordinary night, Fancy | Storm, Fancy | Storm, Fast | Frame GPU ms, storm Fancy |
+|---|---|---|---|---|
+| 1920x1080 | 0.224 | 0.552 | 0.176 | 0.677 (0.676-0.679) |
+| 2560x1369 | 0.392 | 0.981 | 0.270 | 1.194 (1.180-1.208) |
+| 3840x2160 | 0.933 | 2.410 | 0.648 | 2.865 (2.850-2.879) |
+
+A storm costs about 2.5 times an ordinary night, and Fast a quarter to a third of Fancy, so Low uses it. Fabric at 2560x1369
+is the same (0.391, 0.979). Fast was measured before its composite took four reads in place of one.
+
+**The 26.2 number:** the realistic aurora measured 2.09 ms of GPU on 26.2 (Fabric, 2560x1369), about twice this worst
+case at that size, which isn't explained; the recording is gone. It was made minutes before `a469ef76` took
+`MappableRingBuffer` out of this renderer, the fence behind 2.2 ms a frame on 1.21.11, but that isn't the answer on 26.3:
+with the ring buffer put back, back to back on Fabric at 2560x1369, the aurora read 0.390 / 0.390 (night), 0.981 / 0.982
+(storm, Fancy) and 0.269 / 0.268 (storm, Fast). Other drivers may still differ, so our uniform blocks stay plain buffers.
+Use these numbers, not the 26.2 one.
 
 ### Enhanced sounds (`sound.json`)
 

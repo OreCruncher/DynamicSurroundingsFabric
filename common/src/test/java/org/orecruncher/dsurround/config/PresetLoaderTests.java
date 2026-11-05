@@ -102,12 +102,14 @@ public class PresetLoaderTests {
         var config = new Configuration();
         modPreset("low").apply(config);
         assertEquals(GroundFogQuality.FAST, config.weatherOptions.groundFogQuality);
+        assertEquals(AuroraQuality.FAST, config.auroraOptions.realistic.quality);
         assertTrue(config.weatherOptions.enableGroundFog, "Low leaves the ground fog's switch, a feature, alone");
         assertFalse(config.waterfallOptions.enableMist);
 
         modPreset("high").apply(config);
         // Fancy, not Fabulous: Fabulous cost about three times as much walking through the mist
         assertEquals(GroundFogQuality.FANCY, config.weatherOptions.groundFogQuality);
+        assertEquals(AuroraQuality.FANCY, config.auroraOptions.realistic.quality);
         assertTrue(config.blockEffects.blockEffectRange > new Configuration().blockEffects.blockEffectRange);
     }
 
