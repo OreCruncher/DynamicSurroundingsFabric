@@ -22,6 +22,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Rings on the water: they spread where a waterfall lands in still water, and where players and mobs fall in, bigger for taller falls and bigger bodies
   * On by default, and they follow Water Ripple Render Style: Waterfall rings in Waterfall Options, Splash Rings in Entity Effect Options. Waterfall rings are off in the Low preset
 * Spray from waterfalls and splashes leaves a ripple where it falls back on the water, as rain does
+* Wakes: players, mobs and boats moving through the water leave rings that open out behind them, and a boat under way sheds foam that coasts out, slows and fades
+  * Players and mobs make a ring as they bob at the surface, and a boat sitting in the water makes one every couple of seconds
+  * On by default, and they follow Water Ripple Render Style: Bobbing Rings in Entity Effect Options. A boat's foam follows Water froth
 
 **Changes**
 * Water ripples take the light of where they are, rather than always being full-bright, so they are dim at night

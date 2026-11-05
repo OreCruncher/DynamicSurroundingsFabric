@@ -38,6 +38,10 @@ public class WaterRippleParticle extends SingleQuadParticle {
     static final float UNDERSIDE_ALPHA = 0.7F;
     // How far above its place on the surface a ripple starts: the constructor lowers it, leaving it just over the water
     private static final double ABOVE_SURFACE = 0.21D;
+    // How much of its drift a wake's ring keeps from one tick to the next
+    static final double DRIFT_DECAY = 0.8D;
+    // How much longer a wake's ring lasts than a ripple
+    static final float WAKE_LINGER = 1.75F;
 
     private final WaterRippleStyle rippleStyle;
     private final SpriteSet spriteProvider;
@@ -46,6 +50,10 @@ public class WaterRippleParticle extends SingleQuadParticle {
     private final float growthRate;
     // Its light, read once: it stays where it is, and is gone in a second
     private final int light;
+    // A wake's ring: carried along, to start with, by what made it, in blocks a tick
+    private double driftX, driftZ;
+    // How far through its frames it starts, in ticks: a wake's ring skips those of a tiny ripple
+    private int framesSkipped;
 
     public static Particle create(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z) {
         return new WaterRippleParticle(rippleStyle, world, x, y, z, 1F, DSurroundParticleSprites.forRippleStyle(rippleStyle));
@@ -55,9 +63,37 @@ public class WaterRippleParticle extends SingleQuadParticle {
      * A ring on the water, spreading this many times as fast as a raindrop's
      *
      * @param surfaceY the height of the surface as it is drawn
+     * @param lighten  how far its color is taken from the water's toward white, 0 to 1
      */
-    public static Particle createRing(WaterRippleStyle rippleStyle, ClientLevel world, double x, double surfaceY, double z, float size) {
-        return new WaterRippleParticle(rippleStyle, world, x, surfaceY + ABOVE_SURFACE, z, size, DSurroundParticleSprites.forRippleStyle(rippleStyle));
+    public static Particle createRing(WaterRippleStyle rippleStyle, ClientLevel world, double x, double surfaceY, double z, float size, float lighten) {
+        return ring(rippleStyle, world, x, surfaceY, z, size, lighten);
+    }
+
+    /**
+     * A ring of something's wake: as big as what made it from the start, and carried along with it for a moment as it
+     * spreads, or it is left behind before it looks like anything.
+     *
+     * @param driftX    how fast what made it is moving, in blocks a tick
+     * @param startSize how big it starts, as a half width in blocks
+     */
+    public static Particle createWakeRing(WaterRippleStyle rippleStyle, ClientLevel world, double x, double surfaceY, double z, float size, float lighten,
+                                          double driftX, double driftZ, float startSize) {
+        var ring = ring(rippleStyle, world, x, surfaceY, z, size, lighten);
+        ring.driftX = driftX;
+        ring.driftZ = driftZ;
+        ring.quadSize = startSize;
+        ring.lifetime = (int) (ring.lifetime * WAKE_LINGER);
+        ring.framesSkipped = ring.lifetime / 2;
+        ring.setSprite(ring.spriteProvider.get(ring.framesSkipped, ring.lifetime + ring.framesSkipped));
+        return ring;
+    }
+
+    private static WaterRippleParticle ring(WaterRippleStyle rippleStyle, ClientLevel world, double x, double surfaceY, double z, float size, float lighten) {
+        var ring = new WaterRippleParticle(rippleStyle, world, x, surfaceY + ABOVE_SURFACE, z, size, DSurroundParticleSprites.forRippleStyle(rippleStyle));
+        ring.rCol = Mth.lerp(lighten, ring.rCol, 1F);
+        ring.gCol = Mth.lerp(lighten, ring.gCol, 1F);
+        ring.bCol = Mth.lerp(lighten, ring.bCol, 1F);
+        return ring;
     }
 
     protected WaterRippleParticle(WaterRippleStyle rippleStyle, ClientLevel world, double x, double y, double z, float size, SpriteSet spriteProvider) {
@@ -155,6 +191,11 @@ public class WaterRippleParticle extends SingleQuadParticle {
             this.quadSize += this.growthRate;
         }
 
-        this.setSpriteFromAge(this.spriteProvider);
+        this.x += this.driftX;
+        this.z += this.driftZ;
+        this.driftX *= DRIFT_DECAY;
+        this.driftZ *= DRIFT_DECAY;
+
+        this.setSprite(this.spriteProvider.get(this.age + this.framesSkipped, this.lifetime + this.framesSkipped));
     }
 }

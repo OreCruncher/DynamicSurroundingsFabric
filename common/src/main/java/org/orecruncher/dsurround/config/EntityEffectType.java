@@ -33,7 +33,8 @@ public enum EntityEffectType {
     BURNING("burning", entity -> getInstance(BurningEffect.class)),
     HEALTH_POPOFF("health_popoff", entity -> getInstance(HealthPopoffEffect.class)),
     FOOTPRINTS("footprints", entity -> getInstance(FootprintEffect.class)),
-    WATER_SPLASH("water_splash", entity -> getInstance(WaterSplashEffect.class));
+    WATER_SPLASH("water_splash", entity -> getInstance(WaterSplashEffect.class)),
+    WATER_BOB("water_bob", entity -> getInstance(WaterBobEffect.class));
 
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
         return ContainerManager.resolve(clazz);
@@ -87,6 +88,7 @@ public enum EntityEffectType {
         HEALTH_POPOFF.setConfigProvider(() -> config.enableDamagePopoffs);
         FOOTPRINTS.setConfigProvider(() -> config.enableFootprints);
         WATER_SPLASH.setConfigProvider(() -> config.enableSplashRings);
+        WATER_BOB.setConfigProvider(() -> config.enableBobbingRings);
 
         if (FeatureConflict.FOOTSTEP_EFFECTS.isBlocked())
             BRUSH_STEP.setConfigProvider(() -> false);

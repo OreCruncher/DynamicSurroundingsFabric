@@ -225,6 +225,7 @@ public class EntityEffectLibrary implements IEntityEffectLibrary {
             effectTypes.add(EntityEffectType.FOOTPRINTS);
         // Anything can fall in; the small ones make no rings
         effectTypes.add(EntityEffectType.WATER_SPLASH);
+        effectTypes.add(EntityEffectType.WATER_BOB);
 
         return effectTypes;
     }

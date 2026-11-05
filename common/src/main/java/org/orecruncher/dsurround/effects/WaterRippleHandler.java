@@ -6,6 +6,8 @@ package org.orecruncher.dsurround.effects;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
@@ -16,6 +18,7 @@ import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.tags.FluidTags;
 
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class WaterRippleHandler {
 
@@ -26,6 +29,10 @@ public class WaterRippleHandler {
 
     // Fudge factor because the height algo is off.
     private static final double LIQUID_HEIGHT_ADJUST = (1D / 9D) + 0.1D;
+    // How much lighter rings from something floating or wading are, 0 to 1: see createRing
+    public static final float FLOATING_RING_LIGHTEN = 0.35F;
+    // How far up from a point to look for the surface of the water it is in
+    private static final int SURFACE_SEARCH = 3;
 
     public static boolean doRipples() {
         return compatibleEnvironment && CONFIG.waterRippleStyle != WaterRippleStyle.NONE;
@@ -38,9 +45,35 @@ public class WaterRippleHandler {
      * @param size     how many times as fast as a raindrop's it spreads
      */
     public static Optional<Particle> createRing(ClientLevel world, double x, double surfaceY, double z, float size) {
+        return createRing(world, x, surfaceY, z, size, 0F);
+    }
+
+    /**
+     * A ring on the water, as {@link #createRing(ClientLevel, double, double, double, float)}, lighter: a small ring
+     * from something floating needs it to show
+     *
+     * @param lighten how far its color is taken from the water's toward white, 0 to 1
+     */
+    public static Optional<Particle> createRing(ClientLevel world, double x, double surfaceY, double z, float size, float lighten) {
         if (!doRipples())
             return Optional.empty();
-        return Optional.of(WaterRippleParticle.createRing(CONFIG.waterRippleStyle, world, x, surfaceY, z, size));
+        return Optional.of(WaterRippleParticle.createRing(CONFIG.waterRippleStyle, world, x, surfaceY, z, size, lighten));
+    }
+
+    /**
+     * The height of the surface of still water at a point in it or just above it; empty if there is none, or it is
+     * flowing or doesn't ripple
+     */
+    public static OptionalDouble stillSurface(Level world, double x, double y, double z) {
+        var pos = BlockPos.containing(x, y, z).mutable();
+        if (world.getFluidState(pos).isEmpty())
+            pos.move(Direction.DOWN);
+        for (int i = 0; i < SURFACE_SEARCH && !world.getFluidState(pos.above()).isEmpty(); i++)
+            pos.move(Direction.UP);
+        var fluid = world.getFluidState(pos);
+        if (!fluid.isSource() || !world.getFluidState(pos.above()).isEmpty() || !TAG_LIBRARY.is(FluidTags.WATER_RIPPLES, fluid))
+            return OptionalDouble.empty();
+        return OptionalDouble.of(pos.getY() + fluid.getHeight(world, pos));
     }
 
     /**
@@ -51,6 +84,17 @@ public class WaterRippleHandler {
         if (!world.getFluidState(BlockPos.containing(x, y, z).above()).isEmpty())
             return Optional.empty();
         return createRippleParticle(world, new Vec3(x, y, z));
+    }
+
+    /**
+     * A ring of something's wake, if ripples are on: see {@link WaterRippleParticle#createWakeRing}
+     */
+    public static Optional<Particle> createWakeRing(ClientLevel world, double x, double surfaceY, double z, float size,
+                                                    double driftX, double driftZ, float startSize) {
+        if (!doRipples())
+            return Optional.empty();
+        return Optional.of(WaterRippleParticle.createWakeRing(CONFIG.waterRippleStyle, world, x, surfaceY, z, size,
+                FLOATING_RING_LIGHTEN, driftX, driftZ, startSize));
     }
 
     public static Optional<Particle> createRippleParticle(ClientLevel world, Vec3 position) {

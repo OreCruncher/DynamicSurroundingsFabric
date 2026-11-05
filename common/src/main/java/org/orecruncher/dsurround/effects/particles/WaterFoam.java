@@ -134,10 +134,19 @@ public class WaterFoam extends SingleQuadParticle {
      * @param xd starting velocity across the water, in blocks per tick; the current then takes over
      */
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double zd) {
-        return new WaterFoam(level, x, y, z, xd, zd, DSurroundParticleSprites.WATER_FOAM);
+        return create(level, x, y, z, xd, zd, 1F);
     }
 
-    protected WaterFoam(ClientLevel level, double x, double y, double z, double xd, double zd, SpriteSet sprites) {
+    /**
+     * A foam patch on the water, this many times the usual size
+     *
+     * @param xd starting velocity across the water, in blocks per tick; the current then takes over
+     */
+    public static Particle create(ClientLevel level, double x, double y, double z, double xd, double zd, float scale) {
+        return new WaterFoam(level, x, y, z, xd, zd, scale, DSurroundParticleSprites.WATER_FOAM);
+    }
+
+    protected WaterFoam(ClientLevel level, double x, double y, double z, double xd, double zd, float scale, SpriteSet sprites) {
         // The constructor without velocity: the one with it adds a random velocity of its own
         super(level, x, y, z, sprites.get(level.getRandom()));
         this.xd = xd;
@@ -147,7 +156,7 @@ public class WaterFoam extends SingleQuadParticle {
         var random = level.getRandom();
         this.lifetime = 20 + random.nextInt(30);
         // Half its width, as quadSize is: 0.16 to 0.36 blocks across
-        this.startSize = 0.08F + random.nextFloat() * 0.1F;
+        this.startSize = (0.08F + random.nextFloat() * 0.1F) * scale;
         this.quadSize = this.startSize;
         this.peakAlpha = 0.55F + random.nextFloat() * 0.3F;
         this.alpha = 0F;

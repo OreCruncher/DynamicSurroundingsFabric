@@ -35,6 +35,7 @@
       "entityEffects.enableFootprints": false,
       "entityEffects.enableTrackedFootprints": false,
       "entityEffects.enableSplashRings": false,
+      "entityEffects.enableBobbingRings": false,
 
       "weatherOptions.enableStormSimulation": false,
       "weatherOptions.enableParticlePrecipitation": false,
@@ -113,6 +114,7 @@
       "fireflyOptions.enableLight": true,
       "entityEffects.enableBreathEffect": true,
       "entityEffects.enableSplashRings": true,
+      "entityEffects.enableBobbingRings": true,
       "entityEffects.enableAnimalBreath": true
     }
   },
@@ -150,6 +152,7 @@
       "entityEffects.enableFootprints": true,
       "entityEffects.enableTrackedFootprints": true,
       "entityEffects.enableSplashRings": true,
+      "entityEffects.enableBobbingRings": true,
       "particleTweaks.suppressProjectileParticleTrails": false,
 
       "weatherOptions.enableStormSimulation": true,
