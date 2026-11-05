@@ -25,6 +25,8 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Wakes: players, mobs and boats moving through the water leave rings that open out behind them, and a boat under way sheds foam that coasts out, slows and fades
   * Players and mobs make a ring as they bob at the surface, and a boat sitting in the water makes one every couple of seconds
   * On by default, and they follow Water Ripple Render Style: Bobbing Rings in Entity Effect Options. A boat's foam follows Water froth
+* Beach waves: foam rolls in over the water and up the shore of oceans and large lakes in a steady rhythm, then back, bigger and closer together in a storm
+  * On by default: Beach Waves in Block Effect Options, also set by the World, Vanilla+ and Defaults presets
 
 **Changes**
 * Water ripples take the light of where they are, rather than always being full-bright, so they are dim at night

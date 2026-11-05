@@ -291,6 +291,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("The style of water ripple to render when a drop hits a fluid")
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
+
+        @Property
+        @Comment("Enable/disable waves lapping on the shores of oceans and large lakes, bigger in a storm")
+        public boolean enableBeachWaves = true;
     }
 
     public static class FlameJetOptions {

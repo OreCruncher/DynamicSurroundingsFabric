@@ -561,6 +561,23 @@ its own time, outside the handlers' timers, and each boat keeps about 70 patches
 Set the season in a scene with water: `aurora.json` leaves the bench world in winter, the pool froze, and the boats ended
 up on the bottom.
 
+## Results, 2026-11-05: beach waves (`shore.json`)
+
+Waves on nearly 190 blocks of shore in range of the player, a pool in the air with a sandstone rim level with the water:
+more than most beaches. NeoForge, OpenGL, 1920x1080, two repeats:
+
+| Run | fps | Frame GPU ms | Frame CPU ms | Shore Waves, ms a tick |
+|---|---|---|---|---|
+| calm, off | 924 | 0.735 (0.733-0.737) | 0.416 | 0.001 |
+| calm, waves | 904 | 0.738 (0.734-0.743) | 0.434 | 0.038 |
+| storm, off | 795 | 0.841 (0.839-0.844) | 0.624 | 0.001 |
+| storm, waves | 753 | 0.861 (0.858-0.863) | 0.659 | 0.041 |
+
+About 2% of the frame rate in calm weather and 5% in a storm, whose pulses come closer together and keep more foam
+going. Looking over some 4,200 columns a tick for where a pulse has reached doesn't show apart from the handler's
+0.04 ms. As with boats, the game ticks the foam on its own time, outside the handlers' timers, so the frame rate is the
+better guide to the whole. The barrier the player stands on counts as land, adding a little shore around them.
+
 ## Field recordings
 
 These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on

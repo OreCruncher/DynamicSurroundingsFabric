@@ -363,6 +363,8 @@
   "dsurround.config.blockEffects.skullFlamesEnabled.tooltip": "Enable/disable little flames burning in the eyes of skeleton skulls placed in the world; wither skeleton skulls burn with blue soul fire",
   "dsurround.config.blockEffects.bubbleColumnEnabled": "Bubble Columns",
   "dsurround.config.blockEffects.bubbleColumnEnabled.tooltip": "Enable/disable bubble columns generated underwater",
+  "dsurround.config.blockEffects.enableBeachWaves": "Beach Waves",
+  "dsurround.config.blockEffects.enableBeachWaves.tooltip": "Enable/disable waves lapping on the shores of oceans and large lakes, bigger in a storm.",
   "dsurround.config.blockEffects.waterRippleStyle": "Water Ripple Render Style",
   "dsurround.config.blockEffects.waterRippleStyle.tooltip": "The style of water ripple to render when a drop hits a fluid. Commonly happens with rainfall and water splashes.",
   "dsurround.config.waterfallOptions": "Waterfall Options",
