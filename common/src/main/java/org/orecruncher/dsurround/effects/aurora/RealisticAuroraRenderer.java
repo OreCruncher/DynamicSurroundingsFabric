@@ -193,7 +193,7 @@ public final class RealisticAuroraRenderer {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
         RenderTarget target = fast ? reducedFor(screen, quality.scale()) : screen;
-        writeInfo(aurora, moment, motion, shadow, washout, alpha, viewMatrix, time, target.height);
+        writeInfo(aurora, moment, motion, quality, shadow, washout, alpha, viewMatrix, time, target.height);
 
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
@@ -235,7 +235,7 @@ public final class RealisticAuroraRenderer {
      * The shader's values this frame (see shaders/include/aurora_realistic.glsl)
      */
     private static void writeInfo(RealisticAurora aurora, RealisticAurora.Moment moment, RealisticAuroraMotion motion,
-                                  float shadow, float washout, float alpha, Matrix4f viewMatrix, float time, int height) {
+                                  AuroraQuality quality, float shadow, float washout, float alpha, Matrix4f viewMatrix, float time, int height) {
         if (info == null)
             info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings aurora (realistic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
         var arcs = aurora.arcs();
@@ -248,7 +248,7 @@ public final class RealisticAuroraRenderer {
                     .putMat4f(invViewProj)
                     .putVec4(GREEN[0] * moment.green(), GREEN[1] * moment.green(), GREEN[2] * moment.green(), washout)
                     .putVec4(RED[0], RED[1], RED[2], pixelAngle)
-                    .putVec4(FRINGE[0], FRINGE[1], FRINGE[2], 0F)
+                    .putVec4(FRINGE[0], FRINGE[1], FRINGE[2], quality.fieldSamples())
                     .putVec4(time, Math.clamp(alpha, 0F, 1F), height, count)
                     .putVec4(moment.lowerEdge(), RealisticAurora.FIELD_TILT, moment.red(), moment.fringe())
                     .putVec4(moment.rayContrast(), moment.pulse(), (float) Math.cos(aurora.declination()), (float) Math.sin(aurora.declination()))

@@ -11,15 +11,17 @@ import org.orecruncher.dsurround.lib.config.ITranslatedEnum;
  * screen's, then laid over the sky; at half, a quarter of the pixels to work out, and its finest rays a little softer.
  */
 public enum AuroraQuality implements ITranslatedEnum {
-    FAST("options.graphics.fast", 2),
-    FANCY("options.graphics.fancy", 1);
+    FAST("options.graphics.fast", 2, 2),
+    FANCY("options.graphics.fancy", 1, 1);
 
     private final String translationKey;
     private final int scale;
+    private final int fieldSamples;
 
-    AuroraQuality(String translationKey, int scale) {
+    AuroraQuality(String translationKey, int scale, int fieldSamples) {
         this.translationKey = translationKey;
         this.scale = scale;
+        this.fieldSamples = fieldSamples;
     }
 
     @Override
@@ -32,5 +34,13 @@ public enum AuroraQuality implements ITranslatedEnum {
      */
     public int scale() {
         return this.scale;
+    }
+
+    /**
+     * How many times over to sample the ray field along a line of sight: a sample that misses a ray between its
+     * neighbors shows as a speck, and the fewer the pixels, the larger the speck
+     */
+    public int fieldSamples() {
+        return this.fieldSamples;
     }
 }

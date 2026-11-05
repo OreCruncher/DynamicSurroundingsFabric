@@ -310,6 +310,8 @@ vec3 ray_field(vec3 dir, float mu, float tIn, float tOut, float leanUp, float le
     float rays = (tTo - tFrom) * across / FIELD_CELL;
     int samples = rays > float(FIELD_STEPS) * FIELD_BLENDED ? FIELD_GLOW_STEPS
                 : clamp(int(ceil(rays / FIELD_SAMPLE_RAYS)), FIELD_FEW_STEPS, FIELD_STEPS);
+    // Where samples miss the rays between them the pixel is a speck, a larger one the fewer pixels it is drawn at
+    samples *= int(FringeColor.a + 0.5);
     float stride = (tTo - tFrom) / float(samples);
     // Each pixel's samples start a little differently along the line, which breaks up banding between steps: in an
     // ordered pattern, which shows far less than random offsets would as grain where the field is a smooth glow

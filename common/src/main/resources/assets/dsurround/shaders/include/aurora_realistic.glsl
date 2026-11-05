@@ -11,8 +11,9 @@ layout(std140) uniform RealisticAuroraInfo {
     // together, as the world was drawn (view bobbing and all)
     mat4 InvViewProj;
     // The colors of the light: oxygen's green, low in an arc; oxygen's red, high above it; nitrogen's pink fringe at
-    // its lower edge. rgb; a is unused, but for GreenColor's: how much moonlight washes out the faint parts
-    // (RealisticAurora.moonWashout), and RedColor's: radians across a pixel, up and down the screen, at its middle
+    // its lower edge. rgb; a is GreenColor's: how much moonlight washes out the faint parts
+    // (RealisticAurora.moonWashout), RedColor's: radians across a pixel, up and down the screen, at its middle, and
+    // FringeColor's: how many times over to sample the ray field (AuroraQuality.fieldSamples)
     vec4 GreenColor;
     vec4 RedColor;
     vec4 FringeColor;
