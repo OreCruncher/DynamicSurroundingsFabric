@@ -279,7 +279,7 @@ The two platforms draw our effects at the same cost, and the whole frame within 
 
 ## Results, 2026-11-04: 26.3, OpenGL against Vulkan
 
-The first baseline on 26.3 and the first on Vulkan: every scenario on each, in one evening, the two back to back. Enhanced sounds are missing: see below. Each session's `dsurround.Environment` event was checked for its backend
+The first baseline on 26.3 and the first on Vulkan: every scenario on each, in one evening, the two back to back. Enhanced sounds were run the next morning (see below). Each session's `dsurround.Environment` event was checked for its backend
 and each scenario's screenshots compared between the two: no effect was missing from either.
 
 | | |
@@ -432,11 +432,42 @@ for about 1.7 of that factor of 9.3. It was drawn (seen in the screenshots), and
 explain the rest; the old recording is gone. Measure it at 2560x1369 and 3840x2160, with `/dsaurora activity` held high,
 before tuning it. The frame also rises less than the timer reads, about 0.1 ms.
 
-### Enhanced sounds: not recorded
+### Enhanced sounds (`sound.json`)
 
-`sound.json` ran with no sound device (`Failed to open OpenAL device` in the log; every run's manifest says
-`enhancedSounds: false`), so its 14 runs measured nothing. The headphones had most likely gone idle. The 2026-11-02
-numbers stand until it is rerun.
+The evening's session ran with no sound device (`Failed to open OpenAL device`; every run's manifest said
+`enhancedSounds: false`), so it measured nothing. Rerun on 2026-11-05 on OpenGL at commit `be8cdf70`, with a device
+(every run `enhancedSounds: true`). Columns as in the first sound table above.
+
+| Run | Trace ms | Start ms | Starts ms/s | Update ms/s | Traced/s | Reused/s |
+|---|---|---|---|---|---|---|
+| open | 0.298 | 0.273 | 5.6 | 15.4 | 68.7 | 5.3 |
+| open, occlusion on | 0.301 | 0.273 | 5.6 | 15.7 | 69.3 | 4.9 |
+| enclosed | 0.326 | 0.309 | 6.3 | 16.8 | 69.7 | 5.2 |
+| enclosed, simplified shared airspace | 0.235 | 0.224 | 4.6 | 11.9 | 68.9 | 5.3 |
+| occluded | 0.320 | 0.295 | 6.1 | 14.0 | 61.2 | 4.7 |
+| occluded, occlusion on | 0.322 | 0.295 | 6.1 | 13.9 | 60.9 | 5.0 |
+| burst | 0.307 | 0.283 | 30.5 | 69.0 | 321.9 | 23.7 |
+
+A trace in the box costs 0.32-0.33 ms, against 0.39-0.43 on 1.21.11 with the chunk kept in hand, and the sound engine's
+thread spends about 6 ms a second on starts instead of 8. Simplified shared airspace is still about 28% cheaper;
+occlusion now adds about 1%. In `burst`, 108 sounds a second are calculated as they start and 43 (28%, was 37%) start
+without effects. Frames stay at about 1750 fps: none of this is on the render thread.
+
+**`open` isn't open air here.** The plains scenes share one spot, one above another, and what they leave stays. Burning
+zombies from `burning-lights.json` stood on a dirt stage left at y 245, within a few blocks of the player, and `open`
+clears only 8 blocks around it, so rays find the stage. Its row doesn't compare with 1.21.11's. The zombies add about
+0.5 sound starts a second (20.5 fell to 20.0 once they were killed) and 0.02-0.03 ms of Point Lights to these recordings.
+`burning-lights.json` ran after `precipitation.json` and `performance-rest.json` in the evening's set, and their rain and
+crowd recordings show no Point Lights, so only this rerun is affected.
+
+**Reuse is nearly gone, and the mobs aren't why.** 1.21.11 reused 45 results a second and traced 26; here it is 5 and 69,
+which puts the workers' updates at about 15 ms a second instead of 3.8. A short run that logged what changed found 13
+block changes a second in this world, standing still: water freezing (9 a second, y 62) and dirt turning to grass
+(3.7), most of them 170 blocks from the player and none nearer than 69, with a little amethyst and sulfur spike growth.
+`WorldChangeTracker` counts a change anywhere, and each sound updates about three times a second, so one change every
+third of a second ends every result. Killing all the entities barely moved it (reused 5-6 a second to 7-8). Water
+freezing on plains is probably the dev client's Serene Seasons, which Fabric's bench doesn't have; that isn't confirmed.
+Counting only changes near the player would save most of this: the workers' time, not the render thread's.
 
 ## Field recordings
 
