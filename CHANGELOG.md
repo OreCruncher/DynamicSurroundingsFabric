@@ -27,6 +27,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
   * On by default, and they follow Water Ripple Render Style: Bobbing Rings in Entity Effect Options. A boat's foam follows Water froth
 * **[Experimental]** Beach waves: foam rolls in over the water and up the shore of oceans and large lakes in a steady rhythm, then back, bigger and closer together in a storm
   * On by default: Beach Waves in Block Effect Options, also set by the World, Vanilla+ and Defaults presets
+* **[Experimental]** Target portrait: the head, name and health of the mob you are looking at, in the top left of the screen, with its bar colored for hostile, neutral or passive
+  * A row of badges under the portrait shows the effects on the mob. Effects with hidden particles can't be seen, as a mob's effects aren't sent to the client
+  * Off by default, and on in the RPG preset: Target Portrait Options. Drawn with Minecraft's toast and boss bar sprites, so resource packs restyle it. With Jade, its Display Entities option can be turned off so they don't both show
 
 **Changes**
 * Water ripples take the light of where they are, rather than always being full-bright, so they are dim at night

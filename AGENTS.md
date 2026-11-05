@@ -213,7 +213,7 @@ release, 5.1.0, is for 26.3.
   what would change (`ConfigPreset.changes`), by group, scrolling. Modpacks add presets in any namespace's
   `dsconfigs/presets.json` (resource pack or `config/dsurround/configs/<ns>/`): ours are read first, a same id replaces,
   `"hidden": true` removes, inline `name`/`description` beat the lang keys. Bad values, Scary Content and
-  restart-needing settings are dropped and logged at load. Feature presets never touch the HUD, quality or ranges;
+  restart-needing settings are dropped and logged at load. Feature presets never touch the HUD (but for the target portrait, in RPG), quality or ranges;
   performance presets also set waterfall mist/froth/rings, dynamic clouds and flame/firefly lights, features too, so a feature
   preset after Low turns them back on (accepted) (`PresetLoaderTests`; `DsConfigFuzzTests` skips the file, which has no
   codec).
@@ -274,6 +274,7 @@ release, 5.1.0, is for 26.3.
   `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
 - Our particles (`effects/particles`) stay the game's own particles, not a system like the weather's drops: the
   package's `package-info.java` says why, and what to measure before converting one (waterfall mist the likely one).
+- Target portrait (`gui/overlay/TargetPortraitOverlay`): framed by height and width (`headBlocks`), with horses set by hand. A mob's effects aren't sent to clients, only the particles of the visible ones, so `TargetEffects` matches those back by color or type.
 - Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
   `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
   blocks' sounds; past 32, an effects-only tail out to `blockEffectRange`, kept only where the inner spreads fall short

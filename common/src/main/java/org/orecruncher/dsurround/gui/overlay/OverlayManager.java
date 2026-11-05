@@ -24,6 +24,7 @@ public final class OverlayManager {
                 ContainerManager.resolve(DiagnosticsOverlay.class),
                 ContainerManager.resolve(CompassOverlay.class),
                 ContainerManager.resolve(ClockOverlay.class),
+                ContainerManager.resolve(TargetPortraitOverlay.class),
                 ContainerManager.resolve(LightLevelOverlay.class),
                 ContainerManager.resolve(ProfileOverlay.class)
         );

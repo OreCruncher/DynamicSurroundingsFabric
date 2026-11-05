@@ -81,6 +81,10 @@ public class Configuration extends ConfigurationData {
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
 
     @Property
+    @Comment("Configuration options for the target portrait")
+    public final TargetPortraitOptions targetPortraitOptions = new TargetPortraitOptions();
+
+    @Property
     @Comment("Configuration options for the compass and clock overlay")
     public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
 
@@ -456,6 +460,24 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Smoke, ash, leaves and spores, from the game and other mods, drift with the wind out in the open")
         public boolean windBlowsParticles = true;
+    }
+
+    public static class TargetPortraitOptions {
+        @Property
+        @Experimental
+        @Comment("Shows a portrait of the mob you are looking at in the top left of the screen, with its name and health")
+        public boolean enableTargetPortrait = false;
+
+        @Property
+        @Experimental
+        @Comment("Shows a row of badges under the portrait for the effects showing on the mob")
+        public boolean showEffects = true;
+
+        @Property
+        @Experimental
+        @Comment("Scales the portrait by the specified amount")
+        @DoubleSlider(min = 0.5D, max = 3D, step = 0.1D)
+        public double scale = 1D;
     }
 
     public static class CompassAndClockOptions {
