@@ -5,13 +5,21 @@ package org.orecruncher.dsurround.effects.footprints;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,6 +34,7 @@ import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
+import java.util.function.Function;
 
 /**
  * The footprints on the ground: flat prints from the footprint texture, lit as the ground they are on, fading away.
@@ -41,6 +50,21 @@ public final class Footprints {
     public static final Identifier TEXTURE = Constants.asId("textures/footprints.png");
     // The same prints in white, for tracked prints' colors: a color only darkens what it tints
     public static final Identifier TRACKED_TEXTURE = Constants.asId("textures/footprints_tracked.png");
+
+    // Vanilla's text with a polygon offset, without its depth writes: translucent blocks are drawn after these, and a print
+    // on ice or glass would otherwise keep the block from being drawn under it
+    private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.WORLD_TEXT_SNIPPET)
+            .withLocation(Constants.asId("pipeline/footprints"))
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false, 1F, 10F))
+            .build();
+    private static final Function<Identifier, RenderType> RENDER_TYPE = Util.memoize(texture -> RenderType.create("dsurround_footprints",
+            RenderSetup.builder(PIPELINE)
+                    .setOitPipelines(RenderPipelines.OIT_TEXT_POLYGON_OFFSET)
+                    .withTexture("Sampler0", texture)
+                    .useLightmap()
+                    .sortOnUpload()
+                    .createRenderSetup()));
 
     // Their life, in ticks: 10 seconds, or a minute in snow
     static final float LIFE = 200F;
@@ -270,7 +294,7 @@ public final class Footprints {
 
     private void submit(SubmitNodeCollector collector, CameraRenderState camera, boolean tracked) {
         double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
-        collector.submitCustomGeometry(new PoseStack(), RenderTypes.textPolygonOffset(tracked ? TRACKED_TEXTURE : TEXTURE), (pose, consumer) -> {
+        collector.submitCustomGeometry(new PoseStack(), RENDER_TYPE.apply(tracked ? TRACKED_TEXTURE : TEXTURE), (pose, consumer) -> {
             Matrix4f matrix = pose.pose();
             for (var print : this.prints) {
                 if (print.tracked != tracked)
