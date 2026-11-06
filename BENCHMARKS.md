@@ -3,6 +3,36 @@
 What Dynamic Surroundings' effects cost to draw, and what enhanced sound processing costs, measured by the bench
 runner, with the numbers the Performance presets (Low/Medium/High) were chosen from. Kept as a baseline: after a change to an effect, rerun its scenario and compare.
 
+## Contents
+
+- [Method](#method)
+  - [Machine and versions](#machine-and-versions)
+- [Results](#results)
+  - [Ground fog (`swamp-fog.json`)](#ground-fog-swamp-fogjson)
+  - [Rain and snow (`precipitation.json`)](#rain-and-snow-precipitationjson)
+  - [Waterfalls and flame jets, crowd, dust range (`performance-rest.json`)](#waterfalls-and-flame-jets-crowd-dust-range-performance-restjson)
+  - [Burning mobs (`burning-lights.json`)](#burning-mobs-burning-lightsjson)
+  - [Dust storm, default against Low (`dust-low.json`)](#dust-storm-default-against-low-dust-lowjson)
+  - [Enhanced sounds (`sound.json`)](#enhanced-sounds-soundjson)
+- [Results, 2026-11-03: lightning, clouds, aurora, NeoForge](#results-2026-11-03-lightning-clouds-aurora-neoforge)
+  - [Lightning (`lightning.json`)](#lightning-lightningjson)
+  - [Dynamic clouds (`clouds.json`)](#dynamic-clouds-cloudsjson)
+  - [Aurora, classic (`aurora.json`)](#aurora-classic-aurorajson)
+  - [NeoForge against Fabric (`precipitation.json`, `swamp-fog.json`)](#neoforge-against-fabric-precipitationjson-swamp-fogjson)
+- [Results, 2026-11-04: 26.3, OpenGL against Vulkan](#results-2026-11-04-263-opengl-against-vulkan)
+  - [Vulkan against OpenGL](#vulkan-against-opengl)
+  - [Is the gap ours?](#is-the-gap-ours)
+  - [Firefly lights (`fireflies.json`)](#firefly-lights-firefliesjson)
+  - [Rain and snow on 26.3](#rain-and-snow-on-263)
+  - [The rest](#the-rest)
+  - [Aurora on 26.3 (`aurora.json`, at y 245)](#aurora-on-263-aurorajson-at-y-245)
+  - [Enhanced sounds (`sound.json`)](#enhanced-sounds-soundjson-1)
+- [Results, 2026-11-05: boats (`boats.json`)](#results-2026-11-05-boats-boatsjson)
+- [Results, 2026-11-05: beach waves (`shore.json`)](#results-2026-11-05-beach-waves-shorejson)
+- [Results, 2026-11-05: G1 against ZGC (`gc.json`)](#results-2026-11-05-g1-against-zgc-gcjson)
+- [Field recordings](#field-recordings)
+- [Rerunning](#rerunning)
+
 ## Method
 
 The bench runner (`scripts/bench/README.md`) is a development client that plays a scenario by itself: for each run it
