@@ -40,7 +40,7 @@ release, 5.1.0, is for 26.3.
 
 ## Build and test (Git Bash on Windows; use absolute paths, `cd` can be reset between commands)
 - Compile everything: `./gradlew :common:compileJava :fabric:compileJava :neoforge:compileJava -q`
-- Tests (common only, ~2100): `./gradlew :common:test -q` ends with `Tests: N run, N failed, N skipped`, after a
+- Tests (common only, ~2570): `./gradlew :common:test -q` ends with `Tests: N run, N failed, N skipped`, after a
   `FAILED <class>.<test>: <message>` line per failure; read `common/build/test-results/test/*.xml` only for a stack trace.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
 - License headers: every tracked Java, shader and Python file starts with an SPDX header (after a shader's `#version`
@@ -56,7 +56,7 @@ release, 5.1.0, is for 26.3.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.
 - Does the built mod link against another Minecraft version? `python scripts/version-compat.py BASE.jar OTHER.jar`
   (Mojang client jars; compile first) lists every class, member, override and mixin target/`@At` call site that
-  resolves in BASE and not in OTHER. Behaviour changes and game data aren't covered. It also says nothing of how a
+  resolves in BASE and not in OTHER. Behavior changes and game data aren't covered. It also says nothing of how a
   frame is drawn: 26.2 → 26.3 looked like renames, and the weather pass was gone (see `MIGRATION.md`).
 - Decompiled sources (to see how vanilla draws something): `./gradlew :common:genSources`, then the `-sources.jar`
   under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/26.3/`.
@@ -219,7 +219,7 @@ release, 5.1.0, is for 26.3.
   `effects/LevelProjection` holds the frame's projection, view bobbing included, which `RenderSystem` only has as a
   GPU buffer. Timestamps are ticks: `RenderTimer` scales them by `DeviceInfo.timestampPeriod`. NeoForge's early window
   is OpenGL, so Vulkan needs `earlyWindowControl = false` in `config/fml.toml`. A failed start resets the game's
-  Vulkan option to default: `-PgraphicsBackend=vulkan` on a bench run is a launch argument, which holds.
+  Vulkan option to default: `-PgraphicsBackend=vulkan`, on any run, is a launch argument, which holds.
 - View bobbing is in the projection matrix, and moves the camera a little as well as turning it. A screen pass that
   turns pixels back into directions (the realistic aurora) takes each one between two unprojected points along the
   pixel's line, not from the camera to one point near it, or every direction swings as the player walks.
@@ -277,7 +277,7 @@ release, 5.1.0, is for 26.3.
     must drop the same pixels: one only the depth bounds stage drops (under 0.01 alpha) gets the far plane from the
     composite, a hole in the depth that clouds show through (seen as rings at the edge of mist). Particle layers need a set for the stages (or `drawLayers`
     throws): `RenderPipelines.OIT_PARTICLE`, or ours in `SoftParticles`, the same shader with `OIT` and, for added
-    light, `OIT_ADDITIVE`. Vanilla's weather and clouds have theirs (`renderOit`, cancelled for ours).
+    light, `OIT_ADDITIVE`. Vanilla's weather and clouds have theirs (`renderOit`, canceled for ours).
 - Shaders: every stage is compiled to SPIR-V, so `#version 330`, `#extension GL_ARB_separate_shader_objects : require`,
   `#include` (not `#moj_import`), `layout(location = N)` on every input and output (a vertex shader's attributes in the
   vertex format's order), `gl_VertexIndex`. An include has no `#version`. Pipelines are compiled on demand through
@@ -373,7 +373,7 @@ release, 5.1.0, is for 26.3.
   - Dynamic clouds (`effects/clouds`, run by `processing/CloudHandler`): blocky columns on vanilla's 12-block cells,
     each with its own base and top, in place of vanilla's (`MixinCloudRenderer` cancels `CloudRenderer.render` when
     ours draw; `OptionalHook.DYNAMIC_CLOUDS`; off for Distant Horizons, which turns vanilla's clouds off and draws its
-    own: `FeatureConflict.DYNAMIC_CLOUDS`). Three pipelines in one pass to the main target, in `IWorldRender.CLOUDS`, vanilla's `prepare`, `render` and `renderOit` cancelled:
+    own: `FeatureConflict.DYNAMIC_CLOUDS`). Three pipelines in one pass to the main target, in `IWorldRender.CLOUDS`, vanilla's `prepare`, `render` and `renderOit` canceled:
     the settled part's depth, then its color, then the changing part fading, no depth. The grid follows the Cloud
     Distance option; the light on them is vanilla's cloud color (the environment's). `runtime/weather/CloudCover` is
     what the weather calls for: fair puffs that build up in the afternoon, a storm's lowered, thickened deck, thunder
@@ -411,9 +411,12 @@ release, 5.1.0, is for 26.3.
 ## Environment gotchas
 - Git Bash mangles backslash escapes inside heredocs passed to Python (`'\\'`, `§`, `\s`): use the Edit/Write
   tools for code containing backslashes, `chr()`/`os.sep` in scripts, and avoid two heredocs in one command.
-- Language files: edit as text, line by line. Re-serialising the JSON turns `§` escapes into literal `§`.
+- Language files: edit as text, line by line. Re-serializing the JSON turns `§` escapes into literal `§`.
   Only `en_us` is maintained here; other languages come through Crowdin (`crowdin.yml`) and must stay a subset of
   `en_us` (`LanguageFileTests`).
+- `powercfg` runs from PowerShell only: Git Bash mangles `/change` ("Invalid Parameters").
+- Git Bash's `/tmp` isn't a path to Windows programs, Python among them. Give a script a Windows path (`cygpath -m`) in
+  the scratchpad.
 - The user commits; don't commit unless asked.
 
 ## Branches
@@ -454,3 +457,7 @@ release, 5.1.0, is for 26.3.
   and a `versions.json` entry, and `recommend`, under its Minecraft version (the update check compares only within a
   Minecraft version, so 0.4.8 and 5.0.0 never meet), and is tagged `<mc>-<version>` (`1.21.11-5.0.1`). The jar's name
   already carries the Minecraft version.
+- The update check reads `versions.json` from `main`, so upload the jars before that entry reaches `main`, or players
+  are told about a version they can't download.
+- Every line's changelog links in `versions.json` point at `main`'s one `CHANGELOG.md` (`blob/main/CHANGELOG.md#...`),
+  whichever branch the release came from, so a heading has to be in `main`'s copy for its link to work.
