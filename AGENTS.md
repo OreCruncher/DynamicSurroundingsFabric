@@ -127,6 +127,35 @@ release, 5.1.0, is for 26.3.
   takes a frame of a bench scene, and `list`, `save` and `swap` read it from a script: each draw, any target, a pass
   redrawn with an edited shader (OpenGL captures). For what's wrong in a picture, not for costs: replay times aren't
   the game's, so a change's cost comes from the bench.
+- A client on a vanilla server (one that sends no `c:` tags, for the tag fallback in `ServerResourceFinder`), through
+  `scripts/vanilla-server.py` (`build/vanilla-server`, or `--folder`):
+  1. `python scripts/vanilla-server.py server` sets up the folder, starts the server and returns once it's ready. The
+     first time in a folder it refuses without `--accept-eula`: Mojang's EULA is the user's to accept, so ask them.
+  2. `python scripts/vanilla-server.py client neoforge` (or `fabric`), in the background. The client joins by itself:
+     `joined the game` in `server.log`, as `Dev` on NeoForge and `Player<number>` on Fabric.
+  3. Ask the user to type `/dsdump biomes` and `/dsdump tags` in that client, both before quitting. Keys sent to the
+     window (`SendKeys`) don't arrive reliably, and stray ones hit the game's bindings.
+  4. `python scripts/vanilla-server.py check neoforge [--against <single player biomes.txt>]` reports the members only
+     a `c:` tag can give our tags, with any that are missing, and exits 1 if there are any. It reads the dumps from
+     `<platform>/run-pack/none/config/dsurround/dumps`.
+  5. `python scripts/vanilla-server.py stop`, and stop the client as above. Quitting ends in the shutdown watchdog
+     crash and a failed Gradle task, and may leave a JVM to kill; none of that is the test failing.
+
+  Why the script does what it does, for when something else needs a vanilla server:
+  - `:neoforge:runClient` can't join. The dev client's extra mods (Biomes O' Plenty and the others `-Ppack` leaves out)
+    need NeoForge on the server: "You are trying to connect to a server that is not running NeoForge, but you have mods
+    that require it". Dynamic Surroundings, Architectury and Cloth Config don't, so `client` is
+    `runClientPack -Ppack=none`, whose folder (`<platform>/run-pack/none`, ignored by git) leaves the dev settings and
+    dumps alone.
+  - `--quickPlayMultiplayer` goes on `clientPack` alone, from a Gradle init script: that run inherits `client`'s
+    arguments, and on both the launch crashes with "Found multiple arguments for option quickPlayMultiplayer".
+  - 26.3 turns the whitelist on by default ("You are not white-listed on this server"), and the dev client's account is
+    offline, so `server.properties` needs `white-list=false`, `online-mode=false` and `enforce-secure-profile=false`.
+  - The server has no console when started this way, so it's stopped by killing it. `Saving chunks` right after `Done (`
+    in its log isn't a shutdown.
+  - The `c:` tags are in `forge-universal.jar` and in `fabric-convention-tags-v2`, where older versions stay in Gradle's
+    cache: use the one the client's log names. Read jars with Python's `zipfile`: `unzip` here silently extracted only
+    some files, and the count came out low (202 where the truth was 332) with nothing to show for it.
 - Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
   `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
   pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
