@@ -591,6 +591,35 @@ going. Looking over some 4,200 columns a tick for where a pulse has reached does
 0.04 ms. As with boats, the game ticks the foam on its own time, outside the handlers' timers, so the frame rate is the
 better guide to the whole. The barrier the player stands on counts as land, adding a little shore around them.
 
+## Results, 2026-11-05: G1 against ZGC (`gc.json`)
+
+NeoForge 26.3, the dev client's mods, 2560x1369, render distance 32 (`options.txt` in `neoforge/run-bench`, put back to 16
+after), flying east at 11 blocks a second at height 230, 43 seconds a pass. `-Pgc=zgc` for ZGC, a world of its own on the
+same seed for each, no heap limit given. New terrain is each world's first flight; generated terrain is two more over
+the same ground, in a later session of the game.
+
+| | G1 | ZGC |
+| --- | --- | --- |
+| New terrain: fps | 313 | 310 |
+| New terrain: GC pauses | 39, 535 ms in all, longest 33 ms | none over 1 ms |
+| New terrain: worst frame of a second, median | 47.3 ms | 47.8 ms |
+| New terrain: seconds with a frame over 33 ms, of 43 | 30 | 33 |
+| New terrain: seconds with a frame over 50 ms, of 43 | 20 | 19 |
+| New terrain: longest frame | 145 ms | 160 ms |
+| Generated terrain: fps, two passes | 454, 499 | 450, 495 |
+| Generated terrain: GC pauses | 16, 15, about 17 ms each | none over 1 ms |
+| Generated terrain: worst frame of a second, median | 18.1, 13.7 ms | 10.1, 9.5 ms |
+| Generated terrain: seconds with a frame over 16.7 ms | 24, 16 | 6, 7 |
+| Peak heap used | 2.6 to 2.9 GB | 13.4 to 13.9 GB |
+
+- On generated terrain the hitches are G1's pauses: ZGC about halves the worst frames, at no cost in frame rate.
+- On new terrain they aren't: the spikes stay with the pauses gone, so they come with the terrain being generated and
+  built. What in the frame takes the time isn't known; CPU samples show `buildTerrain`, world generation and the
+  workers busy, but can't name one slow frame. Dynamic Surroundings is about 10% of the render thread on both.
+- ZGC stays opt-in. With no limit it took about five times the heap, and it hasn't been run under a pack's `-Xmx`; G1
+  stays the default so runs compare with the rest of this file. The mod can't choose a collector: for players it is a
+  launcher setting.
+
 ## Field recordings
 
 These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on

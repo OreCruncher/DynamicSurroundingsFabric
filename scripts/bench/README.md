@@ -65,6 +65,8 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
   of 6 to 10 catches a strike in the shot.
 - **Boats**: a scene's `"boatSpeed"` keeps the boats near the player going around them, in blocks a tick, from the
   warm-up on, on the built-in server, as no one is there to row them (`boats.json`).
+- **Flying**: a scene's `"flySpeed"` flies the player east in blocks a tick at height 230, from the warm-up on, for what moving through
+  terrain costs. Fresh terrain the first time; give a scenario a `"world"` of its own for that, as `-Pgc=zgc` comparisons do.
 - **Sounds**: a scene's `"sounds"` play around where the player's eyes are as the warm-up starts (after the commands
   have moved them), through the warm-up and the recording, for enhanced sound processing to work on (`sound.json`):
   `{"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 6, "seed": 1}` plays

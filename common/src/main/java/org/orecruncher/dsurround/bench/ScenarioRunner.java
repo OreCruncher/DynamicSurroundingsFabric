@@ -106,6 +106,9 @@ public final class ScenarioRunner {
             "commands.clone.failed", "argument.entity.notfound.entity");
     // The boats kept going in this scene, how fast and around where
     private double boatSpeed;
+    // How fast the player is flown east in this scene, and how high: over the mountains and trees
+    private static final double FLY_HEIGHT = 230D;
+    private double flySpeed;
     private Vec3 boatMiddle = Vec3.ZERO;
     // Server commands that failed, from the server's thread
     private final Set<String> commandFailures = ConcurrentHashMap.newKeySet();
@@ -204,6 +207,13 @@ public final class ScenarioRunner {
                 this.sounds.tick();
             if (this.boatSpeed > 0D)
                 BenchBoats.tick(server(), this.boatMiddle, this.boatSpeed);
+            var flying = Minecraft.getInstance().player;
+            if (this.flySpeed > 0D && flying != null) {
+                flying.getAbilities().flying = true;
+                // At a height held, or it sinks to where it sat waiting for the warm-up, and into the mountains
+                flying.setDeltaMovement(Vec3.ZERO);
+                flying.setPos(flying.getX() + this.flySpeed, FLY_HEIGHT, flying.getZ());
+            }
             if (this.current == null) {
                 this.current = this.steps.poll();
                 this.stepTicks = 0;
@@ -359,6 +369,8 @@ public final class ScenarioRunner {
             return true;
         }, FIND_SECONDS * TICKS_PER_SECOND);
         this.step(tag + ": go there", () -> {
+            // The last scene is over: flying on would keep the player from arriving at this one
+            this.flySpeed = 0D;
             var l = arrival.location;
             float yaw = scene.yaw() != null ? scene.yaw() : l.yaw();
             float pitch = scene.pitch() != null ? scene.pitch() : l.pitch();
@@ -400,6 +412,7 @@ public final class ScenarioRunner {
             // Boats go around where the player stands
             if (this.stepTicks == 1) {
                 this.boatSpeed = scene.boatSpeed();
+                this.flySpeed = scene.flySpeed();
                 this.boatMiddle = Minecraft.getInstance().player.position();
             }
             // The sounds from here, where the player is once the commands have moved them; and whether they can be heard

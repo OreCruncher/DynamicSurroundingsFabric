@@ -62,9 +62,10 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      * @param shotDelay ticks from those commands to the screenshot, for what they start to show
      * @param sounds   sounds played around the player from the end of the commands to the end of the recording
      * @param boatSpeed how fast the boats near the player are kept going around them, in blocks a tick; 0 leaves them be
+     * @param flySpeed  how fast the player is flown east, in blocks a tick, through terrain; 0 leaves them where they are
      */
     public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands,
-                        List<String> settledCommands, String profile, List<String> shotCommands, int shotDelay, List<Sounds> sounds, double boatSpeed) {
+                        List<String> settledCommands, String profile, List<String> shotCommands, int shotDelay, List<Sounds> sounds, double boatSpeed, double flySpeed) {
     }
 
     /**
@@ -116,7 +117,8 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                     strings(s, "shotCommands"),
                     s.has("shotDelay") ? Math.max(0, s.get("shotDelay").getAsInt()) : 0,
                     sounds(s),
-                    s.has("boatSpeed") ? s.get("boatSpeed").getAsDouble() : 0D));
+                    s.has("boatSpeed") ? s.get("boatSpeed").getAsDouble() : 0D,
+                    s.has("flySpeed") ? s.get("flySpeed").getAsDouble() : 0D));
         }
 
         // Named groups of settings, for runs to share ("use"): such as every effect turned off

@@ -156,6 +156,9 @@ def potatoRuns(Project p) {
                 ideConfigGenerated !v.bench
                 // Finds the game's JVM for run-affinity.ps1
                 vmArg "-Ddsurround.devRun=$runName"
+                // Which garbage collector: -Pgc=zgc for ZGC, G1 otherwise
+                if (p.rootProject.findProperty('gc') == 'zgc')
+                    vmArg '-XX:+UseZGC'
                 vmArgs v.vm
                 programArgs v.program
                 if (v.bench) {
