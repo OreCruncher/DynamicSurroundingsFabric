@@ -52,6 +52,14 @@ final class PrecipitationRenderer {
     // How fast a puff turns, as a fraction of how fast it rises and falls
     static final float DUST_SPIN = 0.1F;
     /**
+     * Puffs nearer the camera than this, in blocks, are not drawn, and fade in over {@link #DUST_NEAR_FADE} beyond it.
+     * A puff close by covers much of the screen: in a storm those within 2 blocks were about a quarter of the dust's
+     * drawing, for a haze the dust storm's fog already gives. Fading them also keeps big blobs from sliding across the
+     * view.
+     */
+    static final float DUST_NEAR_HIDDEN = 2F;
+    static final float DUST_NEAR_FADE = 1.5F;
+    /**
      * How far behind the camera a drop can be and still reach into view, beyond the largest puff's half size, the
      * length of the longest streak or the largest flake's half size: room to spare. See {@link #behindMargin}.
      */
@@ -77,8 +85,6 @@ final class PrecipitationRenderer {
     static final float STREAK_BEAD_ALPHA = 0.6F;
     static final float STREAK_TRAIL_WIDTH = 0.45F;
     static final float STREAK_TRAIL_ALPHA = 0.5F;
-    // A damp spot's color where the ground can't be darkened, so it is laid over it instead
-    static final float DAMP_RED = 0.08F, DAMP_GREEN = 0.08F, DAMP_BLUE = 0.1F;
 
     private PrecipitationRenderer() {
     }
@@ -96,13 +102,13 @@ final class PrecipitationRenderer {
 
         /**
          * The directions are worked out from the camera's rotation as Camera.setRotation does, to the same values, not
-         * copied from its vectors: a mod may change those in place while the frame is drawn (Rainbows doubles the look
-         * vector as its particle is drawn, before the weather), and then drops built ahead never matched, and those
-         * built in the weather's pass were culled with the wrong look
+         * copied from its vectors: a mod may change those in place while the frame is drawn (on 1.21.1, Rainbows
+         * doubles the look vector as its particle is drawn, before the weather), and then drops built ahead never
+         * matched, and those built in the weather's pass were culled with the wrong look
          */
         static View of(Camera camera) {
             var rotation = camera.rotation();
-            return new View(camera.getPosition(), LEFT.rotate(rotation, new Vector3f()), UP.rotate(rotation, new Vector3f()),
+            return new View(camera.position(), LEFT.rotate(rotation, new Vector3f()), UP.rotate(rotation, new Vector3f()),
                     FORWARDS.rotate(rotation, new Vector3f()));
         }
     }
@@ -118,13 +124,14 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Writes the drops of a kind as {@link DefaultVertexFormat#PARTICLE} quads, to be drawn with
-     * {@link PrecipitationShaders#DROPS} and the particle atlas bound, only those in front of the camera and not faded
-     * out. The dust and the falling rain and snow are drawn apart, as the dust is drawn soft and they are not. Reads
-     * only the drops drawn, so it may run on another thread while the drops' next tick is stepped, but not while the
-     * step is finished and its drops made the ones drawn.
+     * Writes the drops into {@code quads}, for drawing with a pipeline that takes {@link DefaultVertexFormat#PARTICLE}:
+     * with the particle atlas bound for the dust, and the snow texture for rain and snow. The dust and the falling rain
+     * and snow are drawn apart, as the dust is drawn soft and they are not. Written straight into memory rather than
+     * through a BufferBuilder: there are thousands (see {@link ParticleQuads}). Reads only the drops drawn, so it may
+     * run on another thread while the drops' next tick is stepped, but not while the step is finished and its drops
+     * made the ones drawn (see {@link DropMeshes}).
      *
-     * @param dustOnly   true to write just the dust; false to write just the rain and snow
+     * @param dustOnly   true to draw just the dust; false to draw just the rain and snow
      * @param snowflakes the flakes of the snow texture, which must be bound when drawing rain and snow; each falling
      *                   flake keeps one for its whole fall. Empty to draw plain flakes.
      * @param largest    the largest of them, in pixels: the others are drawn in proportion
@@ -133,13 +140,17 @@ final class PrecipitationRenderer {
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's color
      */
-    static void build(PrecipitationField field, BufferBuilder builder, View view, float partialTick, boolean dustOnly,
+    static void build(PrecipitationField field, ParticleQuads quads, View view, float partialTick, boolean dustOnly,
                       List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
         var d = field.drops();
+        quads.begin(dustOnly ? d.dustCount : d.count - d.dustCount);
+        if (!hasAny(field, dustOnly))
+            return;
+
         var cam = view.position();
-        Vector3f left = view.left();
-        Vector3f up = view.up();
-        Vector3f look = view.look();
+        Vector3fc left = view.left();
+        Vector3fc up = view.up();
+        Vector3fc look = view.look();
         float radius = field.radius();
         float margin = behindMargin(scales);
         // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so
@@ -148,6 +159,9 @@ final class PrecipitationRenderer {
         float snowCos = Mth.cos(snowTurn), snowSin = Mth.sin(snowTurn);
         float dustTurn = partialTick * PrecipitationField.DUST_TURBULENCE_RATE * DUST_SPIN;
         float dustCos = Mth.cos(dustTurn), dustSin = Mth.sin(dustTurn);
+        float rainRed = rainColor.red(), rainGreen = rainColor.green(), rainBlue = rainColor.blue();
+        // A streak's tail is clear
+        int rainTail = ParticleQuads.color(rainRed, rainGreen, rainBlue, 0F);
 
         for (int i = 0; i < d.count; i++) {
             if ((d.kind[i] == PrecipitationField.DUST) != dustOnly)
@@ -161,6 +175,8 @@ final class PrecipitationRenderer {
             float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
             if (!dustOnly)
                 fade *= thinned(d.thinning[i], distance, radius);
+            else
+                fade *= dustNearFade(x, y, z);
             if (fade <= 0F)
                 continue;
             int light = d.light[i];
@@ -174,20 +190,20 @@ final class PrecipitationRenderer {
                 float r = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
                 float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
                 float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
-                billboard(builder, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
-                        r, g, b, DUST_ALPHA * fade, light);
+                billboard(quads, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
+                        ParticleQuads.color(r, g, b, DUST_ALPHA * fade), light);
             } else if (d.kind[i] == PrecipitationField.SNOW) {
                 float a = SNOW_ALPHA * fade;
                 float cos = d.spinCos[i] * snowCos - d.spinSin[i] * snowSin;
                 float sin = d.spinSin[i] * snowCos + d.spinCos[i] * snowSin;
                 float size = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i)) * scales.snow();
                 if (snowflakes.isEmpty()) {
-                    billboard(builder, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, 1F, 1F, 1F, a, light);
+                    billboard(quads, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, ParticleQuads.color(1F, 1F, 1F, a), light);
                 } else {
                     // A flake of a pixel is drawn smaller than one of three, in proportion
                     var flake = snowflakes.get(field.variant(i, snowflakes.size()));
                     size *= flake.size() / (float) largest;
-                    billboard(builder, x, y, z, left, up, cos, sin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), 1F, 1F, 1F, a, light);
+                    billboard(quads, x, y, z, left, up, cos, sin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), ParticleQuads.color(1F, 1F, 1F, a), light);
                 }
             } else {
                 float dropSize = field.rainSize(i);
@@ -216,10 +232,11 @@ final class PrecipitationRenderer {
                 }
                 float tx = x - vx * length, ty = y - vy * length, tz = z - vz * length;
                 float a = (RAIN_MIN_ALPHA + RAIN_ALPHA_RANGE * dropSize) * fade;
-                builder.addVertex(x - sx, y - sy, z - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
-                builder.addVertex(tx - sx, ty - sy, tz - sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
-                builder.addVertex(tx + sx, ty + sy, tz + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
-                builder.addVertex(x + sx, y + sy, z + sz).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+                int head = ParticleQuads.color(rainRed, rainGreen, rainBlue, a);
+                quads.vertex(x - sx, y - sy, z - sz, NO_TEXTURE, NO_TEXTURE, head, light);
+                quads.vertex(tx - sx, ty - sy, tz - sz, NO_TEXTURE, NO_TEXTURE, rainTail, light);
+                quads.vertex(tx + sx, ty + sy, tz + sz, NO_TEXTURE, NO_TEXTURE, rainTail, light);
+                quads.vertex(x + sx, y + sy, z + sz, NO_TEXTURE, NO_TEXTURE, head, light);
             }
         }
     }
@@ -246,6 +263,14 @@ final class PrecipitationRenderer {
      */
     static float thinned(float thinning, float distance, float radius) {
         return Mth.clamp((shareDrawn(distance, radius) - thinning) / THIN_FADE + 1F, 0F, 1F);
+    }
+
+    /**
+     * How much of a puff of dust is drawn for being near the camera, relative to which it is: none inside
+     * {@link #DUST_NEAR_HIDDEN}, all of it {@link #DUST_NEAR_FADE} further out
+     */
+    static float dustNearFade(float x, float y, float z) {
+        return Mth.clamp((Mth.sqrt(x * x + y * y + z * z) - DUST_NEAR_HIDDEN) / DUST_NEAR_FADE, 0F, 1F);
     }
 
     /**
@@ -280,23 +305,23 @@ final class PrecipitationRenderer {
      *
      * @param margin how far behind a drop can be and still reach into view (see {@link #behindMargin})
      */
-    static boolean isBehind(float x, float y, float z, Vector3f look, float margin) {
+    static boolean isBehind(float x, float y, float z, Vector3fc look, float margin) {
         return x * look.x() + y * look.y() + z * look.z() < -margin;
     }
 
     /**
      * A textured square facing the camera, turned in its plane by the angle whose cos and sin are given
      */
-    private static void billboard(BufferBuilder builder, float x, float y, float z, Vector3f left, Vector3f up,
+    private static void billboard(ParticleQuads quads, float x, float y, float z, Vector3fc left, Vector3fc up,
                                   float turnCos, float turnSin, float halfSize, float u0, float v0, float u1, float v1,
-                                  float r, float g, float b, float a, int light) {
+                                  int color, int light) {
         float cos = turnCos * halfSize, sin = turnSin * halfSize;
         float ax = left.x() * cos + up.x() * sin, ay = left.y() * cos + up.y() * sin, az = left.z() * cos + up.z() * sin;
         float bx = up.x() * cos - left.x() * sin, by = up.y() * cos - left.y() * sin, bz = up.z() * cos - left.z() * sin;
-        builder.addVertex(x - ax - bx, y - ay - by, z - az - bz).setUv(u1, v1).setColor(r, g, b, a).setLight(light);
-        builder.addVertex(x - ax + bx, y - ay + by, z - az + bz).setUv(u1, v0).setColor(r, g, b, a).setLight(light);
-        builder.addVertex(x + ax + bx, y + ay + by, z + az + bz).setUv(u0, v0).setColor(r, g, b, a).setLight(light);
-        builder.addVertex(x + ax - bx, y + ay - by, z + az - bz).setUv(u0, v1).setColor(r, g, b, a).setLight(light);
+        quads.vertex(x - ax - bx, y - ay - by, z - az - bz, u1, v1, color, light);
+        quads.vertex(x - ax + bx, y - ay + by, z - az + bz, u1, v0, color, light);
+        quads.vertex(x + ax + bx, y + ay + by, z + az + bz, u0, v0, color, light);
+        quads.vertex(x + ax - bx, y + ay - by, z + az - bz, u0, v1, color, light);
     }
 
     /**
@@ -399,13 +424,9 @@ final class PrecipitationRenderer {
     /**
      * Writes the damp spots as {@link DefaultVertexFormat#POSITION_TEX_COLOR} quads, around the camera at {@code cam},
      * to be drawn with {@link PrecipitationShaders#DAMP_SPOTS} and the particle atlas bound. Any thread, while nothing
-     * changes the spots.
-     *
-     * @param darkening true when the blend darkens the ground by the spot's alpha, so its color doesn't matter;
-     *                  false to lay a dark color over the ground with an ordinary blend
+     * changes the spots. The blend darkens the ground by the spot's alpha, so its color doesn't matter.
      */
-    static void build(DampSpots spots, BufferBuilder builder, Vec3 cam, float partialTick, TextureAtlasSprite sprite, boolean darkening) {
-        float r = darkening ? 1F : DAMP_RED, g = darkening ? 1F : DAMP_GREEN, b = darkening ? 1F : DAMP_BLUE;
+    static void build(DampSpots spots, BufferBuilder builder, Vec3 cam, float partialTick, TextureAtlasSprite sprite) {
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
 
         for (int i = 0; i < spots.count; i++) {
@@ -417,10 +438,10 @@ final class PrecipitationRenderer {
             float z = (float) (spots.z[i] - cam.z);
             // The corners, each a quarter turn from the last
             float cx = spots.cornerX[i], cz = spots.cornerZ[i];
-            builder.addVertex(x + cx, y, z + cz).setUv(u0, v0).setColor(r, g, b, a);
-            builder.addVertex(x - cz, y, z + cx).setUv(u0, v1).setColor(r, g, b, a);
-            builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(r, g, b, a);
-            builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(r, g, b, a);
+            builder.addVertex(x + cx, y, z + cz).setUv(u0, v0).setColor(1F, 1F, 1F, a);
+            builder.addVertex(x - cz, y, z + cx).setUv(u0, v1).setColor(1F, 1F, 1F, a);
+            builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(1F, 1F, 1F, a);
+            builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(1F, 1F, 1F, a);
         }
     }
 }

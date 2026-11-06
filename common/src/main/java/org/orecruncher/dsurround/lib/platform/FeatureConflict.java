@@ -22,9 +22,9 @@ import static org.orecruncher.dsurround.lib.platform.KnownMod.*;
 public enum FeatureConflict {
 
     /**
-     * Sound Physics Remastered does its own sound processing
+     * Sound Physics Remastered and Sound Physics Perfected do their own sound processing
      */
-    ENHANCED_SOUNDS("Enhanced sound processing", SOUND_PHYSICS_REMASTERED),
+    ENHANCED_SOUNDS("Enhanced sound processing", SOUND_PHYSICS_REMASTERED, SOUND_PHYSICS_PERFECTED),
     /**
      * Mods that draw rain and snow as particles of their own
      */
@@ -53,7 +53,16 @@ public enum FeatureConflict {
     /**
      * Distant Horizons draws its own clouds, and turns vanilla's off
      */
-    DYNAMIC_CLOUDS("Dynamic clouds", DISTANT_HORIZONS);
+    DYNAMIC_CLOUDS("Dynamic clouds", DISTANT_HORIZONS),
+    /**
+     * Particle Rain has fog of its own in wet biomes, as a pack with it has chosen
+     */
+    GROUND_FOG("Ground fog", PARTICLE_RAIN),
+    /**
+     * Async Particles draws particle layers from copies of their pipelines, past the point that binds a soft one's depth
+     * copy: the draw crashes on the unbound block. The layers drawn the vanilla way need nothing bound.
+     */
+    SOFT_PARTICLES("Soft edges of mist and flames", ASYNC_PARTICLES);
 
     private final String feature;
     private final List<KnownMod> mods;

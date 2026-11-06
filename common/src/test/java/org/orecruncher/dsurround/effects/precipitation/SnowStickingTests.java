@@ -68,7 +68,7 @@ public class SnowStickingTests {
         }
 
         @Override
-        public int getMinBuildHeight() {
+        public int getMinY() {
             return -64;
         }
     }

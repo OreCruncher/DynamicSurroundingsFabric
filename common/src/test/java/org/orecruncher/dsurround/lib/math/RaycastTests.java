@@ -71,7 +71,7 @@ public class RaycastTests {
         }
 
         @Override
-        public int getMinBuildHeight() {
+        public int getMinY() {
             return -64;
         }
     }

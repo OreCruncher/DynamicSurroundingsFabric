@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.config.biome;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 
@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
  */
 public interface IBiomeIdentity {
 
-    ResourceLocation getBiomeId();
+    Identifier getBiomeId();
 
     String getBiomeName();
 

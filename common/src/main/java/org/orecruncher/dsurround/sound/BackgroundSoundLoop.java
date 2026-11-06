@@ -53,15 +53,21 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     }
 
     public void tick() {
-        if (this.scale < this.target && !this.isFading)
-            this.scale += SCALE_AMOUNT;
-        else if (this.isFading || this.scale > this.target)
-            this.scale -= SCALE_AMOUNT;
-
-        this.scale = Mth.clamp(this.scale, 0F, this.target);
+        this.scale = nextScale(this.scale, this.target, this.isFading);
 
         if (Float.compare(this.getVolume(), 0F) == 0)
             this.stop();
+    }
+
+    /**
+     * A tick's step towards the target, or towards silence while fading out. Stops at the target, in both directions:
+     * a sound following the wind has its target changed every tick, and a full step down for each small fall would
+     * take a quiet one nearly to silence and back, tick after tick, or stop it.
+     */
+    static float nextScale(float scale, float target, boolean fading) {
+        if (fading)
+            return Mth.clamp(scale - SCALE_AMOUNT, 0F, target);
+        return scale < target ? Math.min(scale + SCALE_AMOUNT, target) : Math.max(scale - SCALE_AMOUNT, target);
     }
 
     public BlockPos getPos() {
@@ -104,7 +110,7 @@ public class BackgroundSoundLoop extends AbstractTickableSoundInstance {
     @Override
     public @NotNull String toString() {
         var temp = MoreObjects.toStringHelper(this)
-                .addValue(this.getLocation().toString())
+                .addValue(this.getIdentifier().toString())
                 .addValue(this.getSource().getName());
 
         // Possible that the sound was not yet assigned.  Seen issues when exiting worlds.

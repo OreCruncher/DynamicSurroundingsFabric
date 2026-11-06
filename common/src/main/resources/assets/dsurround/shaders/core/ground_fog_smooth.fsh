@@ -1,4 +1,5 @@
-#version 150
+#version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -9,32 +10,19 @@
 // the edge.
 // The composite (ground_fog_composite) then lays it over the scene at full size.
 //
-// Its pixel at (i, j) followed the line of sight to the screen's pixel at (Scale i, Scale j), so how far that went is
-// read from the scene's depth there.
+// How far each of its pixels' lines of sight went, the march wrote alongside the mist (DistanceSampler).
+
+#include <dsurround:ground_fog.glsl>
 
 uniform sampler2D MistSampler;
-uniform sampler2D MistDepthSampler;
-uniform sampler2D DepthSampler;
+// How far along the view each of the mist's pixels' line of sight went, from the march
+uniform sampler2D DistanceSampler;
 
-// Two rows of the projection's inverse: for a pixel at (x, y, depth) on the screen, how far along the view it is
-uniform vec4 DepthRowZ;
-uniform vec4 DepthRowW;
-// The screen's size in pixels
-uniform vec2 FullSize;
-// The screen's pixels each way for each of the mist's (GroundFogQuality): 1 at the screen's size, 2 at half, 3 at a
-// third
-uniform float Scale;
+layout(location = 0) out vec4 fragColor;
 
-out vec4 fragColor;
-
-// How far along the view the line of sight through a screen pixel goes, in blocks: enough to tell whether two pixels
-// looked about as far
-float distanceAt(ivec2 pixel) {
-    pixel = clamp(pixel, ivec2(0), ivec2(FullSize) - 1);
-    float depth = texelFetch(DepthSampler, pixel, 0).r;
-    vec2 uv = (vec2(pixel) + 0.5) / FullSize;
-    vec4 screen = vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    return -dot(DepthRowZ, screen) / dot(DepthRowW, screen);
+// How far along the view the line of sight through one of the mist's pixels went, in blocks
+float distanceAt(ivec2 at) {
+    return texelFetch(DistanceSampler, at, 0).r;
 }
 
 void main() {
@@ -56,12 +44,12 @@ void main() {
     }
 
     // How far each one's line of sight went, and how much further or nearer than this one's, and the least of those
-    float here = distanceAt(at * int(Scale));
+    float here = distanceAt(at);
     float distances[9];
     float differences[9];
     float least = 1e30;
     for (int k = 0; k < 9; k++) {
-        distances[k] = distanceAt(taps[k] * int(Scale));
+        distances[k] = distanceAt(taps[k]);
         differences[k] = abs(distances[k] - here);
         least = min(least, differences[k]);
     }
@@ -85,24 +73,16 @@ void main() {
     // closest few are blended
     vec4 sum = vec4(0.0);
     float weights = 0.0;
-    // Where the mist begins, from the one counting most toward the mist here
-    float most = -1.0;
-    ivec2 mostAt = at;
     for (int k = 0; k < 9; k++) {
         vec2 offset = vec2(k % 3 - 1, k / 3 - 1);
         float w = exp(-dot(offset, offset) * 0.6) * exp(-(differences[k] - least) / tolerance);
         sum += mists[k] * w;
         weights += w;
-        if (w * mists[k].a > most) {
-            most = w * mists[k].a;
-            mostAt = taps[k];
-        }
     }
     vec4 mist = sum / weights;
     if (mist.a <= 0.002) {
         discard;
     }
 
-    gl_FragDepth = texelFetch(MistDepthSampler, mostAt, 0).r;
     fragColor = mist;
 }

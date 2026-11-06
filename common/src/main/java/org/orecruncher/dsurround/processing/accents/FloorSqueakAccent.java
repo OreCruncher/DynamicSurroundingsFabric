@@ -4,7 +4,7 @@
 package org.orecruncher.dsurround.processing.accents;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 class FloorSqueakAccent implements IFootstepAccentProvider {
 
-    private static final ResourceLocation FLOOR_SQUEAK = Constants.asId("footstep/floorsqueak");
+    private static final Identifier FLOOR_SQUEAK = Constants.asId("footstep/floorsqueak");
 
     private final Configuration config;
     private final ISoundLibrary soundLibrary;

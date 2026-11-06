@@ -1,0 +1,57 @@
+// Waves on a shore, calm and in a storm, and what looking for them costs. A pool in the air with a sandstone rim (sand
+// would fall) level with the water, nearly 190 blocks of shore in range of the player: more than most beaches. The same
+// spot as boats.json, whose pool it rebuilds. The season is set because one left by another scenario stays, and in winter the pool freezes.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 15,
+  "record": 30,
+  "repeats": 2,
+  "scenes": {
+    "shore-calm": {
+      "biome": "minecraft:flower_forest",
+      "pitch": 25,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "season set mid_summer",
+        "tp @s ~ 150 ~",
+        "kill @e[type=minecraft:oak_boat]",
+        "fill ~-30 ~-3 ~-30 ~30 ~-1 ~30 sandstone",
+        "fill ~-30 ~ ~-30 ~30 ~4 ~30 air",
+        "fill ~-23 ~-2 ~-23 ~23 ~-1 ~23 water",
+        "fill ~-1 ~-1 ~-1 ~1 ~-1 ~1 barrier"
+      ],
+      "profile": "general"
+    },
+    "shore-storm": {
+      "biome": "minecraft:flower_forest",
+      "pitch": 25,
+      "commands": [
+        "time set 6000",
+        "season set mid_summer",
+        "tp @s ~ 150 ~",
+        "kill @e[type=minecraft:oak_boat]",
+        "fill ~-30 ~-3 ~-30 ~30 ~-1 ~30 sandstone",
+        "fill ~-30 ~ ~-30 ~30 ~4 ~30 air",
+        "fill ~-23 ~-2 ~-23 ~23 ~-1 ~23 water",
+        "fill ~-1 ~-1 ~-1 ~1 ~-1 ~1 barrier"
+      ],
+      // Holds a full storm (and sends "weather thunder")
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "calm-waves", "scene": "shore-calm"},
+    {"label": "calm-off", "scene": "shore-calm", "settings": {"blockEffects.enableBeachWaves": false}},
+    {"label": "storm-waves", "scene": "shore-storm"},
+    {"label": "storm-off", "scene": "shore-storm", "settings": {"blockEffects.enableBeachWaves": false}}
+  ]
+}

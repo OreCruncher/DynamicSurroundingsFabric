@@ -75,7 +75,7 @@ public class PresetLoaderTests {
     // What the performance presets set that the feature presets may set too: details that are features as well
     // (accepted: a feature preset after Low turns them back on). Quality and ranges are the performance presets' alone
     private static final List<String> SHARED_WITH_FEATURES = List.of("waterfallOptions.enableMist",
-            "waterfallOptions.enableFroth", "weatherOptions.enableDynamicClouds", "flameJetOptions.enableLight",
+            "waterfallOptions.enableFroth", "waterfallOptions.enableRings", "weatherOptions.enableDynamicClouds", "flameJetOptions.enableLight",
             "fireflyOptions.enableLight");
 
     @Test
@@ -102,12 +102,14 @@ public class PresetLoaderTests {
         var config = new Configuration();
         modPreset("low").apply(config);
         assertEquals(GroundFogQuality.FAST, config.weatherOptions.groundFogQuality);
+        assertEquals(AuroraQuality.FAST, config.auroraOptions.realistic.quality);
         assertTrue(config.weatherOptions.enableGroundFog, "Low leaves the ground fog's switch, a feature, alone");
         assertFalse(config.waterfallOptions.enableMist);
 
         modPreset("high").apply(config);
         // Fancy, not Fabulous: Fabulous cost about three times as much walking through the mist
         assertEquals(GroundFogQuality.FANCY, config.weatherOptions.groundFogQuality);
+        assertEquals(AuroraQuality.FANCY, config.auroraOptions.realistic.quality);
         assertTrue(config.blockEffects.blockEffectRange > new Configuration().blockEffects.blockEffectRange);
     }
 

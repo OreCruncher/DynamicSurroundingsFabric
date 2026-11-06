@@ -7,6 +7,7 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.FootprintStyle;
+import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.effects.footprints.StrideTracker.Step;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -194,5 +195,59 @@ public class FootprintTests {
         // Kept within bounds for the very small and very large
         assertEquals(0.5D, FootprintEffect.strideFor(0.1F), 1.0E-6D);
         assertEquals(1.3F, FootprintEffect.scaleFor(4F), 1.0E-6F);
+    }
+
+    @Test
+    void feetCarryWhatTheyPickedUpForItsStepsAndThenNothing() {
+        var carried = new CarriedGround();
+        assertEquals(0F, carried.spend());
+        carried.pickUp(TrackedGround.SNOW);
+        for (int i = 0; i < TrackedGround.SNOW.steps(); i++) {
+            assertEquals(TrackedGround.SNOW, carried.ground());
+            assertTrue(carried.spend() > 0F);
+        }
+        assertNull(carried.ground());
+        assertEquals(0F, carried.spend());
+    }
+
+    @Test
+    void trackedPrintsFadeFromFullToTheLastStrength() {
+        int steps = TrackedGround.MUD.steps();
+        assertEquals(1F, CarriedGround.strength(steps, steps), 1E-5F);
+        assertEquals(CarriedGround.LAST_STRENGTH, CarriedGround.strength(1, steps), 1E-5F);
+        for (int left = steps; left > 1; left--)
+            assertTrue(CarriedGround.strength(left, steps) > CarriedGround.strength(left - 1, steps));
+    }
+
+    @Test
+    void walkingThroughMoreStartsOver() {
+        var carried = new CarriedGround();
+        carried.pickUp(TrackedGround.SAND);
+        carried.spend();
+        carried.pickUp(TrackedGround.MUD);
+        assertEquals(TrackedGround.MUD, carried.ground());
+        assertEquals(1F, carried.spend(), 1E-5F);
+    }
+
+    @Test
+    void muddyFeetKeepTheirMudOnSnowButSnowyFeetLoseTheirSnowInMud() {
+        assertFalse(FootprintEffect.replaces(TrackedGround.SNOW, TrackedGround.MUD));
+        assertTrue(FootprintEffect.replaces(TrackedGround.MUD, TrackedGround.SNOW));
+        assertTrue(FootprintEffect.replaces(TrackedGround.SNOW, null));
+        assertTrue(FootprintEffect.replaces(TrackedGround.SAND, TrackedGround.WATER));
+        assertFalse(FootprintEffect.replaces(TrackedGround.SAND, TrackedGround.MUD));
+        assertFalse(FootprintEffect.replaces(TrackedGround.SAND, TrackedGround.SNOW));
+        assertTrue(FootprintEffect.replaces(TrackedGround.MUD, TrackedGround.MUD));
+    }
+
+    @Test
+    void onlySnowAndMudShowOnSoftGround() {
+        for (var ground : TrackedGround.values())
+            assertEquals(ground == TrackedGround.SNOW || ground == TrackedGround.MUD, ground.showsOnSoftGround(), ground::name);
+    }
+
+    @Test
+    void aFreshTrackedPrintLetsTheGroundShowThrough() {
+        assertTrue(Footprints.PEAK_ALPHA * Footprints.TRACKED_STRENGTH < 1F);
     }
 }

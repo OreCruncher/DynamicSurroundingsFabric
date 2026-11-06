@@ -1,3 +1,96 @@
+> ### DynamicSurroundings-26.3-5.1.0
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+The first release for Minecraft 26.3, with a new aurora modeled on real ones and water that answers to what moves through it. It carries every feature and fix of 5.0.0 for 1.21.11 (see below). 1.21.11 takes fixes from here, not features, so it stays on 5.0.x.
+
+**All Loaders**
+* JAVA 25+  
+* Architectury 22.0.5+
+
+**Fabric**
+* Fabric Loader >= 0.20.1
+* Fabric API >= 0.165.2+26.3
+
+**NeoForge**
+* NeoForge 26.3.0.101+
+
+**AI Disclosure**
+* Ported the mod to Minecraft 26.3's rendering, and made its shaders work on Vulkan
+* Built the realistic aurora, tracked footprints, water rings, wakes, beach waves and target portrait
+* Measured the effects with benchmark runs on OpenGL and Vulkan, and tuned the realistic aurora's quality from the results
+* Found drawing faults under Improved Transparency by reading captured frames with RenderDoc, and fixed them
+
+**What's New**
+* Realistic aurora: a new style of aurora, modeled on real ones, and now the default. The original stays as Aurora style Classic
+  * Arcs of light high in the sky with folds, rays and colors that vary from night to night, growing, breaking up and fading through the night
+  * Now and then a night builds into a storm, brighter and redder, that can reach overhead (Storm chance). A bright moon washes out the faint parts, as a real one does (Moonlight washout)
+  * Quality in Realistic Aurora: Fancy draws it at the screen's size, and Fast at half that, for about a quarter of the cost. The Low preset sets Fast
+  * `/dsaurora` shows tonight's aurora, and can hold its activity, phase or colors to look at; `/dsaurora clear` lets it go. `/dsprofile aurora` records a storm overhead
+* Vulkan: all effects draw on Minecraft 26.3's Vulkan option as they do on OpenGL. Tested so far on AMD graphics only, where frame rates are a little lower than on OpenGL, mostly from Minecraft's own drawing rather than this mod's effects
+  * On NeoForge, the loading screen doesn't work with Vulkan: set `earlyWindowControl = false` in `config/fml.toml`
+* Tracked footprints: feet carry what they walk through, and players and mobs leave colored prints that fade with each step
+  * Snow, mud, sand, red sand, soul sand and water track onto hard ground; snow and mud show on soft ground too, then give way to normal prints
+  * Walking on grass or dirt in the rain leaves mud prints, and picks up mud to track onward
+  * On by default, and needs Footprints on: Tracked Footprints in Entity Effect Options, also set by the RPG, Vanilla+ and Defaults presets
+  * Mods and modpacks can add their blocks with the `tracks_*` block tags
+* Rings on the water: they spread where a waterfall lands in still water, and where players and mobs fall in, bigger for taller falls and bigger bodies
+  * On by default, and they follow Water Ripple Render Style: Waterfall rings in Waterfall Options, Splash Rings in Entity Effect Options. Waterfall rings are off in the Low preset
+* Spray from waterfalls and splashes leaves a ripple where it falls back on the water, as rain does
+* Wakes: players, mobs and boats moving through the water leave rings that open out behind them, and a boat under way sheds foam that coasts out, slows and fades
+  * Players and mobs make a ring as they bob at the surface, and a boat sitting in the water makes one every couple of seconds
+  * On by default, and they follow Water Ripple Render Style: Bobbing Rings in Entity Effect Options. A boat's foam follows Water froth
+* **[Experimental]** Beach waves: foam rolls in over the water and up the shore of oceans and large lakes in a steady rhythm, rippling along the shore, then back. In a storm the waves are closer together and the foam is thicker
+  * On by default: Beach Waves in Block Effect Options, also set by the World, Vanilla+ and Defaults presets
+* **[Experimental]** Target portrait: the head, name and health of the mob you are looking at, in the top left of the screen, with its bar colored for hostile, neutral or passive
+  * A row of badges under the portrait shows the effects on the mob. Effects with hidden particles can't be seen, as a mob's effects aren't sent to the client
+  * Off by default, and on in the RPG preset: Target Portrait Options. Drawn with Minecraft's toast and boss bar sprites, so resource packs restyle it. With Jade, its Display Entities option can be turned off so they don't both show
+
+**Changes**
+* Water ripples take the light of where they are, rather than always being full-bright, so they are dim at night
+* Mist, steam and smoke are always drawn after other particles, so ripples and foam under them no longer show on top of them, depending on the launch
+* Enhanced sounds reuse their calculations far more: only changes within 64 blocks of the player count, not grass spreading or water freezing far away. This saves work on the sound threads
+* With Improved Transparency on, flames and mist keep their soft edges and added light, and mist no longer cuts holes in the terrain or hides the clouds and weather behind it
+* With Improved Transparency on, clouds, rain and ground fog behind glass or water are drawn over it, without the tint of stained glass, and point lights fall on what is behind it
+* With Particle Rain installed, ground fog stands aside, as Particle Rain has fog of its own in wet biomes
+* Quiet wind sounds no longer stutter or restart as gusts pass
+* Rain blown in under cover soaks into soft ground instead of splashing on it
+* Fixed a crash near waterfalls with Particle Core, which ticks particles on several threads
+* With Sound Physics Perfected installed, enhanced sound processing stands aside, as it does for Sound Physics Remastered
+* With Async Particles installed, mist, steam, breath and flames are drawn without their soft edges, as its GPU drawing can't use them. Rain, sounds and storm strength work alongside its off-thread weather
+
+**Shader Packs**
+* While a shader pack is in use, many effects are off on purpose, whatever the configuration says, tracked footprints among them. If a feature is on and isn't working, turn the shader pack off before opening an issue. The [installation guide](https://dynamic-surroundings.readthedocs.io/en/latest/installation.html#shader-packs) has the list
+
+> ### DynamicSurroundings-1.21.11-5.0.0
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+The first release for Minecraft 1.21.11. Version numbers now follow MAJOR.MINOR.PATCH, starting at 5.0.0: the third number is kept for bug fix releases. It carries every feature of 0.4.9 for 1.21.1 (see below).
+
+**All Loaders**
+* JAVA 21+  
+* Architectury 19.0.1+
+
+**Fabric**
+* Fabric Loader >= 0.19.3
+* Fabric API >= 0.141.6+1.21.11
+
+**NeoForge**
+* NeoForge 21.11.13+
+
+**AI Disclosure**
+* Ported the mod to Minecraft 1.21.11's rendering, from the work done for later Minecraft versions
+* Measured the effects' drawing costs in recordings, and found and removed a GPU stall behind the aurora
+
+**Changes from 0.4.9 for 1.21.1**
+* Dynamic clouds reach as far as Minecraft's Cloud Distance option, in place of the mod's own Cloud Distance option
+* When Minecraft's Music Toast option shows toasts, its toast is used for music credits in place of the mod's
+* Key bindings are listed under their own Dynamic Surroundings category
+* The particle repair guard (Guards in Diagnostics) isn't needed on 1.21.11 and isn't included
+* Window frost grows on all glass, stained and tinted included, not only clear glass
+* With a shader pack in use, the branching lightning is drawn, with the shader pack's look, in place of Minecraft's bolts
+
 > ### DynamicSurroundings-1.21.1-0.4.9
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.

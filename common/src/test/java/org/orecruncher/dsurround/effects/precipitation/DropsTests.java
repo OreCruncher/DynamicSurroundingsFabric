@@ -40,6 +40,7 @@ public class DropsTests {
             for (int i = 0; i < CAPACITY; i++) {
                 int value = f * 16 + i + 1;
                 switch (array) {
+                    case double[] a -> a[i] = value;
                     case float[] a -> a[i] = value;
                     case int[] a -> a[i] = value;
                     case byte[] a -> a[i] = (byte) value;

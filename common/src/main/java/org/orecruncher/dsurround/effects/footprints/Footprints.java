@@ -5,38 +5,66 @@ package org.orecruncher.dsurround.effects.footprints;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.LightCoordsUtil;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.FootprintStyle;
+import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
-import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
+import java.util.function.Function;
 
 /**
  * The footprints on the ground: flat prints from the footprint texture, lit as the ground they are on, fading away.
  * They last {@link #LIFE} ticks, {@link #SNOW_LIFE} in snow, wash away faster where it is raining on them, and go when
- * the ground under them changes (dug up, melted, covered). At most {@link #MAX}; past that the oldest go.
+ * the ground under them changes (dug up, melted, covered). At most {@link #MAX}; past that the oldest go. Prints of what
+ * feet tracked onto hard ground are kept with them, drawn in color from a white copy of the texture.
  * <p>
  * Not particles: they don't move, last long and can be many, so they are kept here and drawn together as decals
- * (nudged toward the camera by a polygon offset, as sign text is, so they don't flicker into the ground), through the
- * buffers vanilla's debug renderers use ({@code MixinDebugRenderer}). Client thread only.
+ * (nudged toward the camera by a polygon offset, as sign text is, so they don't flicker into the ground), submitted with the level's features ({@code MixinLevelRenderer}). Client thread only.
  */
 public final class Footprints {
 
-    public static final ResourceLocation TEXTURE = Constants.asId("textures/footprints.png");
+    public static final Identifier TEXTURE = Constants.asId("textures/footprints.png");
+    // The same prints in white, for tracked prints' colors: a color only darkens what it tints
+    public static final Identifier TRACKED_TEXTURE = Constants.asId("textures/footprints_tracked.png");
+
+    // Vanilla's text with a polygon offset, without its depth writes: translucent blocks are drawn after these, and a print
+    // on ice or glass would otherwise keep the block from being drawn under it
+    private static final RenderPipeline PIPELINE = RenderPipeline.builder(RenderPipelines.WORLD_TEXT_SNIPPET)
+            .withLocation(Constants.asId("pipeline/footprints"))
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false, 1F, 10F))
+            .build();
+    private static final Function<Identifier, RenderType> RENDER_TYPE = Util.memoize(texture -> RenderType.create("dsurround_footprints",
+            RenderSetup.builder(PIPELINE)
+                    .setOitPipelines(RenderPipelines.OIT_TEXT_POLYGON_OFFSET)
+                    .withTexture("Sampler0", texture)
+                    .useLightmap()
+                    .sortOnUpload()
+                    .createRenderSetup()));
 
     // Their life, in ticks: 10 seconds, or a minute in snow
     static final float LIFE = 200F;
@@ -45,6 +73,8 @@ public final class Footprints {
     static final float RAIN_AGING = 3F;
     // How dark a fresh print is, 0 to 1; it fades from there
     static final float PEAK_ALPHA = 0.45F;
+    // How strong a fresh tracked print is next to that: light ones on pale stone need it
+    static final float TRACKED_STRENGTH = 1.6F;
     // A print's half width and half length, in blocks, at scale 1
     private static final float HALF_WIDTH = 0.125F;
     private static final float HALF_LENGTH = 0.25F;
@@ -56,14 +86,14 @@ public final class Footprints {
     // Not drawn farther than this from the camera, in blocks
     private static final double DRAW_RANGE_SQ = 64D * 64D;
 
-    private final WeatherSimulation weather;
+    private final IWeatherSimulation weather;
     private final ArrayDeque<Print> prints = new ArrayDeque<>();
     private int untilCheck = CHECK_INTERVAL;
     // The level the prints are in: in another (a new dimension) they are dropped. Held weakly, so a world left isn't
     // kept in memory.
     private WeakReference<Level> level = new WeakReference<>(null);
 
-    public Footprints(WeatherSimulation weather) {
+    public Footprints(IWeatherSimulation weather) {
         this.weather = weather;
     }
 
@@ -82,10 +112,15 @@ public final class Footprints {
         // How much the rain washes it: 0 under cover or where it doesn't rain, to 1 in the open
         final float washing;
         final float life;
+        // Its color, and how strong it is: 0xFFFFFF and 1 for a print pressed into the ground, drawn from TEXTURE
+        final int color;
+        final float strength;
+        final boolean tracked;
         float age;
 
         Print(double x, double y, double z, float yawDegrees, float scale, FootprintStyle style, boolean rightFoot,
-              int light, BlockPos ground, BlockState groundState, float washing, float life) {
+              int light, BlockPos ground, BlockState groundState, float washing, float life, int color, float strength,
+              boolean tracked) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -96,6 +131,9 @@ public final class Footprints {
             this.groundState = groundState;
             this.washing = washing;
             this.life = life;
+            this.color = color;
+            this.strength = strength;
+            this.tracked = tracked;
             layOut(this.corners, yawDegrees, HALF_WIDTH * scale, HALF_LENGTH * scale);
         }
     }
@@ -130,16 +168,51 @@ public final class Footprints {
      */
     void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
              boolean rightFoot, BlockPos ground, BlockState state) {
+        this.add(level, x, y, z, yawDegrees, scale, style, rightFoot, ground, state,
+                state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE, 0xFFFFFF, 1F, false);
+    }
+
+    /**
+     * Leaves a print of what feet carried onto hard ground.
+     *
+     * @param y        the top of the ground
+     * @param ground   the block it is on
+     * @param state    that block
+     * @param carried  what it is a print of
+     * @param strength how much is left of it, 1 for the first step
+     */
+    void addTracked(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
+                    boolean rightFoot, BlockPos ground, BlockState state, TrackedGround carried, float strength) {
+        this.add(level, x, y, z, yawDegrees, scale, style, rightFoot, ground, state, carried.life(), carried.color(),
+                strength * TRACKED_STRENGTH, true);
+    }
+
+    private void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
+                     boolean rightFoot, BlockPos ground, BlockState state, float life, int color, float strength,
+                     boolean tracked) {
         this.inLevel(level);
         if (this.prints.size() >= MAX)
             this.prints.pollFirst();
         // Where the print is: above a full block, in a snow layer
         var above = BlockPos.containing(x, y, z);
-        int light = LevelRenderer.getLightColor(level, above);
-        boolean rains = level.getBiome(above).value().getPrecipitationAt(above) == Biome.Precipitation.RAIN;
-        float washing = rains ? Shelter.exposure(level, above) : 0F;
+        int light = LightCoordsUtil.getLightCoords(level, above);
         this.prints.addLast(new Print(x, y + LIFT, z, yawDegrees, scale, style, rightFoot, light, ground.immutable(),
-                state, washing, state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE));
+                state, openToRain(level, above), life, color, strength, tracked));
+    }
+
+    /**
+     * How open a place is to rain: 0 under cover or where it doesn't rain, to 1 in the open
+     */
+    private static float openToRain(Level level, BlockPos pos) {
+        boolean rains = level.getBiome(pos).value().getPrecipitationAt(pos, level.getSeaLevel()) == Biome.Precipitation.RAIN;
+        return rains ? Shelter.exposure(level, pos) : 0F;
+    }
+
+    /**
+     * How soaked the ground at a place is by the rain falling on it now, 0 to 1
+     */
+    float wetness(Level level, BlockPos pos) {
+        return this.weather.rainLevel(level.getRainLevel(1F)) * openToRain(level, pos);
     }
 
     /**
@@ -203,32 +276,44 @@ public final class Footprints {
     }
 
     /**
-     * Draws them.
-     *
-     * @param camX the camera's position; the pose stack is relative to it
+     * Submits them for drawing this frame: the camera's position is taken away, as the geometry is drawn relative to it.
      */
-    public void draw(PoseStack poseStack, MultiBufferSource buffers, double camX, double camY, double camZ) {
+    public void submit(SubmitNodeCollector collector, CameraRenderState camera) {
         // A shader pack draws the world its own way; whether these fit in is untested, so they stay off
         if (this.prints.isEmpty() || IrisCompat.isShaderPackInUse())
             return;
 
-        VertexConsumer consumer = buffers.getBuffer(RenderType.textPolygonOffset(TEXTURE));
-        Matrix4f pose = poseStack.last().pose();
+        this.submit(collector, camera, false);
         for (var print : this.prints) {
-            double dx = print.x - camX, dz = print.z - camZ;
-            if (dx * dx + dz * dz > DRAW_RANGE_SQ)
-                continue;
-            int alpha = (int) (alphaAt(print.age / print.life) * 255F);
-            if (alpha <= 0)
-                continue;
-            int color = (alpha << 24) | 0xFFFFFF;
-            float x = (float) dx, y = (float) (print.y - camY), z = (float) dz;
-            float[] c = print.corners;
-            vertex(consumer, pose, x + c[0], y, z + c[1], color, print.u0, 0F, print.light);
-            vertex(consumer, pose, x + c[2], y, z + c[3], color, print.u0, 1F, print.light);
-            vertex(consumer, pose, x + c[4], y, z + c[5], color, print.u1, 1F, print.light);
-            vertex(consumer, pose, x + c[6], y, z + c[7], color, print.u1, 0F, print.light);
+            if (print.tracked) {
+                this.submit(collector, camera, true);
+                return;
+            }
         }
+    }
+
+    private void submit(SubmitNodeCollector collector, CameraRenderState camera, boolean tracked) {
+        double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
+        collector.submitCustomGeometry(new PoseStack(), RENDER_TYPE.apply(tracked ? TRACKED_TEXTURE : TEXTURE), (pose, consumer) -> {
+            Matrix4f matrix = pose.pose();
+            for (var print : this.prints) {
+                if (print.tracked != tracked)
+                    continue;
+                double dx = print.x - camX, dz = print.z - camZ;
+                if (dx * dx + dz * dz > DRAW_RANGE_SQ)
+                    continue;
+                int alpha = Math.min(255, (int) (alphaAt(print.age / print.life) * print.strength * 255F));
+                if (alpha <= 0)
+                    continue;
+                int color = (alpha << 24) | print.color;
+                float x = (float) dx, y = (float) (print.y - camY), z = (float) dz;
+                float[] c = print.corners;
+                vertex(consumer, matrix, x + c[0], y, z + c[1], color, print.u0, 0F, print.light);
+                vertex(consumer, matrix, x + c[2], y, z + c[3], color, print.u0, 1F, print.light);
+                vertex(consumer, matrix, x + c[4], y, z + c[5], color, print.u1, 1F, print.light);
+                vertex(consumer, matrix, x + c[6], y, z + c[7], color, print.u1, 0F, print.light);
+            }
+        });
     }
 
     private static void vertex(VertexConsumer consumer, Matrix4f pose, float x, float y, float z, int color, float u, float v, int light) {
@@ -241,9 +326,9 @@ public final class Footprints {
     }
 
     /**
-     * Draws the prints; called from world rendering (see {@code MixinDebugRenderer})
+     * Submits the prints for drawing; called as the level's features are submitted (see {@code MixinLevelRenderer})
      */
-    public static void render(PoseStack poseStack, MultiBufferSource buffers, double camX, double camY, double camZ) {
-        Holder.INSTANCE.draw(poseStack, buffers, camX, camY, camZ);
+    public static void submitAll(SubmitNodeCollector collector, CameraRenderState camera) {
+        Holder.INSTANCE.submit(collector, camera);
     }
 }

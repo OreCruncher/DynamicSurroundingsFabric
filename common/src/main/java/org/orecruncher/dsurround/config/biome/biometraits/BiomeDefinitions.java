@@ -5,7 +5,7 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public final class BiomeDefinitions {
     private static final int MAX_DEPTH = 4;
 
     private final IDefinitionFiles files;
-    private final Map<ResourceLocation, Optional<BiomeDefinition>> biomes = new ConcurrentHashMap<>();
+    private final Map<Identifier, Optional<BiomeDefinition>> biomes = new ConcurrentHashMap<>();
 
     public BiomeDefinitions(IDefinitionFiles files) {
         this.files = files;
@@ -41,11 +41,11 @@ public final class BiomeDefinitions {
     /**
      * What a biome's definition says it grows, if it has one
      */
-    public Optional<BiomeDefinition> read(ResourceLocation biome) {
+    public Optional<BiomeDefinition> read(Identifier biome) {
         return this.biomes.computeIfAbsent(biome, this::readBiome);
     }
 
-    private Optional<BiomeDefinition> readBiome(ResourceLocation biome) {
+    private Optional<BiomeDefinition> readBiome(Identifier biome) {
         return this.files.read(biome.getNamespace(), "biome", biome.getPath())
                 .filter(JsonElement::isJsonObject)
                 .map(json -> this.define(json.getAsJsonObject()));
@@ -84,7 +84,16 @@ public final class BiomeDefinitions {
     }
 
     private static boolean spawnsWaterCreatures(JsonObject biome) {
-        var spawners = biome.get("spawners");
+        var attributes = biome.get("attributes");
+        if (attributes == null || !attributes.isJsonObject())
+            return false;
+        var spawns = attributes.getAsJsonObject().get("minecraft:gameplay/natural_mob_spawns");
+        if (spawns == null || !spawns.isJsonObject())
+            return false;
+        var argument = spawns.getAsJsonObject().has("argument") ? spawns.getAsJsonObject().get("argument") : spawns;
+        if (!argument.isJsonObject())
+            return false;
+        var spawners = argument.getAsJsonObject().get("spawns_by_category");
         if (spawners == null || !spawners.isJsonObject())
             return false;
         var creatures = spawners.getAsJsonObject().get("water_creature");
@@ -96,8 +105,8 @@ public final class BiomeDefinitions {
      * only the vegetation step: a step only orders the features, and mods put trees in others (No Man's Land in the
      * underground decoration and top layer steps). Underground placements are told by their rules instead.
      */
-    private static List<ResourceLocation> vegetation(JsonObject biome) {
-        var result = new ArrayList<ResourceLocation>();
+    private static List<Identifier> vegetation(JsonObject biome) {
+        var result = new ArrayList<Identifier>();
         var steps = biome.get("features");
         if (steps == null || !steps.isJsonArray())
             return result;
@@ -112,7 +121,7 @@ public final class BiomeDefinitions {
         return result;
     }
 
-    private boolean isTree(@Nullable ResourceLocation id, @Nullable JsonObject placed, int depth) {
+    private boolean isTree(@Nullable Identifier id, @Nullable JsonObject placed, int depth) {
         if (id != null && isBush(id))
             return false;
         if (id != null && id.getPath().contains("tree"))
@@ -127,7 +136,7 @@ public final class BiomeDefinitions {
             return false;
         if (configuredId != null && configuredId.getPath().contains("tree"))
             return true;
-        var configured = feature.isJsonObject() ? feature.getAsJsonObject() : this.object("configured_feature", configuredId);
+        var configured = feature.isJsonObject() ? feature.getAsJsonObject() : this.object("feature", configuredId);
         return configured != null && this.isTreeConfigured(configured, depth);
     }
 
@@ -135,7 +144,7 @@ public final class BiomeDefinitions {
      * Bushes and shrubs are named or placed as trees ({@code trees_rocky_shrubland} places {@code oak_bush}), but
      * don't make a forest
      */
-    private static boolean isBush(ResourceLocation id) {
+    private static boolean isBush(Identifier id) {
         return id.getPath().contains("bush") || id.getPath().contains("shrub");
     }
 
@@ -147,21 +156,20 @@ public final class BiomeDefinitions {
         var type = configured.get("type");
         if (type != null && type.isJsonPrimitive() && type.getAsString().contains("tree"))
             return true;
-        var config = configured.get("config");
-        if (config == null || !config.isJsonObject())
-            return false;
         var choices = new ArrayList<JsonElement>();
-        var features = config.getAsJsonObject().get("features");
+        var features = configured.get("features");
         if (features != null) {
             for (var choice : features.isJsonArray() ? features.getAsJsonArray().asList() : List.of(features)) {
-                // A random selector's choices carry a chance with the feature
+                // A random selector's choices carry a chance with the feature, a weighted one's a weight with it
                 if (choice.isJsonObject() && choice.getAsJsonObject().has("chance"))
                     choice = choice.getAsJsonObject().get("feature");
+                else if (choice.isJsonObject() && choice.getAsJsonObject().has("weight"))
+                    choice = choice.getAsJsonObject().get("data");
                 choices.add(choice);
             }
         }
         for (var key : List.of("default", "feature_true", "feature_false")) {
-            var choice = config.getAsJsonObject().get(key);
+            var choice = configured.get(key);
             if (choice != null)
                 choices.add(choice);
         }
@@ -265,14 +273,14 @@ public final class BiomeDefinitions {
     /**
      * The id a reference names, or null for a tag or anything written out in place
      */
-    private static @Nullable ResourceLocation id(JsonElement reference) {
+    private static @Nullable Identifier id(JsonElement reference) {
         if (!reference.isJsonPrimitive() || !reference.getAsJsonPrimitive().isString())
             return null;
         var text = reference.getAsString();
-        return text.startsWith("#") ? null : ResourceLocation.tryParse(text);
+        return text.startsWith("#") ? null : Identifier.tryParse(text);
     }
 
-    private @Nullable JsonObject object(String folder, @Nullable ResourceLocation id) {
+    private @Nullable JsonObject object(String folder, @Nullable Identifier id) {
         if (id == null)
             return null;
         return this.files.read(id.getNamespace(), folder, id.getPath())

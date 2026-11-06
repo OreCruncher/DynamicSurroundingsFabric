@@ -13,12 +13,14 @@ import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.FontDescription;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.text.Localization;
 import org.orecruncher.dsurround.lib.config.ConfigElement;
@@ -30,6 +32,7 @@ import org.orecruncher.dsurround.lib.gui.GuiHelpers;
 import org.orecruncher.dsurround.lib.gui.TooltipDelay;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,15 +45,15 @@ import java.util.function.Supplier;
  */
 public class ClothAPIFactory implements IScreenFactory<Screen> {
 
-    private static final ResourceLocation[] BACKGROUNDS = {
-            ResourceLocation.parse("minecraft:textures/block/cobblestone.png"),
-            ResourceLocation.parse("minecraft:textures/block/bedrock.png"),
-            ResourceLocation.parse("minecraft:textures/block/bricks.png"),
-            ResourceLocation.parse("minecraft:textures/block/sandstone.png"),
-            ResourceLocation.parse("minecraft:textures/block/stone.png"),
-            ResourceLocation.parse("minecraft:textures/block/oak_planks.png"),
-            ResourceLocation.parse("minecraft:textures/block/gilded_blackstone.png"),
-            ResourceLocation.parse("minecraft:textures/block/dirt.png")
+    private static final Identifier[] BACKGROUNDS = {
+            Identifier.parse("minecraft:textures/block/cobblestone.png"),
+            Identifier.parse("minecraft:textures/block/bedrock.png"),
+            Identifier.parse("minecraft:textures/block/bricks.png"),
+            Identifier.parse("minecraft:textures/block/sandstone.png"),
+            Identifier.parse("minecraft:textures/block/stone.png"),
+            Identifier.parse("minecraft:textures/block/oak_planks.png"),
+            Identifier.parse("minecraft:textures/block/gilded_blackstone.png"),
+            Identifier.parse("minecraft:textures/block/dirt.png")
     };
 
     private static final Style TITLE_STYLE = Style.EMPTY.withColor(ColorPalette.PUMPKIN_ORANGE);
@@ -63,7 +66,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private static final Style LINK_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withUnderlined(true);
     // A chain link drawn by the mod's own font (assets/dsurround/font/icons.json), so it is text Cloth draws with
     // the name, and resource packs can replace it.
-    private static final Style LINK_ICON_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withFont(ResourceLocation.parse("dsurround:icons"));
+    private static final Style LINK_ICON_STYLE = Style.EMPTY.withColor(ColorPalette.MC_AQUA).withFont(new FontDescription.Resource(Identifier.parse("dsurround:icons")));
     private static final String LINK_ICON = "\uE000";
     private static final int TOOLTIP_WIDTH = 300;
 
@@ -79,7 +82,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
     private static final Component EMPTY_LINE = Component.literal(" ");
 
     private final ConfigurationData configData;
-    private final ResourceLocation background;
+    private final Identifier background;
 
     public ClothAPIFactory(ConfigurationData config) {
         this.configData = config;
@@ -258,8 +261,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
      * show it; changes not yet saved on the screen are lost, which the question says when there are any.
      */
     private void confirmPreset(ConfigPreset preset, Screen parent) {
-        var minecraft = Minecraft.getInstance();
-        var current = minecraft.screen;
+        var current = GameUtils.getCurrentScreen().orElse(null);
         var root = this.configData.getTranslationRoot();
         var name = preset.displayName(this.configData);
         var title = Component.literal(Localization.load(root + ".presets.confirm").formatted(name));
@@ -268,9 +270,9 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
         if (current instanceof AbstractConfigScreen screen && screen.isEdited())
             message.append("\n\n").append(Component.literal(Localization.load(root + ".presets.confirm.unsaved")).withStyle(RESTART_STYLE));
 
-        minecraft.setScreen(new PresetConfirmScreen(title, message, changes.isEmpty() ? null : changeList(changes), apply -> {
+        GameUtils.setScreen(new PresetConfirmScreen(title, message, changes.isEmpty() ? null : changeList(changes), apply -> {
             if (!apply) {
-                minecraft.setScreen(current);
+                GameUtils.setScreen(current);
                 return;
             }
             try {
@@ -278,7 +280,7 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
             } catch (Throwable t) {
                 Library.LOGGER.error(t, "Unable to save configuration");
             }
-            minecraft.setScreen(this.create(parent));
+            GameUtils.setScreen(this.create(parent));
         }));
     }
 
@@ -327,8 +329,8 @@ public class ClothAPIFactory implements IScreenFactory<Screen> {
      */
     private static Style linkStyle(Style style, String url) {
         return style
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(url)));
+                .withClickEvent(new ClickEvent.OpenUrl(URI.create(url)))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(url)));
     }
 
     /**

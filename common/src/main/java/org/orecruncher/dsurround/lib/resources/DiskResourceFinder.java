@@ -5,7 +5,7 @@ package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
 import dev.architectury.platform.Platform;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
@@ -54,7 +54,7 @@ public class DiskResourceFinder extends AbstractResourceFinder {
             var file = folder.resolve(fileName);
             if (Files.exists(file)) {
                 var namespace = folder.getFileName().toString();
-                var location = ResourceLocation.fromNamespaceAndPath(namespace, assetPath);
+                var location = Identifier.fromNamespaceAndPath(namespace, assetPath);
                 this.readInto(location, namespace, file, () -> Files.newInputStream(file), codec, results);
             }
         }

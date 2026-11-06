@@ -6,7 +6,7 @@ package org.orecruncher.dsurround.gui.overlay;
 import com.google.common.collect.ImmutableList;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelOverlay;
 import org.orecruncher.dsurround.lib.di.Cacheable;
@@ -24,6 +24,7 @@ public final class OverlayManager {
                 ContainerManager.resolve(DiagnosticsOverlay.class),
                 ContainerManager.resolve(CompassOverlay.class),
                 ContainerManager.resolve(ClockOverlay.class),
+                ContainerManager.resolve(TargetPortraitOverlay.class),
                 ContainerManager.resolve(LightLevelOverlay.class),
                 ContainerManager.resolve(ProfileOverlay.class)
         );
@@ -31,10 +32,10 @@ public final class OverlayManager {
         IClientTickEnd.EVENT.register(this::tick);
     }
 
-    public void render(GuiGraphics context, DeltaTracker deltaTracker) {
-        // Hidden with the HUD (F1). Fabric's layer already is; NeoForge draws a layer registered above all of them even
-        // then
-        if (Minecraft.getInstance().options.hideGui)
+    public void render(GuiGraphicsExtractor context, DeltaTracker deltaTracker) {
+        // Hidden with the HUD (F1, a bench screenshot). Fabric's HUD layers already are; NeoForge draws a layer
+        // registered above all of them even then
+        if (Minecraft.getInstance().gui.hud.isHidden())
             return;
         var partialTick = deltaTracker.getGameTimeDeltaTicks();
         this.overlays.forEach(overlay -> overlay.render(context, partialTick));

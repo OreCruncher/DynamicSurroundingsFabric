@@ -1,0 +1,34 @@
+// Flying through terrain, for comparing garbage collectors: run as it is for G1, and with -Pgc=zgc and "world" changed to
+// another for ZGC, so each starts on the same seed with nothing generated. The first repeat flies through new terrain, the
+// second through what the first generated. Render distance is whatever the run folder's options say (BENCHMARKS.md used 32).
+{
+  "world": "gc-g1",
+  "seed": 20261105,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {"width": 2560, "height": 1369, "vsync": false, "maxFps": 260},
+  "warmup": 5,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "fly": {
+      "biome": "minecraft:plains",
+      "pitch": 10,
+      "yaw": -90,
+      "flySpeed": 0.55,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "tp @s ~ 230 ~"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {"label": "fly", "scene": "fly"}
+  ]
+}

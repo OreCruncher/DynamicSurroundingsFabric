@@ -91,7 +91,7 @@ public class WaterfallColumnTests {
         }
 
         @Override
-        public int getMinBuildHeight() {
+        public int getMinY() {
             return -64;
         }
     }

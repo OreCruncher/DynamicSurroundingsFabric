@@ -11,8 +11,8 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.Guard;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.processing.FogHandler;
 import org.orecruncher.dsurround.processing.CloudHandler;
+import org.orecruncher.dsurround.processing.FogHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
@@ -30,7 +30,6 @@ public class MixinHelpers {
     public static final Configuration.SoundSystem soundSystemConfig = ContainerManager.resolve(Configuration.SoundSystem.class);
     public static final Configuration.FootstepAccents footstepAccentsConfig = ContainerManager.resolve(Configuration.FootstepAccents.class);
     public static final Configuration.ParticleTweaks particleTweaksConfig = ContainerManager.resolve(Configuration.ParticleTweaks.class);
-    public static final Configuration.Guards guardsConfig = ContainerManager.resolve(Configuration.Diagnostics.class).guards;
     public static final Configuration.SoundOptions soundOptions = ContainerManager.resolve(Configuration.SoundOptions.class);
     public static final Configuration.FogOptions fogOptions = ContainerManager.resolve(Configuration.FogOptions.class);
     public static final Configuration.WeatherOptions weatherOptions = ContainerManager.resolve(Configuration.WeatherOptions.class);
@@ -44,12 +43,27 @@ public class MixinHelpers {
     public static final Guard SUNSET_TINT_GUARD = Guard.named("Sunrise and sunset color tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
     public static final Guard RAIN_SOUND_GUARD = Guard.named("Storm rain sound");
+    /**
+     * Whether the level renderer's main pass is running: particle weather is drawn in place of vanilla's only then
+     * (see MixinLevelRenderer). Render thread only.
+     */
+    public static boolean inLevelMainPass;
+    /**
+     * The thread ticking vanilla's rain (ClientLevel.tickWeatherEffects, wrapped, see MixinClientLevel) while it does,
+     * otherwise null. The rain's hooks (its level in MixinLevel, its splashes and sound in MixinClientLevel) act only
+     * then, and only on that thread: other threads read the rain level too. It needn't be the client's: Async Particles
+     * ticks the rain on a worker. Hooked inside the method itself, they would be lost to a mod that wraps it (Iris on
+     * 1.21.11 wraps the method there).
+     */
+    public static volatile Thread rainTickThread;
+    public static final Guard GROUND_FOG_GUARD = Guard.named("Drawing ground fog");
+    public static final Guard WINDOW_FROST_GUARD = Guard.named("Drawing window frost");
+    public static final Guard PRECIPITATION_GUARD = Guard.named("Drawing particle rain and snow");
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");
     public static final Guard WIND_DRIFT_GUARD = Guard.named("Wind drift");
     public static final Guard VANILLA_FIRE_GUARD = Guard.named("Vanilla fire suppression on burning mobs");
     public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
-    public static final Guard PARTICLE_BATCH_GUARD = Guard.named("Particle batch repair");
     public static final Guard LIGHTNING_GUARD = Guard.named("Lightning");
     public static final Guard CLOUDS_GUARD = Guard.named("Dynamic clouds");
     public static final Guard PRECIPITATION_AHEAD_GUARD = Guard.named("Building rain and snow ahead");
@@ -79,6 +93,27 @@ public class MixinHelpers {
 
     public static IWeatherSimulation weatherSimulation() {
         return WeatherSimulationHolder.INSTANCE;
+    }
+
+    /**
+     * The storm's strength in place of the world's rain level, where vanilla draws and ticks its rain and snow. The
+     * game's level, if working it out fails. Read a few times a frame and a tick: no lambda.
+     */
+    /**
+     * Whether vanilla's rain is being ticked, on this thread (see {@link #rainTickThread})
+     */
+    public static boolean inRainTick() {
+        var thread = rainTickThread;
+        return thread != null && thread == Thread.currentThread();
+    }
+
+    public static float stormRainLevel(float vanillaLevel) {
+        try {
+            return weatherSimulation().rainLevel(vanillaLevel);
+        } catch (Throwable t) {
+            STORM_RAIN_LEVEL_GUARD.failed(t);
+            return vanillaLevel;
+        }
     }
 
     // Asked every frame to tint the fog's color

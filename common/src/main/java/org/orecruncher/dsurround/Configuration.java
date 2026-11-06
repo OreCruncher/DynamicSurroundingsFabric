@@ -3,6 +3,8 @@
 
 package org.orecruncher.dsurround;
 
+import org.orecruncher.dsurround.config.AuroraQuality;
+import org.orecruncher.dsurround.config.AuroraStyle;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.FootprintStyle;
@@ -79,6 +81,10 @@ public class Configuration extends ConfigurationData {
     public final ParticleTweaks particleTweaks = new ParticleTweaks();
 
     @Property
+    @Comment("Configuration options for the target portrait")
+    public final TargetPortraitOptions targetPortraitOptions = new TargetPortraitOptions();
+
+    @Property
     @Comment("Configuration options for the compass and clock overlay")
     public final CompassAndClockOptions compassAndClockOptions = new CompassAndClockOptions();
 
@@ -146,21 +152,8 @@ public class Configuration extends ConfigurationData {
         @Comment("Play your own Simple Voice Chat voice back to you, with enhanced sound processing, for testing")
         @Experimental
         public boolean voiceChatHearSelf = false;
-
-        @Property
-        @Comment("Fixes for problems other mods cause, each of which can be turned off should it cause a problem of its own")
-        public final Guards guards = new Guards();
     }
 
-    /**
-     * Fixes for problems other mods cause. Each can be turned off, in case one causes a problem of its own.
-     */
-    public static class Guards {
-
-        @Property
-        @Comment("Put back the drawing state another mod's particle changes while Minecraft's particles are drawn, which draws them as squares, and draw that particle on its own. Turn off if it causes a problem")
-        public boolean repairParticleBatches = true;
-    }
 
     public static class SoundSystem {
         @Property
@@ -302,6 +295,11 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("The style of water ripple to render when a drop hits a fluid")
         public WaterRippleStyle waterRippleStyle = WaterRippleStyle.PIXELATED_CIRCLE;
+
+        @Property
+        @Experimental
+        @Comment("Enable/disable waves lapping on the shores of oceans and large lakes, bigger in a storm")
+        public boolean enableBeachWaves = true;
     }
 
     public static class FlameJetOptions {
@@ -341,6 +339,10 @@ public class Configuration extends ConfigurationData {
         @MovedFrom({"particleEffects.enableWaterStepFroth", "worksInProgressOptions.enableWaterStepFroth"})
         @Comment("Enable/disable water froth: foam where flowing water drops one block (with a gentle sound) and around where waterfalls land")
         public boolean enableFroth = true;
+
+        @Property
+        @Comment("Enable/disable rings spreading on the water where a waterfall lands; follows the Water Ripple Style")
+        public boolean enableRings = true;
     }
 
     public static class FireflyOptions {
@@ -416,6 +418,18 @@ public class Configuration extends ConfigurationData {
         public boolean enableFootprints = true;
 
         @Property
+        @Comment("Enable/disable feet tracking snow, mud, sand and water onto hard ground; needs footprints on")
+        public boolean enableTrackedFootprints = true;
+
+        @Property
+        @Comment("Enable/disable rings spreading on the water where players and mobs fall in; follows the Water Ripple Style")
+        public boolean enableSplashRings = true;
+
+        @Property
+        @Comment("Enable/disable rings spreading on the water from players and mobs bobbing, and from boats; follows the Water Ripple Style")
+        public boolean enableBobbingRings = true;
+
+        @Property
         @Comment("The look of players' footprints")
         public FootprintStyle footprintStyle = FootprintStyle.SQUARE;
     }
@@ -446,6 +460,24 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Smoke, ash, leaves and spores, from the game and other mods, drift with the wind out in the open")
         public boolean windBlowsParticles = true;
+    }
+
+    public static class TargetPortraitOptions {
+        @Property
+        @Experimental
+        @Comment("Shows a portrait of the mob you are looking at in the top left of the screen, with its name and health")
+        public boolean enableTargetPortrait = false;
+
+        @Property
+        @Experimental
+        @Comment("Shows a row of badges under the portrait for the effects showing on the mob")
+        public boolean showEffects = true;
+
+        @Property
+        @Experimental
+        @Comment("Scales the portrait by the specified amount")
+        @DoubleSlider(min = 0.5D, max = 3D, step = 0.1D)
+        public double scale = 1D;
     }
 
     public static class CompassAndClockOptions {
@@ -572,7 +604,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableWindowStreaks = true;
 
         @Property
-        @Comment("Frost forms on the outside of clear glass windows when it is cold")
+        @Comment("Frost forms on the outside of glass windows when it is cold")
         public boolean enableWindowFrost = true;
 
         // 0.4.8 kept the switch as the quality's NONE: declared before the quality, and its NONE (no longer one of
@@ -591,11 +623,6 @@ public class Configuration extends ConfigurationData {
         @Experimental
         @Comment("Clouds that change with the weather: scattered puffs that build up through fair afternoons, a low dark deck in a storm, towering in a thunderstorm. Drawn in place of vanilla's clouds")
         public boolean enableDynamicClouds = true;
-
-        @Property
-        @Slider(min = 8, max = 32)
-        @Comment("How far dynamic clouds reach, in chunks, whatever the render distance")
-        public int cloudDistance = 24;
     }
 
     public static class FogOptions {
@@ -627,9 +654,39 @@ public class Configuration extends ConfigurationData {
         public int chance = 33;
 
         @Property
+        @Comment("How auroras look: REALISTIC, modelled on real auroras, or CLASSIC, the original Dynamic Surroundings curtains")
+        public AuroraStyle style = AuroraStyle.REALISTIC;
+
+        @Property
+        @Comment("Settings for the classic aurora")
+        public final ClassicAurora classic = new ClassicAurora();
+
+        @Property
+        @Comment("Settings for the realistic aurora")
+        public final RealisticAurora realistic = new RealisticAurora();
+    }
+
+    public static class ClassicAurora {
+        @Property
         @Slider(min = 1, max = 3)
+        @MovedFrom("auroraOptions.maxBands")
         @Comment("The most curtains of light an aurora can have")
         public int maxBands = 3;
+    }
+
+    public static class RealisticAurora {
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("Percent of aurora nights that build into a storm: brighter, redder, and able to reach overhead")
+        public int stormChance = 10;
+
+        @Property
+        @Comment("How finely the realistic aurora is drawn: FANCY at the screen's size, FAST at half (a quarter of the cost, its finest rays a little softer)")
+        public AuroraQuality quality = AuroraQuality.FANCY;
+
+        @Property
+        @Comment("A bright moon washes out faint auroras, as it does the real ones")
+        public boolean moonWashout = true;
     }
 
     public static class MusicManagerOptions {

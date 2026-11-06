@@ -52,6 +52,17 @@ public final class MarginLayout {
         return EDGE_GAP + this.compassHeight + gap + this.watchHeight;
     }
 
+    /**
+     * How far down from the top of the screen the compass and watch reach when they are shown in the top left corner,
+     * the gap to the edge included; 0 when they aren't shown there
+     */
+    float topLeftReach(MarginPosition position) {
+        if (position != MarginPosition.TOP_LEFT || (this.compassWidth <= 0F && this.watchWidth <= 0F))
+            return 0F;
+        float gap = this.compassWidth > 0 && this.watchWidth > 0 ? ITEM_GAP : 0F;
+        return EDGE_GAP + this.compassHeight + gap + this.watchHeight;
+    }
+
     Placement place(MarginPosition position, float guiWidth, float guiHeight) {
         return place(position, guiWidth, guiHeight, this.compassWidth, this.compassHeight, this.watchWidth, this.watchHeight);
     }

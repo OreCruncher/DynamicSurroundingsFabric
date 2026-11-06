@@ -28,6 +28,12 @@ public class RenderTimerTests {
     }
 
     @Test
+    void timestampsAreScaledToNanoseconds() {
+        assertEquals(12345L, RenderTimer.nanos(12345L, 1F), "OpenGL's are nanoseconds");
+        assertEquals(123450L, RenderTimer.nanos(12345L, 10F), "AMD's Vulkan ticks are 10 ns");
+    }
+
+    @Test
     void noneIsACount() {
         var timer = new RenderTimer("spots");
         timer.count(0);

@@ -3,21 +3,35 @@
 
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.Client;
+import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
 public class FireflyParticle extends SimpleAnimatedParticle {
     private static final IRandomizer RANDOM = Randomizer.current();
+
+    // Fireflies, with their halos: vanilla's translucent particles with depth writes off, so halos don't hide each
+    // other. The lights they cast are drawn just before them (see PointLights).
+    private static final RenderPipeline PIPELINE = SoftParticles.particlePipeline("pipeline/firefly", null).build();
+    private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, PIPELINE, RenderPipelines.OIT_PARTICLE);
+
+    static {
+        // Drawn with a shader pack too, with the pack's program for translucent particles
+        IrisCompat.assignPipeline(PIPELINE, IrisCompat.Program.PARTICLES_TRANSLUCENT);
+    }
     private static final float XZ_MOTION_DELTA = 0.03F; //0.04F;
     private static final float Y_MOTION_DELTA = XZ_MOTION_DELTA / 2.0F;
 
@@ -92,12 +106,12 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return DSurroundParticleRenderType.PARTICLE_SHEET_FIREFLY;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return LAYER;
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTicks) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTicks) {
         // Dark between flashes, like a real firefly
         var glow = this.flash.brightness(this.age + partialTicks);
         if (glow < MIN_VISIBLE)
@@ -111,13 +125,13 @@ public class FireflyParticle extends SimpleAnimatedParticle {
             this.sprite = this.haloSprite;
             this.quadSize = size * HALO_SCALE;
             this.alpha = HALO_ALPHA * glow;
-            super.render(buffer, camera, partialTicks);
+            super.extract(state, camera, partialTicks);
             this.sprite = sprite;
             this.quadSize = size;
         }
 
         this.alpha = glow;
-        super.render(buffer, camera, partialTicks);
+        super.extract(state, camera, partialTicks);
 
         if (PointLights.fireflyLightsOn()) {
             PointLights.add(
@@ -131,8 +145,8 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
     // Lit by its own light while it flashes, however dark it is around it (as GlowParticle)
     @Override
-    public int getLightColor(float f) {
-        int i = super.getLightColor(f);
+    public int getLightCoords(float f) {
+        int i = super.getLightCoords(f);
         int block = i & 0xFF;
         int sky = i >> 16 & 0xFF;
         block = Math.max(block, (int) (this.flash.brightness(this.age + f) * 240F));

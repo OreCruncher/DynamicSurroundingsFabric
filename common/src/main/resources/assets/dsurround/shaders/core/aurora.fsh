@@ -1,4 +1,5 @@
-#version 150
+#version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
@@ -12,18 +13,22 @@
 //  - colour by height: BottomColor at the edge, through MiddleColor, to TopColor where it fades out
 //  - patches of brightness travelling along the curtain, and a faint flicker
 
-uniform float AuroraTime;  // seconds
-uniform vec3 BottomColor;
-uniform vec3 MiddleColor;
-uniform vec3 TopColor;
-uniform float Alpha;       // overall strength, 0 to 1
+// Colours are vec4 for std140 layout; only rgb is used
+layout(std140) uniform AuroraInfo {
+    vec4 BottomColor;
+    vec4 MiddleColor;
+    vec4 TopColor;
+    float AuroraTime;  // seconds
+    float Alpha;       // overall strength, 0 to 1
+};
+
 // A random value a texel, read smoothly between texels and repeating (NoiseTexture)
 uniform sampler2D NoiseSampler;
 
-in vec2 texCoord0;
-in float vertexAlpha;
+layout(location = 0) in vec2 texCoord0;
+layout(location = 1) in float vertexAlpha;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 // The noise texture's size, which it repeats at (AuroraRenderer.NOISE_SIZE): wider than a curtain's finest noise
 const float NOISE_SIZE = 512.0;
@@ -70,8 +75,8 @@ void main() {
     float intensity = profile * (0.25 + 0.75 * rays) * pulse * flicker * vertexAlpha * Alpha;
 
     vec3 color = v < 0.3
-        ? mix(BottomColor, MiddleColor, smoothstep(0.0, 0.3, v))
-        : mix(MiddleColor, TopColor, smoothstep(0.3, 0.7, v));
+        ? mix(BottomColor.rgb, MiddleColor.rgb, smoothstep(0.0, 0.3, v))
+        : mix(MiddleColor.rgb, TopColor.rgb, smoothstep(0.3, 0.7, v));
     // The lower edge burns a little whiter
     color = mix(color, vec3(1.0), 0.25 * lower * glow);
 

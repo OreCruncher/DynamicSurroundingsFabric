@@ -64,8 +64,8 @@ public class ConfigCommandHandler {
             first = false;
             var hover = name(config, preset).append("\n").append(preset.displayDescription(config));
             list.append(Component.literal(preset.id()).withStyle(NAME_STYLE
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, hover))
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/dsconfig preset " + preset.id()))));
+                    .withHoverEvent(new HoverEvent.ShowText(hover))
+                    .withClickEvent(new ClickEvent.SuggestCommand("/dsconfig preset " + preset.id()))));
         }
         return list;
     }

@@ -8,6 +8,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -95,7 +96,7 @@ public final class Shelter {
         for (var side : SIDES) {
             for (int step = 1; step <= ROOF_REACH; step++) {
                 SCRATCH.setWithOffset(pos, side.getStepX() * step, 0, side.getStepZ() * step);
-                if (columns.state(SCRATCH).blocksMotion())
+                if (blocksMotion(columns.state(SCRATCH)))
                     break;
                 // Its own block doesn't block motion, so at most a fluid's surface there
                 if (SCRATCH.getY() >= columns.top(SCRATCH.getX(), SCRATCH.getZ()) - 1) {
@@ -105,6 +106,14 @@ public final class Shelter {
             }
         }
         return share;
+    }
+
+    /**
+     * What used to be BlockState.blocksMotion(): 26.3 took it out for a tag the heightmaps read, which holds nothing
+     * until a world's tags arrive
+     */
+    static boolean blocksMotion(BlockState state) {
+        return state.isSolid() && !state.is(Blocks.COBWEB) && !state.is(Blocks.BAMBOO_SAPLING);
     }
 
     /**

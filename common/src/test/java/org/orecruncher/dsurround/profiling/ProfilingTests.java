@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.profiling;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.effects.RenderTimers;
+import org.orecruncher.dsurround.effects.aurora.Aurora;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -183,8 +185,9 @@ public class ProfilingTests {
 
     // As the render thread captures it in the game, which tests can't: there is no OpenGL here
     static ProfileEnvironment environment() {
-        return new ProfileEnvironment("Dynamic Surroundings 1.21.1-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
-                "4.6.0 Test Driver 1.2.3", "fabulous", false, 12, 3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
+        return new ProfileEnvironment("Dynamic Surroundings 26.2-0.4.7 (Fabric)", 42, "Test GPU/PCIe/SSE2", "Test Vendor",
+                "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
+                3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
                 List.of(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false),
                         new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "true", true)));
     }
@@ -216,8 +219,8 @@ public class ProfilingTests {
         assertEquals(new ProfileFeature(ProfileFeature.SETTING, "entityEffects.entityEffectRange", "16", false),
                 named(features, "entityEffects.entityEffectRange"));
         assertTrue(named(features, "weatherOptions.enableDynamicClouds").usual());
-        // Nested groups are walked, and every hook and conflict is there
-        assertTrue(named(features, "diagnostics.guards.repairParticleBatches").usual());
+        // Every setting is named by its group, and every hook and conflict is there
+        assertTrue(features.stream().filter(f -> f.kind().equals(ProfileFeature.SETTING)).allMatch(f -> f.name().contains(".")));
         assertEquals(OptionalHook.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.HOOK)).count());
         assertEquals(FeatureConflict.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.CONFLICT)).count());
     }
@@ -270,9 +273,11 @@ public class ProfilingTests {
         var event = events.getFirst();
         assertEquals(environment.mod(), event.getString("mod"));
         assertEquals(environment.mods(), event.getInt("mods"));
-        assertEquals(environment.glRenderer(), event.getString("glRenderer"));
-        assertEquals(environment.glVendor(), event.getString("glVendor"));
-        assertEquals(environment.glVersion(), event.getString("glVersion"));
+        assertEquals(environment.gpu(), event.getString("gpu"));
+        assertEquals(environment.gpuVendor(), event.getString("gpuVendor"));
+        assertEquals(environment.gpuType(), event.getString("gpuType"));
+        assertEquals(environment.driver(), event.getString("driver"));
+        assertEquals(environment.backend(), event.getString("backend"));
         assertEquals(environment.graphics(), event.getString("graphics"));
         assertEquals(environment.shaderPack(), event.getBoolean("shaderPack"));
         assertEquals(environment.renderDistance(), event.getInt("renderDistance"));
@@ -392,8 +397,8 @@ public class ProfilingTests {
         var text = ProfileSummary.of(file).text("storm");
         assertTrue(text.length() <= ProfileSummary.LIMIT, text.length() + " characters");
         assertTrue(text.startsWith("Dynamic Surroundings profile: storm, "), text);
-        assertTrue(text.contains("Test GPU/PCIe/SSE2 (4.6.0 Test Driver 1.2.3)"), text);
-        assertTrue(text.contains("Display: 3840x2160, fabulous, render distance 12, vsync off, frame limit none, dev run clientPotato"), text);
+        assertTrue(text.contains("GPU: Test GPU/PCIe/SSE2 (discrete; OpenGL, driver 4.6.0 Test Driver 1.2.3)"), text);
+        assertTrue(text.contains("Display: 3840x2160, fabulous, improved transparency on, render distance 12, vsync off, frame limit none, dev run clientPotato"), text);
         assertTrue(text.contains("Frames: 125 fps, mean 8.0 ms"), text);
         assertTrue(text.contains("most: Cloud Handler 0.20"), text);
         assertTrue(text.contains("Hooks not applied: DYNAMIC_CLOUDS"), text);
@@ -513,6 +518,43 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingHasTheAurora() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Drawn as the renderer would each frame: half strength, over a quarter of a 100x100 screen
+        var aurora = Aurora.create(7, 3);
+        while (recorder.isAlive()) {
+            AuroraSamples.drawn(aurora, 0.5F, 2500.0, 10000);
+            Thread.sleep(20);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Aurora"))
+                .toList();
+        assertFalse(events.isEmpty());
+        for (var event : events) {
+            assertTrue(event.getInt("frames") > 0);
+            assertEquals(aurora.bands(), event.getInt("bands"));
+            assertEquals(aurora.distance(), event.getFloat("distance"), 1e-6);
+            assertEquals(aurora.height(), event.getFloat("height"), 1e-6);
+            assertEquals(Math.toDegrees(aurora.heading()), event.getFloat("heading"), 1e-3);
+            assertEquals(0.5F, event.getFloat("strength"), 1e-6);
+            assertEquals(2500.0, event.getDouble("pixels"), 1e-6);
+            assertEquals(0.25, event.getDouble("screenShare"), 1e-6);
+        }
+        // Not recording any more: nothing is kept for the next
+        assertFalse(AuroraSamples.isRecording());
+    }
+
+    @Test
     void aRecordingHasTheEnhancedSounds() throws Exception {
         var file = this.folder.resolve("test.jfr");
         // Counted before the recording: not in it
@@ -528,21 +570,10 @@ public class ProfilingTests {
                 }
             });
             recorder.start();
-            // A pass a tick, as the worker would: 4 sounds, one starting (2 ms) and two updates (1 and 3 ms); of their
-            // calculations one traced (1.5 ms), two shared, one reused its own and one was skipped
+            // A pass a tick, as the worker would
             while (recorder.isAlive()) {
-                if (SoundSamples.isRecording()) {
-                    SoundSamples.started(2_000_000);
-                    SoundSamples.deferred();
-                    SoundSamples.updated(1_000_000);
-                    SoundSamples.updated(3_000_000);
-                    SoundSamples.traced(1_500_000);
-                    SoundSamples.shared();
-                    SoundSamples.shared();
-                    SoundSamples.reused();
-                    SoundSamples.skipped();
-                    SoundSamples.pass(5_000_000, 4);
-                }
+                if (SoundSamples.isRecording())
+                    soundPass();
                 Thread.sleep(50);
             }
             recorder.join();
@@ -554,32 +585,74 @@ public class ProfilingTests {
                 .filter(e -> e.getEventType().getName().equals("dsurround.EnhancedSounds"))
                 .toList();
         assertFalse(events.isEmpty());
+        // A second can end partway through a pass, leaving its counts in two events: what they hold is checked in
+        // enhancedSoundsEventsHoldWhatWasCounted
         int passes = 0;
         for (var event : events) {
             assertTrue(event.getBoolean("available"));
-            int n = event.getInt("passes");
-            passes += n;
-            assertEquals(n, event.getInt("starts"));
-            assertEquals(n, event.getInt("deferred"));
-            assertEquals(2 * n, event.getInt("updates"));
-            assertEquals(n, event.getInt("traced"));
-            assertEquals(2 * n, event.getInt("shared"));
-            assertEquals(n, event.getInt("reused"));
-            assertEquals(n, event.getInt("skipped"));
-            if (n == 0)
-                continue;
-            assertEquals(4F, event.getFloat("sources"), 1e-6);
-            assertEquals(4, event.getInt("sourcesPeak"));
-            assertEquals(2.0, event.getDouble("startMean"), 1e-9);
-            assertEquals(2.0, event.getDouble("startPeak"), 1e-9);
-            assertEquals(2.0, event.getDouble("updateMean"), 1e-9);
-            assertEquals(3.0, event.getDouble("updatePeak"), 1e-9);
-            assertEquals(5.0, event.getDouble("passMean"), 1e-9);
-            assertEquals(1.5, event.getDouble("traceMean"), 1e-9);
-            assertEquals(1.5, event.getDouble("tracePeak"), 1e-9);
+            assertTrue(event.getDouble("startPeak") <= 2.0, "peak " + event.getDouble("startPeak"));
+            passes += event.getInt("passes");
         }
         assertTrue(passes > 0);
         assertFalse(SoundSamples.isRecording());
+    }
+
+    @Test
+    void enhancedSoundsEventsHoldWhatWasCounted() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        try (var recording = new Recording()) {
+            recording.enable(EnhancedSoundsEvent.class);
+            recording.start();
+            SoundSamples.start();
+            try {
+                soundPass();
+                soundPass();
+                EnhancedSoundsEvent.write(true, SoundSamples.take());
+            } finally {
+                SoundSamples.stop();
+            }
+            recording.stop();
+            recording.dump(file);
+        }
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.EnhancedSounds"))
+                .toList();
+        assertEquals(1, events.size());
+        var event = events.getFirst();
+        assertTrue(event.getBoolean("available"));
+        assertEquals(2, event.getInt("passes"));
+        assertEquals(2, event.getInt("starts"));
+        assertEquals(2, event.getInt("deferred"));
+        assertEquals(4, event.getInt("updates"));
+        assertEquals(2, event.getInt("traced"));
+        assertEquals(4, event.getInt("shared"));
+        assertEquals(2, event.getInt("reused"));
+        assertEquals(2, event.getInt("skipped"));
+        assertEquals(4F, event.getFloat("sources"), 1e-6);
+        assertEquals(4, event.getInt("sourcesPeak"));
+        assertEquals(2.0, event.getDouble("startMean"), 1e-9);
+        assertEquals(2.0, event.getDouble("startPeak"), 1e-9);
+        assertEquals(2.0, event.getDouble("updateMean"), 1e-9);
+        assertEquals(3.0, event.getDouble("updatePeak"), 1e-9);
+        assertEquals(5.0, event.getDouble("passMean"), 1e-9);
+        assertEquals(1.5, event.getDouble("traceMean"), 1e-9);
+        assertEquals(1.5, event.getDouble("tracePeak"), 1e-9);
+    }
+
+    // 4 sounds, one starting (2 ms) and two updates (1 and 3 ms); of their calculations one traced (1.5 ms), two shared,
+    // one reused its own and one was skipped
+    private static void soundPass() {
+        SoundSamples.started(2_000_000);
+        SoundSamples.deferred();
+        SoundSamples.updated(1_000_000);
+        SoundSamples.updated(3_000_000);
+        SoundSamples.traced(1_500_000);
+        SoundSamples.shared();
+        SoundSamples.shared();
+        SoundSamples.reused();
+        SoundSamples.skipped();
+        SoundSamples.pass(5_000_000, 4);
     }
 
     @Test
@@ -605,7 +678,9 @@ public class ProfilingTests {
                 .filter(e -> e.getEventType().getName().equals("dsurround.Feature"))
                 .map(e -> new ProfileFeature(e.getString("kind"), e.getString("name"), e.getString("state"), e.getBoolean("usual")))
                 .toList();
-        assertEquals(environment.features(), events);
+        // Written together, so they can share a timestamp, and JFR hands those back in any order
+        assertEquals(environment.features().size(), events.size());
+        assertEquals(new HashSet<>(environment.features()), new HashSet<>(events));
     }
 
     @Test
@@ -637,7 +712,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("AuroraEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

@@ -29,7 +29,7 @@ public interface IDefinitionFiles {
     /**
      * The file, parsed, if there is one and it reads
      *
-     * @param folder the folder under {@code worldgen}: {@code biome}, {@code placed_feature}, {@code configured_feature}
+     * @param folder the folder under {@code worldgen}: {@code biome}, {@code placed_feature}, {@code feature}
      */
     Optional<JsonElement> read(String namespace, String folder, String path);
 
