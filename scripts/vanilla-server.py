@@ -73,6 +73,7 @@ REGISTRIES = {
     "minecraft:entity_type": "entity_type",
     "minecraft:worldgen/biome": "worldgen/biome",
 }
+ALWAYS_HAVE_C_TAGS = {"block", "item", "worldgen/biome"}
 
 
 def gradle_property(name):
@@ -283,6 +284,10 @@ def report(folder, tags, resolver):
     print(f"{folder}: {found} of {expected} members only c: tags give")
     for line in missing:
         print(f"  MISSING {line}")
+    # None to look for means the c: tags weren't read, not that all is well
+    if expected == 0 and folder in ALWAYS_HAVE_C_TAGS:
+        print(f"  NOTHING to check for {folder}: are the c: tags in {resolver.convention.filename}?")
+        return 1
     return len(missing)
 
 

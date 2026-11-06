@@ -17,7 +17,7 @@ The first release for Minecraft 26.3, with a new aurora modeled on real ones and
 
 **AI Disclosure**
 * Ported the mod to Minecraft 26.3's rendering, and made its shaders work on Vulkan
-* Built the tracked footprints, water rings, wakes, beach waves and target portrait
+* Built the realistic aurora, tracked footprints, water rings, wakes, beach waves and target portrait
 * Measured the effects with benchmark runs on OpenGL and Vulkan, and tuned the realistic aurora's quality from the results
 * Found drawing faults under Improved Transparency by reading captured frames with RenderDoc, and fixed them
 
@@ -27,7 +27,7 @@ The first release for Minecraft 26.3, with a new aurora modeled on real ones and
   * Now and then a night builds into a storm, brighter and redder, that can reach overhead (Storm chance). A bright moon washes out the faint parts, as a real one does (Moonlight washout)
   * Quality in Realistic Aurora: Fancy draws it at the screen's size, and Fast at half that, for about a quarter of the cost. The Low preset sets Fast
   * `/dsaurora` shows tonight's aurora, and can hold its activity, phase or colors to look at; `/dsaurora clear` lets it go. `/dsprofile aurora` records a storm overhead
-* Vulkan: all effects draw on Minecraft 26.3's Vulkan option as they do on OpenGL. Checked on an AMD card, and frame rates are a little lower than on OpenGL, mostly from the game's own drawing
+* Vulkan: all effects draw on Minecraft 26.3's Vulkan option as they do on OpenGL. Tested so far on AMD graphics only, where frame rates are a little lower than on OpenGL, mostly from Minecraft's own drawing rather than this mod's effects
   * On NeoForge, the loading screen doesn't work with Vulkan: set `earlyWindowControl = false` in `config/fml.toml`
 * Tracked footprints: feet carry what they walk through, and players and mobs leave colored prints that fade with each step
   * Snow, mud, sand, red sand, soul sand and water track onto hard ground; snow and mud show on soft ground too, then give way to normal prints

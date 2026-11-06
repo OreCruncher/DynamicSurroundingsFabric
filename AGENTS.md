@@ -27,7 +27,7 @@ without the notice, breaks the license.
 ## About the mod
 Client-side Minecraft mod (MIT). Minecraft 26.3, Fabric and NeoForge through Architectury. Versions are in
 `gradle.properties`. This branch, still named for 26.2, is on 26.3, carrying 0.4.9 and 1.21.11's 5.0.0 fixes, and where features land first;
-`MIGRATION.md` records what changed and what still needs checking in game. 26.2 itself was never released: the next
+`MIGRATION.md` holds notes for the next Minecraft version: how the last move went, and what is known of 26.4. 26.2 itself was never released: the next
 release, 5.1.0, is for 26.3.
 
 ## Layout
@@ -62,8 +62,9 @@ release, 5.1.0, is for 26.3.
   under `.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-merged-*/26.3/`.
 
 ## Checking in the dev client
-- Launch in the background, logging to a file:
-  `/c/repos/DynamicSurroundingsFabric/gradlew -p /c/repos/DynamicSurroundingsFabric :fabric:runClient > <log> 2>&1`
+- Launch in the background, logging to a file, from the checkout being worked on (each worktree is its own branch, and
+  `/c/repos/DynamicSurroundingsFabric` holds `main`, so another's `gradlew` tests other code):
+  `./gradlew :fabric:runClient > <log> 2>&1`
 - Wait for and grep the log: `Loaded the dsurround:pipeline/<name> shader`, `Dependency registration validated`,
   `N biome configs loaded`, mixin errors (`InvalidInjection`, `MixinApplyError`), config migration
   (`has moved to`).
@@ -202,8 +203,8 @@ release, 5.1.0, is for 26.3.
   from `Std140Builder.onStack`; made once with their data where it doesn't change while the device lives), not
   `MappableRingBuffer`s: its `rotate()` sets a fence, and the one after the aurora held the GPU idle 2.2 ms a frame on
   1.21.11 (AMD). 26.2's recordings didn't show it, but other drivers might.
-- Realistic aurora (`effects/aurora/RealisticAurora*`, `shaders/core/aurora_realistic.*`; MIGRATION.md has the
-  whole): the Java model mirrors the shader (`Arc.northAt` is `arc_north`, constants such as `FIELD_CELL`), and tests
+- Realistic aurora (`effects/aurora/RealisticAurora*`, `shaders/core/aurora_realistic.*`; the package's
+  `package-info.java` has the whole): the Java model mirrors the shader (`Arc.northAt` is `arc_north`, constants such as `FIELD_CELL`), and tests
   check the shader's text and constants against it, so change both. Its uniform block is in
   `shaders/include/aurora_realistic.glsl`. Anything that
   moves at a speed that changes goes through `RealisticAuroraMotion`, never `time × speed`. `/dsaurora activity|phase|
@@ -227,8 +228,8 @@ release, 5.1.0, is for 26.3.
   test or write depth (`ModShaderTests` checks the clouds' depth pass).
 - Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
 - Rendering is 26.3's: pipelines (`com.mojang.renderpearl.api`), `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
-  layers and extraction. Depth is reverse-Z (cleared to 0). See `MIGRATION.md` for how the aurora, soft particles and
-  point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3
+  layers and extraction. Depth is reverse-Z (cleared to 0). "How 26.3 draws a level" below has how the aurora, soft
+  particles and point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3
   can run on Vulkan.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
@@ -417,6 +418,8 @@ release, 5.1.0, is for 26.3.
 - `powercfg` runs from PowerShell only: Git Bash mangles `/change` ("Invalid Parameters").
 - Git Bash's `/tmp` isn't a path to Windows programs, Python among them. Give a script a Windows path (`cygpath -m`) in
   the scratchpad.
+- Findings worth keeping go in a file as they are made (`MIGRATION.md`, here, a memory note): a conversation's summary
+  isn't a record, and what is only there is lost with it.
 - The user commits; don't commit unless asked.
 
 ## Branches
@@ -430,7 +433,7 @@ release, 5.1.0, is for 26.3.
 - The current 1.21.1 release branch (none open since 0.4.9's squash): merged into this branch directly, before its squash to
   `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
   `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
-  work by merging, resolving against 26.3's APIs (see `MIGRATION.md`); never rebase this branch.
+  work by merging, resolving against 26.3's APIs; never rebase this branch.
   - After `git merge OreCruncher/<release>` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
     (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
     names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
