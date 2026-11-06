@@ -2,6 +2,8 @@
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
 
+The first release for Minecraft 26.3, with a new aurora modeled on real ones and water that answers to what moves through it. It carries every feature and fix of 5.0.0 for 1.21.11 (see below). 1.21.11 takes fixes from here, not features, so it stays on 5.0.x.
+
 **All Loaders**
 * JAVA 25+  
 * Architectury 22.0.5+
@@ -13,7 +15,20 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 **NeoForge**
 * NeoForge 26.3.0.101+
 
+**AI Disclosure**
+* Ported the mod to Minecraft 26.3's rendering, and made its shaders work on Vulkan
+* Built the tracked footprints, water rings, wakes, beach waves and target portrait
+* Measured the effects with benchmark runs on OpenGL and Vulkan, and tuned the realistic aurora's quality from the results
+* Found drawing faults under Improved Transparency by reading captured frames with RenderDoc, and fixed them
+
 **What's New**
+* Realistic aurora: a new style of aurora, modeled on real ones, and now the default. The original stays as Aurora style Classic
+  * Arcs of light high in the sky with folds, rays and colors that vary from night to night, growing, breaking up and fading through the night
+  * Now and then a night builds into a storm, brighter and redder, that can reach overhead (Storm chance). A bright moon washes out the faint parts, as a real one does (Moonlight washout)
+  * Quality in Realistic Aurora: Fancy draws it at the screen's size, and Fast at half that, for about a quarter of the cost. The Low preset sets Fast
+  * `/dsaurora` shows tonight's aurora, and can hold its activity, phase or colors to look at; `/dsaurora clear` lets it go. `/dsprofile aurora` records a storm overhead
+* Vulkan: all effects draw on Minecraft 26.3's Vulkan option as they do on OpenGL. Checked on an AMD card, and frame rates are a little lower than on OpenGL, mostly from the game's own drawing
+  * On NeoForge, the loading screen doesn't work with Vulkan: set `earlyWindowControl = false` in `config/fml.toml`
 * Tracked footprints: feet carry what they walk through, and players and mobs leave colored prints that fade with each step
   * Snow, mud, sand, red sand, soul sand and water track onto hard ground; snow and mud show on soft ground too, then give way to normal prints
   * Walking on grass or dirt in the rain leaves mud prints, and picks up mud to track onward
@@ -35,6 +50,9 @@ Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthe
 * Water ripples take the light of where they are, rather than always being full-bright, so they are dim at night
 * Mist, steam and smoke are always drawn after other particles, so ripples and foam under them no longer show on top of them, depending on the launch
 * Enhanced sounds reuse their calculations far more: only changes within 64 blocks of the player count, not grass spreading or water freezing far away. This saves work on the sound threads
+* With Improved Transparency on, flames and mist keep their soft edges and added light, and mist no longer cuts holes in the terrain or hides the clouds and weather behind it
+* With Improved Transparency on, clouds, rain and ground fog behind glass or water are drawn over it, without the tint of stained glass, and point lights fall on what is behind it
+* With Particle Rain installed, ground fog stands aside, as Particle Rain has fog of its own in wet biomes
 
 > ### DynamicSurroundings-1.21.11-5.0.0
 
