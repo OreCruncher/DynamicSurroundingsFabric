@@ -168,6 +168,12 @@ release, 5.1.0, is for 26.3.
   Exception: features hooked into code other mods often replace are `require = 0` and listed in
   `mixinutils/OptionalHook`, which checks at client start whether each applied (logs it, shows it in `/dsconflicts`
   and diagnostics, and fails the launch in dev). A new optional hook goes in that list (a test checks its handler).
+- The class tweaker (`dsurround.classtweaker`) has to be asked for by the jar as well: `"accessWidener"` in `fabric.mod.json` (that key, though the file is a class tweaker: Fabric Loader only warns of any other),
+  and on NeoForge `META-INF/accesstransformer.cfg`, generated from it by `accessTransformer` and declared in
+  `neoforge.mods.toml`. Loom applies it to development runs and pack runs whatever the jar says, so none of them show a
+  jar that doesn't: a real launcher crashed at once, in `MixinMinecraftClient`, writing a `final` field (`shadowJar` now
+  fails without it). `remapJar` added this up to 1.21.11, and 26.x has no `remapJar`. So try a release's jars in a real
+  launcher, once each loader, before uploading: no dev run covers them.
 - A mixin `method` given by name alone applies to the first overload only. NeoForge adds overloads (its
   `WeatherEffectRenderer.render` takes the level render state too, and the vanilla one only forwards to it), so give
   the descriptor, or every overload's, wherever NeoForge might add one: the injection still "applies", to a method
@@ -304,6 +310,9 @@ release, 5.1.0, is for 26.3.
   `voicechat` entrypoint / NeoForge annotation), so nothing else may reference it.
 - Our particles (`effects/particles`) stay the game's own particles, not a system like the weather's drops: the
   package's `package-info.java` says why, and what to measure before converting one (waterfall mist the likely one).
+  A particle's `tick` isn't always on the client thread: Particle Core ticks particles on several threads at once, and
+  Async Particles on a worker. So `tick` touches no shared state unguarded, and no `level.getRandom()` (fine in a
+  constructor): an unguarded map in `WaterFoam` crashed with Particle Core (#213).
 - Target portrait (`gui/overlay/TargetPortraitOverlay`): framed by height and width (`headBlocks`), with horses set by hand. A mob's effects aren't sent to clients, only the particles of the visible ones, so `TargetEffects` matches those back by color or type.
 - Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
   `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
@@ -335,9 +344,14 @@ release, 5.1.0, is for 26.3.
     that should follow the storm (fog, sounds, scripts, particles, aurora). Mixins feed it into vanilla's weather:
     drawn (`MixinWeatherEffectRenderer`), ticked with its splashes and sounds (`ClientLevel.tickWeatherEffects`), and
     its rain fog (`MixinAtmosphericFogEnvironment`). The mod's weather fog adds only a dust storm's. The tick is hooked
-    where `ClientLevel.tick` calls it (`MixinHelpers.rainTickThread`) and on what it calls (`Level.getRainLevel`,
-    `ClientLevel.addParticle` and `playLocalSound`), not inside it: a mod wrapping the method (`@WrapMethod`, as Iris
-    1.10 does to 1.21.11's `tickRainParticles`) leaves hooks inside it nothing to attach to.
+    around the method (`@WrapMethod`, `MixinHelpers.rainTickThread`) and on what it calls (`Level.getRainLevel`,
+    `ClientLevel.addParticle` and `playLocalSound`), not inside it: a mod wrapping the method (as Iris 1.10 does to
+    1.21.11's `tickRainParticles`) leaves hooks inside it nothing to attach to. The wrapper has an early `order` so that
+    it is the innermost. Wrappers chain, the first applied inside, and Async Particles' `tickWeatherAsync` hands the
+    method on to a worker from a `@WrapMethod` of its own: with ours outside it, or around the call, the mark was made on
+    the client thread and gone by then, so vanilla's splashes came through on grass, with vanilla's rain sounds and
+    level, and `OptionalHook` saw nothing wrong. That setting takes effect at once, no world restart, so it's a quick
+    way to compare. To see the order, run with `-Dmixin.debug.export=true` and read `.mixin.out` in the run folder.
   - `WindService` ticks `Wind` and publishes it via static `SceneWind` for particles to drift; `WindSounds` scales
     sound factories marked `followsWind`. `DustStorms` decides where storms raise dust.
   - `Shelter.exposure` is how open to the weather a place is (sky light, and a roof from the `MOTION_BLOCKING`

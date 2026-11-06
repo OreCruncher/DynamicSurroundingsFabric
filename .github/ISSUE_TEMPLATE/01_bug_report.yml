@@ -13,6 +13,9 @@ body:
         possible, and definitely include client logs. Most of the time the log will contain enough context information
         to identify the source of the issue.
 
+        **If a feature is turned on and isn't working, turn off any shader pack first.** Many effects are off on purpose
+        while a shader pack is in use. If the feature comes back with the shader pack off, it isn't a bug.
+
         See the [troubleshooting guide](https://dynamic-surroundings.readthedocs.io/en/latest/troubleshooting/troubleshooting.html)
         for what to include, where to find the logs, and how to capture a flight recording for performance problems.
   - type: input
@@ -42,6 +45,17 @@ body:
       options:
         - Upgrade
         - New Install
+    validations:
+      required: true
+  - type: dropdown
+    id: shaderpack
+    attributes:
+      label: "Shader Pack"
+      description: Does this happen with no shader pack in use? Turn the shader pack off to check before reporting.
+      options:
+        - "I don't use a shader pack"
+        - "Yes, it also happens with the shader pack off"
+        - "No, it only happens with a shader pack on"
     validations:
       required: true
   - type: textarea

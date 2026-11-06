@@ -621,6 +621,20 @@ going. Looking over some 4,200 columns a tick for where a pulse has reached does
 0.04 ms. As with boats, the game ticks the foam on its own time, outside the handlers' timers, so the frame rate is the
 better guide to the whole. The barrier the player stands on counts as land, adding a little shore around them.
 
+**Thicker storm foam, 2026-11-06.** In a storm the waves came 1.5 times as often and ran 2.5 times as far with the same
+patches, so the foam thinned out. Now a full storm has about twice the patches, 1.3 times the size, and only one in five
+runs the full reach. Rerun on the same day, NeoForge, OpenGL, 1920x1080, two repeats:
+
+| Run | fps | Frame GPU ms | Frame CPU ms | Shore Waves, ms a tick |
+|---|---|---|---|---|
+| calm, off | 900 | 0.746 (0.737-0.756) | 0.532 | 0.001 |
+| calm, waves | 888 | 0.745 (0.745-0.745) | 0.540 | 0.039 |
+| storm, off | 643 | 0.960 (0.953-0.968) | 0.829 | 0.001 |
+| storm, waves | 540 | 1.128 (1.099-1.158) | 0.928 | 0.053 |
+
+A storm's waves went from 0.02 ms of GPU to about 0.17, in a scene with far more shore than most beaches and the camera
+beside the foam: overdraw, from more and larger patches. Both tables are of one session each, so compare within a table.
+
 ## Results, 2026-11-05: G1 against ZGC (`gc.json`)
 
 NeoForge 26.3, the dev client's mods, 2560x1369, render distance 32 (`options.txt` in `neoforge/run-bench`, put back to 16

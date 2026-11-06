@@ -36,5 +36,8 @@ versionRange = "[22.0.5,)"
 ordering = "AFTER"
 side = "CLIENT"
 
+[[accessTransformers]]
+file = "META-INF/accesstransformer.cfg"
+
 [[mixins]]
 config = "dsurround.mixins.json"

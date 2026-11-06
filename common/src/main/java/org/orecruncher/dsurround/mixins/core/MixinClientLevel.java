@@ -3,8 +3,8 @@
 
 package org.orecruncher.dsurround.mixins.core;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -46,14 +46,16 @@ public class MixinClientLevel {
 
     /**
      * Marks vanilla's rain being ticked, for the hooks on what it calls: the rain level (MixinLevel), its splashes and
-     * its sound (below). Wrapped here, where it is called, rather than hooked inside it: a mod that wraps the method
-     * moves its body, and hooks inside it are left with nothing to attach to (Iris does so on 1.21.11).
+     * its sound (below). The method is wrapped, rather than hooked inside: a mod that wraps it moves its body, and hooks
+     * inside it are left with nothing to attach to (Iris does so on 1.21.11). The early order makes this the innermost
+     * wrapper, next to the method's own code, as it has to run on the thread doing the tick: Async Particles' wrapper,
+     * at the default order, hands the rest to a worker, and a mark made outside it would be gone by then.
      */
-    @WrapOperation(method = "tick(Ljava/util/function/BooleanSupplier;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;tickWeatherEffects()V"), require = 0)
-    private void dsurround$rainTick(ClientLevel level, Operation<Void> original) {
+    @WrapMethod(method = "tickWeatherEffects()V", order = 500, require = 0)
+    private void dsurround$rainTick(Operation<Void> original) {
         MixinHelpers.rainTickThread = Thread.currentThread();
         try {
-            original.call(level);
+            original.call();
         } finally {
             MixinHelpers.rainTickThread = null;
         }

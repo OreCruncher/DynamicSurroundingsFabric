@@ -51,6 +51,7 @@ public class KnownModTests {
         // As they were as constants, so moving them didn't change any
         assertEquals(List.of("presencefootsteps"), KnownMod.PRESENCE_FOOTSTEPS.ids());
         assertEquals(List.of("sound_physics_remastered"), KnownMod.SOUND_PHYSICS_REMASTERED.ids());
+        assertEquals(List.of("sound_physics_perfected"), KnownMod.SOUND_PHYSICS_PERFECTED.ids());
         assertEquals(List.of("particlerain"), KnownMod.PARTICLE_RAIN.ids());
         assertEquals(List.of("rsls"), KnownMod.RAISE_SOUND_LIMIT_SIMPLIFIED.ids());
         assertEquals(List.of("cloth-config", "cloth_config"), KnownMod.CLOTH_CONFIG.ids());

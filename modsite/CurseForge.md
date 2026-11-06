@@ -82,6 +82,9 @@ sound and visual effects.
 * Want more detailed footsteps sounds?  Check out [Presence Footsteps](https://www.curseforge.com/minecraft/mc-mods/presence-footsteps).
 * Want voices to echo in caves too? With [Simple Voice Chat](https://www.curseforge.com/minecraft/mc-mods/simple-voice-chat) installed, nearby players' voices get the same reverb and occlusion as other sounds.
 
+### Shader Packs
+Many effects are off on purpose while a shader pack is in use, whatever the configuration says: particle rain and snow, dust storms, ground fog, window frost, auroras, dynamic clouds, footprints and more. If a feature is on and isn't working, turn the shader pack off before opening an issue. [The list is here](https://dynamic-surroundings.readthedocs.io/en/latest/installation.html#shader-packs).
+
 ### Links
 * [Documentation on ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html)
 

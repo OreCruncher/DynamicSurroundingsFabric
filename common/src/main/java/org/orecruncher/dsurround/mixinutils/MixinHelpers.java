@@ -49,10 +49,11 @@ public class MixinHelpers {
      */
     public static boolean inLevelMainPass;
     /**
-     * The thread ticking vanilla's rain (ClientLevel.tickWeatherEffects, wrapped where ClientLevel.tick calls it, see
-     * MixinClientLevel) while it does, otherwise null. The rain's hooks (its level in MixinLevel, its splashes and sound
-     * in MixinClientLevel) act only then, and only on that thread: other threads read the rain level too. Hooked inside
-     * the method itself, they would be lost to a mod that wraps it (Iris on 1.21.11 wraps the method there).
+     * The thread ticking vanilla's rain (ClientLevel.tickWeatherEffects, wrapped, see MixinClientLevel) while it does,
+     * otherwise null. The rain's hooks (its level in MixinLevel, its splashes and sound in MixinClientLevel) act only
+     * then, and only on that thread: other threads read the rain level too. It needn't be the client's: Async Particles
+     * ticks the rain on a worker. Hooked inside the method itself, they would be lost to a mod that wraps it (Iris on
+     * 1.21.11 wraps the method there).
      */
     public static volatile Thread rainTickThread;
     public static final Guard GROUND_FOG_GUARD = Guard.named("Drawing ground fog");

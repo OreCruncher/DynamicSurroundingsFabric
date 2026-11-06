@@ -50,8 +50,8 @@ public enum OptionalHook {
             site("core.MixinClientLevel", "dsurround$rainTick"),
             site("core.MixinLevel", "dsurround$stormRainLevelTicked"),
             site("core.MixinAtmosphericFogEnvironment", "dsurround$stormRainFog")),
-    // Ticked rain is hooked where tickWeatherEffects is called and on what it calls, not inside it, which a mod that
-    // wraps the method would take away (see MixinHelpers.rainTickThread): each needs the call wrapped
+    // Ticked rain is hooked around tickWeatherEffects and on what it calls, not inside it, which a mod that wraps the
+    // method would take away (see MixinHelpers.rainTickThread): each needs the method wrapped
     RAIN_SOUNDS("Storm rain sounds",
             site("core.MixinClientLevel", "dsurround$rainTick"),
             site("core.MixinClientLevel", "dsurround$rainSound")),

@@ -120,7 +120,7 @@ public final class Landings {
                     if (traces++ < MAX_TRACES_PER_TICK)
                         this.blownIn(level, field, i, flecks, random);
                 } else if (traces++ < MAX_TRACES_PER_TICK) {
-                    this.rainBlownIn(level, field, i, streaks, random);
+                    this.rainBlownIn(level, field, i, dampSpots, streaks, random);
                 }
                 continue;
             }
@@ -178,10 +178,10 @@ public final class Landings {
 
     /**
      * A rain drop carried into a column below its top, followed on to what it hits: if that is the side of a window,
-     * it runs down the glass; if it drifted in under cover down to the ground, it splashes there, or smokes on something
-     * hot. Into anything else, it runs off unseen.
+     * it runs down the glass; if it drifted in under cover down to the ground, it does there what a drop falling straight
+     * does: splashes, soaks in or smokes on something hot. Into anything else, it runs off unseen.
      */
-    private void rainBlownIn(ClientLevel level, PrecipitationField field, int i, WindowStreaks streaks, RandomSource random) {
+    private void rainBlownIn(ClientLevel level, PrecipitationField field, int i, DampSpots dampSpots, WindowStreaks streaks, RandomSource random) {
         var hit = trace(level, new Vec3(field.landingX(i), field.landingY(i), field.landingZ(i)),
                 field.landingMotionX(i), field.landingMotionY(i), field.landingMotionZ(i));
         if (hit == null)
@@ -191,6 +191,8 @@ public final class Landings {
             var state = level.getBlockState(hit.getBlockPos());
             if (isHot(state) || state.getFluidState().is(FluidTags.LAVA))
                 level.addParticle(ParticleTypes.SMOKE, at.x, at.y, at.z, 0D, 0D, 0D);
+            else if (state.getFluidState().isEmpty() && this.tagLibrary.is(BlockEffectTags.RAIN_ABSORBING, state))
+                dampSpots.add(at.x, at.y, at.z, field.landingSize(i), random);
             else if (!state.getFluidState().isEmpty() || random.nextFloat() < splashChance(field.landingSize(i)))
                 level.addParticle(ParticleTypes.RAIN, at.x, at.y, at.z, 0D, 0D, 0D);
             return;

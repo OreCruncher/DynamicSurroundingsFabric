@@ -94,6 +94,7 @@ configure(subprojects.findAll { it.name != 'processor' }) {
         tasks.named('build') { finalizedBy 'copyJarToMain' }
         potatoRuns(project)
         benchJarExclusion(project)
+        accessInJar(project)
     }
 
     // Configure Maven publishing.
@@ -203,6 +204,24 @@ def benchJarExclusion(Project p) {
                 def found = zip.entries().find { it.name.startsWith(bench) }
                 if (found)
                     throw new GradleException("$jar.name holds the development bench ($found.name)")
+            }
+        }
+    }
+}
+
+// Development runs get dsurround.classtweaker from Loom, whatever the jar says, so nothing shows a jar that doesn't ask
+// its loader for it, and the game crashes as it starts. Up to 1.21.11 remapJar added this; there is no remapJar now.
+def accessInJar(Project p) {
+    p.tasks.matching { it.name == 'shadowJar' }.configureEach {
+        def fabric = p.name == 'fabric'
+        doLast {
+            def jar = archiveFile.get().asFile
+            new java.util.zip.ZipFile(jar).withCloseable { zip ->
+                def metadata = zip.getInputStream(zip.getEntry(fabric ? 'fabric.mod.json' : 'META-INF/neoforge.mods.toml')).text
+                def asked = metadata.contains(fabric ? '"accessWidener": "dsurround.classtweaker"' : 'META-INF/accesstransformer.cfg')
+                def file = zip.getEntry(fabric ? 'dsurround.classtweaker' : 'META-INF/accesstransformer.cfg')
+                if (!asked || file == null)
+                    throw new GradleException("$jar.name doesn't apply the class tweaker")
             }
         }
     }

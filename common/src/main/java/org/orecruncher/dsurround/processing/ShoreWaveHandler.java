@@ -16,7 +16,7 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.particles.ShoreFoam;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
-import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.tags.FluidTags;
 
 /**
@@ -32,14 +32,28 @@ public class ShoreWaveHandler extends AbstractClientHandler {
     static final int CALM_PULSE_TICKS = 120;
     static final int STORM_PULSE_TICKS = 80;
     private static final int PULSE_BLOCKS = 2;
+    // How many ticks early or late a wave can reach a stretch of shore, by the long and short ripples along it, and how
+    // many blocks a ripple is across: two sizes, neither a whole number of the other, so the pattern doesn't show
+    static final float LONG_RIPPLE_TICKS = 12F;
+    static final float SHORT_RIPPLE_TICKS = 5F;
+    private static final float LONG_RIPPLE_X = Mth.TWO_PI / 23F;
+    private static final float LONG_RIPPLE_Z = Mth.TWO_PI / 31F;
+    private static final float SHORT_RIPPLE_X = Mth.TWO_PI / 11F;
+    private static final float SHORT_RIPPLE_Z = Mth.TWO_PI / 13F;
     // How far from the player, in blocks
     static final int RANGE = 32;
     // How far out the water has to reach, in blocks, looked at every few
     static final int OPEN_WATER = 14;
     private static final int OPEN_WATER_STEP = 3;
-    // How far either way along the shore a wave reaches, and how close its patches are, in blocks
+    // How far either way along the shore a wave reaches, and how close its patches are, in blocks, calm and in a full
+    // storm: closer, as a storm's waves are to look thicker, not the same foam spread further up the shore
     private static final int WAVE_HALF_WIDTH = 1;
-    private static final double PATCH_SPACING = 0.5D;
+    private static final double CALM_PATCH_SPACING = 0.5D;
+    private static final double STORM_PATCH_SPACING = 0.2D;
+    // How much bigger a full storm's patches are
+    private static final float STORM_PATCH_SCALE = 1.3F;
+    // The share of patches that run the wave's full reach; the rest stay at the water's edge, thickening the foam there
+    static final float STRAY_SHARE = 0.2F;
     // How far land can be from the water's height and still be its shore
     private static final int SHORE_RISE = 1;
     private static final int WAVE_TICKS = 70;
@@ -47,11 +61,11 @@ public class ShoreWaveHandler extends AbstractClientHandler {
     private static final double START_OUT = 1.5D;
     private static final double START_OUT_MORE = 1D;
 
-    private final WeatherSimulation weather;
+    private final IWeatherSimulation weather;
     private final ITagLibrary tags;
     private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
 
-    public ShoreWaveHandler(WeatherSimulation weather, ITagLibrary tags, Configuration config, IModLog logger) {
+    public ShoreWaveHandler(IWeatherSimulation weather, ITagLibrary tags, Configuration config, IModLog logger) {
         super("Shore Waves", config, logger);
         this.weather = weather;
         this.tags = tags;
@@ -87,9 +101,10 @@ public class ShoreWaveHandler extends AbstractClientHandler {
             if (!this.isLand(level, x + toLand.getStepX(), y, z + toLand.getStepZ()) || !this.opensOut(level, x, y, z, toLand.getOpposite()))
                 continue;
             double surfaceY = y + level.getFluidState(this.probe.set(x, y, z)).getHeight(level, this.probe);
-            float reach = waveReach(storm);
+            double spacing = patchSpacing(storm);
+            float scale = patchScale(storm);
             double alongX = -toLand.getStepZ(), alongZ = toLand.getStepX();
-            for (double along = -WAVE_HALF_WIDTH; along <= WAVE_HALF_WIDTH; along += PATCH_SPACING) {
+            for (double along = -WAVE_HALF_WIDTH; along <= WAVE_HALF_WIDTH; along += spacing) {
                 double px = x + 0.5D + alongX * along + toLand.getStepX() * 0.3D + (RANDOM.nextDouble() - 0.5D) * 0.3D;
                 double pz = z + 0.5D + alongZ * along + toLand.getStepZ() * 0.3D + (RANDOM.nextDouble() - 0.5D) * 0.3D;
                 // Each on a shore of its own: the coast bends, and a straight line runs off a point out over the water
@@ -97,8 +112,9 @@ public class ShoreWaveHandler extends AbstractClientHandler {
                 if (!this.isOpenWater(level, blockX, y, blockZ) || !this.isLand(level, blockX + toLand.getStepX(), y, blockZ + toLand.getStepZ()))
                     continue;
                 double out = START_OUT + RANDOM.nextDouble() * START_OUT_MORE;
+                float reach = patchReach(storm, RANDOM.nextFloat());
                 GameUtils.getParticleManager().add(ShoreFoam.create(level, px - toLand.getStepX() * out, surfaceY, pz - toLand.getStepZ() * out,
-                        toLand.getStepX(), toLand.getStepZ(), out + reach * (0.8D + RANDOM.nextDouble() * 0.4D), WAVE_TICKS + RANDOM.nextInt(20)));
+                        toLand.getStepX(), toLand.getStepZ(), out + reach * (0.8D + RANDOM.nextDouble() * 0.4D), WAVE_TICKS + RANDOM.nextInt(20), scale));
             }
             return;
         }
@@ -132,7 +148,18 @@ public class ShoreWaveHandler extends AbstractClientHandler {
      * @param period the ticks between pulses
      */
     static boolean pulseHere(long tick, int x, int z, int period) {
-        return Math.floorMod(tick + Math.floorDiv(x + z, PULSE_BLOCKS), period) == 0;
+        return Math.floorMod(tick + pulseDelay(x, z), period) == 0;
+    }
+
+    /**
+     * Where a column falls in the pulse: a sweep along the coast, rippled so that a long straight shore, which the sweep
+     * alone reaches all at once if it runs across it, doesn't take the wave in one line. Fixed for a column, so each
+     * takes one wave a period.
+     */
+    static int pulseDelay(int x, int z) {
+        float ripple = LONG_RIPPLE_TICKS * Mth.sin(x * LONG_RIPPLE_X + z * LONG_RIPPLE_Z)
+                + SHORT_RIPPLE_TICKS * Mth.sin(x * SHORT_RIPPLE_X - z * SHORT_RIPPLE_Z);
+        return Math.floorDiv(x + z, PULSE_BLOCKS) + Math.round(ripple);
     }
 
     /**
@@ -147,5 +174,25 @@ public class ShoreWaveHandler extends AbstractClientHandler {
      */
     static float waveReach(float storm) {
         return Mth.lerp(Mth.clamp(storm, 0F, 1F), 1F, 2.5F);
+    }
+
+    /**
+     * How far a patch runs: a few the wave's full reach, the others only as far as a calm day's
+     *
+     * @param roll 0 to 1, at random
+     */
+    static float patchReach(float storm, float roll) {
+        return waveReach(roll < STRAY_SHARE ? storm : 0F);
+    }
+
+    /**
+     * How close a wave's patches are along the shore, in blocks
+     */
+    static double patchSpacing(float storm) {
+        return Mth.lerp(Mth.clamp(storm, 0F, 1F), CALM_PATCH_SPACING, STORM_PATCH_SPACING);
+    }
+
+    static float patchScale(float storm) {
+        return Mth.lerp(Mth.clamp(storm, 0F, 1F), 1F, STORM_PATCH_SCALE);
     }
 }

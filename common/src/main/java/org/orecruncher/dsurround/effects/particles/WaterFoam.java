@@ -89,11 +89,11 @@ public class WaterFoam extends SingleQuadParticle {
 
     // Worked out for a block and shared: a waterfall keeps dozens of patches on the same few blocks, for as long as it
     // runs. Kept for SURFACE_TICKS before being worked out again, so water that starts or stops flowing is followed
-    // within half a second; entries that old are swept out as often. Client thread only, as particles are ticked. The
-    // level is held weakly, so a world left isn't kept in memory.
+    // within half a second; entries that old are swept out as often. Guarded by itself, along with surfacesLevel and
+    // lastSweep: particles aren't only ticked on the client thread, as Particle Core ticks them on several at once, and
+    // its threads met here (#213). The level is held weakly, so a world left isn't kept in memory.
     static final int SURFACE_TICKS = 10;
     private static final Long2ObjectOpenHashMap<Surface> SURFACES = new Long2ObjectOpenHashMap<>();
-    private static final BlockPos.MutableBlockPos PROBE = new BlockPos.MutableBlockPos();
     private static WeakReference<Level> surfacesLevel = new WeakReference<>(null);
     private static long lastSweep = Long.MIN_VALUE;
 
@@ -247,18 +247,23 @@ public class WaterFoam extends SingleQuadParticle {
      */
     private static Surface surfaceAt(Level level, BlockPos pos, FluidState fluid) {
         long tick = level.getGameTime();
-        if (surfacesLevel.get() != level) {
-            SURFACES.clear();
-            surfacesLevel = new WeakReference<>(level);
-            lastSweep = tick;
-        } else if (isStale(lastSweep, tick)) {
-            SURFACES.values().removeIf(s -> isStale(s.tick(), tick));
-            lastSweep = tick;
-        }
         long key = pos.asLong();
-        var surface = SURFACES.get(key);
-        if (surface == null || isStale(surface.tick(), tick)) {
-            surface = surface(level, pos, fluid, tick);
+        synchronized (SURFACES) {
+            if (surfacesLevel.get() != level) {
+                SURFACES.clear();
+                surfacesLevel = new WeakReference<>(level);
+                lastSweep = tick;
+            } else if (isStale(lastSweep, tick)) {
+                SURFACES.values().removeIf(s -> isStale(s.tick(), tick));
+                lastSweep = tick;
+            }
+            var surface = SURFACES.get(key);
+            if (surface != null && !isStale(surface.tick(), tick))
+                return surface;
+        }
+        // Worked out outside the lock, as it reads the world: at worst two threads work out the same answer
+        var surface = surface(level, pos, fluid, tick);
+        synchronized (SURFACES) {
             SURFACES.put(key, surface);
         }
         return surface;
@@ -293,13 +298,13 @@ public class WaterFoam extends SingleQuadParticle {
      * surface below: so the slope dips over the edge as the water does.
      */
     private static double surfaceHeight(Level level, BlockPos pos, int dx, int dz) {
-        PROBE.setWithOffset(pos, dx, 0, dz);
-        var fluid = level.getFluidState(PROBE);
-        if (fluid.isEmpty() && level.getBlockState(PROBE).isAir()) {
-            PROBE.move(Direction.DOWN);
-            fluid = level.getFluidState(PROBE);
+        var probe = pos.mutable().move(dx, 0, dz);
+        var fluid = level.getFluidState(probe);
+        if (fluid.isEmpty() && level.getBlockState(probe).isAir()) {
+            probe.move(Direction.DOWN);
+            fluid = level.getFluidState(probe);
         }
-        return fluid.isEmpty() ? Double.NaN : PROBE.getY() + fluid.getHeight(level, PROBE);
+        return fluid.isEmpty() ? Double.NaN : probe.getY() + fluid.getHeight(level, probe);
     }
 
     /**

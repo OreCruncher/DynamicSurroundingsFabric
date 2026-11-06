@@ -51,12 +51,13 @@ public class ShoreFoam extends SingleQuadParticle {
      * @param dirZ     along Z
      * @param reach    how far up the shore it goes, in blocks
      * @param lifetime how long the wave takes, up and back, in ticks
+     * @param scale    on the patch's size
      */
-    public static Particle create(ClientLevel level, double x, double surfaceY, double z, double dirX, double dirZ, double reach, int lifetime) {
-        return new ShoreFoam(level, x, surfaceY, z, dirX, dirZ, reach, lifetime);
+    public static Particle create(ClientLevel level, double x, double surfaceY, double z, double dirX, double dirZ, double reach, int lifetime, float scale) {
+        return new ShoreFoam(level, x, surfaceY, z, dirX, dirZ, reach, lifetime, scale);
     }
 
-    private ShoreFoam(ClientLevel level, double x, double y, double z, double dirX, double dirZ, double reach, int lifetime) {
+    private ShoreFoam(ClientLevel level, double x, double y, double z, double dirX, double dirZ, double reach, int lifetime, float scale) {
         super(level, x, y + LIFT, z, DSurroundParticleSprites.WATER_FOAM.get(level.getRandom()));
         this.startX = x;
         this.startZ = z;
@@ -68,7 +69,7 @@ public class ShoreFoam extends SingleQuadParticle {
         this.gravity = 0F;
         this.xd = this.yd = this.zd = 0D;
         var random = level.getRandom();
-        this.quadSize = 0.2F + random.nextFloat() * 0.2F;
+        this.quadSize = (0.2F + random.nextFloat() * 0.2F) * scale;
         this.alpha = 0F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
 

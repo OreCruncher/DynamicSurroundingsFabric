@@ -62,6 +62,32 @@ dependencies {
     }
 }
 
+// The class tweaker as NeoForge reads it, so there is one list. Development runs get the tweaker from Loom, but the
+// jar has to carry this: remapJar's atAccessWideners made it up to 1.21.11, and there is no remapJar now.
+def accessTransformer = tasks.register('accessTransformer') {
+    def tweaker = rootProject.file('common/src/main/resources/dsurround.classtweaker')
+    def output = layout.buildDirectory.dir('generated/accessTransformer')
+    inputs.file tweaker
+    outputs.dir output
+    doLast {
+        def modifiers = [:]
+        tweaker.readLines().collect { it.trim() }
+                .findAll { it && !it.startsWith('#') && !it.startsWith('classTweaker') }
+                .each { line ->
+                    def parts = line.split(/\s+/)
+                    def target = parts[2].replace('/', '.')
+                    if (parts[1] == 'field')
+                        target += " ${parts[3]}"
+                    else if (parts[1] == 'method')
+                        target += " ${parts[3]}${parts[4]}"
+                    modifiers[target] = parts[0] == 'mutable' || modifiers[target] == 'public-f' ? 'public-f' : 'public'
+                }
+        def file = output.get().file('META-INF/accesstransformer.cfg').asFile
+        file.parentFile.mkdirs()
+        file.text = modifiers.collect { target, modifier -> "$modifier $target" }.join('\n') + '\n'
+    }
+}
+
 processResources {
     var expandProps = [
             version: project.version,
@@ -89,6 +115,8 @@ processResources {
 
     // MIT asks for the notice to go with every copy, decompiled ones included
     from("$projectDir/../LICENSE")
+
+    from(accessTransformer)
 }
 
 // Minecraft is not obfuscated on this version, so there is no remapJar task.

@@ -30,7 +30,7 @@ import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
-import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
@@ -86,14 +86,14 @@ public final class Footprints {
     // Not drawn farther than this from the camera, in blocks
     private static final double DRAW_RANGE_SQ = 64D * 64D;
 
-    private final WeatherSimulation weather;
+    private final IWeatherSimulation weather;
     private final ArrayDeque<Print> prints = new ArrayDeque<>();
     private int untilCheck = CHECK_INTERVAL;
     // The level the prints are in: in another (a new dimension) they are dropped. Held weakly, so a world left isn't
     // kept in memory.
     private WeakReference<Level> level = new WeakReference<>(null);
 
-    public Footprints(WeatherSimulation weather) {
+    public Footprints(IWeatherSimulation weather) {
         this.weather = weather;
     }
 

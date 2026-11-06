@@ -40,7 +40,7 @@ The first release for Minecraft 26.3, with a new aurora modeled on real ones and
 * Wakes: players, mobs and boats moving through the water leave rings that open out behind them, and a boat under way sheds foam that coasts out, slows and fades
   * Players and mobs make a ring as they bob at the surface, and a boat sitting in the water makes one every couple of seconds
   * On by default, and they follow Water Ripple Render Style: Bobbing Rings in Entity Effect Options. A boat's foam follows Water froth
-* **[Experimental]** Beach waves: foam rolls in over the water and up the shore of oceans and large lakes in a steady rhythm, then back, bigger and closer together in a storm
+* **[Experimental]** Beach waves: foam rolls in over the water and up the shore of oceans and large lakes in a steady rhythm, rippling along the shore, then back. In a storm the waves are closer together and the foam is thicker
   * On by default: Beach Waves in Block Effect Options, also set by the World, Vanilla+ and Defaults presets
 * **[Experimental]** Target portrait: the head, name and health of the mob you are looking at, in the top left of the screen, with its bar colored for hostile, neutral or passive
   * A row of badges under the portrait shows the effects on the mob. Effects with hidden particles can't be seen, as a mob's effects aren't sent to the client
@@ -53,6 +53,14 @@ The first release for Minecraft 26.3, with a new aurora modeled on real ones and
 * With Improved Transparency on, flames and mist keep their soft edges and added light, and mist no longer cuts holes in the terrain or hides the clouds and weather behind it
 * With Improved Transparency on, clouds, rain and ground fog behind glass or water are drawn over it, without the tint of stained glass, and point lights fall on what is behind it
 * With Particle Rain installed, ground fog stands aside, as Particle Rain has fog of its own in wet biomes
+* Quiet wind sounds no longer stutter or restart as gusts pass
+* Rain blown in under cover soaks into soft ground instead of splashing on it
+* Fixed a crash near waterfalls with Particle Core, which ticks particles on several threads
+* With Sound Physics Perfected installed, enhanced sound processing stands aside, as it does for Sound Physics Remastered
+* With Async Particles installed, mist, steam, breath and flames are drawn without their soft edges, as its GPU drawing can't use them. Rain, sounds and storm strength work alongside its off-thread weather
+
+**Shader Packs**
+* While a shader pack is in use, many effects are off on purpose, whatever the configuration says, tracked footprints among them. If a feature is on and isn't working, turn the shader pack off before opening an issue. The [installation guide](https://dynamic-surroundings.readthedocs.io/en/latest/installation.html#shader-packs) has the list
 
 > ### DynamicSurroundings-1.21.11-5.0.0
 

@@ -34,6 +34,7 @@ import org.orecruncher.dsurround.effects.DepthCopy;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 
 import java.util.HashMap;
 import java.util.List;
@@ -236,7 +237,7 @@ public final class SoftParticles {
      * The layer for puffs of mist, steam and smoke: soft if the shader can be used, otherwise drawn the vanilla way.
      */
     public static SingleQuadParticle.Layer mistLayer() {
-        return SHADER.isUsable() ? WATERFALL_MIST : WATERFALL_MIST_FALLBACK;
+        return soft(SHADER) ? WATERFALL_MIST : WATERFALL_MIST_FALLBACK;
     }
 
     /**
@@ -244,14 +245,18 @@ public final class SoftParticles {
      * way; either way adding their light.
      */
     public static SingleQuadParticle.Layer flameLayer() {
-        return FLAME_SHADER.isUsable() ? FLAME : FLAME_FALLBACK;
+        return soft(FLAME_SHADER) ? FLAME : FLAME_FALLBACK;
     }
 
     /**
      * The layer for flames in a skull's eyes: as {@link #flameLayer}, with a short fade
      */
     public static SingleQuadParticle.Layer eyeFlameLayer() {
-        return EYE_FLAME_SHADER.isUsable() ? EYE_FLAME : FLAME_FALLBACK;
+        return soft(EYE_FLAME_SHADER) ? EYE_FLAME : FLAME_FALLBACK;
+    }
+
+    private static boolean soft(ModShader shader) {
+        return shader.isUsable() && !FeatureConflict.SOFT_PARTICLES.isBlocked();
     }
 
     /**

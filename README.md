@@ -152,6 +152,8 @@ https://github.com/OreCruncher/DynamicSurroundingsDocs.
 * Fabric 0.4.2 and earlier has OpenJDK Nashorn JavaScript Engine 15.4 (https://github.com/openjdk/nashorn). For 0.4.3+ there is no JavaScript engine dependency.
 
 ## FAQ 
+* A feature is turned on and isn't working. Is it a bug?
+  * If you use a shader pack, turn it off and look again before opening an issue. Many effects are off on purpose while one is in use, whatever the configuration says: particle rain and snow, dust storms, ground fog, window frost, auroras, dynamic clouds, footprints and more. [The list is here](https://dynamic-surroundings.readthedocs.io/en/latest/installation.html#shader-packs).
 * Do you use AI for features in the mod?
   * AI is used for a variety of tasks, including code creation, review, bug fixing, performance analysis, and mod conflict analysis.
 

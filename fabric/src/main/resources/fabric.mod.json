@@ -32,6 +32,7 @@
     "dsurround.mixins.json",
     "dsurround.mixins.fabric.json"
   ],
+  "accessWidener": "dsurround.classtweaker",
   "depends": {
     "fabricloader": ">=0.20.1",
     "minecraft": "~26.3",

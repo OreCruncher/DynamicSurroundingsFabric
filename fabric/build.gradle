@@ -87,6 +87,9 @@ processResources {
 
     // MIT asks for the notice to go with every copy, decompiled ones included
     from("$projectDir/../LICENSE")
+
+    // fabric.mod.json names it, and in a development run the loader looks in this project's resources, not common's
+    from(project(':common').loom.accessWidenerPath)
 }
 
 // Minecraft is not obfuscated on this version, so there is no remapJar task.
