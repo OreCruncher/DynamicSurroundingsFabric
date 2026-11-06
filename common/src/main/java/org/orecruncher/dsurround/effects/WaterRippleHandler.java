@@ -35,7 +35,15 @@ public class WaterRippleHandler {
     private static final int SURFACE_SEARCH = 3;
 
     public static boolean doRipples() {
-        return compatibleEnvironment && CONFIG.waterRippleStyle != WaterRippleStyle.NONE;
+        return compatibleEnvironment && doRings();
+    }
+
+    /**
+     * Whether rings are drawn where something strikes or moves through the water. Unlike rain's ripples they don't give
+     * way to a mod that makes its own: it has no rings of this kind.
+     */
+    public static boolean doRings() {
+        return CONFIG.waterRippleStyle != WaterRippleStyle.NONE;
     }
 
     /**
@@ -55,7 +63,7 @@ public class WaterRippleHandler {
      * @param lighten how far its color is taken from the water's toward white, 0 to 1
      */
     public static Optional<Particle> createRing(ClientLevel world, double x, double surfaceY, double z, float size, float lighten) {
-        if (!doRipples())
+        if (!doRings())
             return Optional.empty();
         return Optional.of(WaterRippleParticle.createRing(CONFIG.waterRippleStyle, world, x, surfaceY, z, size, lighten));
     }
@@ -83,7 +91,7 @@ public class WaterRippleHandler {
     public static Optional<Particle> createSprayRipple(ClientLevel world, double x, double y, double z) {
         if (!world.getFluidState(BlockPos.containing(x, y, z).above()).isEmpty())
             return Optional.empty();
-        return createRippleParticle(world, new Vec3(x, y, z));
+        return doRings() ? createRipple(world, new Vec3(x, y, z)) : Optional.empty();
     }
 
     /**
@@ -91,22 +99,22 @@ public class WaterRippleHandler {
      */
     public static Optional<Particle> createWakeRing(ClientLevel world, double x, double surfaceY, double z, float size,
                                                     double driftX, double driftZ, float startSize) {
-        if (!doRipples())
+        if (!doRings())
             return Optional.empty();
         return Optional.of(WaterRippleParticle.createWakeRing(CONFIG.waterRippleStyle, world, x, surfaceY, z, size,
                 FLOATING_RING_LIGHTEN, driftX, driftZ, startSize));
     }
 
     public static Optional<Particle> createRippleParticle(ClientLevel world, Vec3 position) {
-        if (doRipples()) {
-            var pos = BlockPos.containing(position);
-            var fluidState = world.getFluidState(pos);
+        return doRipples() ? createRipple(world, position) : Optional.empty();
+    }
 
-            if (fluidState.isSource() && TAG_LIBRARY.is(FluidTags.WATER_RIPPLES, fluidState)) {
-                final float actualHeight = fluidState.getHeight(world, pos) + pos.getY();
-                return Optional.of(WaterRippleParticle.create(CONFIG.waterRippleStyle, world, position.x, actualHeight + LIQUID_HEIGHT_ADJUST, position.z));
-            }
-        }
-        return Optional.empty();
+    private static Optional<Particle> createRipple(ClientLevel world, Vec3 position) {
+        var pos = BlockPos.containing(position);
+        var fluidState = world.getFluidState(pos);
+        if (!fluidState.isSource() || !TAG_LIBRARY.is(FluidTags.WATER_RIPPLES, fluidState))
+            return Optional.empty();
+        final float actualHeight = fluidState.getHeight(world, pos) + pos.getY();
+        return Optional.of(WaterRippleParticle.create(CONFIG.waterRippleStyle, world, position.x, actualHeight + LIQUID_HEIGHT_ADJUST, position.z));
     }
 }

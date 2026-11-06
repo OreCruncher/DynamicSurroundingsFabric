@@ -51,7 +51,7 @@ public class BoatRingHandler extends AbstractClientHandler {
 
     @Override
     public void process(final Player player) {
-        if (!this.config.entityEffects.enableBobbingRings || !WaterRippleHandler.doRipples()
+        if (!this.config.entityEffects.enableBobbingRings || !WaterRippleHandler.doRings()
                 || GameUtils.getGameSettings().particles().get() == ParticleStatus.MINIMAL)
             return;
         if (!(player.level() instanceof ClientLevel level))

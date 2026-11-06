@@ -53,7 +53,11 @@ public enum FeatureConflict {
     /**
      * Distant Horizons draws its own clouds, and turns vanilla's off
      */
-    DYNAMIC_CLOUDS("Dynamic clouds", DISTANT_HORIZONS);
+    DYNAMIC_CLOUDS("Dynamic clouds", DISTANT_HORIZONS),
+    /**
+     * Particle Rain has fog of its own in wet biomes, as a pack with it has chosen
+     */
+    GROUND_FOG("Ground fog", PARTICLE_RAIN);
 
     private final String feature;
     private final List<KnownMod> mods;

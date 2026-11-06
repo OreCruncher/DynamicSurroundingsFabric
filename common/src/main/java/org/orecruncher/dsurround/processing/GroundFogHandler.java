@@ -27,6 +27,7 @@ import org.orecruncher.dsurround.eventing.ILightUpdate;
 import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
@@ -112,7 +113,7 @@ public class GroundFogHandler extends AbstractClientHandler {
      * Whether the mist is drawn
      */
     public boolean isActive() {
-        return this.config.weatherOptions.enableGroundFog && this.shaderUsable()
+        return this.config.weatherOptions.enableGroundFog && !FeatureConflict.GROUND_FOG.isBlocked() && this.shaderUsable()
                 && GameUtils.isInGame() && this.dimensionInformation.groundFog();
     }
 
@@ -214,6 +215,8 @@ public class GroundFogHandler extends AbstractClientHandler {
         var quality = this.config.weatherOptions.groundFogQuality;
         if (!this.config.weatherOptions.enableGroundFog)
             text = "Ground fog: off";
+        else if (FeatureConflict.GROUND_FOG.isBlocked())
+            text = "Ground fog: another mod's (" + FeatureConflict.GROUND_FOG.blockingMod().orElseThrow().ids().getFirst() + ")";
         else if (!this.shaderUsable())
             text = "Ground fog: off (shader unavailable, failed, or a shader pack in use)";
         else {
