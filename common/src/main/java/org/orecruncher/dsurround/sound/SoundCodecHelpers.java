@@ -56,10 +56,16 @@ public final class SoundCodecHelpers {
     private SoundCodecHelpers() {
     }
 
+    // A volume or pitch that isn't a number (NaN, or a value too large for a float, as -1e400 is read) would go on to
+    // the sound engine as NaN: clamping it leaves it so. Found by LibraryRulesFuzzTests
     private static DataResult<FloatProvider> toFloatProvider(Either<Float, RangeProperty> either) {
         return either.map(
-                value -> DataResult.success(ConstantFloat.of(value)),
+                value -> Float.isFinite(value)
+                        ? DataResult.success(ConstantFloat.of(value))
+                        : DataResult.error(() -> "Not a usable number: " + value),
                 range -> {
+                    if (!Float.isFinite(range.min()) || !Float.isFinite(range.max()))
+                        return DataResult.error(() -> "Range min (%s) and max (%s) must be numbers".formatted(range.min(), range.max()));
                     if (range.min() == range.max())
                         return DataResult.success(ConstantFloat.of(range.min()));
                     if (range.min() > range.max())

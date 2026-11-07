@@ -190,6 +190,12 @@ is known of 26.4.
   `lib/threading/RecordingLog` captures logging; `Randomizer.create(seed)` for repeatable randomness.
 - Resource files from tests: anchor on a mod-owned file (`/assets/dsurround/lang/en_us.json`) — other `assets`
   folders are on the class path too.
+- Fuzzing the shipped `dsconfigs`: `testing/ConfigFuzz` reads them by kind and edits entries the way a hand-edited file
+  breaks, shrinking a failure to a minimal entry. `DsConfigFuzzTests` fuzzes decoding; `LibraryRulesFuzzTests` what
+  comes after: garbled scripts in the real evaluator (nothing escapes, stalls or repeats), block rules applied through
+  `RuleGuard` (a bad rule costs only itself), sound factories (sounds made, finite volume and pitch: it found NaN
+  pitches). It registers stand-ins for `IConditionEvaluator` and `ITagLibrary` in the root container, and checks it
+  still reaches compiling scripts and applying rules, so a stand-in that stops it there fails it.
 
 ## Architecture worth knowing
 - Dependency container (`lib/di`): classes it creates take dependencies in their constructors. Config groups are
