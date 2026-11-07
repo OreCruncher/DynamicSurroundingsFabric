@@ -33,6 +33,10 @@
       "entityEffects.enableBurningEffect": false,
       "entityEffects.enableDeathPuffs": false,
       "entityEffects.enableFootprints": false,
+      "entityEffects.enableTrackedFootprints": false,
+      "entityEffects.enableSplashRings": false,
+      "entityEffects.enableBobbingRings": false,
+      "blockEffects.enableBeachWaves": false,
 
       "weatherOptions.enableStormSimulation": false,
       "weatherOptions.enableParticlePrecipitation": false,
@@ -105,10 +109,14 @@
       "waterfallOptions.enableParticles": true,
       "waterfallOptions.enableMist": true,
       "waterfallOptions.enableFroth": true,
+      "waterfallOptions.enableRings": true,
       "fireflyOptions.enableFireflies": true,
       "fireflyOptions.enableGlow": true,
       "fireflyOptions.enableLight": true,
       "entityEffects.enableBreathEffect": true,
+      "entityEffects.enableSplashRings": true,
+      "entityEffects.enableBobbingRings": true,
+      "blockEffects.enableBeachWaves": true,
       "entityEffects.enableAnimalBreath": true
     }
   },
@@ -124,7 +132,9 @@
       "entityEffects.enablePlayerToolbarEffect": true,
       "entityEffects.enableBurningEffect": true,
       "entityEffects.enableDeathPuffs": true,
+      "targetPortraitOptions.enableTargetPortrait": true,
       "entityEffects.enableFootprints": true,
+      "entityEffects.enableTrackedFootprints": true,
       "blockEffects.skullFlamesEnabled": true,
       "particleTweaks.suppressProjectileParticleTrails": false
     }
@@ -142,7 +152,12 @@
       "entityEffects.enablePlayerToolbarEffect": true,
       "entityEffects.enableBurningEffect": true,
       "entityEffects.enableDeathPuffs": true,
+      "targetPortraitOptions.enableTargetPortrait": false,
       "entityEffects.enableFootprints": true,
+      "entityEffects.enableTrackedFootprints": true,
+      "entityEffects.enableSplashRings": true,
+      "entityEffects.enableBobbingRings": true,
+      "blockEffects.enableBeachWaves": true,
       "particleTweaks.suppressProjectileParticleTrails": false,
 
       "weatherOptions.enableStormSimulation": true,
@@ -173,6 +188,7 @@
       "waterfallOptions.enableParticles": true,
       "waterfallOptions.enableMist": true,
       "waterfallOptions.enableFroth": true,
+      "waterfallOptions.enableRings": true,
       "fireflyOptions.enableFireflies": true,
       "fireflyOptions.enableGlow": true,
       "fireflyOptions.enableLight": true,
@@ -195,12 +211,16 @@
     "group": "performance",
     "values": {
       "weatherOptions.groundFogQuality": "FAST",
+      // Fast cost a quarter to a third of Fancy at each size measured (bench, a held storm: 2.4 ms of GPU a frame against 0.65
+      // at 3840x2160)
+      "auroraOptions.realistic.quality": "FAST",
       "weatherOptions.precipitationDensity": 50,
       "weatherOptions.precipitationRange": 10,
       "blockEffects.blockEffectRange": 32,
       "entityEffects.entityEffectRange": 32,
       "waterfallOptions.enableMist": false,
       "waterfallOptions.enableFroth": false,
+      "waterfallOptions.enableRings": false,
       "weatherOptions.enableDynamicClouds": false,
       "flameJetOptions.enableLight": false,
       "fireflyOptions.enableLight": false
@@ -212,12 +232,14 @@
     "group": "performance",
     "values": {
       "weatherOptions.groundFogQuality": "FANCY",
+      "auroraOptions.realistic.quality": "FANCY",
       "weatherOptions.precipitationDensity": 100,
       "weatherOptions.precipitationRange": 14,
       "blockEffects.blockEffectRange": 40,
       "entityEffects.entityEffectRange": 32,
       "waterfallOptions.enableMist": true,
       "waterfallOptions.enableFroth": true,
+      "waterfallOptions.enableRings": true,
       "weatherOptions.enableDynamicClouds": true,
       "flameJetOptions.enableLight": true,
       "fireflyOptions.enableLight": true
@@ -232,12 +254,14 @@
       // standing in it: 2.6 ms of GPU a frame against 0.8), for a difference mostly at the mist's edges. Players who
       // want it choose it themselves.
       "weatherOptions.groundFogQuality": "FANCY",
+      "auroraOptions.realistic.quality": "FANCY",
       "weatherOptions.precipitationDensity": 100,
       "weatherOptions.precipitationRange": 20,
       "blockEffects.blockEffectRange": 64,
       "entityEffects.entityEffectRange": 48,
       "waterfallOptions.enableMist": true,
       "waterfallOptions.enableFroth": true,
+      "waterfallOptions.enableRings": true,
       "weatherOptions.enableDynamicClouds": true,
       "flameJetOptions.enableLight": true,
       "fireflyOptions.enableLight": true

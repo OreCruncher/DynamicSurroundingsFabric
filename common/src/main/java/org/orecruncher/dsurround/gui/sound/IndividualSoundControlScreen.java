@@ -5,18 +5,23 @@ package org.orecruncher.dsurround.gui.sound;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.gui.TooltipDelay;
@@ -115,10 +120,11 @@ public class IndividualSoundControlScreen extends Screen {
     @Override
     protected void repositionElements() {
         this.layout.arrangeElements();
-        this.soundConfigList.updateSize(this.width, this.layout);
         // Never narrower than the controls need, even if that means the rows don't fit a very small window
         int minRowWidth = this.soundConfigList.getMinimumRowWidth();
         this.soundConfigList.setRowWidth(Mth.clamp(this.width - 2 * ROW_SIDE_MARGIN, minRowWidth, Math.max(minRowWidth, MAX_ROW_WIDTH)));
+        // After the row width: this is what places the rows, and it centers them using that width
+        this.soundConfigList.updateSize(this.width, this.layout);
     }
 
     @Override
@@ -136,18 +142,18 @@ public class IndividualSoundControlScreen extends Screen {
     // Typing goes to the search box even when another control has focus
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchField.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(@NonNull KeyEvent event) {
+        return super.keyPressed(event) || this.searchField.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        return super.charTyped(codePoint, modifiers) || this.searchField.charTyped(codePoint, modifiers);
+    public boolean charTyped(@NonNull CharacterEvent event) {
+        return super.charTyped(event) || this.searchField.charTyped(event);
     }
 
     @Override
-    public void render(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
-        super.render(context, mouseX, mouseY, partialTicks);
+    public void extractRenderState(@NonNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
+        super.extractRenderState(context, mouseX, mouseY, partialTicks);
 
         // Shown once the mouse rests on a row, not while it passes over the list or drags a slider. A row scrolled
         // under a still mouse waits afresh. Offset downward so the tooltip doesn't cover the row's controls.
@@ -157,7 +163,8 @@ public class IndividualSoundControlScreen extends Screen {
             this.tooltipDelay = new TooltipDelay();
         }
         if (entry != null && this.tooltipDelay.ready()) {
-            context.renderTooltip(this.font, entry.getToolTip(mouseX, mouseY), mouseX, mouseY + TOOLTIP_Y_OFFSET);
+            var toolTip = entry.getToolTip(mouseX, mouseY).stream().map(ClientTooltipComponent::create).toList();
+            context.tooltip(this.font, toolTip, mouseX, mouseY + TOOLTIP_Y_OFFSET, DefaultTooltipPositioner.INSTANCE, null, false);
         }
     }
 
@@ -209,13 +216,13 @@ public class IndividualSoundControlScreen extends Screen {
         }
 
         @Override
-        public void renderWidget(@NotNull GuiGraphics context, int mouseX, int mouseY, float partialTicks) {
-            super.renderWidget(context, mouseX, mouseY, partialTicks);
+        public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor context, int mouseX, int mouseY, float partialTicks) {
+            super.extractWidgetRenderState(context, mouseX, mouseY, partialTicks);
             // Where vanilla draws the text, and its hint when unfocused
             if (this.isVisible() && this.isFocused() && this.getValue().isEmpty()) {
                 int x = this.isBordered() ? this.getX() + 4 : this.getX();
                 int y = this.isBordered() ? this.getY() + (this.height - 8) / 2 : this.getY();
-                context.drawString(this.font, SEARCH_HINT, x, y, -1);
+                context.text(this.font, SEARCH_HINT, x, y, -1);
             }
         }
     }

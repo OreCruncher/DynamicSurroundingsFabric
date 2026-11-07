@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.effects.entity;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
@@ -15,7 +15,7 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
  */
 public class PlayerJumpEffect extends EntityEffectBase {
 
-    private static final ResourceLocation JUMP_FACTORY = Constants.asId("player_jump");
+    private static final Identifier JUMP_FACTORY = Constants.asId("player_jump");
 
     private final ISoundLibrary soundLibrary;
     // Whether the player was off the ground last tick: true to start, so arriving in the air isn't taken for a jump

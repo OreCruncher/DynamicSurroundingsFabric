@@ -3,9 +3,12 @@
 
 package org.orecruncher.dsurround.processing;
 
-import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.fog.FogData;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.IFogRender;
@@ -16,7 +19,7 @@ import org.orecruncher.dsurround.processing.fog.HolisticFogRangeCalculator;
 public class FogHandler extends AbstractClientHandler {
 
     private final HolisticFogRangeCalculator fogCalculator;
-    private FogRenderer.FogData lastData;
+    private FogData lastData;
     // The sky's color while it is tinted; the sky is drawn on the render thread only
     private final float[] skyColor = new float[3];
     // The sunrise or sunset glow's color while it is tinted
@@ -26,8 +29,8 @@ public class FogHandler extends AbstractClientHandler {
         super("Fog Handler", config, logger);
 
         this.fogCalculator = fogCalculator;
-        this.lastData = new FogRenderer.FogData(FogRenderer.FogMode.FOG_TERRAIN);
-        this.lastData.start = this.lastData.end = 192F;
+        this.lastData = new FogData();
+        this.lastData.environmentalStart = this.lastData.environmentalEnd = 192F;
 
         IFogRender.EVENT.register(this::renderFog);
     }
@@ -43,16 +46,29 @@ public class FogHandler extends AbstractClientHandler {
         this.fogCalculator.disconnect();
     }
 
-    private void renderFog(FogRenderer.FogData data, float renderDistance, float partialTick) {
-        var result = data;
+    private void renderFog(FogData data, float renderDistance, float partialTick) {
         if (this.fogCalculator.enabled()) {
-            result = this.fogCalculator.render(data, renderDistance, partialTick);
-            FogCompat.applyShaderFog(result);
+            this.lastData = this.fogCalculator.render(data, renderDistance, partialTick);
+            FogCompat.applyRange(data, this.lastData);
+        } else {
+            // Preserve for diagnostic trace even though action was not taken
+            this.lastData = data;
         }
+    }
 
-        // The diagnostic trace shows the terrain fog, even when no action was taken; the sky's is set too
-        if (data.mode == FogRenderer.FogMode.FOG_TERRAIN)
-            this.lastData = result;
+    /**
+     * How far the sky's fog reaches this frame, in blocks, with the mod's own thickening
+     */
+    /**
+     * How far the view reaches in the fog, in blocks, as of the last frame: the weather's fog or the render distance's,
+     * whichever is nearer
+     */
+    public float viewReach() {
+        return Math.min(this.lastData.environmentalEnd, this.lastData.renderDistanceEnd);
+    }
+
+    public float skyFogEnd() {
+        return this.lastData.skyEnd;
     }
 
     /**
@@ -65,17 +81,30 @@ public class FogHandler extends AbstractClientHandler {
     }
 
     /**
-     * The sky's color, turned toward the dust's in a dust storm as the fog's is. Called as the sky is drawn.
+     * The sky's color, 0xAARRGGBB, turned toward the dust's in a dust storm as the fog's is. Called as the sky is
+     * set up for drawing.
      */
-    public Vec3 tintSkyColor(Vec3 color, float partialTick) {
+    public Vector3fc tintSkyColor(Vector3fc color, float partialTick) {
         var rgb = this.skyColor;
-        rgb[0] = (float) color.x;
-        rgb[1] = (float) color.y;
-        rgb[2] = (float) color.z;
+        rgb[0] = color.x();
+        rgb[1] = color.y();
+        rgb[2] = color.z();
         this.fogCalculator.tintFogColor(rgb, partialTick);
-        if (rgb[0] == (float) color.x && rgb[1] == (float) color.y && rgb[2] == (float) color.z)
-            return color;
-        return new Vec3(rgb[0], rgb[1], rgb[2]);
+        return new Vector3f(rgb[0], rgb[1], rgb[2]);
+    }
+
+    /**
+     * The glow of sunrise and sunset, 0xAARRGGBB, turned toward the dust's color in a dust storm and dimmed. Called as
+     * the sky is set up for drawing.
+     */
+    public Vector4fc tintSunsetColor(Vector4fc color, float partialTick) {
+        var rgba = this.sunsetColor;
+        rgba[0] = color.x();
+        rgba[1] = color.y();
+        rgba[2] = color.z();
+        rgba[3] = color.w();
+        this.fogCalculator.tintSunsetColor(rgba, partialTick);
+        return new Vector4f(rgba[0], rgba[1], rgba[2], rgba[3]);
     }
 
     /**
@@ -95,7 +124,7 @@ public class FogHandler extends AbstractClientHandler {
 
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
-        var text = "Fog: %f/%f, %s, %s ".formatted(this.lastData.start, this.lastData.end, this.lastData.shape, this.lastData.mode);
+        var text = "Fog: %f/%f".formatted(this.lastData.environmentalStart, this.lastData.environmentalEnd);
         var disabledText = this.fogCalculator.getDisabledText();
         if (disabledText.isPresent())
             text += disabledText.get();

@@ -16,7 +16,7 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -33,17 +33,17 @@ import org.orecruncher.dsurround.config.data.SoundMetadataConfig;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.gui.sound.ConfigSoundInstance;
-import org.orecruncher.dsurround.lib.codec.CodecExtensions;
-import org.orecruncher.dsurround.lib.registry.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.lib.codec.CodecExtensions;
 import org.orecruncher.dsurround.lib.compat.BlockCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
+import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
+import org.orecruncher.dsurround.lib.registry.Comparers;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
-import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactoryBuilder;
@@ -74,10 +74,10 @@ public final class SoundLibrary implements ISoundLibrary {
     private static final Codec<List<IndividualSoundConfigEntry>> SOUND_CONFIG_CODEC = Codec.list(IndividualSoundConfigEntry.CODEC);
     private static final Codec<List<SoundMappingConfigRule>> SOUND_MAPPING_CODEC = Codec.list(SoundMappingConfigRule.CODEC);
 
-    private static final ResourceLocation MISSING_RESOURCE = Constants.asId("missing_sound");
+    private static final Identifier MISSING_RESOURCE = Constants.asId("missing_sound");
     private static final SoundEvent MISSING = SoundEvent.createVariableRangeEvent(MISSING_RESOURCE);
 
-    private static final ResourceLocation THUNDER_SOUND = SoundEvents.LIGHTNING_BOLT_THUNDER.getLocation();
+    private static final Identifier THUNDER_SOUND = SoundEvents.LIGHTNING_BOLT_THUNDER.location();
     private static final Set<String> SOUND_MAPPING_BLOCKED_MOBS = ImmutableSet.of("creeper");
     private static final DateTimeFormatter BACKUP_TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
@@ -85,19 +85,19 @@ public final class SoundLibrary implements ISoundLibrary {
     private final Configuration config;
     private final Path soundConfigPath;
     // A missing sound may be asked for repeatedly; warn once per sound per reload
-    private final LogThrottle<ResourceLocation> missingSounds;
+    private final LogThrottle<Identifier> missingSounds;
     // Used by mapSound() to look around a block. Client thread only, like the rest of the class.
     private final BlockPos.MutableBlockPos neighborPos = new BlockPos.MutableBlockPos();
 
-    private final Object2ObjectOpenHashMap<ResourceLocation, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
-    private final Object2ObjectOpenHashMap<ResourceLocation, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
-    private final Map<ResourceLocation, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
-    private final Map<ResourceLocation, ISoundFactory> soundFactories = new Object2ObjectOpenHashMap<>();
-    private final Set<ResourceLocation> blockedSounds = new ObjectOpenHashSet<>();
-    private final Set<ResourceLocation> culledSounds = new ObjectOpenHashSet<>();
-    private final Map<ResourceLocation, SoundMapping> soundMappings = new Object2ObjectOpenHashMap<>();
+    private final Object2ObjectOpenHashMap<Identifier, SoundEvent> myRegistry = new Object2ObjectOpenHashMap<>();
+    private final Object2ObjectOpenHashMap<Identifier, SoundMetadata> soundMetadata = new Object2ObjectOpenHashMap<>();
+    private final Map<Identifier, IndividualSoundConfigEntry> individualSoundConfiguration = new Object2ObjectOpenHashMap<>();
+    private final Map<Identifier, ISoundFactory> soundFactories = new Object2ObjectOpenHashMap<>();
+    private final Set<Identifier> blockedSounds = new ObjectOpenHashSet<>();
+    private final Set<Identifier> culledSounds = new ObjectOpenHashSet<>();
+    private final Map<Identifier, SoundMapping> soundMappings = new Object2ObjectOpenHashMap<>();
     // Metadata for sounds that have none configured, built on first request instead of on every request
-    private final Map<ResourceLocation, SoundMetadata> defaultMetadata = new Object2ObjectOpenHashMap<>();
+    private final Map<Identifier, SoundMetadata> defaultMetadata = new Object2ObjectOpenHashMap<>();
     private List<IndividualSoundConfigEntry> soundConfiguration = new ArrayList<>();
     private int version;
 
@@ -115,7 +115,7 @@ public final class SoundLibrary implements ISoundLibrary {
     @Override
     public Stream<String> dump() {
         return this.myRegistry.values().stream()
-                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.getLocation(), c2.getLocation()))
+                .sorted((c1, c2) -> Comparers.IDENTIFIER_NATURAL_COMPARABLE.compare(c1.location(), c2.location()))
                 .map(Object::toString);
     }
 
@@ -136,7 +136,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
         // Initializes the internal sound registry once all the other mods have
         // registered their sounds.
-        BuiltInRegistries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.getLocation(), se));
+        BuiltInRegistries.SOUND_EVENT.forEach(se -> this.myRegistry.put(se.location(), se));
 
         // Gather resource pack sound files and process them to ensure metadata is collected.
         // Resource pack sounds generally replace existing registration, but this allows for new
@@ -164,11 +164,11 @@ public final class SoundLibrary implements ISoundLibrary {
 
     @Override
     public SoundEvent getSound(final String sound) {
-        return getSound(ResourceLocation.parse(sound));
+        return getSound(Identifier.parse(sound));
     }
 
     @Override
-    public SoundEvent getSound(final ResourceLocation sound) {
+    public SoundEvent getSound(final Identifier sound) {
         Objects.requireNonNull(sound);
         final SoundEvent se = this.myRegistry.get(sound);
         if (se == SoundLibrary.MISSING) {
@@ -183,38 +183,38 @@ public final class SoundLibrary implements ISoundLibrary {
     }
 
     @Override
-    public SoundMetadata getSoundMetadata(final ResourceLocation sound) {
+    public SoundMetadata getSoundMetadata(final Identifier sound) {
         var result = this.soundMetadata.get(Objects.requireNonNull(sound));
         return result.isDefault() ? this.defaultMetadata.computeIfAbsent(sound, SoundMetadata::new) : result;
     }
 
     @Override
-    public Optional<ISoundFactory> getSoundFactory(ResourceLocation factoryLocation) {
+    public Optional<ISoundFactory> getSoundFactory(Identifier factoryLocation) {
         return Optional.ofNullable(this.soundFactories.get(factoryLocation));
     }
 
     @Override
-    public ISoundFactory getSoundFactoryOrDefault(ResourceLocation factoryLocation) {
+    public ISoundFactory getSoundFactoryOrDefault(Identifier factoryLocation) {
         return this.soundFactories.computeIfAbsent(factoryLocation, loc -> SoundFactoryBuilder.create(loc).build());
     }
 
     @Override
     public ISoundFactory getSoundFactoryForMusic(Music music) {
-        return this.soundFactories.computeIfAbsent(music.getEvent().value().getLocation(), loc -> SoundFactoryBuilder.create(music).build());
+        return this.soundFactories.computeIfAbsent(music.sound().value().location(), loc -> SoundFactoryBuilder.create(music).build());
     }
 
     @Override
-    public boolean isBlocked(final ResourceLocation sound) {
+    public boolean isBlocked(final Identifier sound) {
         return this.blockedSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public boolean isCulled(final ResourceLocation sound) {
+    public boolean isCulled(final Identifier sound) {
         return this.culledSounds.contains(Objects.requireNonNull(sound));
     }
 
     @Override
-    public float getVolumeScale(SoundSource category, ResourceLocation sound) {
+    public float getVolumeScale(SoundSource category, Identifier sound) {
         // Assume scaling of 1F. Basically, it would leave the volume alone.
         var scale = 1F;
 
@@ -254,7 +254,7 @@ public final class SoundLibrary implements ISoundLibrary {
         if (soundInstance instanceof ConfigSoundInstance)
             return Optional.empty();
 
-        var soundLocation = soundInstance.getLocation();
+        var soundLocation = soundInstance.getIdentifier();
 
         // If it is a thunder sound, and replacement is not enabled, don't do anything
         if (THUNDER_SOUND.equals(soundLocation)) {
@@ -294,7 +294,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
             if (soundFactory.isPresent()) {
                 // Need to force a sound to be selected so we can get the volume
-                soundInstance.resolve(GameUtils.getSoundManager());
+                soundInstance.getOrResolve(GameUtils.getSoundManager());
                 var volumeScale = soundInstance.getVolume();
                 return Optional.of(soundFactory.get().createAtLocation(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ(), volumeScale));
             }
@@ -308,8 +308,8 @@ public final class SoundLibrary implements ISoundLibrary {
      * sound similar to what happens with the player.
      */
     @Nullable
-    private ResourceLocation mapMobStepSound(SoundInstance soundInstance) {
-        var soundLocation = soundInstance.getLocation();
+    private Identifier mapMobStepSound(SoundInstance soundInstance) {
+        var soundLocation = soundInstance.getIdentifier();
         var path = soundLocation.getPath();
         if (path.startsWith("entity.") && path.endsWith("step")) {
             // Get the mob this sound is for. We do not want to convert mobs like creepers.
@@ -317,8 +317,8 @@ public final class SoundLibrary implements ISoundLibrary {
             if (!SOUND_MAPPING_BLOCKED_MOBS.contains(mobType)) {
                 var level = GameUtils.getWorld().orElseThrow();
                 var pos = BlockPos.containing(soundInstance.getX(), soundInstance.getY(), soundInstance.getZ()).below();
-                soundLocation = level.getBlockState(pos).getSoundType().getStepSound().getLocation();
-                this.logger.debug("Mob sound remapping from %s to %s", soundInstance.getLocation(), soundLocation);
+                soundLocation = level.getBlockState(pos).getSoundType().getStepSound().location();
+                this.logger.debug("Mob sound remapping from %s to %s", soundInstance.getIdentifier(), soundLocation);
                 return soundLocation;
             }
         }
@@ -330,7 +330,7 @@ public final class SoundLibrary implements ISoundLibrary {
         var result = soundFile.resourceContent();
         result.forEach((key, value) -> {
             // We want to register the sound regardless of having metadata.
-            final ResourceLocation loc = ResourceLocation.fromNamespaceAndPath(soundFile.namespace(), key);
+            final Identifier loc = Identifier.fromNamespaceAndPath(soundFile.namespace(), key);
             if (!this.myRegistry.containsKey(loc)) {
                 this.myRegistry.put(loc, SoundEvent.createVariableRangeEvent(loc));
             }
@@ -431,7 +431,7 @@ public final class SoundLibrary implements ISoundLibrary {
 
     private void addSoundConfig(final String id, int volumeScale, SoundAction action) {
         var entry = new IndividualSoundConfigEntry(
-                ResourceLocation.parse(id),
+                Identifier.parse(id),
                 volumeScale,
                 action);
         this.soundConfiguration.add(entry);
@@ -449,7 +449,7 @@ public final class SoundLibrary implements ISoundLibrary {
         this.culledSounds.clear();
 
         // One entry per sound; if a sound is listed more than once, the last entry wins
-        var bySound = new LinkedHashMap<ResourceLocation, IndividualSoundConfigEntry>();
+        var bySound = new LinkedHashMap<Identifier, IndividualSoundConfigEntry>();
         for (var e : this.soundConfiguration)
             bySound.put(e.soundEventId, e);
         this.soundConfiguration = new ArrayList<>(bySound.values());

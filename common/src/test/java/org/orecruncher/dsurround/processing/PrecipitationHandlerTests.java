@@ -4,7 +4,7 @@
 package org.orecruncher.dsurround.processing;
 
 import org.junit.jupiter.api.Test;
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
 

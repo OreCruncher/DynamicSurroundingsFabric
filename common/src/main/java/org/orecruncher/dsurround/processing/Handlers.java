@@ -65,6 +65,8 @@ public class Handlers {
         this.register(AreaBlockEffects.class);
         this.register(StepAccentGenerator.class);
         this.register(FootprintHandler.class);
+        this.register(BoatRingHandler.class);
+        this.register(ShoreWaveHandler.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(PrecipitationHandler.class);
@@ -185,6 +187,8 @@ public class Handlers {
             .registerSingleton(StepAccentGenerator.class)
             .registerSingleton(Footprints.class)
             .registerSingleton(FootprintHandler.class)
+            .registerSingleton(BoatRingHandler.class)
+            .registerSingleton(ShoreWaveHandler.class)
             .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
             .registerSingleton(AuroraHandler.class)

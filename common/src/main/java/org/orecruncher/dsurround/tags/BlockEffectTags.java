@@ -36,6 +36,13 @@ public class BlockEffectTags {
     public static final TagKey<Block> FROSTED_WINDOWS = of("frosted_windows");
     // Blocks feet leave prints in, besides those that sound like sand, gravel, snow or mud underfoot
     public static final TagKey<Block> FOOTPRINTS = of("footprints");
+    // What feet carry from them onto hard ground, as prints of that color; the last, only when rain has soaked them
+    public static final TagKey<Block> TRACKS_SNOW = of("tracks_snow");
+    public static final TagKey<Block> TRACKS_MUD = of("tracks_mud");
+    public static final TagKey<Block> TRACKS_SAND = of("tracks_sand");
+    public static final TagKey<Block> TRACKS_RED_SAND = of("tracks_red_sand");
+    public static final TagKey<Block> TRACKS_SOUL_SAND = of("tracks_soul_sand");
+    public static final TagKey<Block> TRACKS_MUD_WHEN_WET = of("tracks_mud_when_wet");
 
     private static TagKey<Block> of(String id) {
         var tagKey = TagKey.create(Registries.BLOCK, Constants.asId("effects/" + id));

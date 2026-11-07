@@ -32,15 +32,16 @@
     "dsurround.mixins.json",
     "dsurround.mixins.fabric.json"
   ],
+  "accessWidener": "dsurround.classtweaker",
   "depends": {
-    "fabricloader": ">=0.16.9",
-    "minecraft": "~1.21.1",
-    "java": ">=21",
-    "architectury": ">=13.0.8",
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "architectury": ">=22.0.5",
     "fabric-api": "*"
   },
   "suggests": {
-    "cloth-config": ">=15.0.140"
+    "cloth-config": ">=26.3.159"
   },
   "custom": {
     "modmenu": {

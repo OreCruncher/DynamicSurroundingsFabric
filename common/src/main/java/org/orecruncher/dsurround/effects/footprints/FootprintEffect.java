@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.effects.footprints;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.FootprintStyle;
+import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.entity.EntityEffectBase;
@@ -27,6 +28,12 @@ import org.orecruncher.dsurround.tags.EntityEffectTags;
  * as it comes down, both on landing. Players' prints are the style chosen in the config; mobs' come from the
  * footprint tags (square, paw, hoof, bird). Their stride, how far apart their feet are and how big their prints are
  * follow their size, so a baby's are smaller.
+ * <p>
+ * Feet also carry what they walked through ({@link CarriedGround}): snow, mud, sand and soul sand ({@code BlockInfo.tracks}),
+ * water, and mud from ground the rain has soaked ({@code BlockInfo.tracksMudWhenWet}). On hard ground each step then
+ * leaves a print of it, fainter until it is used up; snow and mud show on soft ground too, in place of the pressed print.
+ * Ground soaked by rain shows mud prints itself. What feet walk through replaces what they carry, but snow and mud stay
+ * on them until used up, on anything but mud.
  * <p>
  * No prints while sneaking, swimming, riding, sleeping or invisible, with Particles on Minimal, or with a shader pack.
  */
@@ -47,12 +54,16 @@ public class FootprintEffect extends EntityEffectBase {
     static final float LARGE = 1.25F;
     static final float SMALL = 0.75F;
     static final float TINY = 0.5F;
+    // How wet the ground has to be for feet to pick up mud: 0 to 1, the storm's strength where it is open to the sky
+    static final float MUDDY_WETNESS = 0.25F;
 
     private final Configuration.EntityEffects config;
     private final IBlockLibrary blockLibrary;
     private final ITagLibrary tagLibrary;
     private final Footprints footprints;
     private final StrideTracker strides = new StrideTracker();
+    private final CarriedGround carried = new CarriedGround();
+    private float carriedStrength;
     // Null for a player, whose style comes from the config
     private @Nullable FootprintStyle style;
     private float sizeBoost = 1F;
@@ -78,6 +89,7 @@ public class FootprintEffect extends EntityEffectBase {
         else
             this.sizeBoost = 1F;
         this.strides.reset();
+        this.carried.clear();
     }
 
     private @Nullable FootprintStyle styleFor(LivingEntity entity) {
@@ -100,6 +112,9 @@ public class FootprintEffect extends EntityEffectBase {
             this.strides.reset();
             return;
         }
+
+        if (entity.isInWater())
+            this.carried.pickUp(TrackedGround.WATER);
 
         var step = this.strides.update(entity.getX() - entity.xo, entity.getZ() - entity.zo,
                 entity.onGround() && !entity.isInWater(), strideFor(entity.getBbHeight()));
@@ -148,11 +163,71 @@ public class FootprintEffect extends EntityEffectBase {
             ground = BlockPos.containing(x, feet - PROBE, z);
             state = level.getBlockState(ground);
             top = this.surface(level, ground, state, feet);
-            if (Double.isNaN(top))
-                return;
         }
 
-        this.footprints.add(level, x, top, z, yaw, scaleFor(width) * this.sizeBoost, style, rightFoot, ground, state);
+        float scale = scaleFor(width) * this.sizeBoost;
+        boolean pressed = !Double.isNaN(top);
+        var carrying = this.config.enableTrackedFootprints ? this.step(level, ground, state) : null;
+        if (carrying != null && (!pressed || carrying.showsOnSoftGround())) {
+            float strength = this.carriedStrength;
+            if (!pressed)
+                top = hardSurface(level, ground, state, feet);
+            if (!Double.isNaN(top))
+                this.footprints.addTracked(level, x, top, z, yaw, scale, style, rightFoot, ground, state, carrying, strength);
+        } else if (pressed) {
+            this.footprints.add(level, x, top, z, yaw, scale, style, rightFoot, ground, state);
+        }
+    }
+
+    /**
+     * A step on a block: picks up what it gives, or spends a step of what is carried.
+     *
+     * @return what this step tracks onto it, null if nothing ({@link #carriedStrength} says how much)
+     */
+    private @Nullable TrackedGround step(Level level, BlockPos pos, BlockState state) {
+        var carrying = this.carried.ground();
+        var picked = this.pickedUp(level, pos, state);
+        if (picked != null && replaces(picked, carrying)) {
+            this.carried.pickUp(picked);
+            // Soaked ground is mud to look at too; mud itself takes a print as any soft ground does
+            if (picked == TrackedGround.MUD && this.blockLibrary.getBlockInfo(state).tracks() == null) {
+                this.carriedStrength = 1F;
+                return picked;
+            }
+            return null;
+        }
+        this.carriedStrength = this.carried.spend();
+        return carrying;
+    }
+
+    /**
+     * Whether ground walked on takes the place of what feet carry: nothing sticks like snow and mud, which stay until
+     * they are used up, unless it is mud they walk through or more of the same
+     */
+    static boolean replaces(TrackedGround picked, @Nullable TrackedGround carrying) {
+        return carrying == null || !carrying.showsOnSoftGround() || picked == carrying || picked == TrackedGround.MUD;
+    }
+
+    /**
+     * What feet pick up from a block, if anything
+     */
+    private @Nullable TrackedGround pickedUp(Level level, BlockPos pos, BlockState state) {
+        var info = this.blockLibrary.getBlockInfo(state);
+        if (info.tracks() != null)
+            return info.tracks();
+        if (info.tracksMudWhenWet() && this.footprints.wetness(level, pos.above()) >= MUDDY_WETNESS)
+            return TrackedGround.MUD;
+        return null;
+    }
+
+    /**
+     * Where a tracked print goes on a block the feet stand on, flat on top; NaN if it isn't, or they aren't on it
+     */
+    private static double hardSurface(Level level, BlockPos pos, BlockState state, double feet) {
+        if (!state.isFaceSturdy(level, pos, Direction.UP))
+            return Double.NaN;
+        double top = pos.getY() + state.getCollisionShape(level, pos).max(Direction.Axis.Y);
+        return Math.abs(top - feet) <= SURFACE_TOLERANCE ? top : Double.NaN;
     }
 
     /**

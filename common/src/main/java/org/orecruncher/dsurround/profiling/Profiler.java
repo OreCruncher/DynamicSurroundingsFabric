@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.profiling;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -24,16 +25,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * /dsprofile: sets up a scene ({@link ProfileScene}), records the game with Java Flight Recorder while it shows, and
  * puts it back. The recording goes in the mod's profiles folder, zipped (see {@link ProfileFiles}), with the mod's
- * render timers in it and nothing private (see {@link ProfileRecording}); when it is done, the player is told where it
- * is, with the render timers, and the log says so too. While it waits and records, {@link #state} and {@link #secondsLeft} drive the
+ * render timers and what it was made on in it, and nothing private (see {@link ProfileRecording}); when it is done, the
+ * player is told where it is, with the render timers, and the log says so too. While it waits and records, {@link #state} and {@link #secondsLeft} drive the
  * indicator on screen.
  * <p>
  * Java Flight Recorder needs the {@code jdk.jfr} module, which not every Java has: without it, the player is told, and
  * nothing that uses it is loaded.
+ * <p>
+ * The player keeps still while it records, so vanilla's inactivity frame limit ("AFK") would drop the game to 30 frames
+ * a second after a minute, and the GPU's clocks with it: while it records, the limit only applies when minimized, and
+ * is set as it was afterwards.
  */
 public final class Profiler {
 
@@ -100,6 +106,15 @@ public final class Profiler {
      * @return what to tell the player
      */
     public static List<Component> start(ProfileScene scene, int seconds) {
+        return start(scene, seconds, path -> {});
+    }
+
+    /**
+     * As {@link #start(ProfileScene, int)}, telling {@code done} on the render thread where the zipped recording is
+     * once it is finished and the scene put back, or null if it couldn't be made. Not told if it didn't start (the
+     * result says why).
+     */
+    public static List<Component> start(ProfileScene scene, int seconds, Consumer<@Nullable Path> done) {
         if (!isAvailable())
             return List.of(Component.translatable(KEY + "unavailable"));
         if (!BUSY.compareAndSet(false, true))
@@ -131,18 +146,26 @@ public final class Profiler {
             }
         }
 
+        var inactivity = mc.options.inactivityFpsLimit();
+        var wasLimit = inactivity.get();
+        inactivity.set(InactivityFpsLimit.MINIMIZED);
+
         var folder = ContainerManager.resolve(IMinecraftDirectories.class).getModProfileDirectory();
         var file = folder.resolve(ProfileFiles.name(scene, LocalDateTime.now()));
         state = State.WAITING;
         until = System.nanoTime() + settle * 1_000_000_000L;
         var thread = new Thread(() -> {
+            Path zip = null;
             try {
-                record(scene, settle, file, seconds, environment);
+                zip = record(scene, settle, file, seconds, environment);
             } finally {
                 state = State.IDLE;
+                var result = zip;
                 mc.execute(() -> {
                     undo.run();
+                    inactivity.set(wasLimit);
                     BUSY.set(false);
+                    done.accept(result);
                 });
             }
         }, "Dynamic Surroundings profile");
@@ -158,7 +181,10 @@ public final class Profiler {
         return scene.settle() + (warm ? 0 : WARM_UP_SECONDS);
     }
 
-    private static void record(ProfileScene scene, int settle, Path file, int seconds, ProfileEnvironment environment) {
+    /**
+     * @return the zipped recording, or null if it couldn't be made
+     */
+    private static @Nullable Path record(ProfileScene scene, int settle, Path file, int seconds, ProfileEnvironment environment) {
         try {
             ProfileRecording.warmUp(Duration.ofSeconds(settle));
             state = State.RECORDING;
@@ -178,9 +204,11 @@ public final class Profiler {
             var summaryText = text;
             var summaryHeadline = headline;
             Minecraft.getInstance().execute(() -> report(zip, summaryText, summaryHeadline));
+            return zip;
         } catch (Throwable t) {
             Library.LOGGER.error(t, "Unable to record a profile");
             tell(Component.translatable(KEY + "failed", t.toString()));
+            return null;
         }
     }
 
@@ -192,8 +220,8 @@ public final class Profiler {
     private static void report(Path file, @Nullable String summary, @Nullable ProfileHeadline headline) {
         var name = Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                 .withColor(ChatFormatting.AQUA).withUnderlined(true)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.toString()))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal(file.toString()))));
+                .withClickEvent(new ClickEvent.OpenFile(file))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal(file.toString()))));
         var fps = Minecraft.getInstance().getFps();
         tell(Component.translatable(KEY + "done", name, fps));
         Library.LOGGER.info("Profile recorded to %s (%d FPS)", file, fps);
@@ -209,8 +237,8 @@ public final class Profiler {
             Library.LOGGER.info("Profile summary:%n%s", summary);
             tell(Component.translatable(KEY + "copy").withStyle(Style.EMPTY
                     .withColor(ChatFormatting.GREEN)
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, summary))
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.translatable(KEY + "copy.tooltip")))));
+                    .withClickEvent(new ClickEvent.CopyToClipboard(summary))
+                    .withHoverEvent(new HoverEvent.ShowText(Component.translatable(KEY + "copy.tooltip")))));
         }
     }
 

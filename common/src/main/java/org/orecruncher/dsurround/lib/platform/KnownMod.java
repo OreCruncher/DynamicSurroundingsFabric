@@ -29,6 +29,10 @@ public enum KnownMod {
      */
     SOUND_PHYSICS_REMASTERED(true, "sound_physics_remastered"),
     /**
+     * Ray traces sound and does its own reverb, so the mod's enhanced sound processing is turned off
+     */
+    SOUND_PHYSICS_PERFECTED(true, "sound_physics_perfected"),
+    /**
      * Draws rain and snow as particles, so the mod's particle rain, snow, dust storms and rain ripples stand aside
      */
     PARTICLE_RAIN(true, "particlerain"),
@@ -75,7 +79,12 @@ public enum KnownMod {
      * Turns vanilla's clouds off (they draw over its distant terrain) and draws clouds of its own, so the mod's dynamic
      * clouds, which follow vanilla's cloud option, would stand aside unexplained
      */
-    DISTANT_HORIZONS(true, "distanthorizons");
+    DISTANT_HORIZONS(true, "distanthorizons"),
+    /**
+     * Draws particle layers itself on the GPU, with copies of their pipelines and without what a soft pipeline needs
+     * bound, so the mod's soft particles stand aside
+     */
+    ASYNC_PARTICLES(true, "asyncparticles");
 
     private final boolean showInDiagnostics;
     private final List<String> ids;

@@ -69,7 +69,7 @@ public class FrostFacesTests {
 
         @Override
         public boolean frosts(BlockState state) {
-            return state.is(Blocks.GLASS) || state.is(Blocks.GLASS_PANE);
+            return state.is(Blocks.GLASS) || state.is(Blocks.GLASS_PANE) || state.is(Blocks.STAINED_GLASS.red());
         }
 
         @Override
@@ -118,7 +118,7 @@ public class FrostFacesTests {
         }
 
         @Override
-        public int getMinBuildHeight() {
+        public int getMinY() {
             return -64;
         }
     }

@@ -39,27 +39,52 @@ dependencies {
     neoForge "net.neoforged:neoforge:$rootProject.neoforge_version"
 
     // Architectury API. This is optional, and you can comment it out if you don't need it.
-    modImplementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version"
+    implementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version"
 
-    common(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+    common(project(path: ':common')) { transitive = false }
     shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
 
-    modImplementation "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
-    modImplementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
-    modImplementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
-    modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
-    // Testing only: in the dev client, not compiled against or published
-    //modLocalRuntime "curse.maven:twilightforest-227639:${rootProject.twilightforest_neoforge_file}"
-    //modLocalRuntime "curse.maven:astralsorcery-241721:${rootProject.astralsorcery_neoforge_file}"
-    //modLocalRuntime "curse.maven:observerlib-316833:${rootProject.observerlib_neoforge_file}"
-    //modLocalRuntime "curse.maven:simpleweather-983390:${rootProject.simpleweather_neoforge_file}"
+    // Mods the development client plays with; a modpack run (-Ppack, scripts/modpack-fetch.py) leaves them to the pack,
+    // which brings its own copy or none, so they are only compiled against there
+    def devMod = rootProject.hasProperty('pack') ? 'compileOnly' : 'implementation'
+    "$devMod" "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
+    "$devMod" "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
+    "$devMod" "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
+    "$devMod" "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
 
-    // Simple Voice Chat: its plugin API to remap the common classes against; the mod itself in the dev client only
+    // Simple Voice Chat: its plugin API to compile the common classes against; the mod itself in the dev client only
     compileOnly "de.maxhenkel.voicechat:voicechat-api:$rootProject.voicechat_api_version"
-    modLocalRuntime "curse.maven:simple-voice-chat-416089:${rootProject.voicechat_neoforge_file}"
+    if (!rootProject.hasProperty('pack'))
+        localRuntime "maven.modrinth:simple-voice-chat:${rootProject.voicechat_neoforge_version}"
 
-    modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
+    api("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
         exclude(group: "net.fabricmc.fabric-api")
+    }
+}
+
+// The class tweaker as NeoForge reads it, so there is one list. Development runs get the tweaker from Loom, but the
+// jar has to carry this: remapJar's atAccessWideners made it up to 1.21.11, and there is no remapJar now.
+def accessTransformer = tasks.register('accessTransformer') {
+    def tweaker = rootProject.file('common/src/main/resources/dsurround.classtweaker')
+    def output = layout.buildDirectory.dir('generated/accessTransformer')
+    inputs.file tweaker
+    outputs.dir output
+    doLast {
+        def modifiers = [:]
+        tweaker.readLines().collect { it.trim() }
+                .findAll { it && !it.startsWith('#') && !it.startsWith('classTweaker') }
+                .each { line ->
+                    def parts = line.split(/\s+/)
+                    def target = parts[2].replace('/', '.')
+                    if (parts[1] == 'field')
+                        target += " ${parts[3]}"
+                    else if (parts[1] == 'method')
+                        target += " ${parts[3]}${parts[4]}"
+                    modifiers[target] = parts[0] == 'mutable' || modifiers[target] == 'public-f' ? 'public-f' : 'public'
+                }
+        def file = output.get().file('META-INF/accesstransformer.cfg').asFile
+        file.parentFile.mkdirs()
+        file.text = modifiers.collect { target, modifier -> "$modifier $target" }.join('\n') + '\n'
     }
 }
 
@@ -90,14 +115,30 @@ processResources {
 
     // MIT asks for the notice to go with every copy, decompiled ones included
     from("$projectDir/../LICENSE")
+
+    from(accessTransformer)
+}
+
+// Minecraft is not obfuscated on this version, so there is no remapJar task.
+// The shaded jar is the mod jar that ships.
+jar {
+    archiveClassifier = 'dev'
 }
 
 shadowJar {
     configurations = [project.configurations.shadowBundle]
-    archiveClassifier = 'dev-shadow'
+    archiveClassifier = null
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
-    atAccessWideners.add("dsurround.accesswidener")
+assemble.dependsOn shadowJar
+
+configurations {
+    apiElements {
+        outgoing.artifacts.clear()
+        outgoing.artifact(shadowJar)
+    }
+    runtimeElements {
+        outgoing.artifacts.clear()
+        outgoing.artifact(shadowJar)
+    }
 }

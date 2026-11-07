@@ -4,7 +4,7 @@
 package org.orecruncher.dsurround.lib.markdown;
 
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
 
 /**
@@ -24,7 +24,7 @@ public final class Options {
     private final TextColor bulletColor;
     private final TextColor textColor;
     private final TextColor quoteColor;
-    private final ResourceLocation font;
+    private final Identifier font;
     private final String bulletStyle;
     private final String quoteStyle;
     private final boolean quoteItalic;
@@ -89,7 +89,7 @@ public final class Options {
     /**
      * The font to use, or null for the default font.
      */
-    public ResourceLocation font() {
+    public Identifier font() {
         return this.font;
     }
 
@@ -144,7 +144,7 @@ public final class Options {
         private TextColor bulletColor = ColorPalette.MC_GRAY;
         private TextColor textColor = null;
         private TextColor quoteColor = ColorPalette.MC_GRAY;
-        private ResourceLocation font = null;
+        private Identifier font = null;
 
         private String bulletStyle = DEFAULT_BULLET;
         private String quoteStyle = DEFAULT_BLOCK_QUOTE;
@@ -236,7 +236,7 @@ public final class Options {
             return this;
         }
 
-        public Builder font(ResourceLocation font) {
+        public Builder font(Identifier font) {
             this.font = font;
             return this;
         }
@@ -297,10 +297,10 @@ public final class Options {
     }
 
     public static final class BuiltinFonts {
-        public static final ResourceLocation DEFAULT = ResourceLocation.withDefaultNamespace("default");
-        public static final ResourceLocation UNIFORM = ResourceLocation.withDefaultNamespace("uniform");
-        public static final ResourceLocation GALACTIC = ResourceLocation.withDefaultNamespace("galactic");
-        public static final ResourceLocation ILLAGERALT = ResourceLocation.withDefaultNamespace("illageralt");
+        public static final Identifier DEFAULT = Identifier.withDefaultNamespace("default");
+        public static final Identifier UNIFORM = Identifier.withDefaultNamespace("uniform");
+        public static final Identifier GALACTIC = Identifier.withDefaultNamespace("galactic");
+        public static final Identifier ILLAGERALT = Identifier.withDefaultNamespace("illageralt");
 
         private BuiltinFonts() {
         }

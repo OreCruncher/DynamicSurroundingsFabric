@@ -8,21 +8,23 @@ import net.minecraft.client.CloudStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
-import org.orecruncher.dsurround.config.libraries.IDimensionInformation;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
 import org.orecruncher.dsurround.effects.clouds.CloudLights;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudSections;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
+import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.UpperWind;
@@ -46,6 +48,11 @@ import java.util.Optional;
  * {@code /dsweather clouds} holds their coverage, and the thickness of the thickest, for seeing how they look.
  */
 public class CloudHandler extends AbstractClientHandler {
+
+    private boolean prepared;
+    private int preparedColor;
+    private Vec3 preparedCamera;
+    private float preparedPartialTick;
 
     /**
      * What /dsweather clouds holds: the coverage, 0 to 1, and the thickness of the thickest in blocks, or NaN for the
@@ -84,7 +91,7 @@ public class CloudHandler extends AbstractClientHandler {
     private static final int MAX_RADIUS = 48;
 
     private final IWeatherSimulation weatherSimulation;
-    private final IDimensionInformation dimensionInformation;
+    private final IDimensionOracle dimensionInformation;
     private final CloudField field = new CloudField();
     private final UpperWind upperWind = new UpperWind();
     private final LevelCovers covers;
@@ -118,11 +125,13 @@ public class CloudHandler extends AbstractClientHandler {
     private CloudLights.Source lightSource;
 
     public CloudHandler(IWeatherSimulation weatherSimulation, IBiomeLibrary biomeLibrary,
-                        IDimensionInformation dimensionInformation, Configuration config, IModLog logger) {
+                        IDimensionOracle dimensionInformation, Configuration config, IModLog logger) {
         super("Cloud Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
         this.dimensionInformation = dimensionInformation;
         this.covers = new LevelCovers(biomeLibrary);
+
+        IWorldRender.EVENT.register(this::render, IWorldRender.CLOUDS);
     }
 
     /**
@@ -131,7 +140,7 @@ public class CloudHandler extends AbstractClientHandler {
     public boolean isActive() {
         return this.config.weatherOptions.enableDynamicClouds && !FeatureConflict.DYNAMIC_CLOUDS.isBlocked()
                 && CloudRenderer.isUsable() && GameUtils.isInGame()
-                && GameUtils.getMC().options.getCloudsType() != CloudStatus.OFF && this.dimensionInformation.dynamicClouds();
+                && GameUtils.getMC().options.cloudStatus().get() != CloudStatus.OFF && this.dimensionInformation.dynamicClouds();
     }
 
     @Override
@@ -167,7 +176,7 @@ public class CloudHandler extends AbstractClientHandler {
         }
 
         // What the clouds are like for each step of a biome's wetness, and over the player
-        long dayTime = level.getDayTime();
+        long dayTime = level.getDefaultClockTime();
         float dayCover = CloudCover.dayCover(dayTime);
         this.covers.prepare(level, this.rainLevel, this.thunder, dayTime, dayCover, held, this.dimensionInformation.seaLevel(),
                 player.blockPosition());
@@ -184,7 +193,7 @@ public class CloudHandler extends AbstractClientHandler {
         this.ticks++;
 
         // The cell the camera is under, in cloud space
-        var camera = GameUtils.getMC().gameRenderer.getMainCamera().getPosition();
+        var camera = GameUtils.getMC().gameRenderer.mainCamera().position();
         int cx = Mth.floor((camera.x - this.drift[0]) / CloudField.CELL);
         int cz = Mth.floor((camera.z - this.drift[1]) / CloudField.CELL);
         int radius = this.radius();
@@ -203,29 +212,45 @@ public class CloudHandler extends AbstractClientHandler {
     }
 
     /**
-     * How far the clouds reach, in blocks: the Cloud Distance option
+     * How many cells out from the camera the clouds go: as far as the Cloud Distance option has vanilla's
      */
-    private int cloudBlocks() {
-        return this.config.weatherOptions.cloudDistance * 16;
+    private static int radius() {
+        int blocks = GameUtils.getMC().options.cloudRange().get() * 16;
+        return Mth.clamp(blocks / CloudField.CELL + 2, MIN_RADIUS, MAX_RADIUS);
     }
 
     /**
-     * How many cells out from the camera the clouds go: a little past their distance, so they have faded out by the
-     * grid's edge
+     * Whether the clouds drawn this frame are ours, not vanilla's (see MixinCloudRenderer)
      */
-    private int radius() {
-        return Mth.clamp(this.cloudBlocks() / CloudField.CELL + 2, MIN_RADIUS, MAX_RADIUS);
+    public boolean replacesClouds() {
+        return this.isActive() && this.started && this.field.radius() >= 0 && GameUtils.getWorld().orElse(null) instanceof ClientLevel;
     }
 
     /**
-     * Draws the clouds, from where the level calls for vanilla's
+     * Keeps what the frame's clouds need, as vanilla prepares its own
      *
-     * @param modelView the view's rotation, with the camera at the origin
-     * @return true if they were drawn, in place of vanilla's
+     * @param color  vanilla's cloud color, 0xAARRGGBB: the light on them for the time of day, from the environment
+     * @param camera where the camera is
+     * @return true if ours are drawn in place of vanilla's
      */
-    public boolean render(Matrix4f modelView, Matrix4f projection, float partialTick, double camX, double camY, double camZ) {
-        if (!this.isActive() || !this.started || this.field.radius() < 0 || !(GameUtils.getWorld().orElse(null) instanceof ClientLevel level))
+    public boolean prepare(int color, Vec3 camera, float partialTick) {
+        this.prepared = this.replacesClouds();
+        if (!this.prepared)
             return false;
+        this.preparedColor = color;
+        this.preparedCamera = camera;
+        this.preparedPartialTick = partialTick;
+        return true;
+    }
+
+    private void render() {
+        if (!this.prepared || !(GameUtils.getWorld().orElse(null) instanceof ClientLevel level))
+            return;
+        this.prepared = false;
+        int color = this.preparedColor;
+        Vec3 camera = this.preparedCamera;
+        float partialTick = this.preparedPartialTick;
+        double camX = camera.x, camY = camera.y, camZ = camera.z;
 
         // The quads of the cells that changed, every few ticks: a change's fade is timed from when it happened, so
         // one built a tick or two late only shows it a little way in
@@ -242,10 +267,9 @@ public class CloudHandler extends AbstractClientHandler {
         float offsetY = (float) (this.dimensionInformation.getCloudHeight() - camY);
 
         // The light on the clouds: vanilla's for the time of day, grayer and dimmer as the sky closes over
-        float day = Mth.clamp(Mth.cos(level.getTimeOfDay(partialTick) * Mth.TWO_PI) * 2F + 0.5F, 0F, 1F);
-        float red = day * 0.9F + 0.1F;
-        float green = day * 0.9F + 0.1F;
-        float blue = day * 0.85F + 0.15F;
+        float red = ARGB.redFloat(color);
+        float green = ARGB.greenFloat(color);
+        float blue = ARGB.blueFloat(color);
         float overcast = this.cover().overcast();
         if (overcast > 0F) {
             float gray = (red * 0.3F + green * 0.59F + blue * 0.11F) * (1F - 0.45F * overcast);
@@ -257,9 +281,8 @@ public class CloudHandler extends AbstractClientHandler {
         var source = this.lightSource;
         if (source != null)
             source.offer(this.lights, partialTick, camX, camY, camZ);
-        return CloudRenderer.render(this.sections, modelView, projection, offsetX, offsetY, offsetZ, red, green, blue,
-                this.ticks + partialTick - this.sections.epoch(), this.field.radius() * CloudField.CELL, this.cloudBlocks(),
-                this.lights);
+        CloudRenderer.render(this.sections, offsetX, offsetY, offsetZ, red, green, blue,
+                this.ticks + partialTick - this.sections.epoch(), this.field.radius() * CloudField.CELL, this.lights);
     }
 
     /**

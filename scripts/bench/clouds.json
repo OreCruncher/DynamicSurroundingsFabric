@@ -1,0 +1,54 @@
+// Dynamic clouds against vanilla's in fair weather, a thunderstorm's deck, and /dsprofile's clouds scene (a storm with
+// the sky half covered by tall, broken clouds: the most sides to draw and cells to rebuild). Lightning is off, so
+// strikes lighting the clouds don't fall unevenly on the runs. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 15,
+  "record": 60,
+  "repeats": 2,
+  "settingSets": {
+    "base": {"scaryContent.enableLightning": false},
+    "vanilla": {"weatherOptions.enableDynamicClouds": false}
+  },
+  // A beach (open, flat, and it rains there), which no other scenario builds on: plains has burning-lights.json's
+  // zombies and precipitation.json's glass
+  "scenes": {
+    "fair": {
+      "biome": "minecraft:beach",
+      "pitch": -15,
+      // Afternoon, when fair weather's puffs have built up
+      "commands": ["time set 9000", "weather clear"],
+      "profile": "general"
+    },
+    "overcast": {
+      "biome": "minecraft:beach",
+      "pitch": -15,
+      "commands": ["time set 6000"],
+      // Holds a full storm, its clouds as the weather makes them: the lowered, thickened deck
+      "profile": "weather"
+    },
+    "towers": {
+      "biome": "minecraft:beach",
+      "pitch": -15,
+      "commands": ["time set 6000"],
+      "profile": "clouds"
+    }
+  },
+  "runs": [
+    {"label": "fair-dynamic", "scene": "fair", "use": "base"},
+    {"label": "fair-vanilla", "scene": "fair", "use": ["base", "vanilla"]},
+    {"label": "overcast-dynamic", "scene": "overcast", "use": "base"},
+    {"label": "overcast-vanilla", "scene": "overcast", "use": ["base", "vanilla"]},
+    {"label": "towers-dynamic", "scene": "towers", "use": "base"},
+    {"label": "towers-vanilla", "scene": "towers", "use": ["base", "vanilla"]}
+  ]
+}

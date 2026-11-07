@@ -1,0 +1,78 @@
+// Rain and snow at the Performance row's precipitation settings: Low (density 50, range 10), Medium (the defaults:
+// 100, 14) and High (100, 20). Rain on grass leaves damp spots; snow leaves flecks. Each scene builds a wall of clear
+// glass ahead (south) on a cleared, floored stage, with the wind blowing from behind the player onto its face: rain
+// runs down it in streaks, and in the snow its frost is held full (/dsweather frost 100), so the cost of both is in
+// the runs. The dust storm is in performance-rest.json. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  // Long enough for damp spots and flecks to build up to a steady number
+  "warmup": 20,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "rain": {
+      "biome": "minecraft:plains",
+      "yaw": 0,
+      "pitch": 5,
+      // Serene Seasons (in the dev run): spring rains in temperate biomes. The snow's frost is held for the session
+      // once set, so it is let go here
+      "commands": [
+        "time set 6000",
+        "season set mid_spring",
+        "dsweather frost clear",
+        "dsweather wind direction S",
+        "dsweather wind speed 100",
+        "fill ~-8 ~ ~-3 ~8 ~6 ~10 air",
+        "fill ~-8 ~-3 ~-3 ~8 ~-2 ~10 dirt replace air",
+        "fill ~-8 ~-1 ~-3 ~8 ~-1 ~10 grass_block",
+        "fill ~-4 ~ ~5 ~4 ~3 ~5 glass"
+      ],
+      // Holds a full storm (and sends "weather thunder")
+      "profile": "weather"
+    },
+    "snow": {
+      "biome": "minecraft:snowy_plains",
+      "yaw": 0,
+      "pitch": 5,
+      "commands": [
+        "time set 6000",
+        "season set mid_spring",
+        "dsweather frost 100",
+        "dsweather wind direction S",
+        "dsweather wind speed 100",
+        "fill ~-8 ~ ~-3 ~8 ~6 ~10 air",
+        "fill ~-8 ~-3 ~-3 ~8 ~-2 ~10 dirt replace air",
+        "fill ~-8 ~-1 ~-3 ~8 ~-1 ~10 grass_block",
+        "fill ~-4 ~ ~5 ~4 ~3 ~5 glass"
+      ],
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "rain-low", "scene": "rain", "settings": {
+      "weatherOptions.precipitationDensity": 50,
+      "weatherOptions.precipitationRange": 10
+    }},
+    {"label": "rain-medium", "scene": "rain"},
+    {"label": "rain-high", "scene": "rain", "settings": {
+      "weatherOptions.precipitationRange": 20
+    }},
+    {"label": "snow-low", "scene": "snow", "settings": {
+      "weatherOptions.precipitationDensity": 50,
+      "weatherOptions.precipitationRange": 10
+    }},
+    {"label": "snow-medium", "scene": "snow"},
+    {"label": "snow-high", "scene": "snow", "settings": {
+      "weatherOptions.precipitationRange": 20
+    }}
+  ]
+}

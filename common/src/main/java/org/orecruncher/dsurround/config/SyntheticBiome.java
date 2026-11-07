@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
@@ -36,7 +36,7 @@ public enum SyntheticBiome {
     }
 
     private final String name;
-    private final ResourceLocation id;
+    private final Identifier id;
     private final BiomeTraits traits;
 
     SyntheticBiome(String name, BiomeTrait... traits) {
@@ -56,7 +56,7 @@ public enum SyntheticBiome {
         return this.name;
     }
 
-    public ResourceLocation getId() {
+    public Identifier getId() {
         return this.id;
     }
 

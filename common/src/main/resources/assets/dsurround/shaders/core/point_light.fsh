@@ -1,34 +1,38 @@
-#version 150
+#version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 // Dynamic Surroundings point light (a firefly's, a flame jet's): lights the scene already drawn, near the light. For
 // each pixel, where in the world it is comes from a copy of the scene's depth, so this lights the grass, leaves and
-// ground around the light rather than a flat disc. Drawn with additive blending.
+// ground around the light rather than a flat disc. Added to what is there (see PointLights).
+
+#include <minecraft:projection.glsl>
 
 uniform sampler2D DepthSampler;
-uniform mat4 InverseProjMat;
-uniform vec2 ScreenSize;
-// With Fabulous graphics, 1: the light's colour comes scaled by its strength, with next to no alpha, for adding as it
-// is (see PointLights)
-uniform float AddOnly;
 
-flat in vec3 lightCenter;
-flat in vec4 lightColor;
-flat in float lightRadius;
+layout(std140) uniform PointLightInfo {
+    // 1 if clip space depth runs 0 to 1, 0 if it runs -1 to 1
+    float DepthZeroToOne;
+};
 
-out vec4 fragColor;
+layout(location = 0) flat in vec3 lightCenter;
+layout(location = 1) flat in vec4 lightColor;
+layout(location = 2) flat in float lightRadius;
+
+layout(location = 0) out vec4 fragColor;
 
 void main() {
     float depth = texelFetch(DepthSampler, ivec2(gl_FragCoord.xy), 0).r;
-    // Nothing there but sky
-    if (depth >= 1.0) {
+    // Nothing there but sky: the depth buffer is cleared to 0, the far end of its range
+    if (depth <= 0.0) {
         discard;
     }
 
     // Where the scene is at this pixel, in view space
-    vec3 ndc = vec3(gl_FragCoord.xy / ScreenSize, depth) * 2.0 - 1.0;
-    vec4 view = InverseProjMat * vec4(ndc, 1.0);
+    vec2 screen = gl_FragCoord.xy / vec2(textureSize(DepthSampler, 0));
+    float ndcZ = DepthZeroToOne > 0.5 ? depth : depth * 2.0 - 1.0;
+    vec4 view = inverse(ProjMat) * vec4(screen * 2.0 - 1.0, ndcZ, 1.0);
     vec3 position = view.xyz / view.w;
 
     vec3 toLight = lightCenter - position;
@@ -50,6 +54,7 @@ void main() {
     }
     float facing = clamp((dot(normal, toLight / max(dist, 0.0001)) + 0.25) / 1.25, 0.0, 1.0);
 
+    // The light's colour scaled by its strength, with next to no alpha: both are added as they are
     float strength = lightColor.a * falloff * facing;
-    fragColor = AddOnly > 0.5 ? vec4(lightColor.rgb * strength, 1.0 / 255.0) : vec4(lightColor.rgb, strength);
+    fragColor = vec4(lightColor.rgb * strength, 1.0 / 255.0);
 }

@@ -1,0 +1,51 @@
+// Boats under way on still water: their rings and foam, and what the handler that finds them costs. The pool is built
+// in the air over a flower forest, well above anything else there; "boatSpeed" keeps the boats going around the player.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 15,
+  "record": 30,
+  "repeats": 2,
+  "scenes": {
+    "boats": {
+      "biome": "minecraft:flower_forest",
+      "pitch": 25,
+      "boatSpeed": 0.35,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        // A season set by another scenario stays in the world: in winter the pool freezes, trapping the boats
+        "season set mid_summer",
+        "tp @s ~ 150 ~",
+        "kill @e[type=minecraft:oak_boat]",
+        "fill ~-24 ~-3 ~-24 ~24 ~1 ~24 stone",
+        "fill ~-23 ~-2 ~-23 ~23 ~1 ~23 air",
+        "fill ~-23 ~-2 ~-23 ~23 ~-1 ~23 water",
+        "fill ~-1 ~-1 ~-1 ~1 ~-1 ~1 barrier"
+      ],
+      "settledCommands": [
+        "summon minecraft:oak_boat ~14 ~0.2 ~",
+        "summon minecraft:oak_boat ~10 ~0.2 ~10",
+        "summon minecraft:oak_boat ~ ~0.2 ~14",
+        "summon minecraft:oak_boat ~-10 ~0.2 ~10",
+        "summon minecraft:oak_boat ~-14 ~0.2 ~",
+        "summon minecraft:oak_boat ~-10 ~0.2 ~-10",
+        "summon minecraft:oak_boat ~ ~0.2 ~-14",
+        "summon minecraft:oak_boat ~10 ~0.2 ~-10"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {"label": "wake", "scene": "boats"},
+    {"label": "wake-nofoam", "scene": "boats", "settings": {"waterfallOptions.enableFroth": false}},
+    {"label": "off", "scene": "boats", "settings": {"entityEffects.enableBobbingRings": false}}
+  ]
+}

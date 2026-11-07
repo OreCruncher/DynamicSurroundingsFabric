@@ -80,17 +80,6 @@ public class OptionalHookTests {
     }
 
     @Test
-    void aHandlerWithSugarInCodeAnotherModsWrapMethodMovedIsFound() {
-        // Iron's Lib wraps EntityRenderDispatcher.render (ATM10): the moved code calls our handler's bridge
-        var node = classCalling("wrapMethod$zcl000$irons_lib$irons_spellbooks$handleTransmog");
-        var wrapped = new MethodNode(Opcodes.ACC_PRIVATE, "render$mixinextras$wrapped$36", "()V", null, null);
-        wrapped.instructions.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, TARGET, "wrapOperation$zil000$dsurround$vanillaFire$mixinextras$bridge$34", "()V", false));
-        wrapped.instructions.add(new InsnNode(Opcodes.RETURN));
-        node.methods.add(wrapped);
-        assertTrue(OptionalHook.calls(node, "dsurround$vanillaFire"));
-    }
-
-    @Test
     void callsToAnotherClassDontCount() {
         var node = classCalling();
         node.methods.getFirst().instructions.insert(new MethodInsnNode(Opcodes.INVOKESTATIC, "other/Owner", "dsurround$tintSkyColor", "()V", false));

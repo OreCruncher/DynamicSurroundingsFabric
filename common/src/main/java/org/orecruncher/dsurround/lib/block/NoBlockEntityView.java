@@ -43,7 +43,7 @@ public record NoBlockEntityView(BlockGetter level) implements BlockGetter {
     }
 
     @Override
-    public int getMinBuildHeight() {
-        return this.level.getMinBuildHeight();
+    public int getMinY() {
+        return this.level.getMinY();
     }
 }

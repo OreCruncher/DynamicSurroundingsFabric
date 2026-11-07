@@ -1,40 +1,33 @@
-#version 150
+#version 330
+#extension GL_ARB_separate_shader_objects : require
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
-// Particle rain and snow: quads lit by the lightmap, as vanilla's weather is, in vanilla's particle vertex format.
-// Snowflakes are textured; rain streaks are plain colour, marked by a texture coordinate below zero. fog_distance from
-// fog.glsl is copied in rather than imported.
+// Particle rain, snow and dust: quads lit by the lightmap, as vanilla's weather is, in vanilla's particle vertex
+// format. The same as vanilla's particle vertex shader (shaders/core/particle.vsh).
 
-in vec3 Position;
-in vec2 UV0;
-in vec4 Color;
-in ivec2 UV2;
+#include <minecraft:fog.glsl>
+#include <minecraft:dynamictransforms.glsl>
+#include <minecraft:projection.glsl>
+#include <minecraft:sample_lightmap.glsl>
+
+layout(location = 0) in vec3 Position;
+layout(location = 1) in vec2 UV0;
+layout(location = 2) in vec4 Color;
+layout(location = 3) in ivec2 UV2;
 
 uniform sampler2D Sampler2;
 
-uniform mat4 ModelViewMat;
-uniform mat4 ProjMat;
-uniform int FogShape;
-
-out float vertexDistance;
-out vec2 texCoord0;
-out vec4 vertexColor;
-
-float fog_distance(vec3 pos, int shape) {
-    if (shape == 0) {
-        return length(pos);
-    } else {
-        float distXZ = length(pos.xz);
-        float distY = abs(pos.y);
-        return max(distXZ, distY);
-    }
-}
+layout(location = 0) out float sphericalVertexDistance;
+layout(location = 1) out float cylindricalVertexDistance;
+layout(location = 2) out vec2 texCoord0;
+layout(location = 3) out vec4 vertexColor;
 
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
 
-    vertexDistance = fog_distance(Position, FogShape);
+    sphericalVertexDistance = fog_spherical_distance(Position);
+    cylindricalVertexDistance = fog_cylindrical_distance(Position);
     texCoord0 = UV0;
-    vertexColor = Color * texelFetch(Sampler2, UV2 / 16, 0);
+    vertexColor = Color * sample_lightmap(Sampler2, UV2);
 }

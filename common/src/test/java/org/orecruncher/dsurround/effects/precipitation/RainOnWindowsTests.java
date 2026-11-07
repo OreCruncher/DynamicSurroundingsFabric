@@ -61,7 +61,7 @@ public class RainOnWindowsTests {
         }
 
         @Override
-        public int getMinBuildHeight() {
+        public int getMinY() {
             return -64;
         }
     }

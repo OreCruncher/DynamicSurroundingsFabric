@@ -1,0 +1,173 @@
+// Compatibility pass, for running alongside a modpack (README.md, "Modpacks"): each scene with our effects at their
+// defaults and with every visual one off (the visual half of the vanillaPlus preset), back to back, so the screenshots
+// of a pair differ only by what we draw. Short recordings: the screenshots, the log and the manifest are what it's for,
+// the timings only a rough check. Scenes cover most of what we draw: clear sky and clouds, rain, a dust storm, morning
+// mist, an aurora night, fireflies, waterfalls and flame jets on a built stage, burning mobs.
+{
+  "world": "compat",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false",
+    "gamerule fire_spread_radius_around_player 0"
+  ],
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 8,
+  "record": 8,
+  "repeats": 1,
+  "settingSets": {
+    "off": {
+      "entityEffects.enableDamagePopoffs": false,
+      "entityEffects.showCritWords": false,
+      "entityEffects.enableSwingEffect": false,
+      "entityEffects.enableBowPull": false,
+      "entityEffects.enableJumpSound": false,
+      "entityEffects.enablePlayerToolbarEffect": false,
+      "entityEffects.enableBurningEffect": false,
+      "entityEffects.enableDeathPuffs": false,
+      "entityEffects.enableFootprints": false,
+      "weatherOptions.enableStormSimulation": false,
+      "weatherOptions.enableParticlePrecipitation": false,
+      "weatherOptions.enableDustStorms": false,
+      "weatherOptions.enableAfterRainDrips": false,
+      "weatherOptions.enableSnowOnSides": false,
+      "weatherOptions.enableWindowStreaks": false,
+      "weatherOptions.enableWindowFrost": false,
+      "weatherOptions.enableGroundFog": false,
+      "weatherOptions.enableDynamicClouds": false,
+      "weatherOptions.enableStormSounds": false,
+      "soundOptions.replaceThunderSounds": false,
+      "fogOptions.enableFogEffects": false,
+      "auroraOptions.enableAuroras": false,
+      "particleTweaks.windBlowsParticles": false,
+      "blockEffects.steamColumnEnabled": false,
+      "blockEffects.skullFlamesEnabled": false,
+      "blockEffects.bubbleColumnEnabled": false,
+      "blockEffects.waterRippleStyle": "NONE",
+      "flameJetOptions.enableFlameJets": false,
+      "waterfallOptions.enableWaterfalls": false,
+      "fireflyOptions.enableFireflies": false,
+      "entityEffects.enableBreathEffect": false,
+      "entityEffects.enableAnimalBreath": false
+    }
+  },
+  "scenes": {
+    "clear": {
+      "biome": "minecraft:plains",
+      "pitch": -5,
+      // Not the clouds profile scene, which raises a thunderstorm to load the clouds
+      "commands": ["time set 6000", "weather clear"],
+      "profile": "general"
+    },
+    "rain": {
+      "biome": "minecraft:forest",
+      // Holds a full storm
+      "commands": ["time set 6000"],
+      "profile": "weather"
+    },
+    "dust": {
+      "biome": "minecraft:desert",
+      // Serene Seasons gives hot biomes a wet season, when the desert rains instead of raising dust; summer is dry
+      "commands": ["time set 6000", "season set mid_summer"],
+      "profile": "weather"
+    },
+    "mist": {
+      "biome": "minecraft:swamp",
+      // Early morning; the profile scene holds the mist at full thickness and clears the weather
+      "commands": ["time set 23500"],
+      "profile": "ground_fog"
+    },
+    "aurora": {
+      "biome": "minecraft:ice_spikes",
+      // Auroras lie north (-Z)
+      "yaw": 180,
+      "pitch": -35,
+      // Up above the spikes and the clouds, on a barrier, for the whole of the northern sky: on the ground a spike or a
+      // cloud could hide much of the aurora, and how much it covers is what it costs
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "season set mid_winter",
+        "tp @s ~ 245 ~",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "profile": "general"
+    },
+    "fireflies": {
+      "biome": "minecraft:flower_forest",
+      "pitch": 5,
+      "commands": ["time set 14000", "weather clear", "season set mid_summer"],
+      "profile": "general"
+    },
+    // A stage the commands clear and floor at the player's feet, as performance-rest.json's: a wide lava pool just
+    // ahead (south) for flame jets, and water falling to the floor beyond it
+    "waterfall": {
+      "biome": "minecraft:sunflower_plains",
+      "yaw": 0,
+      "pitch": -10,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "fill ~-24 ~ ~-4 ~24 ~19 ~16 air",
+        "fill ~-24 ~ ~17 ~24 ~19 ~38 air",
+        "fill ~-24 ~-3 ~-4 ~24 ~-2 ~38 dirt replace air",
+        "fill ~-24 ~-1 ~-4 ~24 ~-1 ~38 grass_block",
+        "fill ~-10 ~-2 ~2 ~10 ~-2 ~6 stone",
+        "fill ~-10 ~-1 ~2 ~10 ~-1 ~6 lava"
+      ],
+      // Clearing under the cliff drops its gravel onto the stage, and items: both cleared once they have landed
+      "settledCommands": [
+        "fill ~-24 ~ ~-4 ~24 ~19 ~16 air",
+        "fill ~-24 ~ ~17 ~24 ~19 ~38 air",
+        "kill @e[type=item,distance=..64]",
+        "setblock ~-8 ~18 ~18 water",
+        "setblock ~0 ~18 ~16 water",
+        "setblock ~8 ~18 ~18 water",
+        "setblock ~-14 ~18 ~26 water",
+        "setblock ~14 ~18 ~26 water",
+        "setblock ~0 ~18 ~30 water"
+      ],
+      "profile": "general"
+    },
+    // Burning zombies at night, near enough to see their poses, flames and the light they cast; and animals, for
+    // their breath
+    "mobs": {
+      "biome": "minecraft:plains",
+      "yaw": 0,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "kill @e[type=!player]",
+        "kill @e[type=item]",
+        "execute positioned ~-3 ~ ~5 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Rotation:[180f,0f],Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~3 ~ ~5 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Rotation:[180f,0f],Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~0 ~ ~9 positioned over motion_blocking run summon skeleton ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Rotation:[180f,0f],Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
+        "execute positioned ~-6 ~ ~10 positioned over motion_blocking run summon cow ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Rotation:[150f,0f]}",
+        "execute positioned ~6 ~ ~10 positioned over motion_blocking run summon sheep ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Rotation:[210f,0f]}",
+        "execute positioned ~0 ~ ~14 positioned over motion_blocking run summon villager ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Rotation:[180f,0f]}"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {"label": "clear-on", "scene": "clear"},
+    {"label": "clear-off", "scene": "clear", "use": "off"},
+    {"label": "rain-on", "scene": "rain"},
+    {"label": "rain-off", "scene": "rain", "use": "off"},
+    {"label": "dust-on", "scene": "dust"},
+    {"label": "dust-off", "scene": "dust", "use": "off"},
+    {"label": "mist-on", "scene": "mist"},
+    {"label": "mist-off", "scene": "mist", "use": "off"},
+    {"label": "aurora-on", "scene": "aurora"},
+    {"label": "aurora-off", "scene": "aurora", "use": "off"},
+    {"label": "fireflies-on", "scene": "fireflies"},
+    {"label": "fireflies-off", "scene": "fireflies", "use": "off"},
+    {"label": "waterfall-on", "scene": "waterfall"},
+    {"label": "waterfall-off", "scene": "waterfall", "use": "off"},
+    {"label": "mobs-on", "scene": "mobs"},
+    {"label": "mobs-off", "scene": "mobs", "use": "off"}
+  ]
+}

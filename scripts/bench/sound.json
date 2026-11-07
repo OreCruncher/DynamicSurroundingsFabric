@@ -1,0 +1,117 @@
+// Enhanced sound processing (reverb, occlusion): button clicks played around the player 20 times a second, and
+// beacon hums kept playing, through the warm-up and the recording (the scene's "sounds"), in three places at y 245,
+// out of the reverb rays' reach (128) of savanna ground: open air, where every ray runs its full length and finds nothing;
+// inside a hollow stone box, where every ray bounces; and in the box with the sounds outside it, for occlusion (off out
+// of the box). The mod's ambient sounds are turned down to nothing so only these are processed. Needs a sound device:
+// each run's manifest says whether processing ran ("enhancedSounds") and how many sounds were played. Ray counts and
+// bounces need a restart, so can't be compared here. Savanna because no other scenario builds there: every plains scene
+// shares one spot, and what they leave stayed (compat.json's stage, burning-lights.json's zombies beside the player). The
+// season is set because the last scenario's stays, and water freezing in a winter ends results' reuse (see
+// WorldChangeTracker). The height is absolute, not above the scene: a scene found after another built here stands on what
+// that one left (the finder reads the height map), which put the box above the build limit, where it can't be placed.
+// See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  // Quiet, but not 0: a sound whose volume works out to 0 isn't played, so isn't processed
+  "volume": 0.05,
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "settingSets": {
+    "quiet": {"soundOptions.ambientVolumeScaling": 0}
+  },
+  "scenes": {
+    "sound-open": {
+      "biome": "minecraft:savanna",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_summer",
+        "weather clear",
+        "tp @s ~ 245 ~",
+        // What the box scenes left here
+        "fill ~-8 ~-7 ~-8 ~8 ~9 ~8 air",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 6, "seed": 1},
+        {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 1.5, "radius": 6, "seed": 2}
+      ],
+      "profile": "general"
+    },
+    "sound-enclosed": {
+      "biome": "minecraft:savanna",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_summer",
+        "weather clear",
+        "tp @s ~ 245 ~",
+        // Inside 13 blocks each way, the player's eyes near its middle
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 5, "seed": 1},
+        {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 1.5, "radius": 5, "seed": 2}
+      ],
+      "profile": "general"
+    },
+    "sound-occluded": {
+      "biome": "minecraft:savanna",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_summer",
+        "weather clear",
+        "tp @s ~ 245 ~",
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      // Outside the box (its farthest corner from the player's eyes is under 13 blocks away), and within the 16 blocks
+      // a sound of volume 1 is heard over. The hum's own range is 7 blocks (its attenuation_distance) times its volume
+      // where more than 1, so each scene plays it at 2.4: out of range, a sound isn't processed
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 13, "radius": 16, "seed": 1},
+        {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 13, "radius": 16, "seed": 2}
+      ],
+      "profile": "general"
+    },
+    // The box with clicks starting 150 times a second, more than the start budget (2 ms of calculating every 50 ms)
+    // lets the sound engine's thread spend: the rest start without their effects and are left to the workers. About
+    // 120 play at once, under OpenAL's 247 sources
+    "sound-burst": {
+      "biome": "minecraft:savanna",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_summer",
+        "weather clear",
+        "tp @s ~ 245 ~",
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 150, "minRadius": 1.5, "radius": 5, "seed": 1}
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {"label": "open", "scene": "sound-open", "use": "quiet"},
+    {"label": "open-occlusion", "scene": "sound-open", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
+    {"label": "enclosed", "scene": "sound-enclosed", "use": "quiet"},
+    {"label": "enclosed-simplified", "scene": "sound-enclosed", "use": "quiet", "settings": {"enhancedSounds.simplifiedSharedAirspace": true}},
+    {"label": "occluded", "scene": "sound-occluded", "use": "quiet"},
+    {"label": "occluded-occlusion", "scene": "sound-occluded", "use": "quiet", "settings": {"enhancedSounds.enableOcclusionProcessing": true}},
+    {"label": "burst", "scene": "sound-burst", "use": "quiet"}
+  ]
+}

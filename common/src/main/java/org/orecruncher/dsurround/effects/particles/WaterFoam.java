@@ -3,17 +3,16 @@
 
 package org.orecruncher.dsurround.effects.particles;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Camera;
+import net.minecraft.client.renderer.state.level.QuadParticleRenderState;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
-import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
-import net.minecraft.client.particle.TextureSheetParticle;
+import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.util.FastColor;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
@@ -36,7 +35,7 @@ import java.util.function.Consumer;
  * <p>
  * Uses the water_foam sprites (textures/particle/water_foam_0 to 5): clusters of small bubbles, one picked at random.
  */
-public class WaterFoam extends TextureSheetParticle {
+public class WaterFoam extends SingleQuadParticle {
 
     // How far above the water's surface it rests, so it isn't hidden by it
     private static final double LIFT = 0.02D;
@@ -90,11 +89,11 @@ public class WaterFoam extends TextureSheetParticle {
 
     // Worked out for a block and shared: a waterfall keeps dozens of patches on the same few blocks, for as long as it
     // runs. Kept for SURFACE_TICKS before being worked out again, so water that starts or stops flowing is followed
-    // within half a second; entries that old are swept out as often. Client thread only, as particles are ticked. The
-    // level is held weakly, so a world left isn't kept in memory.
+    // within half a second; entries that old are swept out as often. Guarded by itself, along with surfacesLevel and
+    // lastSweep: particles aren't only ticked on the client thread, as Particle Core ticks them on several at once, and
+    // its threads met here (#213). The level is held weakly, so a world left isn't kept in memory.
     static final int SURFACE_TICKS = 10;
     private static final Long2ObjectOpenHashMap<Surface> SURFACES = new Long2ObjectOpenHashMap<>();
-    private static final BlockPos.MutableBlockPos PROBE = new BlockPos.MutableBlockPos();
     private static WeakReference<Level> surfacesLevel = new WeakReference<>(null);
     private static long lastSweep = Long.MIN_VALUE;
 
@@ -135,20 +134,29 @@ public class WaterFoam extends TextureSheetParticle {
      * @param xd starting velocity across the water, in blocks per tick; the current then takes over
      */
     public static Particle create(ClientLevel level, double x, double y, double z, double xd, double zd) {
-        return new WaterFoam(level, x, y, z, xd, zd, DSurroundParticleSprites.WATER_FOAM);
+        return create(level, x, y, z, xd, zd, 1F);
     }
 
-    protected WaterFoam(ClientLevel level, double x, double y, double z, double xd, double zd, SpriteSet sprites) {
+    /**
+     * A foam patch on the water, this many times the usual size
+     *
+     * @param xd starting velocity across the water, in blocks per tick; the current then takes over
+     */
+    public static Particle create(ClientLevel level, double x, double y, double z, double xd, double zd, float scale) {
+        return new WaterFoam(level, x, y, z, xd, zd, scale, DSurroundParticleSprites.WATER_FOAM);
+    }
+
+    protected WaterFoam(ClientLevel level, double x, double y, double z, double xd, double zd, float scale, SpriteSet sprites) {
         // The constructor without velocity: the one with it adds a random velocity of its own
-        super(level, x, y, z);
+        super(level, x, y, z, sprites.get(level.getRandom()));
         this.xd = xd;
         this.yd = 0D;
         this.zd = zd;
 
-        var random = level.random;
+        var random = level.getRandom();
         this.lifetime = 20 + random.nextInt(30);
         // Half its width, as quadSize is: 0.16 to 0.36 blocks across
-        this.startSize = 0.08F + random.nextFloat() * 0.1F;
+        this.startSize = (0.08F + random.nextFloat() * 0.1F) * scale;
         this.quadSize = this.startSize;
         this.peakAlpha = 0.55F + random.nextFloat() * 0.3F;
         this.alpha = 0F;
@@ -162,20 +170,19 @@ public class WaterFoam extends TextureSheetParticle {
         orientation(this.slopeX, this.slopeZ, this.roll, this.orientation);
         this.oOrientation.set(this.orientation);
 
-        this.setSprite(sprites.get(random));
-        this.light = super.getLightColor(0F);
+        this.light = super.getLightCoords(0F);
         this.lightPhase = random.nextInt(LIGHT_TICKS);
 
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
-        var colorRgb = FastColor.ARGB32.lerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
+        var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
         this.rCol = ColorPalette.getRed(colorRgb) / 255F;
         this.gCol = ColorPalette.getGreen(colorRgb) / 255F;
         this.bCol = ColorPalette.getBlue(colorRgb) / 255F;
     }
 
     @Override
-    public @NotNull ParticleRenderType getRenderType() {
-        return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+    public @NotNull SingleQuadParticle.Layer getLayer() {
+        return SingleQuadParticle.Layer.TRANSLUCENT;
     }
 
     @Override
@@ -193,7 +200,7 @@ public class WaterFoam extends TextureSheetParticle {
         if (this.removed)
             return;
         if ((this.age + this.lightPhase) % LIGHT_TICKS == 0)
-            this.light = super.getLightColor(0F);
+            this.light = super.getLightCoords(0F);
 
         // The water it is floating on: just under it, as it rests a little above the surface
         var pos = this.waterPos.set(this.x, this.y - LIFT - 0.05D, this.z);
@@ -240,18 +247,23 @@ public class WaterFoam extends TextureSheetParticle {
      */
     private static Surface surfaceAt(Level level, BlockPos pos, FluidState fluid) {
         long tick = level.getGameTime();
-        if (surfacesLevel.get() != level) {
-            SURFACES.clear();
-            surfacesLevel = new WeakReference<>(level);
-            lastSweep = tick;
-        } else if (isStale(lastSweep, tick)) {
-            SURFACES.values().removeIf(s -> isStale(s.tick(), tick));
-            lastSweep = tick;
-        }
         long key = pos.asLong();
-        var surface = SURFACES.get(key);
-        if (surface == null || isStale(surface.tick(), tick)) {
-            surface = surface(level, pos, fluid, tick);
+        synchronized (SURFACES) {
+            if (surfacesLevel.get() != level) {
+                SURFACES.clear();
+                surfacesLevel = new WeakReference<>(level);
+                lastSweep = tick;
+            } else if (isStale(lastSweep, tick)) {
+                SURFACES.values().removeIf(s -> isStale(s.tick(), tick));
+                lastSweep = tick;
+            }
+            var surface = SURFACES.get(key);
+            if (surface != null && !isStale(surface.tick(), tick))
+                return surface;
+        }
+        // Worked out outside the lock, as it reads the world: at worst two threads work out the same answer
+        var surface = surface(level, pos, fluid, tick);
+        synchronized (SURFACES) {
             SURFACES.put(key, surface);
         }
         return surface;
@@ -286,13 +298,13 @@ public class WaterFoam extends TextureSheetParticle {
      * surface below: so the slope dips over the edge as the water does.
      */
     private static double surfaceHeight(Level level, BlockPos pos, int dx, int dz) {
-        PROBE.setWithOffset(pos, dx, 0, dz);
-        var fluid = level.getFluidState(PROBE);
-        if (fluid.isEmpty() && level.getBlockState(PROBE).isAir()) {
-            PROBE.move(Direction.DOWN);
-            fluid = level.getFluidState(PROBE);
+        var probe = pos.mutable().move(dx, 0, dz);
+        var fluid = level.getFluidState(probe);
+        if (fluid.isEmpty() && level.getBlockState(probe).isAir()) {
+            probe.move(Direction.DOWN);
+            fluid = level.getFluidState(probe);
         }
-        return fluid.isEmpty() ? Double.NaN : PROBE.getY() + fluid.getHeight(level, PROBE);
+        return fluid.isEmpty() ? Double.NaN : probe.getY() + fluid.getHeight(level, probe);
     }
 
     /**
@@ -324,18 +336,18 @@ public class WaterFoam extends TextureSheetParticle {
     }
 
     @Override
-    public void render(@NotNull VertexConsumer buffer, @NotNull Camera camera, float partialTick) {
+    public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTick) {
         // Set each frame, so the fades are smooth rather than stepping once a tick
         float life = this.lifeFraction(partialTick);
         float fade = Math.min(life / FADE_IN, (1F - life) / FADE_OUT);
         this.alpha = this.peakAlpha * Mth.clamp(fade, 0F, 1F);
 
         var rotation = blend(this.oOrientation, this.orientation, partialTick, this.rotation);
-        this.renderRotatedQuad(buffer, camera, rotation, partialTick);
+        this.extractRotatedQuad(state, camera, rotation, partialTick);
     }
 
     @Override
-    public int getLightColor(float partialTick) {
+    public int getLightCoords(float partialTick) {
         return this.light;
     }
 

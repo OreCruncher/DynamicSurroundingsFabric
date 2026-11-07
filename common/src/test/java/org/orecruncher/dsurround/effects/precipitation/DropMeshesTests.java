@@ -3,10 +3,7 @@
 
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.phys.Vec3;
@@ -67,17 +64,14 @@ public class DropMeshesTests {
     }
 
     private static byte[] build(PrecipitationField field) {
-        try (var bytes = new ByteBufferBuilder(4096)) {
-            var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DefaultVertexFormat.PARTICLE);
-            PrecipitationRenderer.build(field, builder, VIEW, 0.5F, false, List.of(), 1, new TextureAtlasSprite[0],
+        try (var quads = new ParticleQuads()) {
+            PrecipitationRenderer.build(field, quads, VIEW, 0.5F, false, List.of(), 1, new TextureAtlasSprite[0],
                     DropScales.USUAL, RainColor.ofTint(15));
-            try (var mesh = builder.build()) {
-                assertNotNull(mesh, "drops to draw");
-                ByteBuffer vertices = mesh.vertexBuffer();
-                var copy = new byte[vertices.remaining()];
-                vertices.get(copy);
-                return copy;
-            }
+            assertTrue(quads.vertexCount() > 0, "drops to draw");
+            ByteBuffer vertices = quads.vertices();
+            var copy = new byte[vertices.remaining()];
+            vertices.get(copy);
+            return copy;
         }
     }
 
@@ -108,7 +102,7 @@ public class DropMeshesTests {
 
     private static final TextureAtlasSprite[] NO_DUST = new TextureAtlasSprite[0];
     private static final DropMeshes.Style STYLE = new DropMeshes.Style(List.of(), 1, NO_DUST, DropScales.USUAL,
-            RainColor.ofTint(15), null, true);
+            RainColor.ofTint(15), null);
 
     private static DropMeshes.Sources sources(PrecipitationField field) {
         return new DropMeshes.Sources(field, new SnowFlecks(10), new WindowStreaks(10), new DampSpots(10));
@@ -119,7 +113,7 @@ public class DropMeshesTests {
         var sources = sources(new PrecipitationField(10));
         var view = new PrecipitationRenderer.View(VIEW.position(), new Vector3f(VIEW.left()), new Vector3f(VIEW.up()),
                 new Vector3f(VIEW.look()));
-        var style = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(1F, 1F), RainColor.ofTint(15), null, true);
+        var style = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(1F, 1F), RainColor.ofTint(15), null);
         var built = new DropMeshes.Request(sources, VIEW, 0.5F, STYLE);
         assertNull(built.mismatch(new DropMeshes.Request(new DropMeshes.Sources(sources.field(), sources.flecks(),
                 sources.streaks(), sources.spots()), view, 0.5F, style)));
@@ -146,13 +140,8 @@ public class DropMeshesTests {
         assertEquals(DropMeshes.Behind.PARTIAL_TICK, mismatch.kind());
         assertEquals("0.5 to 0.75", mismatch.detail());
 
-        var bigger = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(2F, 1F), STYLE.rainColor(), null, true);
+        var bigger = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, new DropScales(2F, 1F), STYLE.rainColor(), null);
         mismatch = built.mismatch(new DropMeshes.Request(sources, VIEW, 0.5F, bigger));
-        assertNotNull(mismatch);
-        assertEquals(DropMeshes.Behind.SETTINGS, mismatch.kind());
-
-        var overlaid = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, DropScales.USUAL, STYLE.rainColor(), null, false);
-        mismatch = built.mismatch(new DropMeshes.Request(sources, VIEW, 0.5F, overlaid));
         assertNotNull(mismatch);
         assertEquals(DropMeshes.Behind.SETTINGS, mismatch.kind());
 
@@ -184,18 +173,15 @@ public class DropMeshesTests {
         var random = Randomizer.create(7);
         sources.flecks().add(2.5, GROUND, 3.5, 0.5F, 0.5F, 0xF000F0, random);
         sources.flecks().add(-1.5, GROUND, -4.5, 0.5F, 0.5F, 0xF000F0, random);
-        try (var bytes = new ByteBufferBuilder(4096)) {
-            var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DropMeshes.Kind.FLECKS.format);
-            DropMeshes.build(DropMeshes.Kind.FLECKS, builder, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE));
-            try (var mesh = builder.build()) {
-                assertNotNull(mesh, "flecks to draw");
-                assertEquals(8, mesh.drawState().vertexCount());
-                // The first corner lies on the ground, below the camera, near the first fleck
-                var vertices = mesh.vertexBuffer();
-                assertEquals(2F, vertices.getFloat(0), 0.2F);
-                assertEquals((float) (GROUND - CAMERA_Y), vertices.getFloat(4), 0.02F);
-                assertEquals(3F, vertices.getFloat(8), 0.2F);
-            }
+        try (var bytes = new ByteBufferBuilder(4096);
+             var mesh = DropMeshes.build(DropMeshes.Kind.FLECKS, bytes, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE))) {
+            assertNotNull(mesh, "flecks to draw");
+            assertEquals(8, mesh.drawState().vertexCount());
+            // The first corner lies on the ground, below the camera, near the first fleck
+            var vertices = mesh.vertexBuffer();
+            assertEquals(2F, vertices.getFloat(0), 0.2F);
+            assertEquals((float) (GROUND - CAMERA_Y), vertices.getFloat(4), 0.02F);
+            assertEquals(3F, vertices.getFloat(8), 0.2F);
         }
     }
 
@@ -205,17 +191,11 @@ public class DropMeshesTests {
         var random = Randomizer.create(11);
         // On the north face of a window to the north of the camera, a little above the bottom of the glass
         sources.streaks().add(0.5, GROUND + 2.5, -3.0, SnowFlecks.FACE_NORTH, GROUND + 2.0, false, 0.5F, 0xF000F0, random);
-        try (var bytes = new ByteBufferBuilder(4096)) {
-            var builder = new BufferBuilder(bytes, VertexFormat.Mode.QUADS, DropMeshes.Kind.STREAKS.format);
-            DropMeshes.build(DropMeshes.Kind.STREAKS, builder, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE));
-            var mesh = builder.build();
+        try (var bytes = new ByteBufferBuilder(4096);
+             var mesh = DropMeshes.build(DropMeshes.Kind.STREAKS, bytes, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE))) {
             // A new drop fades in from nothing, so it may not be drawn yet; when it is, it is just off the window's face
-            if (mesh != null) {
-                try (mesh) {
-                    var vertices = mesh.vertexBuffer();
-                    assertEquals(-3.5F, vertices.getFloat(8), 0.02F);
-                }
-            }
+            if (mesh != null)
+                assertEquals(-3.5F, mesh.vertexBuffer().getFloat(8), 0.02F);
         }
     }
 
@@ -295,12 +275,12 @@ public class DropMeshesTests {
     void theViewIsTheCamerasAndAModChangingItsVectorsDoesntChangeIt() {
         var camera = new TurnedCamera(37.5F, 21.25F);
         var view = PrecipitationRenderer.View.of(camera);
-        assertEquals(camera.getLookVector(), view.look());
-        assertEquals(camera.getUpVector(), view.up());
-        assertEquals(camera.getLeftVector(), view.left());
+        assertEquals(camera.forwardVector(), view.look());
+        assertEquals(camera.upVector(), view.up());
+        assertEquals(camera.leftVector(), view.left());
 
-        // As Rainbows does to the camera's own vector, drawing its particle before the weather
-        camera.getLookVector().normalize().mul(2F);
+        // As Rainbows does to the camera's own vector on 1.21.1, drawing its particle before the weather
+        ((Vector3f) camera.forwardVector()).normalize().mul(2F);
         assertEquals(view, PrecipitationRenderer.View.of(camera));
     }
 }

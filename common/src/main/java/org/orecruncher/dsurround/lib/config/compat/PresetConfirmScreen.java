@@ -6,7 +6,6 @@ package org.orecruncher.dsurround.lib.config.compat;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.FittingMultiLineTextWidget;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
@@ -30,7 +29,7 @@ public class PresetConfirmScreen extends Screen {
     private final BooleanConsumer callback;
     private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
     private MultiLineTextWidget messageWidget;
-    private @Nullable ChangeList changesWidget;
+    private @Nullable FittingMultiLineTextWidget changesWidget;
 
     /**
      * @param message  shown above the list
@@ -52,7 +51,7 @@ public class PresetConfirmScreen extends Screen {
         contents.defaultCellSetting().alignHorizontallyCenter();
         this.messageWidget = contents.addChild(new MultiLineTextWidget(this.message, this.font).setCentered(true));
         if (this.changes != null)
-            this.changesWidget = contents.addChild(new ChangeList(LIST_WIDTH, this.changes, this.font));
+            this.changesWidget = contents.addChild(new FittingMultiLineTextWidget(0, 0, LIST_WIDTH, 0, this.changes, this.font));
 
         var buttons = this.layout.addToFooter(LinearLayout.horizontal().spacing(SPACING));
         if (this.changes != null) {
@@ -71,11 +70,13 @@ public class PresetConfirmScreen extends Screen {
     protected void repositionElements() {
         var width = Math.min(LIST_WIDTH, this.width - 2 * SPACING);
         this.messageWidget.setMaxWidth(width);
-        // The list takes the room the message leaves, and no more than its lines need
+        // The list takes the room the message leaves, and no more than its lines need. minimizeHeight() only shrinks
+        // a list that fits without a scroll bar, so it is given all the room first.
         if (this.changesWidget != null) {
             this.changesWidget.setWidth(width);
             var room = this.layout.getContentHeight() - this.messageWidget.getHeight() - 3 * SPACING;
-            this.changesWidget.setHeight(Math.max(0, Math.min(room, this.changesWidget.neededHeight())));
+            this.changesWidget.setHeight(Math.max(0, room));
+            this.changesWidget.minimizeHeight();
         }
         this.layout.arrangeElements();
     }
@@ -94,20 +95,5 @@ public class PresetConfirmScreen extends Screen {
     public Component getNarrationMessage() {
         var narration = CommonComponents.joinForNarration(super.getNarrationMessage(), this.message);
         return this.changes == null ? narration : CommonComponents.joinForNarration(narration, this.changes);
-    }
-
-    /**
-     * The list, which can say how tall it needs to be to show every line without scrolling (1.21.1 has no
-     * minimizeHeight())
-     */
-    private static final class ChangeList extends FittingMultiLineTextWidget {
-
-        ChangeList(int width, Component text, Font font) {
-            super(0, 0, width, 0, text, font);
-        }
-
-        int neededHeight() {
-            return this.getInnerHeight() + this.totalInnerPadding();
-        }
     }
 }

@@ -5,7 +5,7 @@ package org.orecruncher.dsurround.lib.config.compat;
 
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -58,12 +58,12 @@ class PresetButtonsEntry extends TooltipListEntry<Object> {
     }
 
     @Override
-    public void render(GuiGraphics graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
-        super.render(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
+        super.extractRenderState(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
 
         var font = Minecraft.getInstance().font;
         var name = this.getDisplayedFieldName();
-        graphics.drawString(font, name, x, y + 6, this.getPreferredTextColor());
+        graphics.text(font, name, x, y + 6, this.getPreferredTextColor());
 
         // The buttons share what is left of the row after the name, up to PER_ROW a row (a modpack can add presets)
         // and MAX_WIDTH each, starting just after the name
@@ -76,7 +76,7 @@ class PresetButtonsEntry extends TooltipListEntry<Object> {
             button.setX(left + (i % PER_ROW) * (width + GAP));
             button.setY(y + (i / PER_ROW) * (BUTTON_HEIGHT + GAP));
             button.setWidth(width);
-            button.render(graphics, mouseX, mouseY, delta);
+            button.extractRenderState(graphics, mouseX, mouseY, delta);
         }
     }
 

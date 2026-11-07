@@ -59,14 +59,14 @@ public final class ChunkCachingView implements BlockGetter {
 
     @Override
     public @NotNull BlockState getBlockState(@NotNull BlockPos pos) {
-        if (this.level().isOutsideBuildHeight(pos))
+        if (!this.level().isInValidBounds(pos))
             return Blocks.VOID_AIR.defaultBlockState();
         return this.chunk(pos).getBlockState(pos);
     }
 
     @Override
     public @NotNull FluidState getFluidState(@NotNull BlockPos pos) {
-        if (this.level().isOutsideBuildHeight(pos))
+        if (!this.level().isInValidBounds(pos))
             return Fluids.EMPTY.defaultFluidState();
         return this.chunk(pos).getFluidState(pos);
     }
@@ -77,8 +77,8 @@ public final class ChunkCachingView implements BlockGetter {
     }
 
     @Override
-    public int getMinBuildHeight() {
-        return this.level().getMinBuildHeight();
+    public int getMinY() {
+        return this.level().getMinY();
     }
 
     private Level level() {

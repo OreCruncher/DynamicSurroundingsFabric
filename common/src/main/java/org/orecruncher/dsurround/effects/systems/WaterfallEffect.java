@@ -3,7 +3,7 @@
 
 package org.orecruncher.dsurround.effects.systems;
 
-import net.minecraft.client.ParticleStatus;
+import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.core.BlockPos;
@@ -182,6 +182,8 @@ final class WaterfallEffect extends AbstractParticleEmitterEffect {
                 WaterfallSpray.addMist(clientLevel, this.posX, this.waterSurfaceY, this.posZ, this.strength, status, far, RANDOM, particles::add);
             if (OPTIONS.enableFroth)
                 WaterfallSpray.addFoam(clientLevel, this.position, this.strength, status, far, RANDOM, particles::add);
+            if (OPTIONS.enableRings)
+                WaterfallSpray.addRings(clientLevel, this.position, this.strength, status, far, RANDOM, particles::add);
         }
 
         return particles;
