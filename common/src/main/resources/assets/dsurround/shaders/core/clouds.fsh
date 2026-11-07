@@ -9,7 +9,10 @@
 // deck overhead into a pale sheet. Far off they fade out, as vanilla's do toward the clouds' range, and into the
 // weather's fog, rather than only taking on its color: the sky behind them, looking up, isn't the fog's color. And they
 // are gone before the edge of the cloud grid, wherever the fog is. Lightning lights them from inside: up to eight points
-// of light (CloudLights), each brightening the cloud around it, most where it is and none past its reach.
+// of light (CloudLights), each brightening the cloud around it, most where it is and none past its reach. Drawn "over"
+// (premultiplied): the cloud's color by how much of it there is, and the flash's light added on top whatever the fog has
+// left of the cloud, as the glow drawn without these clouds is. A flash 150 blocks off in a storm, in cloud the fog had
+// all but faded, was otherwise lost with it. LightningHandler dims each light for its distance, as that glow is.
 
 #include <minecraft:fog.glsl>
 #include <minecraft:dynamictransforms.glsl>
@@ -47,16 +50,16 @@ void main() {
     float lit = lightFrom(Lights[0], LightPowerA.x) + lightFrom(Lights[1], LightPowerA.y) + lightFrom(Lights[2], LightPowerA.z)
             + lightFrom(Lights[3], LightPowerA.w) + lightFrom(Lights[4], LightPowerB.x) + lightFrom(Lights[5], LightPowerB.y)
             + lightFrom(Lights[6], LightPowerB.z) + lightFrom(Lights[7], LightPowerB.w);
-    color.rgb += GLOW * lit;
 
     // The weather's fog, across the ground: it fades them and takes on their color
     float weather = smoothstep(0.0, 1.0, linear_fog_value(flatDistance, FogEnvironmentalStart, FogEnvironmentalEnd));
-    float fade = (1.0 - weather) * (1.0 - linear_fog_value(flatDistance, 0.0, FogCloudsEnd))
-            * (1.0 - smoothstep(EdgeFade.x, EdgeFade.y, flatDistance));
-    color.a *= fade;
-    if (color.a <= 0.0) {
+    float far = (1.0 - linear_fog_value(flatDistance, 0.0, FogCloudsEnd)) * (1.0 - smoothstep(EdgeFade.x, EdgeFade.y, flatDistance));
+    color.a *= (1.0 - weather) * far;
+    color.rgb = mix(color.rgb, FogColor.rgb, weather * FogColor.a);
+
+    vec3 light = GLOW * lit * far;
+    if (color.a <= 0.0 && max(light.r, max(light.g, light.b)) < 0.002) {
         discard;
     }
-    color.rgb = mix(color.rgb, FogColor.rgb, weather * FogColor.a);
-    fragColor = color;
+    fragColor = vec4(color.rgb * color.a + light, color.a);
 }

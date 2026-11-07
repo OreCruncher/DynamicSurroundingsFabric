@@ -404,14 +404,17 @@ public class LightningHandler extends AbstractClientHandler {
         if (level == null)
             return;
         double now = level.getGameTime() + partialTick;
+        float reach = this.fogHandler.viewReach();
         for (var active : this.strikes) {
             var strike = active.strike;
             float age = strike.age(now);
             if (age < 0F || strike.isDone(age))
                 continue;
             var glow = strike.glow();
+            // Seen through the fog as the glow drawn without the mod's clouds is: the clouds add it whatever their fog
+            float seen = Strikes.visibility(strike.distance(), reach);
             for (int p = 0; p < glow.count(); p++) {
-                float power = strike.glowBrightness(p, age) * DECK_LIGHT;
+                float power = strike.glowBrightness(p, age) * DECK_LIGHT * seen;
                 lights.add((float) (strike.x() + glow.x(p) - cameraX),
                         (float) (strike.y() + glow.y(p) + DECK_DEPTH - cameraY),
                         (float) (strike.z() + glow.z(p) - cameraZ), glow.radius(p) * DECK_REACH, power);
