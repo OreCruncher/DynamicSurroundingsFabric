@@ -1,5 +1,6 @@
 {
   "dsurround.modname": "动态环境/动态环绕(Dynamic Surroundings)",
+  "dsurround.newversion.update": "可用更新 ",
   "dsurround.newversion.message": "<color:#7FFFD4>%1$s</color> <color:#FFCC33>%2$s v%3$s</color>%4$s <color:#BFC1C2>\\[</color><color:#FBCEB1>[Discussion](%5$s \"Click to go to discussion forums\")</color><color:#BFC1C2>\\]</color> <color:#BFC1C2>\\[</color><color:#F16436>[CurseForge](%6$s \"点击以获取下载页面\")</color><color:#BFC1C2>\\]</color> <color:#BFC1C2>\\[</color><color:#1BD96A>[Modrinth](%7$s \"点击以获取下载页面\")</color><color:#BFC1C2>\\]</color>",
   "dsurround.newversion.releasenoteslink": " <color:#BFC1C2>\\[</color><color:#1DACD6>[发布说明](%1$s \"点击查看发布说明\")</color><color:#BFC1C2>\\]</color>",
   "dsurround.mod.link.sources": "源代码存储库",
@@ -169,7 +170,7 @@
   "dsurround.text.soundconfig.volume.help": "计算声音输出音量时应用的音量缩放因子\n增加使得安静声音变大；减少使得大声音变小\n100%代表正常音量。",
   "dsurround.text.config.soundconfiguration": "配置声音",
   "dsurround.text.config.soundconfiguration.tooltip": "在模组内配置单独的声音",
-  "dsurround.text.keybind.section": "动态环境/动态环绕(Dynamic Surroundings)",
+  "key.category.dsurround.category": "动态环境/动态环绕(Dynamic Surroundings)",
   "dsurround.text.keybind.modConfigurationMenu": "模组配置菜单",
   "dsurround.text.keybind.individualSoundConfig": "单独声音配置",
   "dsurround.text.keybind.diagnosticHud": "诊断叠加",
