@@ -249,6 +249,10 @@ is known of 26.4.
   `RealisticAuroraFrame`, `PointLightFrame`), unit-tested; the renderer only packs it into its uniform block (a `pack`
   method: the matrix, then the record's vec4s in order), so that packing is all a render API change touches. A new
   value goes in the record, in the block's order, and in its shader include.
+  Passes over the whole screen (ground fog's three, the realistic aurora and its composite) go through
+  `effects/ScreenPasses`: `pipeline` starts their pipelines (one triangle from the vertex index, no vertex buffer, no
+  culling), `draw` opens the pass, sets the pipeline, binds and draws, and `Reduced` keeps a target at a share of the
+  screen's size.
 - Rendering is 26.3's: pipelines (`com.mojang.renderpearl.api`), `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). "How 26.3 draws a level" below has how the aurora, soft
   particles and point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3

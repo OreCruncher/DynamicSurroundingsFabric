@@ -6,16 +6,12 @@ package org.orecruncher.dsurround.effects.aurora;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.FilterMode;
@@ -25,17 +21,16 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.AuroraQuality;
 import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.effects.ScreenPasses;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 /**
  * Draws a {@link RealisticAurora}: a pass over the whole screen, after the stars, that follows each pixel's line of
@@ -84,25 +79,15 @@ public final class RealisticAuroraRenderer {
 
     // A triangle over the whole of what it draws to, from the vertex's index alone. Nothing is tested against or
     // written to the depth buffer
-    private static final RenderPipeline PIPELINE = RenderPipeline.builder()
-            .withLocation(Constants.asId("pipeline/aurora_realistic"))
-            .withVertexShader(Constants.asId("core/aurora_realistic"))
-            .withFragmentShader(Constants.asId("core/aurora_realistic"))
+    private static final RenderPipeline PIPELINE = ScreenPasses.pipeline("pipeline/aurora_realistic", "core/aurora_realistic", "core/aurora_realistic")
             .withBindGroupLayout(INFO_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADD))
-            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
-            .withCull(false)
             .build();
 
     // Lays the aurora, drawn at a share of the screen's size, over the sky
-    private static final RenderPipeline COMPOSITE_PIPELINE = RenderPipeline.builder()
-            .withLocation(Constants.asId("pipeline/aurora_composite"))
-            .withVertexShader(Constants.asId("core/aurora_composite"))
-            .withFragmentShader(Constants.asId("core/aurora_composite"))
+    private static final RenderPipeline COMPOSITE_PIPELINE = ScreenPasses.pipeline("pipeline/aurora_composite", "core/aurora_composite", "core/aurora_composite")
             .withBindGroupLayout(COMPOSITE_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADD))
-            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
-            .withCull(false)
             .build();
 
     public static final ModShader SHADER = new ModShader(PIPELINE, "the realistic aurora", "realistic auroras will not be drawn", Library.LOGGER);
@@ -141,8 +126,7 @@ public final class RealisticAuroraRenderer {
     @Nullable
     private static GpuBuffer info;
     // Where it is drawn at FAST, at a share of the screen's size
-    @Nullable
-    private static TextureTarget reduced;
+    private static final ScreenPasses.Reduced REDUCED = new ScreenPasses.Reduced("Dynamic Surroundings aurora (realistic)");
 
     private RealisticAuroraRenderer() {
     }
@@ -184,44 +168,25 @@ public final class RealisticAuroraRenderer {
                              AuroraQuality quality, float shadow, float washout, float alpha, Matrix4f viewMatrix, float time) {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
-        RenderTarget target = fast ? reducedFor(screen, quality.scale()) : screen;
+        RenderTarget target = fast ? REDUCED.of(screen, quality.scale()) : screen;
         pack(RealisticAuroraFrame.of(aurora, moment, motion, quality, shadow, washout, alpha, LevelProjection.get(), viewMatrix,
                 time, target.height));
 
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
-        var encoder = RenderSystem.getDevice().createCommandEncoder();
-        try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic)", target.getColorTextureView(),
-                fast ? Optional.of(CLEAR) : Optional.empty(), null, OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
-            pass.setUniform(INFO, info);
-            pass.setUniform(NOISE_SAMPLER, noiseView, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
-            pass.draw(3, 1, 0, 0);
-        }
+        var block = info;
+        ScreenPasses.draw(() -> "Dynamic Surroundings aurora (realistic)", target.getColorTextureView(),
+                fast ? Optional.of(CLEAR) : Optional.empty(), PIPELINE, pass -> {
+                    pass.setUniform(INFO, block);
+                    pass.setUniform(NOISE_SAMPLER, noiseView, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+                });
 
         if (fast) {
-            COMPOSITE.run(() -> {
-                try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic) composite", screen.getColorTextureView(),
-                        Optional.empty(), null, OptionalDouble.empty())) {
-                    pass.setPipeline(RenderSystem.getCompiledPipeline(COMPOSITE_PIPELINE));
-                    pass.setUniform(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-                    pass.draw(3, 1, 0, 0);
-                }
-            }, () -> {});
+            COMPOSITE.run(() -> ScreenPasses.draw(() -> "Dynamic Surroundings aurora (realistic) composite", screen.getColorTextureView(),
+                    Optional.empty(), COMPOSITE_PIPELINE,
+                    pass -> pass.setUniform(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))),
+                    () -> {});
         }
-    }
-
-    /**
-     * The target it is drawn to at a share of the screen's size, created or resized, rounded up
-     */
-    private static TextureTarget reducedFor(RenderTarget screen, int scale) {
-        int width = (screen.width + scale - 1) / scale;
-        int height = (screen.height + scale - 1) / scale;
-        if (reduced == null)
-            reduced = new TextureTarget("Dynamic Surroundings aurora (realistic)", width, height, GpuFormat.RGBA8_UNORM, null);
-        else if (reduced.width != width || reduced.height != height)
-            reduced.resize(width, height);
-        return reduced;
     }
 
     /**
