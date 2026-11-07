@@ -357,6 +357,8 @@ is known of 26.4.
 - Features that turn themselves off for another mod are listed in `lib/platform/FeatureConflict` (checked with
   `isBlocked()`), not by skipping mixins: it logs them at startup and feeds the diagnostics overlay and `/dsconflicts`.
   A new one needs a `dsurround.conflict.<name>` entry in `en_us` (a test checks).
+  Effects a shader pack keeps off are listed in `lib/compat/ShaderPackFeature`, which `/dsconflicts` reports while one
+  is in use (those switched on in the config); a new one needs a `dsurround.shader_pack.<name>` entry (a test checks).
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
 - Biome traits (`config/biome/biometraits`) hold tables of what vanilla has, so **on every Minecraft version upgrade
