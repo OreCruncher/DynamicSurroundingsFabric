@@ -47,6 +47,8 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
+import org.orecruncher.dsurround.lib.resources.IModFiles;
+import org.orecruncher.dsurround.lib.resources.ModFiles;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.seasons.SeasonManager;
@@ -95,7 +97,9 @@ public final class Client {
 
         ContainerManager.getRootContainer()
                 .registerSingleton(IModLog.class, Library.LOGGER)
-                .registerSingleton(IConfigScreenFactoryProvider.class, ClothAPIFactoryProvider.class);
+                .registerSingleton(IConfigScreenFactoryProvider.class, ClothAPIFactoryProvider.class)
+                // A platform reading mods' files its own way registers that after initialize (NeoForge does)
+                .registerSingleton(IModFiles.class, ModFiles.byPaths());
 
         // Setup debug trace on the logger. It's not guaranteed that we
         // are the first getting the log file, so we can't rely

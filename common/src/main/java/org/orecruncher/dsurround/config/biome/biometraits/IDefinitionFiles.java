@@ -5,17 +5,16 @@ package org.orecruncher.dsurround.config.biome.biometraits;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import org.orecruncher.dsurround.lib.resources.ModRoots;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.resources.IModFiles;
+import org.orecruncher.dsurround.lib.resources.ModFiles;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -38,21 +37,20 @@ public interface IDefinitionFiles {
     }
 
     /**
-     * The files in the installed mods' jars (Minecraft's own included): those of the mod whose id is the namespace,
-     * else of the first mod that has the namespace's data (see {@link ModRoots})
+     * The files in the installed mods (Minecraft's own included): those of the mod whose id is the namespace, else of
+     * the first mod that has the namespace's data (see {@link ModFiles#ownerOf})
      */
     static IDefinitionFiles installedMods() {
-        return under(ModRoots::forNamespace);
+        return (namespace, folder, path) -> ModFiles.ownerOf(namespace)
+                .flatMap(owner -> parse(ContainerManager.resolve(IModFiles.class), owner, resource(namespace, folder, path)));
     }
 
     /**
      * The files under the roots a namespace's are in
      */
     static IDefinitionFiles under(Function<String, List<Path>> rootsOf) {
-        // Where a namespace's files are, found once
-        Map<String, List<Path>> roots = new ConcurrentHashMap<>();
-        return (namespace, folder, path) -> ModRoots.find(roots.computeIfAbsent(namespace, rootsOf), resource(namespace, folder, path))
-                .flatMap(IDefinitionFiles::parse);
+        var files = new ModFiles.PathBased(rootsOf);
+        return (namespace, folder, path) -> parse(files, namespace, resource(namespace, folder, path));
     }
 
     /**
@@ -70,8 +68,10 @@ public interface IDefinitionFiles {
         };
     }
 
-    private static Optional<JsonElement> parse(Path file) {
-        try (var reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+    private static Optional<JsonElement> parse(IModFiles files, String modId, String file) {
+        if (!files.has(modId, file))
+            return Optional.empty();
+        try (var reader = new InputStreamReader(files.open(modId, file), StandardCharsets.UTF_8)) {
             return Optional.of(JsonParser.parseReader(reader));
         } catch (IOException | RuntimeException e) {
             return Optional.empty();

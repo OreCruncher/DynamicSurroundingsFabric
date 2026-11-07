@@ -258,6 +258,11 @@ is known of 26.4.
   particles and point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3
   can run on Vulkan.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
+- Mods' own files (biome definitions, the tag fallback) are read through the `IModFiles` registered with the container
+  (by mod id): `ModFiles.byPaths()` by default (`Client.initialize`), reading the folders `ModRoots` finds. NeoForge,
+  which hands over jar files, registers `NeoForgeModFiles` after `Client.initialize`, reading through FML's open
+  `JarContents`. Don't open mod jars as zip file systems: kept open, they cost about 300 bytes of heap a file in them
+  (36 MB for a pack of 120 mods).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
   old values carry over on load (also rename the path in `dsconfigs/presets.json`). Translation keys follow
   `dsurround.config.<group>.<field>[.tooltip]`.
