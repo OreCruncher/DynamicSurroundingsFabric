@@ -1,4 +1,5 @@
 {
+  "dsurround.newversion.update": "Dostępna aktualizacja ",
   "dsurround.newversion.message": "<color:#7FFFD4>%1$s</color> <color:#FFCC33>%2$s v%3$s</color>%4$s <color:#BFC1C2>\\[</color><color:#FBCEB1>[Discussion](%5$s \"Click to go to discussion forums\")</color><color:#BFC1C2>\\]</color> <color:#BFC1C2>\\[</color><color:#F16436>[CurseForge](%6$s \"Kliknij, aby przejść na stronę pobierania\")</color><color:#BFC1C2>\\]</color> <color:#BFC1C2>\\[</color><color:#1BD96A>[Modrinth](%7$s \"Kliknij, aby przejść na stronę pobierania\")</color><color:#BFC1C2>\\]</color>",
   "dsurround.newversion.releasenoteslink": " <color:#BFC1C2>\\[</color><color:#1DACD6>[Informacje o wydaniu](%1$s \"Kliknij, aby zobaczyć informacje o wydaniu\")</color><color:#BFC1C2>\\]</color>",
   "dsurround.mod.link.sources": "Repozytorium kodu źródłowego",
