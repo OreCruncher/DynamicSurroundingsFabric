@@ -30,6 +30,9 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-05: boats (`boats.json`)](#results-2026-11-05-boats-boatsjson)
 - [Results, 2026-11-05: beach waves (`shore.json`)](#results-2026-11-05-beach-waves-shorejson)
 - [Results, 2026-11-05: G1 against ZGC (`gc.json`)](#results-2026-11-05-g1-against-zgc-gcjson)
+- [Results, 2026-11-07: rays skip air, random block check](#results-2026-11-07-rays-skip-air-random-block-check)
+  - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
+  - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
 - [Rerunning](#rerunning)
 
@@ -663,6 +666,52 @@ the same ground, in a later session of the game.
 - ZGC stays opt-in. With no limit it took about five times the heap, and it hasn't been run under a pack's `-Xmx`; G1
   stays the default so runs compare with the rest of this file. The mod can't choose a collector: for players it is a
   launcher setting.
+
+## Results, 2026-11-07: rays skip air, random block check
+
+Fabric, OpenGL, 1920x1080, the machine above, on `OreCruncher/26.3-5.2.0` (5.2.0 work).
+
+### Rays skip sections of air (`sound.json`)
+
+Sound traces now go through `lib/block/RayWalk` (`ChunkCachingView.clip`): the same blocks in the same order as the
+level's own trace, each tested the same way, but nothing read in a section (16 by 16 by 16) that holds only air. The
+hits are the level's (`RayWalkTests` compares 40,000 rays), so the acoustics are unchanged. Before is the same code with
+`clip` handed back to the level's trace, run straight after; each label two repeats. Sound device on (the Bose
+headphones: they had disconnected while idle, and the first try started with `Error starting SoundSystem`).
+
+| Run | Trace ms, before | after | Start ms/s, before | after |
+|---|---|---|---|---|
+| open | 0.413 | 0.189 (-54%) | 8.4 | 4.0 |
+| open, occlusion on | 0.416 | 0.200 (-52%) | 8.6 | 4.1 |
+| enclosed | 0.362 | 0.326 (-10%) | 7.1 | 6.3 |
+| enclosed, simplified shared airspace | 0.259 | 0.233 (-10%) | 5.1 | 4.6 |
+| occluded | 0.391 | 0.154 (-61%) | 8.0 | 3.3 |
+| occluded, occlusion on | 0.398 | 0.162 (-59%) | 8.2 | 3.4 |
+| burst | 0.341 | 0.299 (-12%) | 30.3 | 31.0 |
+
+- Open air was where a trace spent its time: every reverb ray ran its full 128 blocks, reading each. Now a ray through
+  open sky reads almost nothing. The box's sections hold blocks, so the enclosed scenes gain only what their rays cross
+  outside it.
+- In `burst`, sounds starting without effects (past the start budget) went from 54.9 a second to 37.6.
+- Reuse and sharing are as they were (about 52 reused a second in the open), as they should be: only the cost of a
+  trace changed. Frames are unaffected, none of this being on the render thread.
+- Left as it is: occlusion still starts a new trace after each block it passes (`ReusableRaycastIterator`). Each is far
+  cheaper now; walking it in one pass would change how occlusion is measured, so the acoustics with it.
+
+### Random block effects' ignore check
+
+The 2026-10-27 profiles put a third of a random block sample in the `BLOCKS_TO_IGNORE` set lookup. Tried in its place:
+`state.isAir()` (a flag on the state), then barrier and command block by identity, checked against the set for every
+vanilla block state. Plains, swamp and birch forest, 40 s each, three repeats; Area Block Effects, median ms a tick:
+
+| Scene | Set lookup | `isAir()` |
+|---|---|---|
+| plains | 0.127 / 0.122 / 0.121 | 0.134 / 0.127 / 0.121 |
+| swamp | 0.173 / 0.167 / 0.156 | 0.179 / 0.177 / 0.162 |
+| birch forest | 0.194 / 0.186 / 0.180 | 0.211 / 0.198 / 0.183 |
+
+No gain, within the noise if anything slower, and reverted: the time is the first read of the block state, which only
+moves to the next line. Not worth trying again.
 
 ## Field recordings
 

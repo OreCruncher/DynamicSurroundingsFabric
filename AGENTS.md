@@ -321,7 +321,9 @@ is known of 26.4.
   current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
   `SourceProviders` hand it. Worker threads read the world only through `WorldContext.blocks`
   (`lib/block/NoBlockEntityView`), or, for the traces, each thread's `lib/block/ChunkCachingView` (keeps the chunk in
-  hand between reads; a quarter of a trace was the level looking chunks up): on the client `Level.getBlockEntity` can
+  hand between reads; a quarter of a trace was the level looking chunks up). Its `clip` is `lib/block/RayWalk`: the
+  same blocks in the same order as vanilla's, each tested the same way (`RayWalkTests` compares them ray for ray), but
+  nothing read in a section that holds only air; that halved traces in open air (`sound.json`, 2026-11-07): on the client `Level.getBlockEntity` can
   create a block entity from any thread, and mod blocks call it from shape methods, which corrupted chunk maps (#166).
   Nor may they call a `SoundInstance`'s
   `getVolume()`/`getPitch()`: each draws on the instance's `LegacyRandomSource`, which the sound engine also uses on the
