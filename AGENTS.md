@@ -26,9 +26,9 @@ without the notice, breaks the license.
 
 ## About the mod
 Client-side Minecraft mod (MIT). Minecraft 26.3, Fabric and NeoForge through Architectury. Versions are in
-`gradle.properties`. This branch, still named for 26.2, is on 26.3, carrying 0.4.9 and 1.21.11's 5.0.0 fixes, and where features land first;
-`MIGRATION.md` holds notes for the next Minecraft version: how the last move went, and what is known of 26.4. 26.2 itself was never released: the next
-release, 5.1.0, is for 26.3.
+`gradle.properties`. `main` is the 26.x line, where features land first (5.1.0, for 26.3, was its first release; 26.2
+itself was never released). `MIGRATION.md` holds notes for the next Minecraft version: how the last move went, and what
+is known of 26.4.
 
 ## Layout
 - `common/` — almost all code, resources and tests (`org.orecruncher.dsurround`).
@@ -437,27 +437,25 @@ release, 5.1.0, is for 26.3.
 - The user commits; don't commit unless asked.
 
 ## Branches
-- `main`: the 1.21.1 line (0.4.9 was squash-merged as `df0c23ef` and recorded here with `-s ours`; each 1.21.1
-  release branches from `main`).
-- `OreCruncher/1.21.11` (5.0.0 released, tag `1.21.11-5.0.0`): a long-lived 1.21.11 line backported from this branch, branched
-  from it rather than from `main`. It takes no features from here, only fixes, so it stays on 5.0.x and skips the
-  minors this branch makes. Don't merge between the two (that would bring this branch's features there, or the
+- `main`: the 26.x line, on 26.3 (NeoForge 26.3.0.101, Architectury 22.0.5, Cloth Config 26.3.159; NeoForge's
+  client launch class is `net.neoforged.fml.startup.Client`). 5.1.0 is released (tag `26.3-5.1.0`); it has the
+  realistic aurora, which 1.21.11 doesn't (see Versions). Never rebase it.
+  - It came from `OreCruncher/26.2`, the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9, moved to 26.3
+    and merged into `main` for 5.1.0. Up to then `main` was the 1.21.1 line, which is why its history holds 0.4.9's
+    squash (`df0c23ef`), recorded on the port branch with `git merge -s ours`.
+- `OreCruncher/1.21.11` (5.0.0 released, tag `1.21.11-5.0.0`): a long-lived 1.21.11 line backported from the 26.x line,
+  branched from `OreCruncher/26.2` rather than from `main`. It takes no features from `main`, only fixes, so it stays on
+  5.0.x and skips the minors `main` makes. Don't merge between the two (that would bring `main`'s features there, or the
   backport's downgrades here): cherry-pick a fix either way.
-- 1.21.1 is frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering.
-- The current 1.21.1 release branch (none open since 0.4.9's squash): merged into this branch directly, before its squash to
-  `main`; merge it again for its fixes. Once squashed, check `git diff OreCruncher/<release> main` is empty and record
-  `main` with `git merge -s ours main` (a normal merge would reopen every conflict this branch resolved). Port 1.21.1
-  work by merging, resolving against 26.3's APIs; never rebase this branch.
-  - After `git merge OreCruncher/<release>` stops: `python scripts/port-merge.py merge --show` renames 1.21.1's names
-    (`scripts/port-renames.txt`) and merges each conflict again, staging what resolves (and files git merged with old
-    names in them), then prints only the conflicts left. Then compile; add any rename the compiler finds to the table
-    and run `port-merge.py check-table`. `port-merge.py convert --to 1.21.1 FILE...` renames code copied to 0.4.7.
+- 1.21.1 is frozen at 0.4.9 (tag `1.21.1-0.4.9`); a hotfix there would be 0.4.10, the old numbering. Branch it from
+  the tag (`git switch -c OreCruncher/0.4.10 1.21.1-0.4.9`), release and tag it from that branch, and never merge it
+  into `main`: cherry-pick fixes across. Its changelog heading and `versions.json` entry still go into `main` by hand
+  (see Versions).
+  - `python scripts/port-merge.py convert --to 1.21.1 FILE...` renames 26.x names in code copied to 1.21.1, and
+    `--to 26.2` the other way (`scripts/port-renames.txt`); compile afterwards, as a rename can't see types. Its
+    `merge` mode was for merging 1.21.1 release branches into the port branch, which no longer happens.
 - Biome dumps: `python scripts/dump-diff.py OLD NEW [--sounds]` lists only what changed (traits, their sources, the
   "Biomes to check" list); `--keep DUMP` saves a copy to `build/dumps` before the next dump overwrites it.
-- `OreCruncher/26.2`: named for the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9, now on 26.3 (NeoForge
-  26.3.0.101, Architectury 22.0.5, Cloth Config 26.3.159). NeoForge's client launch class is
-  `net.neoforged.fml.startup.Client`.
-  `mod_version` is 5.1.0: this branch has the realistic aurora, which 1.21.11 doesn't (see Versions).
 
 ## Versions
 - `MAJOR.MINOR.PATCH` from 5.0.0, the first 1.21.11 release. The 0.x releases used the third number for every release,
