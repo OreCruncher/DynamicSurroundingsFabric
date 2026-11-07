@@ -27,7 +27,6 @@ import net.minecraft.client.renderer.BindGroupLayouts;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
@@ -66,17 +65,8 @@ import java.util.OptionalDouble;
 public final class GroundFogVolume {
 
     private static final String INFO = "GroundFogInfo";
-    // Each vec3 of the block and the float after it are written as one vec4: in std140 the float takes the vec3's
-    // fourth slot, but Std140Builder.putVec3 always takes sixteen bytes, which would put everything after it out by four
-    private static final int INFO_SIZE = new Std140SizeCalculator()
-            .putMat4f()
-            .putVec4().putVec4()
-            .putVec2().putFloat().putFloat()
-            .putVec4()
-            .putVec2().putFloat().putFloat()
-            .putVec4()
-            .putVec2().putFloat().putFloat()
-            .get();
+    // The matrix, then the frame's vectors (see GroundFogFrame for how the block's vec3s and vec2s are laid out as them)
+    private static final int INFO_SIZE;
     private static final String DEPTH_SAMPLER = "DepthSampler";
     private static final String FOG_GRID = "FogGrid";
     private static final String NOISE_SAMPLER = "NoiseSampler";
@@ -102,6 +92,13 @@ public final class GroundFogVolume {
     // Far off, where nothing was drawn (no pixel is left so: the march writes every one)
     private static final Vector4f CLEAR_DISTANCE = new Vector4f(1.0e6F, 0F, 0F, 0F);
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
+
+    static {
+        var size = new Std140SizeCalculator().putMat4f();
+        for (int i = 0; i < GroundFogFrame.VECTORS; i++)
+            size.putVec4();
+        INFO_SIZE = size.get();
+    }
 
     /**
      * Draws the mist, at a share of the screen's size, replacing what was there: its color, already multiplied by its
@@ -243,7 +240,7 @@ public final class GroundFogVolume {
     private static void draw(GroundFogField field, Camera camera, RenderTarget target,
                              GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
         if (grid == null || gridSize != field.size() || gridVersion != field.version()) {
-            gridBaseY = Mth.floor(lowestGround(field)) - HEIGHT_BASE_MARGIN;
+            gridBaseY = Mth.floor(GroundFogFrame.lowestGround(field)) - HEIGHT_BASE_MARGIN;
             gridHighest = upload(field, gridBaseY);
             gridVersion = field.version();
         }
@@ -256,7 +253,9 @@ public final class GroundFogVolume {
         var reduced = marched = reducedFor(marched, "Dynamic Surroundings ground fog", target, scale);
         var smoothedReduced = smoothed = reducedFor(smoothed, "Dynamic Surroundings ground fog, smoothed", target, scale);
         var distance = distancesFor(reduced);
-        writeInfo(field, camera, target, quality, strength, driftX, driftZ, seconds);
+        var cam = camera.position();
+        pack(GroundFogFrame.of(field, cam.x, cam.y, cam.z, gridBaseY, gridHighest, LevelProjection.get(), RenderSystem.getModelViewMatrixCopy(),
+                target.width, target.height, quality, strength, driftX, driftZ, seconds, RenderSystem.getDevice().getDeviceInfo().isZZeroToOne()));
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
         var encoder = RenderSystem.getDevice().createCommandEncoder();
@@ -316,43 +315,17 @@ public final class GroundFogVolume {
     }
 
     /**
-     * The values the passes share, this frame (see shaders/include/ground_fog.glsl)
+     * Writes the values the passes share this frame into the uniform block (see shaders/include/ground_fog.glsl)
      */
-    private static void writeInfo(GroundFogField field, Camera camera, RenderTarget target,
-                                  GroundFogQuality quality, float strength, float driftX, float driftZ, float seconds) {
+    private static void pack(GroundFogFrame frame) {
         if (info == null)
             info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings ground fog UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        var cam = camera.position();
-        int baseY = gridBaseY;
-        float top = gridHighest + MIST_DEPTH;
-        // The mist thins to nothing a block inside the area's edge, from where the camera is: beyond that, the field has
-        // no cells (see GroundFogField.prepare)
-        float fadeWidth = field.radius() * GroundFogField.EDGE_FADE;
-        var zeroToOne = RenderSystem.getDevice().getDeviceInfo().isZZeroToOne();
-        var projection = LevelProjection.get();
-        var invViewProj = new Matrix4f(projection).mul(RenderSystem.getModelViewMatrixCopy()).invert();
-        var invProj = new Matrix4f(projection).invert();
+        var v = frame.vec4s();
         try (var stack = MemoryStack.stackPush()) {
-            var data = Std140Builder.onStack(stack, INFO_SIZE)
-                    .putMat4f(invViewProj)
-                    .putVec4(invProj.m02(), invProj.m12(), invProj.m22(), invProj.m32())
-                    .putVec4(invProj.m03(), invProj.m13(), invProj.m23(), invProj.m33())
-                    .putVec2(target.width, target.height)
-                    .putFloat(quality.scale())
-                    .putFloat(quality.maxSteps())
-                    // The camera, in the grid's terms: a block to a texel, heights from the base; and where the base is
-                    // in the world, so the noise stays put as the camera goes up and down. Not wrapped: heights are
-                    // small, and a wrap would shift the noise
-                    .putVec4((float) (cam.x - field.cellX(0)), (float) (cam.y - baseY), (float) (cam.z - field.cellZ(0)), baseY)
-                    .putVec2(Math.floorMod(field.cellX(0), NOISE_WRAP), Math.floorMod(field.cellZ(0), NOISE_WRAP))
-                    .putFloat(gridSize)
-                    .putFloat(top - baseY)
-                    .putVec4(driftX, driftZ, seconds, MIST_DEPTH)
-                    .putVec2(field.radius() - 1F, fadeWidth)
-                    .putFloat(THICKNESS * strength)
-                    .putFloat(zeroToOne ? 1F : 0F)
-                    .get();
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), data);
+            var builder = Std140Builder.onStack(stack, INFO_SIZE).putMat4f(frame.invViewProj());
+            for (int i = 0; i < v.length; i += 4)
+                builder.putVec4(v[i], v[i + 1], v[i + 2], v[i + 3]);
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
     }
 
@@ -408,20 +381,7 @@ public final class GroundFogVolume {
     }
 
     /**
-     * The lowest the smoothed ground is anywhere in the grid
-     */
-    private static float lowestGround(GroundFogField field) {
-        int size = field.size();
-        float lowest = Float.POSITIVE_INFINITY;
-        for (int j = 0; j < size; j++)
-            for (int i = 0; i < size; i++)
-                lowest = Math.min(lowest, field.smoothHeight(i, j));
-        return lowest;
-    }
-
-    /**
-     * Puts the grid in the texture: a texel a column, red the smoothed ground's height above the base in whole blocks
-     * and alpha the part of a block over, green the mist's thickness, blue the block and sky light
+     * Puts the grid in the texture, a texel a column (see {@link GroundFogFrame#texel})
      *
      * @return the highest ground under any mist, in blocks
      */
@@ -437,25 +397,11 @@ public final class GroundFogVolume {
             gridSize = size;
         }
 
-        float highest = Float.NEGATIVE_INFINITY;
-        for (int j = 0; j < size; j++) {
-            for (int i = 0; i < size; i++) {
-                float density = field.density(i, j);
-                float height = field.smoothHeight(i, j);
-                if (density > 0F)
-                    highest = Math.max(highest, height);
-                float above = Mth.clamp(height - baseY, 0F, 255.99F);
-                int r = Mth.floor(above);
-                int a = Mth.clamp(Math.round((above - r) * 255F), 0, 255);
-                int g = Mth.clamp(Math.round(density * 255F), 0, 255);
-                int light = field.light(i, j);
-                // Block light and sky light, 0 to 15 each, together in a byte
-                int b = ((light >> 4) & 0xF) << 4 | ((light >> 20) & 0xF);
-                pixels.setPixelABGR(i, j, (a << 24) | (b << 16) | (g << 8) | r);
-            }
-        }
+        for (int j = 0; j < size; j++)
+            for (int i = 0; i < size; i++)
+                pixels.setPixelABGR(i, j, GroundFogFrame.texel(field, i, j, baseY));
         grid.upload();
-        return highest;
+        return GroundFogFrame.highestUnderMist(field);
     }
 
     /**

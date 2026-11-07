@@ -25,7 +25,10 @@
     "field": {
       "biome": "minecraft:birch_forest",
       "pitch": 5,
+      // Summer: fireflies follow the season (Serene Seasons in the dev run), and aurora.json leaves the world in winter,
+      // where there are none
       "commands": [
+        "season set mid_summer",
         "time set 18000",
         "weather clear",
         "fill ~-24 ~ ~-24 ~24 ~19 ~-1 air",

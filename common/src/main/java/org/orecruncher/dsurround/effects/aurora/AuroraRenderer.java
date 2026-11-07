@@ -127,8 +127,6 @@ public final class AuroraRenderer {
     }
 
     private static void draw(Aurora aurora, float alpha, Matrix4f viewMatrix, float time) {
-        var device = RenderSystem.getDevice();
-
         if (quads == null)
             quads = new QuadWriter(QuadWriter.Format.POSITION_TEX_COLOR);
         quads.begin(aurora.bands() * SEGMENTS);
@@ -143,22 +141,10 @@ public final class AuroraRenderer {
         if (quads.vertexCount() == 0)
             return;
 
-        if (auroraInfo == null)
-            auroraInfo = device.createBuffer(() -> "Dynamic Surroundings aurora UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, AURORA_INFO_SIZE);
-        var palette = aurora.palette();
-        try (var stack = MemoryStack.stackPush()) {
-            var data = Std140Builder.onStack(stack, AURORA_INFO_SIZE)
-                    .putVec4(palette.bottom().red(), palette.bottom().green(), palette.bottom().blue(), 1F)
-                    .putVec4(palette.middle().red(), palette.middle().green(), palette.middle().blue(), 1F)
-                    .putVec4(palette.top().red(), palette.top().green(), palette.top().blue(), 1F)
-                    .putFloat(time)
-                    .putFloat(Math.clamp(alpha * aurora.brightness(), 0F, 1F))
-                    .get();
-            device.createCommandEncoder().writeToBuffer(auroraInfo.slice(), data);
-        }
+        var frame = AuroraFrame.of(aurora, alpha, time);
+        pack(frame);
         if (coverage != null)
-            AuroraSamples.drawn(aurora, Math.clamp(alpha * aurora.brightness(), 0F, 1F),
-                    coverage.pixels(target.width, target.height), target.width * target.height);
+            AuroraSamples.drawn(aurora, frame.strength(), coverage.pixels(target.width, target.height), target.width * target.height);
 
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(viewMatrix);
         // Made the first time it is used, which can't be while a render pass is open
@@ -168,6 +154,26 @@ public final class AuroraRenderer {
             pass.setUniform(AURORA_INFO, info);
             pass.setUniform(NOISE_SAMPLER, noiseTexture.getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
         });
+    }
+
+    /**
+     * Writes the frame's values into the uniform block (see aurora.fsh)
+     */
+    private static void pack(AuroraFrame frame) {
+        var device = RenderSystem.getDevice();
+        if (auroraInfo == null)
+            auroraInfo = device.createBuffer(() -> "Dynamic Surroundings aurora UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, AURORA_INFO_SIZE);
+        var palette = frame.palette();
+        try (var stack = MemoryStack.stackPush()) {
+            var data = Std140Builder.onStack(stack, AURORA_INFO_SIZE)
+                    .putVec4(palette.bottom().red(), palette.bottom().green(), palette.bottom().blue(), 1F)
+                    .putVec4(palette.middle().red(), palette.middle().green(), palette.middle().blue(), 1F)
+                    .putVec4(palette.top().red(), palette.top().green(), palette.top().blue(), 1F)
+                    .putFloat(frame.time())
+                    .putFloat(frame.strength())
+                    .get();
+            device.createCommandEncoder().writeToBuffer(auroraInfo.slice(), data);
+        }
     }
 
     private static void buildCurtains(QuadWriter quads, Aurora aurora, float time, @Nullable AuroraCoverage coverage) {

@@ -83,30 +83,14 @@ public final class PointLights {
      */
     public static final float FIREFLY_STRENGTH = 0.45F;
 
-    /**
-     * The most lights drawn: the nearest, which are the brightest on screen and cost the most to draw (each is a
-     * square over the pixels it may light, the whole screen when the camera is inside its reach). A swamp full of
-     * fireflies could otherwise draw hundreds.
-     */
-    static final int MAX_DRAWN = 64;
-    /**
-     * From this far down the nearest, the lights fade, to nothing at {@link #MAX_DRAWN}: one moving across that limit
-     * fades in or out rather than switching.
-     */
-    static final int FADE_FROM = 48;
-    // A light this faint changes no pixel: under half a step of an 8 bit color, at its brightest
-    static final float MIN_STRENGTH = 0.5F / 255F;
-
     // Lights recorded longer ago than this weren't from this frame (nothing lit was drawn), so are dropped
     private static final long STALE_NANOS = 250_000_000L;
-    // x, y, z (relative to the camera: small enough for a float wherever the world is), red, green, blue, strength,
-    // radius
-    static final int STRIDE = 8;
+    private static final int STRIDE = PointLightFrame.STRIDE;
 
+    // As PointLightFrame lays them out
     private static float[] lights = new float[STRIDE * 64];
-    // For sorting the lights nearest first: each one's distance and index, and the lights in that order
-    private static long[] sortKeys = new long[64];
-    private static float[] sorted = new float[STRIDE * 64];
+    // Which of them are drawn
+    private static final PointLightFrame FRAME = new PointLightFrame();
     private static int count;
     private static long lastAdded;
     // Run just before the lights are drawn, to add lights gathered during the frame (see addSource)
@@ -115,7 +99,7 @@ public final class PointLights {
     /**
      * Registers something that adds its lights just before they are drawn, rather than as it goes: to pick the ones
      * worth drawing once all of the frame's are known (burning mobs add theirs this way; nothing caps them beyond the
-     * {@link #MAX_DRAWN} nearest lights of the frame). Render thread.
+     * {@link PointLightFrame#MAX_DRAWN} nearest lights of the frame). Render thread.
      */
     public static void addSource(Runnable source) {
         SOURCES.add(source);
@@ -186,7 +170,7 @@ public final class PointLights {
      * @param radius   how far it reaches, in blocks
      */
     public static void add(double x, double y, double z, float red, float green, float blue, float strength, float radius) {
-        if (strength < MIN_STRENGTH || radius <= 0F)
+        if (strength < PointLightFrame.MIN_STRENGTH || radius <= 0F)
             return;
         if ((count + 1) * STRIDE > lights.length)
             lights = Arrays.copyOf(lights, lights.length * 2);
@@ -226,30 +210,23 @@ public final class PointLights {
     private static void drawLights(RenderTarget target, int n, GpuBufferSlice transforms) {
         var device = RenderSystem.getDevice();
 
-        // Enough that some fade or are left out: the nearest first. Their positions are already relative to the camera
-        if (n > FADE_FROM)
-            sortNearest(lights, n, 0D, 0D, 0D);
+        FRAME.select(lights, n);
+        if (FRAME.count() == 0)
+            return;
         if (quads == null)
             quads = new QuadWriter(QuadWriter.Format.POSITION_TEX_COLOR);
-        quads.begin(Math.min(n, MAX_DRAWN));
-        for (int l = 0; l < Math.min(n, MAX_DRAWN); l++) {
-            int i = l * STRIDE;
-            float a = lights[i + 6] * rankFade(l);
-            if (a < MIN_STRENGTH)
-                continue;
-            float x = lights[i], y = lights[i + 1], z = lights[i + 2];
-            float r = lights[i + 3], g = lights[i + 4], b = lights[i + 5];
+        quads.begin(FRAME.count());
+        for (int l = 0; l < FRAME.count(); l++) {
+            float x = FRAME.value(l, 0), y = FRAME.value(l, 1), z = FRAME.value(l, 2);
             // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
             // radius, which is how the shader knows it.
-            float radius = lights[i + 7];
-            int color = QuadWriter.color(r, g, b, a);
+            float radius = FRAME.value(l, 7);
+            int color = QuadWriter.color(FRAME.value(l, 3), FRAME.value(l, 4), FRAME.value(l, 5), FRAME.value(l, 6));
             quads.vertex(x, y, z, -radius, -radius, color);
             quads.vertex(x, y, z, radius, -radius, color);
             quads.vertex(x, y, z, radius, radius, color);
             quads.vertex(x, y, z, -radius, radius, color);
         }
-        if (quads.vertexCount() == 0)
-            return;
 
         if (lightInfo == null) {
             var zeroToOne = device.getDeviceInfo().isZZeroToOne();
@@ -264,35 +241,5 @@ public final class PointLights {
             SoftParticles.bindSceneDepth(pass);
             pass.setUniform(POINT_LIGHT_INFO, info);
         });
-    }
-
-    /**
-     * How much the light {@code rank} lights down the nearest is drawn at: in full up to {@link #FADE_FROM}, fading
-     * to nothing at {@link #MAX_DRAWN}.
-     */
-    static float rankFade(int rank) {
-        if (rank < FADE_FROM)
-            return 1F;
-        return Math.max(0F, (float) (MAX_DRAWN - rank) / (MAX_DRAWN - FADE_FROM));
-    }
-
-    /**
-     * Puts the first {@code n} lights in {@code lights} in order of how near each is to the camera, nearest first.
-     */
-    static void sortNearest(float[] lights, int n, double cameraX, double cameraY, double cameraZ) {
-        if (sortKeys.length < n)
-            sortKeys = new long[lights.length / STRIDE];
-        if (sorted.length < n * STRIDE)
-            sorted = new float[lights.length];
-        // Each light's distance squared, then its index: a float's bits order as it does when it isn't negative
-        for (int l = 0; l < n; l++) {
-            int i = l * STRIDE;
-            double x = lights[i] - cameraX, y = lights[i + 1] - cameraY, z = lights[i + 2] - cameraZ;
-            sortKeys[l] = ((long) Float.floatToIntBits((float) (x * x + y * y + z * z)) << 32) | l;
-        }
-        Arrays.sort(sortKeys, 0, n);
-        for (int r = 0; r < n; r++)
-            System.arraycopy(lights, (int) sortKeys[r] * STRIDE, sorted, r * STRIDE, STRIDE);
-        System.arraycopy(sorted, 0, lights, 0, n * STRIDE);
     }
 }

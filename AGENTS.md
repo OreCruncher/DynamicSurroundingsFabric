@@ -245,6 +245,10 @@ is known of 26.4.
   the only places an effect meets the game's buffer types, so a render API change lands there. `BufferBuilder` and
   `VertexConsumer` remain only where geometry is handed to vanilla's own drawing (footprints, the light level overlay,
   lightning for shader packs).
+  A shader effect's per-frame values are worked out with no GPU into a frame record (`GroundFogFrame`, `AuroraFrame`,
+  `RealisticAuroraFrame`, `PointLightFrame`), unit-tested; the renderer only packs it into its uniform block (a `pack`
+  method: the matrix, then the record's vec4s in order), so that packing is all a render API change touches. A new
+  value goes in the record, in the block's order, and in its shader include.
 - Rendering is 26.3's: pipelines (`com.mojang.renderpearl.api`), `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). "How 26.3 draws a level" below has how the aurora, soft
   particles and point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3

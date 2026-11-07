@@ -74,7 +74,7 @@ public final class RealisticAuroraRenderer {
 
     static {
         var size = new Std140SizeCalculator().putMat4f();
-        for (int i = 0; i < 8 + RealisticAurora.MAX_ARCS * 4; i++)
+        for (int i = 0; i < RealisticAuroraFrame.VECTORS; i++)
             size.putVec4();
         INFO_SIZE = size.get();
     }
@@ -134,14 +134,6 @@ public final class RealisticAuroraRenderer {
      */
     public static final float FIELD_CELL = 3F;
 
-    // The colors of the light, as a photograph shows it: oxygen's green (557.7 nm) and red (630 nm), and nitrogen's
-    // pink at the lower edge
-    private static final float[] GREEN = {0.25F, 1.0F, 0.45F};
-    private static final float[] RED = {1.0F, 0.12F, 0.2F};
-    private static final float[] FRINGE = {1.0F, 0.3F, 0.75F};
-    // And the blue-violet of nitrogen lit by the sun, at the tops of the rays above the Earth's shadow (427.8 nm)
-    private static final float[] SUNLIT = {0.45F, 0.3F, 1.0F};
-
     @Nullable
     private static DynamicTexture noise;
     // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
@@ -193,7 +185,8 @@ public final class RealisticAuroraRenderer {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
         RenderTarget target = fast ? reducedFor(screen, quality.scale()) : screen;
-        writeInfo(aurora, moment, motion, quality, shadow, washout, alpha, viewMatrix, time, target.height);
+        pack(RealisticAuroraFrame.of(aurora, moment, motion, quality, shadow, washout, alpha, LevelProjection.get(), viewMatrix,
+                time, target.height));
 
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
@@ -232,55 +225,16 @@ public final class RealisticAuroraRenderer {
     }
 
     /**
-     * The shader's values this frame (see shaders/include/aurora_realistic.glsl)
+     * Writes the frame's values into the uniform block (see shaders/include/aurora_realistic.glsl)
      */
-    private static void writeInfo(RealisticAurora aurora, RealisticAurora.Moment moment, RealisticAuroraMotion motion,
-                                  AuroraQuality quality, float shadow, float washout, float alpha, Matrix4f viewMatrix, float time, int height) {
+    private static void pack(RealisticAuroraFrame frame) {
         if (info == null)
             info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings aurora (realistic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        var arcs = aurora.arcs();
-        int count = Math.min(arcs.size(), RealisticAurora.MAX_ARCS);
-        var projection = LevelProjection.get();
-        var invViewProj = new Matrix4f(projection).mul(viewMatrix).invert();
-        float pixelAngle = 2F / (projection.m11() * height);
+        var v = frame.vec4s();
         try (var stack = MemoryStack.stackPush()) {
-            var builder = Std140Builder.onStack(stack, INFO_SIZE)
-                    .putMat4f(invViewProj)
-                    .putVec4(GREEN[0] * moment.green(), GREEN[1] * moment.green(), GREEN[2] * moment.green(), washout)
-                    .putVec4(RED[0], RED[1], RED[2], pixelAngle)
-                    .putVec4(FRINGE[0], FRINGE[1], FRINGE[2], quality.fieldSamples())
-                    .putVec4(time, Math.clamp(alpha, 0F, 1F), height, count)
-                    .putVec4(moment.lowerEdge(), RealisticAurora.FIELD_TILT, moment.red(), moment.fringe())
-                    .putVec4(moment.rayContrast(), moment.pulse(), (float) Math.cos(aurora.declination()), (float) Math.sin(aurora.declination()))
-                    .putVec4(moment.fieldNorth(), moment.fieldWidth(), moment.rayField() * moment.gain(), motion.field())
-                    .putVec4(SUNLIT[0] * RealisticAurora.SUNLIT, SUNLIT[1] * RealisticAurora.SUNLIT, SUNLIT[2] * RealisticAurora.SUNLIT, shadow);
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++) {
-                if (i < count) {
-                    var arc = arcs.get(i);
-                    // Where it is now: as much closer as the aurora has come
-                    builder.putVec4(arc.distance() - moment.approach(), arc.foldAmplitude(), arc.foldWavelength(), arc.phase());
-                } else {
-                    builder.putVec4(0F, 0F, 1F, 0F);
-                }
-            }
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++) {
-                if (i < count) {
-                    var arc = arcs.get(i);
-                    builder.putVec4(arc.waveAmplitude(), arc.waveWavelength(), motion.wave(i), arc.curlAmplitude());
-                } else {
-                    builder.putVec4(0F, 1F, 0F, 0F);
-                }
-            }
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++) {
-                if (i < count) {
-                    var arc = arcs.get(i);
-                    builder.putVec4(arc.brightness() * moment.gain(), arc.thickness(), motion.curl(i), motion.ray(i));
-                } else {
-                    builder.putVec4(0F, 1F, 0F, 0F);
-                }
-            }
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++)
-                builder.putVec4(i < count ? arcs.get(i).bow() : 0F, 0F, 0F, 0F);
+            var builder = Std140Builder.onStack(stack, INFO_SIZE).putMat4f(frame.invViewProj());
+            for (int i = 0; i < v.length; i += 4)
+                builder.putVec4(v[i], v[i + 1], v[i + 2], v[i + 3]);
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
     }
