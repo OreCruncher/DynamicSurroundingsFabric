@@ -240,6 +240,11 @@ is known of 26.4.
 - `RenderPipeline.Builder` defaults to no depth state: no test and no writes. Set one on every pipeline that should
   test or write depth (`ModShaderTests` checks the clouds' depth pass).
 - Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
+- Effects write their geometry with `effects/QuadWriter` (particle or position-texture-color quads, straight into
+  memory) and draw it with `effects/MeshDraw`, which checks the writer's format against the pipeline's: those two are
+  the only places an effect meets the game's buffer types, so a render API change lands there. `BufferBuilder` and
+  `VertexConsumer` remain only where geometry is handed to vanilla's own drawing (footprints, the light level overlay,
+  lightning for shader packs).
 - Rendering is 26.3's: pipelines (`com.mojang.renderpearl.api`), `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). "How 26.3 draws a level" below has how the aurora, soft
   particles and point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3
@@ -372,7 +377,7 @@ is known of 26.4.
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
     at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads (`DropMeshes.Kind`: drops, dust, snow flecks, window streaks, damp spots) are
-    written into `ParticleQuads` on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
+    written into `QuadWriter`s on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
     at High's range) as the level starts to be drawn (`DropMeshes`, from
     `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
     and partial tick; the `IWorldRender` handler uploads and draws them, or writes them on the

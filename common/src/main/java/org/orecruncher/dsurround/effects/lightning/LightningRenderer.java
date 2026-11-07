@@ -5,8 +5,6 @@ package org.orecruncher.dsurround.effects.lightning;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -34,6 +32,7 @@ import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.RenderFailSafe;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
@@ -110,14 +109,15 @@ public final class LightningRenderer {
      * The noise texture's size, in cells, which it repeats at (see {@link NoiseTexture})
      */
     static final int NOISE_SIZE = 128;
-    // Room for a few strikes' vertices to start with; grown as needed
-    private static final int INITIAL_BYTES = 4096 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize();
+    // Room for a few strikes' quads to start with; grown as needed
+    private static final int INITIAL_QUADS = 1024;
 
     // Made on first use, on the render thread
     @Nullable
     private static DynamicTexture noise;
+    // The channels' and then the glow's, each drawn as soon as written
     @Nullable
-    private static ByteBufferBuilder meshBytes;
+    private static QuadWriter quads;
     private static final MeshDraw CHANNEL_DRAW = new MeshDraw("lightning");
     private static final MeshDraw GLOW_DRAW = new MeshDraw("lightning cloud glow");
     // Submitting it the game's way, with a shader pack (see submitForShaderPack)
@@ -199,16 +199,17 @@ public final class LightningRenderer {
         return pass -> pass.setUniform(NOISE_SAMPLER, view, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
     }
 
-    private static BufferBuilder builder() {
-        if (meshBytes == null)
-            meshBytes = new ByteBufferBuilder(INITIAL_BYTES);
-        return new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+    private static QuadWriter quads() {
+        if (quads == null)
+            quads = new QuadWriter(QuadWriter.Format.POSITION_TEX_COLOR);
+        quads.begin(INITIAL_QUADS);
+        return quads;
     }
 
     private static int drawChannels(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,
                                     double nowTicks, float fogEnd) {
         var position = camera.position();
-        var builder = builder();
+        var quads = quads();
         int drawn = 0;
         for (var strike : strikes) {
             var shape = strike.shape();
@@ -222,19 +223,17 @@ public final class LightningRenderer {
             float oz = (float) (strike.z() - position.z);
             float seen = Strikes.visibility(strike.distance(), fogEnd);
             for (var channel : shape.channels())
-                ribbon(builder, strike, channel, ox, oy, oz, age, seen);
+                ribbon(quads, strike, channel, ox, oy, oz, age, seen);
             drawn++;
         }
-        var mesh = builder.build();
-        if (mesh != null)
-            CHANNEL_DRAW.draw(mesh, pipeline, target, pass -> {});
+        CHANNEL_DRAW.draw(quads, pipeline, target, pass -> {});
         return drawn;
     }
 
     private static int drawGlow(RenderPipeline pipeline, List<Strike> strikes, Camera camera, RenderTarget target,
                                 double nowTicks, float fogEnd) {
         var position = camera.position();
-        var builder = builder();
+        var quads = quads();
         int drawn = 0;
         for (var strike : strikes) {
             float age = strike.age(nowTicks);
@@ -251,15 +250,14 @@ public final class LightningRenderer {
                 if (a <= 0F)
                     continue;
                 any = true;
-                cloudPatch(builder, ox + glow.x(p), oy + glow.y(p), oz + glow.z(p), glow.radius(p), glow.noiseCell(p), a);
+                cloudPatch(quads, ox + glow.x(p), oy + glow.y(p), oz + glow.z(p), glow.radius(p), glow.noiseCell(p), a);
             }
             // Flashes in the cloud are only glow; the rest were counted with their channels
             if (any && strike.shape() == null)
                 drawn++;
         }
-        var mesh = builder.build();
-        if (mesh != null)
-            GLOW_DRAW.draw(mesh, pipeline, target, bindNoise());
+        if (quads.vertexCount() > 0)
+            GLOW_DRAW.draw(quads, pipeline, target, bindNoise());
         return drawn;
     }
 
@@ -268,19 +266,20 @@ public final class LightningRenderer {
      * cloud deck does. UV0 is where in it a corner is, from its middle, -1 to 1 each way, with the patch's noise cell
      * times {@link #NOISE_CELL_STEP} added to x for the shader to take back out (see lightning.fsh).
      */
-    private static void cloudPatch(BufferBuilder builder, float cx, float cy, float cz, float r, int noiseCell, float alpha) {
+    private static void cloudPatch(QuadWriter quads, float cx, float cy, float cz, float r, int noiseCell, float alpha) {
         float cell = noiseCell * NOISE_CELL_STEP;
-        builder.addVertex(cx - r, cy, cz - r).setUv(cell - 1F, -1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
-        builder.addVertex(cx + r, cy, cz - r).setUv(cell + 1F, -1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
-        builder.addVertex(cx + r, cy, cz + r).setUv(cell + 1F, 1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
-        builder.addVertex(cx - r, cy, cz + r).setUv(cell - 1F, 1F).setColor(GLOW_R, GLOW_G, GLOW_B, alpha);
+        int color = QuadWriter.color(GLOW_R, GLOW_G, GLOW_B, alpha);
+        quads.vertex(cx - r, cy, cz - r, cell - 1F, -1F, color);
+        quads.vertex(cx + r, cy, cz - r, cell + 1F, -1F, color);
+        quads.vertex(cx + r, cy, cz + r, cell + 1F, 1F, color);
+        quads.vertex(cx - r, cy, cz + r, cell - 1F, 1F, color);
     }
 
     /**
      * One channel as a ribbon: at each point, out to either side across the channel and the line of sight, so it
      * faces the camera however the channel turns. Positions are from the camera.
      */
-    private static void ribbon(BufferBuilder builder, Strike strike, BoltShape.Channel channel, float ox, float oy, float oz,
+    private static void ribbon(QuadWriter quads, Strike strike, BoltShape.Channel channel, float ox, float oy, float oz,
                                float age, float seen) {
         int n = channel.size();
         if (n < 2)
@@ -319,10 +318,12 @@ public final class LightningRenderer {
             float rx = px + sideX * half, ry = py + sideY * half, rz = pz + sideZ * half;
             float alpha = alpha(light);
             if (i > 0 && (prevA > 0F || alpha > 0F)) {
-                builder.addVertex(prevLx, prevLy, prevLz).setUv(0F, -1F).setColor(CHANNEL_R, CHANNEL_G, CHANNEL_B, prevA);
-                builder.addVertex(prevRx, prevRy, prevRz).setUv(0F, 1F).setColor(CHANNEL_R, CHANNEL_G, CHANNEL_B, prevA);
-                builder.addVertex(rx, ry, rz).setUv(0F, 1F).setColor(CHANNEL_R, CHANNEL_G, CHANNEL_B, alpha);
-                builder.addVertex(lx, ly, lz).setUv(0F, -1F).setColor(CHANNEL_R, CHANNEL_G, CHANNEL_B, alpha);
+                int prevColor = QuadWriter.color(CHANNEL_R, CHANNEL_G, CHANNEL_B, prevA);
+                int color = QuadWriter.color(CHANNEL_R, CHANNEL_G, CHANNEL_B, alpha);
+                quads.vertex(prevLx, prevLy, prevLz, 0F, -1F, prevColor);
+                quads.vertex(prevRx, prevRy, prevRz, 0F, 1F, prevColor);
+                quads.vertex(rx, ry, rz, 0F, 1F, color);
+                quads.vertex(lx, ly, lz, 0F, -1F, color);
             }
             prevLx = lx;
             prevLy = ly;

@@ -6,11 +6,8 @@ package org.orecruncher.dsurround.effects.aurora;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
@@ -27,15 +24,13 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.profiling.AuroraSamples;
-
-import java.nio.ByteBuffer;
-import java.util.Optional;
-import java.util.OptionalDouble;
 
 /**
  * Draws an aurora into the sky: each curtain a strip of quads, its lower edge following the curtain's path and its
@@ -94,9 +89,8 @@ public final class AuroraRenderer {
 
     // Created on first use, on the render thread
     @Nullable
-    private static ByteBufferBuilder meshBytes;
-    @Nullable
-    private static GpuBuffer vertexBuffer;
+    private static QuadWriter quads;
+    private static final MeshDraw MESH_DRAW = new MeshDraw("aurora");
     // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
     // for 2 ms a frame after the aurora on 1.21.11 (AMD)
     @Nullable
@@ -135,9 +129,9 @@ public final class AuroraRenderer {
     private static void draw(Aurora aurora, float alpha, Matrix4f viewMatrix, float time) {
         var device = RenderSystem.getDevice();
 
-        if (meshBytes == null)
-            meshBytes = new ByteBufferBuilder(aurora.bands() * SEGMENTS * 4 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize());
-        var builder = new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        if (quads == null)
+            quads = new QuadWriter(QuadWriter.Format.POSITION_TEX_COLOR);
+        quads.begin(aurora.bands() * SEGMENTS);
         var target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var coverage = AuroraSamples.isRecording() ? COVERAGE : null;
         if (coverage != null) {
@@ -145,15 +139,9 @@ public final class AuroraRenderer {
             Minecraft.getInstance().gameRenderer.mainCamera().getViewRotationProjectionMatrix(CLIP).scale(Aurora.SCALE);
             coverage.start(CLIP);
         }
-        buildCurtains(builder, aurora, time, coverage);
-
-        int indexCount;
-        try (var mesh = builder.build()) {
-            if (mesh == null)
-                return;
-            indexCount = mesh.drawState().indexCount();
-            uploadVertices(mesh.vertexBuffer());
-        }
+        buildCurtains(quads, aurora, time, coverage);
+        if (quads.vertexCount() == 0)
+            return;
 
         if (auroraInfo == null)
             auroraInfo = device.createBuffer(() -> "Dynamic Surroundings aurora UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, AURORA_INFO_SIZE);
@@ -173,35 +161,16 @@ public final class AuroraRenderer {
                     coverage.pixels(target.width, target.height), target.width * target.height);
 
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(viewMatrix);
-        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-        var indexBuffer = indices.getBuffer(indexCount);
-
         // Made the first time it is used, which can't be while a render pass is open
         var noiseTexture = noise();
-        try (RenderPass pass = device.createCommandEncoder()
-                .createRenderPass(() -> "Dynamic Surroundings aurora", target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
-            RenderSystem.bindDefaultUniforms(pass);
-            pass.setUniform("DynamicTransforms", transforms);
-            pass.setUniform(AURORA_INFO, auroraInfo);
+        var info = auroraInfo;
+        MESH_DRAW.draw(quads, PIPELINE, target, transforms, pass -> {
+            pass.setUniform(AURORA_INFO, info);
             pass.setUniform(NOISE_SAMPLER, noiseTexture.getTextureView(), RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
-            pass.setVertexBuffer(0, vertexBuffer.slice());
-            pass.setIndexBuffer(indexBuffer, indices.type());
-            pass.drawIndexed(indexCount, 1, 0, 0, 0);
-        }
+        });
     }
 
-    private static void uploadVertices(ByteBuffer vertices) {
-        var device = RenderSystem.getDevice();
-        if (vertexBuffer == null || vertexBuffer.size() < vertices.remaining()) {
-            if (vertexBuffer != null)
-                vertexBuffer.close();
-            vertexBuffer = device.createBuffer(() -> "Dynamic Surroundings aurora vertices", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, vertices.remaining());
-        }
-        device.createCommandEncoder().writeToBuffer(vertexBuffer.slice(), vertices);
-    }
-
-    private static void buildCurtains(BufferBuilder builder, Aurora aurora, float time, @Nullable AuroraCoverage coverage) {
+    private static void buildCurtains(QuadWriter quads, Aurora aurora, float time, @Nullable AuroraCoverage coverage) {
         // Farthest curtain first; with additive blending the order doesn't change the result, but it's tidy
         for (int band = aurora.bands() - 1; band >= 0; band--) {
             var bandAlpha = aurora.bandBrightness(band);
@@ -220,10 +189,10 @@ public final class AuroraRenderer {
                 aurora.bottom(band, s, time, BOTTOM);
                 aurora.top(band, BOTTOM, TOP);
 
-                vertex(builder, pbx, pby, pbz, prevU, 0F, prevA);
-                vertex(builder, BOTTOM.x, BOTTOM.y, BOTTOM.z, u, 0F, a);
-                vertex(builder, TOP.x, TOP.y, TOP.z, u, 1F, a);
-                vertex(builder, ptx, pty, ptz, prevU, 1F, prevA);
+                vertex(quads, pbx, pby, pbz, prevU, 0F, prevA);
+                vertex(quads, BOTTOM.x, BOTTOM.y, BOTTOM.z, u, 0F, a);
+                vertex(quads, TOP.x, TOP.y, TOP.z, u, 1F, a);
+                vertex(quads, ptx, pty, ptz, prevU, 1F, prevA);
                 if (coverage != null)
                     coverage.quad(pbx, pby, pbz, BOTTOM.x, BOTTOM.y, BOTTOM.z, TOP.x, TOP.y, TOP.z, ptx, pty, ptz);
 
@@ -235,8 +204,8 @@ public final class AuroraRenderer {
         }
     }
 
-    private static void vertex(BufferBuilder builder, float x, float y, float z, float u, float v, float alpha) {
-        builder.addVertex(x * Aurora.SCALE, y * Aurora.SCALE, z * Aurora.SCALE).setUv(u, v).setColor(1F, 1F, 1F, alpha);
+    private static void vertex(QuadWriter quads, float x, float y, float z, float u, float v, float alpha) {
+        quads.vertex(x * Aurora.SCALE, y * Aurora.SCALE, z * Aurora.SCALE, u, v, QuadWriter.color(1F, 1F, 1F, alpha));
     }
 
     private static DynamicTexture noise() {

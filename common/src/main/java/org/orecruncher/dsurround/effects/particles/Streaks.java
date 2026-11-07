@@ -12,9 +12,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.effects.MeshDraw;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.RenderFailSafe;
 import org.orecruncher.dsurround.effects.RenderTimer;
-import org.orecruncher.dsurround.effects.precipitation.ParticleQuads;
 import org.orecruncher.dsurround.lib.Library;
 
 /**
@@ -30,7 +30,7 @@ public final class Streaks {
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Streaks");
 
-    private static final ParticleQuads QUADS = new ParticleQuads();
+    private static final QuadWriter QUADS = new QuadWriter(QuadWriter.Format.PARTICLE);
     private static final MeshDraw COLOR_DRAW = new MeshDraw("streaks");
     private static final RenderFailSafe FAIL_SAFE = new RenderFailSafe("spark and droplet streaks", Library.LOGGER);
     // Whether streaks have been added this frame
@@ -84,8 +84,8 @@ public final class Streaks {
         sy *= scale;
         sz *= scale;
 
-        int head = ParticleQuads.color(color[0], color[1], color[2], alpha);
-        int tail = ParticleQuads.color(color[0], color[1], color[2], 0F);
+        int head = QuadWriter.color(color[0], color[1], color[2], alpha);
+        int tail = QuadWriter.color(color[0], color[1], color[2], 0F);
         // Counter-clockwise as the camera sees it, as a front face is: the flames' pipeline, as vanilla's particles,
         // doesn't draw back faces (across is length x the line to the camera, so it turns the same way for every streak)
         QUADS.vertex(hx + sx, hy + sy, hz + sz, u0, v1, head, light);
@@ -104,8 +104,7 @@ public final class Streaks {
         if (!begun)
             return;
         begun = false;
-        int vertices = QUADS.vertexCount();
-        if (vertices == 0)
+        if (QUADS.vertexCount() == 0)
             return;
 
         // Drawn as the flames are this frame: soft and adding their light, or the vanilla way without the scene's depth,
@@ -116,7 +115,7 @@ public final class Streaks {
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
         RENDER_TIMER.begin();
         FAIL_SAFE.run(() -> {
-            COLOR_DRAW.drawQuads(QUADS.vertices(), vertices, color, target, transforms, pass -> {
+            COLOR_DRAW.draw(QUADS, color, target, transforms, pass -> {
                 pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
                 pass.setUniform("Sampler2", lightmap, lightmapSampler);
                 SoftParticles.bind(pass, color);

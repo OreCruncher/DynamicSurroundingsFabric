@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
-package org.orecruncher.dsurround.effects.precipitation;
+package org.orecruncher.dsurround.effects;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The drops are written straight into memory: the bytes must be those a BufferBuilder writes for the same corners, or
- * the pipeline reads them wrong.
+ * Quads are written straight into memory: the bytes must be those a BufferBuilder writes for the same corners, or the
+ * pipeline reads them wrong.
  */
-public class ParticleQuadsTests {
+public class QuadWriterTests {
 
-    // Corners with colours and lights that would show a byte or channel out of place, and alphas rounded at an edge
+    // Corners with colors and lights that would show a byte or channel out of place, and alphas rounded at an edge
     private static final float[][] CORNERS = {
             {1.5F, -2.25F, 3F, 0.125F, 0.875F, 0.1F, 0.2F, 0.3F, 0.4F},
             {-7F, 0F, 0.5F, -1F, -1F, 1F, 0.5F, 0F, 0F},
@@ -28,12 +27,19 @@ public class ParticleQuadsTests {
 
     @Test
     void theBytesAreThoseABufferBuilderWrites() {
+        for (var format : QuadWriter.Format.values())
+            assertArrayEquals(bufferBuilderBytes(format), quadWriterBytes(format), format.toString());
+    }
+
+    private static byte[] bufferBuilderBytes(QuadWriter.Format format) {
         byte[] expected;
         try (var bytes = new ByteBufferBuilder(1024)) {
-            var builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
+            var builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, format.vertexFormat);
             for (int k = 0; k < CORNERS.length; k++) {
                 var c = CORNERS[k];
-                builder.addVertex(c[0], c[1], c[2]).setUv(c[3], c[4]).setColor(c[5], c[6], c[7], c[8]).setLight(LIGHTS[k]);
+                var vertex = builder.addVertex(c[0], c[1], c[2]).setUv(c[3], c[4]).setColor(c[5], c[6], c[7], c[8]);
+                if (format.hasLight)
+                    vertex.setLight(LIGHTS[k]);
             }
             try (var mesh = builder.buildOrThrow()) {
                 var buffer = mesh.vertexBuffer();
@@ -41,26 +47,27 @@ public class ParticleQuadsTests {
                 buffer.get(expected);
             }
         }
+        return expected;
+    }
 
-        byte[] actual;
-        try (var quads = new ParticleQuads()) {
+    private static byte[] quadWriterBytes(QuadWriter.Format format) {
+        try (var quads = new QuadWriter(format)) {
             quads.begin(1);
             for (int k = 0; k < CORNERS.length; k++) {
                 var c = CORNERS[k];
-                quads.vertex(c[0], c[1], c[2], c[3], c[4], ParticleQuads.color(c[5], c[6], c[7], c[8]), LIGHTS[k]);
+                quads.vertex(c[0], c[1], c[2], c[3], c[4], QuadWriter.color(c[5], c[6], c[7], c[8]), LIGHTS[k]);
             }
             assertEquals(CORNERS.length, quads.vertexCount());
             var buffer = quads.vertices();
-            actual = new byte[buffer.remaining()];
+            var actual = new byte[buffer.remaining()];
             buffer.get(actual);
+            return actual;
         }
-
-        assertArrayEquals(expected, actual);
     }
 
     @Test
     void itGrowsToFitAndStartsOverEachTime() {
-        try (var quads = new ParticleQuads()) {
+        try (var quads = new QuadWriter(QuadWriter.Format.PARTICLE)) {
             quads.begin(1);
             for (int k = 0; k < 4; k++)
                 quads.vertex(k, k, k, 0F, 0F, 0, 0);
@@ -69,8 +76,10 @@ public class ParticleQuadsTests {
             for (int k = 0; k < 4000; k++)
                 quads.vertex(k, -k, k, 0.5F, 0.5F, -1, 0xF000F0);
             assertEquals(4000, quads.vertexCount());
-            assertEquals(4000 * ParticleQuads.VERTEX_SIZE, quads.vertices().remaining());
-            assertEquals(3999F, quads.vertices().getFloat(3999 * ParticleQuads.VERTEX_SIZE), "the last corner's x");
+            assertEquals(1000, quads.quadCount());
+            int size = QuadWriter.Format.PARTICLE.vertexSize();
+            assertEquals(4000 * size, quads.vertices().remaining());
+            assertEquals(3999F, quads.vertices().getFloat(3999 * size), "the last corner's x");
         }
     }
 }

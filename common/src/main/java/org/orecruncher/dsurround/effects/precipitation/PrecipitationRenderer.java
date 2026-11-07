@@ -3,15 +3,13 @@
 
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import org.orecruncher.dsurround.effects.QuadWriter;
 
 import java.util.List;
 
@@ -124,10 +122,10 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Writes the drops into {@code quads}, for drawing with a pipeline that takes {@link DefaultVertexFormat#PARTICLE}:
+     * Writes the drops into {@code quads}, for drawing with a pipeline that takes {@link QuadWriter.Format#PARTICLE}:
      * with the particle atlas bound for the dust, and the snow texture for rain and snow. The dust and the falling rain
      * and snow are drawn apart, as the dust is drawn soft and they are not. Written straight into memory rather than
-     * through a BufferBuilder: there are thousands (see {@link ParticleQuads}). Reads only the drops drawn, so it may
+     * through a BufferBuilder: there are thousands (see {@link QuadWriter}). Reads only the drops drawn, so it may
      * run on another thread while the drops' next tick is stepped, but not while the step is finished and its drops
      * made the ones drawn (see {@link DropMeshes}).
      *
@@ -140,7 +138,7 @@ final class PrecipitationRenderer {
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's color
      */
-    static void build(PrecipitationField field, ParticleQuads quads, View view, float partialTick, boolean dustOnly,
+    static void build(PrecipitationField field, QuadWriter quads, View view, float partialTick, boolean dustOnly,
                       List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales, RainColor rainColor) {
         var d = field.drops();
         quads.begin(dustOnly ? d.dustCount : d.count - d.dustCount);
@@ -161,7 +159,7 @@ final class PrecipitationRenderer {
         float dustCos = Mth.cos(dustTurn), dustSin = Mth.sin(dustTurn);
         float rainRed = rainColor.red(), rainGreen = rainColor.green(), rainBlue = rainColor.blue();
         // A streak's tail is clear
-        int rainTail = ParticleQuads.color(rainRed, rainGreen, rainBlue, 0F);
+        int rainTail = QuadWriter.color(rainRed, rainGreen, rainBlue, 0F);
 
         for (int i = 0; i < d.count; i++) {
             if ((d.kind[i] == PrecipitationField.DUST) != dustOnly)
@@ -191,19 +189,19 @@ final class PrecipitationRenderer {
                 float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
                 float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
                 billboard(quads, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
-                        ParticleQuads.color(r, g, b, DUST_ALPHA * fade), light);
+                        QuadWriter.color(r, g, b, DUST_ALPHA * fade), light);
             } else if (d.kind[i] == PrecipitationField.SNOW) {
                 float a = SNOW_ALPHA * fade;
                 float cos = d.spinCos[i] * snowCos - d.spinSin[i] * snowSin;
                 float sin = d.spinSin[i] * snowCos + d.spinCos[i] * snowSin;
                 float size = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i)) * scales.snow();
                 if (snowflakes.isEmpty()) {
-                    billboard(quads, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, ParticleQuads.color(1F, 1F, 1F, a), light);
+                    billboard(quads, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, QuadWriter.color(1F, 1F, 1F, a), light);
                 } else {
                     // A flake of a pixel is drawn smaller than one of three, in proportion
                     var flake = snowflakes.get(field.variant(i, snowflakes.size()));
                     size *= flake.size() / (float) largest;
-                    billboard(quads, x, y, z, left, up, cos, sin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), ParticleQuads.color(1F, 1F, 1F, a), light);
+                    billboard(quads, x, y, z, left, up, cos, sin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), QuadWriter.color(1F, 1F, 1F, a), light);
                 }
             } else {
                 float dropSize = field.rainSize(i);
@@ -232,7 +230,7 @@ final class PrecipitationRenderer {
                 }
                 float tx = x - vx * length, ty = y - vy * length, tz = z - vz * length;
                 float a = (RAIN_MIN_ALPHA + RAIN_ALPHA_RANGE * dropSize) * fade;
-                int head = ParticleQuads.color(rainRed, rainGreen, rainBlue, a);
+                int head = QuadWriter.color(rainRed, rainGreen, rainBlue, a);
                 quads.vertex(x - sx, y - sy, z - sz, NO_TEXTURE, NO_TEXTURE, head, light);
                 quads.vertex(tx - sx, ty - sy, tz - sz, NO_TEXTURE, NO_TEXTURE, rainTail, light);
                 quads.vertex(tx + sx, ty + sy, tz + sz, NO_TEXTURE, NO_TEXTURE, rainTail, light);
@@ -312,7 +310,7 @@ final class PrecipitationRenderer {
     /**
      * A textured square facing the camera, turned in its plane by the angle whose cos and sin are given
      */
-    private static void billboard(ParticleQuads quads, float x, float y, float z, Vector3fc left, Vector3fc up,
+    private static void billboard(QuadWriter quads, float x, float y, float z, Vector3fc left, Vector3fc up,
                                   float turnCos, float turnSin, float halfSize, float u0, float v0, float u1, float v1,
                                   int color, int light) {
         float cos = turnCos * halfSize, sin = turnSin * halfSize;
@@ -325,7 +323,7 @@ final class PrecipitationRenderer {
     }
 
     /**
-     * Writes the snow flecks as {@link DefaultVertexFormat#PARTICLE} quads, around the camera at {@code cam}, to be
+     * Writes the snow flecks as {@link QuadWriter.Format#PARTICLE} quads, around the camera at {@code cam}, to be
      * drawn as the falling snow is ({@link PrecipitationShaders#DROPS}, the snow texture bound). Each lies flat on the
      * face it landed on, the top of a block or a side it was blown into, as the flake it fell as, at the flake's size,
      * fading and shrinking as it melts. Any thread, while nothing changes the flecks.
@@ -334,8 +332,9 @@ final class PrecipitationRenderer {
      * @param largest    the largest of them, in pixels: the others are drawn in proportion
      * @param scale      how big snowflakes are drawn
      */
-    static void build(SnowFlecks flecks, BufferBuilder builder, Vec3 cam, float partialTick, List<Snowflakes.Flake> snowflakes,
+    static void build(SnowFlecks flecks, QuadWriter quads, Vec3 cam, float partialTick, List<Snowflakes.Flake> snowflakes,
                       int largest, float scale) {
+        quads.begin(flecks.count);
         for (int i = 0; i < flecks.count; i++) {
             float remaining = flecks.remaining(i, partialTick);
             if (remaining <= 0F)
@@ -354,27 +353,29 @@ final class PrecipitationRenderer {
                 u1 = flake.u1();
                 v1 = flake.v1();
             }
-            float a = SNOW_ALPHA * remaining;
+            int color = QuadWriter.color(1F, 1F, 1F, SNOW_ALPHA * remaining);
             int light = flecks.light[i];
             // The corners, each a quarter turn from the last, as far out as a falling flake's (see billboard), in the
             // plane of the face it lies on
             float corner = half * Mth.SQRT_OF_TWO;
             float cu = flecks.turnCos[i] * corner, cv = flecks.turnSin[i] * corner;
             byte face = flecks.face[i];
-            fleckCorner(builder, face, x, y, z, cu, cv).setUv(u0, v0).setColor(1F, 1F, 1F, a).setLight(light);
-            fleckCorner(builder, face, x, y, z, -cv, cu).setUv(u0, v1).setColor(1F, 1F, 1F, a).setLight(light);
-            fleckCorner(builder, face, x, y, z, -cu, -cv).setUv(u1, v1).setColor(1F, 1F, 1F, a).setLight(light);
-            fleckCorner(builder, face, x, y, z, cv, -cu).setUv(u1, v0).setColor(1F, 1F, 1F, a).setLight(light);
+            fleckCorner(quads, face, x, y, z, cu, cv, u0, v0, color, light);
+            fleckCorner(quads, face, x, y, z, -cv, cu, u0, v1, color, light);
+            fleckCorner(quads, face, x, y, z, -cu, -cv, u1, v1, color, light);
+            fleckCorner(quads, face, x, y, z, cv, -cu, u1, v0, color, light);
         }
     }
 
     /**
-     * Writes the drops running down windows as {@link DefaultVertexFormat#PARTICLE} quads, around the camera at
+     * Writes the drops running down windows as {@link QuadWriter.Format#PARTICLE} quads, around the camera at
      * {@code cam}, to be drawn as the falling rain is ({@link PrecipitationShaders#DROPS}). Untextured, in the rain's
      * color: a bead, and above it the wet trail it has left, fading toward its top. Any thread, while nothing changes
      * the streaks.
      */
-    static void build(WindowStreaks streaks, BufferBuilder builder, Vec3 cam, float partialTick, RainColor rainColor) {
+    static void build(WindowStreaks streaks, QuadWriter quads, Vec3 cam, float partialTick, RainColor rainColor) {
+        // A bead and a trail each
+        quads.begin(streaks.count * 2);
         for (int i = 0; i < streaks.count; i++) {
             float fade = streaks.fade(i, partialTick);
             if (fade <= 0F)
@@ -388,45 +389,49 @@ final class PrecipitationRenderer {
             float size = streaks.size[i];
             float half = STREAK_BEAD_MIN_HALF_SIZE + STREAK_BEAD_HALF_SIZE_RANGE * size;
             float a = STREAK_BEAD_ALPHA * fade;
+            int bead = QuadWriter.color(rainColor.red(), rainColor.green(), rainColor.blue(), a);
 
             // The bead
-            fleckCorner(builder, face, x, y, z, -half, -half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
-            fleckCorner(builder, face, x, y, z, half, -half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
-            fleckCorner(builder, face, x, y, z, half, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
-            fleckCorner(builder, face, x, y, z, -half, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), a).setLight(light);
+            fleckCorner(quads, face, x, y, z, -half, -half, NO_TEXTURE, NO_TEXTURE, bead, light);
+            fleckCorner(quads, face, x, y, z, half, -half, NO_TEXTURE, NO_TEXTURE, bead, light);
+            fleckCorner(quads, face, x, y, z, half, half, NO_TEXTURE, NO_TEXTURE, bead, light);
+            fleckCorner(quads, face, x, y, z, -half, half, NO_TEXTURE, NO_TEXTURE, bead, light);
 
             // The trail above it, narrower and fainter, fading out toward its top
             float trail = trailTop - y - half;
             if (trail > 0F) {
                 float width = half * STREAK_TRAIL_WIDTH;
-                float ta = a * STREAK_TRAIL_ALPHA;
-                fleckCorner(builder, face, x, y, z, -width, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), ta).setLight(light);
-                fleckCorner(builder, face, x, y, z, width, half).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), ta).setLight(light);
-                fleckCorner(builder, face, x, y, z, width, half + trail).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
-                fleckCorner(builder, face, x, y, z, -width, half + trail).setUv(NO_TEXTURE, NO_TEXTURE).setColor(rainColor.red(), rainColor.green(), rainColor.blue(), 0F).setLight(light);
+                int trailColor = QuadWriter.color(rainColor.red(), rainColor.green(), rainColor.blue(), a * STREAK_TRAIL_ALPHA);
+                int faded = QuadWriter.color(rainColor.red(), rainColor.green(), rainColor.blue(), 0F);
+                fleckCorner(quads, face, x, y, z, -width, half, NO_TEXTURE, NO_TEXTURE, trailColor, light);
+                fleckCorner(quads, face, x, y, z, width, half, NO_TEXTURE, NO_TEXTURE, trailColor, light);
+                fleckCorner(quads, face, x, y, z, width, half + trail, NO_TEXTURE, NO_TEXTURE, faded, light);
+                fleckCorner(quads, face, x, y, z, -width, half + trail, NO_TEXTURE, NO_TEXTURE, faded, light);
             }
         }
     }
 
     /**
-     * Adds a corner of something lying on a face, a snow fleck or a drop on a window, offset from its center by (u, v)
-     * in the plane of the face: x and z on the top of a block, z and y on a west or east side, x and y on a north or
-     * south side
+     * Writes a corner of something lying on a face, a snow fleck or a drop on a window, offset from its center by
+     * (u, v) in the plane of the face: x and z on the top of a block, z and y on a west or east side, x and y on a north
+     * or south side
      */
-    private static VertexConsumer fleckCorner(BufferBuilder builder, byte face, float x, float y, float z, float u, float v) {
-        return switch (face) {
-            case SnowFlecks.FACE_WEST, SnowFlecks.FACE_EAST -> builder.addVertex(x, y + v, z + u);
-            case SnowFlecks.FACE_NORTH, SnowFlecks.FACE_SOUTH -> builder.addVertex(x + u, y + v, z);
-            default -> builder.addVertex(x + u, y, z + v);
-        };
+    private static void fleckCorner(QuadWriter quads, byte face, float x, float y, float z, float u, float v,
+                                    float texU, float texV, int color, int light) {
+        switch (face) {
+            case SnowFlecks.FACE_WEST, SnowFlecks.FACE_EAST -> quads.vertex(x, y + v, z + u, texU, texV, color, light);
+            case SnowFlecks.FACE_NORTH, SnowFlecks.FACE_SOUTH -> quads.vertex(x + u, y + v, z, texU, texV, color, light);
+            default -> quads.vertex(x + u, y, z + v, texU, texV, color, light);
+        }
     }
 
     /**
-     * Writes the damp spots as {@link DefaultVertexFormat#POSITION_TEX_COLOR} quads, around the camera at {@code cam},
+     * Writes the damp spots as {@link QuadWriter.Format#POSITION_TEX_COLOR} quads, around the camera at {@code cam},
      * to be drawn with {@link PrecipitationShaders#DAMP_SPOTS} and the particle atlas bound. Any thread, while nothing
      * changes the spots. The blend darkens the ground by the spot's alpha, so its color doesn't matter.
      */
-    static void build(DampSpots spots, BufferBuilder builder, Vec3 cam, float partialTick, TextureAtlasSprite sprite) {
+    static void build(DampSpots spots, QuadWriter quads, Vec3 cam, float partialTick, TextureAtlasSprite sprite) {
+        quads.begin(spots.count);
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
 
         for (int i = 0; i < spots.count; i++) {
@@ -438,10 +443,11 @@ final class PrecipitationRenderer {
             float z = (float) (spots.z[i] - cam.z);
             // The corners, each a quarter turn from the last
             float cx = spots.cornerX[i], cz = spots.cornerZ[i];
-            builder.addVertex(x + cx, y, z + cz).setUv(u0, v0).setColor(1F, 1F, 1F, a);
-            builder.addVertex(x - cz, y, z + cx).setUv(u0, v1).setColor(1F, 1F, 1F, a);
-            builder.addVertex(x - cx, y, z - cz).setUv(u1, v1).setColor(1F, 1F, 1F, a);
-            builder.addVertex(x + cz, y, z - cx).setUv(u1, v0).setColor(1F, 1F, 1F, a);
+            int color = QuadWriter.color(1F, 1F, 1F, a);
+            quads.vertex(x + cx, y, z + cz, u0, v0, color);
+            quads.vertex(x - cz, y, z + cx, u0, v1, color);
+            quads.vertex(x - cx, y, z - cz, u1, v1, color);
+            quads.vertex(x + cz, y, z - cx, u1, v0, color);
         }
     }
 }

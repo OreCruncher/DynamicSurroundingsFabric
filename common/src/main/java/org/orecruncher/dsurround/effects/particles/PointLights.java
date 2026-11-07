@@ -7,12 +7,9 @@ import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
@@ -26,15 +23,14 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -127,9 +123,8 @@ public final class PointLights {
 
     // Created on first use, on the render thread
     @Nullable
-    private static ByteBufferBuilder meshBytes;
-    @Nullable
-    private static GpuBuffer vertexBuffer;
+    private static QuadWriter quads;
+    private static final MeshDraw MESH_DRAW = new MeshDraw("point lights");
     // What it holds doesn't change while the device lives: made once, with no MappableRingBuffer (rotating one sets a
     // fence, which held the GPU idle for 2 ms a frame after the aurora on 1.21.11, AMD)
     @Nullable
@@ -234,9 +229,9 @@ public final class PointLights {
         // Enough that some fade or are left out: the nearest first. Their positions are already relative to the camera
         if (n > FADE_FROM)
             sortNearest(lights, n, 0D, 0D, 0D);
-        if (meshBytes == null)
-            meshBytes = new ByteBufferBuilder(64 * 4 * DefaultVertexFormat.POSITION_TEX_COLOR.getVertexSize());
-        var builder = new BufferBuilder(meshBytes, PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        if (quads == null)
+            quads = new QuadWriter(QuadWriter.Format.POSITION_TEX_COLOR);
+        quads.begin(Math.min(n, MAX_DRAWN));
         for (int l = 0; l < Math.min(n, MAX_DRAWN); l++) {
             int i = l * STRIDE;
             float a = lights[i + 6] * rankFade(l);
@@ -247,19 +242,14 @@ public final class PointLights {
             // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
             // radius, which is how the shader knows it.
             float radius = lights[i + 7];
-            builder.addVertex(x, y, z).setUv(-radius, -radius).setColor(r, g, b, a);
-            builder.addVertex(x, y, z).setUv(radius, -radius).setColor(r, g, b, a);
-            builder.addVertex(x, y, z).setUv(radius, radius).setColor(r, g, b, a);
-            builder.addVertex(x, y, z).setUv(-radius, radius).setColor(r, g, b, a);
+            int color = QuadWriter.color(r, g, b, a);
+            quads.vertex(x, y, z, -radius, -radius, color);
+            quads.vertex(x, y, z, radius, -radius, color);
+            quads.vertex(x, y, z, radius, radius, color);
+            quads.vertex(x, y, z, -radius, radius, color);
         }
-
-        int indexCount;
-        try (var mesh = builder.build()) {
-            if (mesh == null)
-                return;
-            indexCount = mesh.drawState().indexCount();
-            uploadVertices(mesh.vertexBuffer());
-        }
+        if (quads.vertexCount() == 0)
+            return;
 
         if (lightInfo == null) {
             var zeroToOne = device.getDeviceInfo().isZZeroToOne();
@@ -269,30 +259,11 @@ public final class PointLights {
             }
         }
 
-        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-        var indexBuffer = indices.getBuffer(indexCount);
-
-        try (RenderPass pass = device.createCommandEncoder()
-                .createRenderPass(() -> "Dynamic Surroundings point lights", target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
-            RenderSystem.bindDefaultUniforms(pass);
-            pass.setUniform("DynamicTransforms", transforms);
+        var info = lightInfo;
+        MESH_DRAW.draw(quads, PIPELINE, target, transforms, pass -> {
             SoftParticles.bindSceneDepth(pass);
-            pass.setUniform(POINT_LIGHT_INFO, lightInfo);
-            pass.setVertexBuffer(0, vertexBuffer.slice());
-            pass.setIndexBuffer(indexBuffer, indices.type());
-            pass.drawIndexed(indexCount, 1, 0, 0, 0);
-        }
-    }
-
-    private static void uploadVertices(ByteBuffer vertices) {
-        var device = RenderSystem.getDevice();
-        if (vertexBuffer == null || vertexBuffer.size() < vertices.remaining()) {
-            if (vertexBuffer != null)
-                vertexBuffer.close();
-            vertexBuffer = device.createBuffer(() -> "Dynamic Surroundings point light vertices", GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, vertices.remaining());
-        }
-        device.createCommandEncoder().writeToBuffer(vertexBuffer.slice(), vertices);
+            pass.setUniform(POINT_LIGHT_INFO, info);
+        });
     }
 
     /**

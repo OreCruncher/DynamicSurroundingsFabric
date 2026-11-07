@@ -370,14 +370,14 @@ public class PrecipitationHandler extends AbstractClientHandler {
             pass.setUniform("Sampler2", lightmap, lightmapSampler);
         };
         this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, sources, camera, partialTick, style,
-                (vertices, count) -> this.dropDraw.drawQuads(vertices, count, pipeline, target, bind));
+                quads -> this.dropDraw.draw(quads, pipeline, target, bind));
         this.meshes.draw(DropMeshes.Kind.FLECKS, sources, camera, partialTick, style,
-                (vertices, count) -> this.fleckDraw.drawQuads(vertices, count, pipeline, target, bind));
+                quads -> this.fleckDraw.draw(quads, pipeline, target, bind));
         if (this.windowStreaks.count() > 0) {
             PrecipitationShaders.STREAKS_TIMER.begin();
             PrecipitationShaders.STREAKS_TIMER.count(this.windowStreaks.count());
             this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
-                    (vertices, count) -> this.streakDraw.drawQuads(vertices, count, pipeline, target, bind));
+                    quads -> this.streakDraw.draw(quads, pipeline, target, bind));
             PrecipitationShaders.STREAKS_TIMER.end();
         }
     }
@@ -392,7 +392,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         boolean isSoft = soft.isUsable() && SoftParticles.captureDepth(target);
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;
         this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DUST, sources, camera, partialTick, style,
-                (vertices, count) -> this.dustDraw.drawQuads(vertices, count, dustPipeline, target, pass -> {
+                quads -> this.dustDraw.draw(quads, dustPipeline, target, pass -> {
                     pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
                     pass.setUniform("Sampler2", lightmap, lightmapSampler);
                     if (isSoft)
@@ -403,7 +403,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick) {
         var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
         this.meshes.draw(DropMeshes.Kind.SPOTS, this.sources(), camera, partialTick, this.style(),
-                (vertices, count) -> this.dampSpotDraw.drawQuads(vertices, count, pipeline, target,
+                quads -> this.dampSpotDraw.draw(quads, pipeline, target,
                         pass -> pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler())));
     }
 

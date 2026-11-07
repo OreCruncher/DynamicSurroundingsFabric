@@ -3,12 +3,12 @@
 
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
@@ -64,7 +64,7 @@ public class DropMeshesTests {
     }
 
     private static byte[] build(PrecipitationField field) {
-        try (var quads = new ParticleQuads()) {
+        try (var quads = new QuadWriter(QuadWriter.Format.PARTICLE)) {
             PrecipitationRenderer.build(field, quads, VIEW, 0.5F, false, List.of(), 1, new TextureAtlasSprite[0],
                     DropScales.USUAL, RainColor.ofTint(15));
             assertTrue(quads.vertexCount() > 0, "drops to draw");
@@ -173,12 +173,11 @@ public class DropMeshesTests {
         var random = Randomizer.create(7);
         sources.flecks().add(2.5, GROUND, 3.5, 0.5F, 0.5F, 0xF000F0, random);
         sources.flecks().add(-1.5, GROUND, -4.5, 0.5F, 0.5F, 0xF000F0, random);
-        try (var bytes = new ByteBufferBuilder(4096);
-             var mesh = DropMeshes.build(DropMeshes.Kind.FLECKS, bytes, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE))) {
-            assertNotNull(mesh, "flecks to draw");
-            assertEquals(8, mesh.drawState().vertexCount());
+        try (var quads = new QuadWriter(DropMeshes.Kind.FLECKS.format)) {
+            DropMeshes.build(DropMeshes.Kind.FLECKS, quads, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE));
+            assertEquals(8, quads.vertexCount(), "flecks to draw");
             // The first corner lies on the ground, below the camera, near the first fleck
-            var vertices = mesh.vertexBuffer();
+            var vertices = quads.vertices();
             assertEquals(2F, vertices.getFloat(0), 0.2F);
             assertEquals((float) (GROUND - CAMERA_Y), vertices.getFloat(4), 0.02F);
             assertEquals(3F, vertices.getFloat(8), 0.2F);
@@ -191,11 +190,11 @@ public class DropMeshesTests {
         var random = Randomizer.create(11);
         // On the north face of a window to the north of the camera, a little above the bottom of the glass
         sources.streaks().add(0.5, GROUND + 2.5, -3.0, SnowFlecks.FACE_NORTH, GROUND + 2.0, false, 0.5F, 0xF000F0, random);
-        try (var bytes = new ByteBufferBuilder(4096);
-             var mesh = DropMeshes.build(DropMeshes.Kind.STREAKS, bytes, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE))) {
+        try (var quads = new QuadWriter(DropMeshes.Kind.STREAKS.format)) {
+            DropMeshes.build(DropMeshes.Kind.STREAKS, quads, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE));
             // A new drop fades in from nothing, so it may not be drawn yet; when it is, it is just off the window's face
-            if (mesh != null)
-                assertEquals(-3.5F, mesh.vertexBuffer().getFloat(8), 0.02F);
+            if (quads.vertexCount() > 0)
+                assertEquals(-3.5F, quads.vertices().getFloat(8), 0.02F);
         }
     }
 
