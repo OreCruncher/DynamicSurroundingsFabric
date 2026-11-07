@@ -124,13 +124,19 @@ public final class DSurroundMusicManager extends MusicManager {
 
         // Lookup meta information; getSoundMetadata never returns null
         var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
-        if (!metaData.hasTitle() || metaData.getCredits().isEmpty()) {
-            return Component.literal(this.currentMusic.getIdentifier().toString());
+        if (metaData.hasTitle() && !metaData.getCredits().isEmpty()) {
+            var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+            var author = metaData.getCredits().getFirst().author().copy().withColor(ColorPalette.WHEAT.getValue());
+            return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
         }
 
-        var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
-        var author = metaData.getCredits().getFirst().author().copy().withColor(ColorPalette.WHEAT.getValue());
-        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
+        // The name the game gives its own tracks in its "now playing" toast, translated; else the title, if there is one
+        var translated = NowPlayingName.translatedKey(super.getCurrentMusicTranslationKey(), Language.getInstance()::has);
+        if (translated != null)
+            return Component.translatable(translated).withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+        if (metaData.hasTitle())
+            return metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+        return Component.literal(this.currentMusic.getIdentifier().toString());
     }
 
     public String getDiagnosticText() {

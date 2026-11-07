@@ -37,4 +37,18 @@ final class NowPlayingName {
         // and "/" would still become "."
         return name.replace("%", "%%").replace('/', '∕');
     }
+
+    /**
+     * The key the language names a track by, as the game looks it up ("/" turned to "."): the game's own tracks have
+     * one ("music.game.sweden" is "C418 - Sweden"), in every language it has
+     *
+     * @param key the game's key for the track, or null when nothing is playing
+     * @return the key to translate, or null if the language has nothing for it
+     */
+    static @Nullable String translatedKey(@Nullable String key, Predicate<String> isTranslated) {
+        if (key == null)
+            return null;
+        var lookup = key.replace('/', '.');
+        return isTranslated.test(lookup) ? lookup : null;
+    }
 }
