@@ -64,6 +64,8 @@ public enum OptionalHook {
             site("core.MixinParticleEngine", "dsurround$markWindBlown"),
             site("core.MixinParticle", "dsurround$driftX"),
             site("core.MixinParticle", "dsurround$driftZ")),
+    FIREFLY_BUSHES("Flashing fireflies at firefly bushes",
+            site("core.MixinParticleEngine", "dsurround$firefly")),
     BURNING_ENTITIES("Flames on burning mobs",
             site("core.MixinEntityRenderer", "dsurround$vanillaFire")),
     DEATH_PUFFS("Dark mist when mobs die",

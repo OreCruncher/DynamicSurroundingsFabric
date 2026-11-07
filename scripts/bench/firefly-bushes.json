@@ -1,0 +1,79 @@
+// Firefly bushes, which give the mod's fireflies in place of the game's (MixinParticleEngine): the player in a field
+// with a row of bushes every four rows at night, about 640 of them. The game says when a bush makes a firefly, so the
+// count is the game's, against its own particle with the mod's fireflies off. No poppies, so only the bushes' fireflies
+// are seen. The stage is built as in fireflies.json. Fireflies aren't seeded: compare with --spread. See README.md.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "bushes": {
+      "biome": "minecraft:birch_forest",
+      "pitch": 5,
+      // Summer, as in fireflies.json: the season doesn't stop the game's fireflies, but keep the scenes alike
+      "commands": [
+        "season set mid_summer",
+        "time set 18000",
+        "weather clear",
+        "fill ~-24 ~ ~-24 ~24 ~19 ~-1 air",
+        "fill ~-24 ~ ~0 ~24 ~19 ~24 air",
+        "fill ~-24 ~-3 ~-24 ~24 ~-2 ~24 dirt replace air",
+        "fill ~-24 ~-1 ~-24 ~24 ~-1 ~24 grass_block"
+      ],
+      // Clearing the trees drops what was in them onto the stage: cleared once it has landed, then the bushes
+      "settledCommands": [
+        "fill ~-24 ~ ~-24 ~24 ~19 ~-1 air",
+        "fill ~-24 ~ ~0 ~24 ~19 ~24 air",
+        "kill @e[type=item,distance=..64]",
+        "fill ~-24 ~ ~-24 ~24 ~ ~-24 firefly_bush",
+        "fill ~-24 ~ ~-20 ~24 ~ ~-20 firefly_bush",
+        "fill ~-24 ~ ~-16 ~24 ~ ~-16 firefly_bush",
+        "fill ~-24 ~ ~-12 ~24 ~ ~-12 firefly_bush",
+        "fill ~-24 ~ ~-8 ~24 ~ ~-8 firefly_bush",
+        "fill ~-24 ~ ~-4 ~24 ~ ~-4 firefly_bush",
+        "fill ~-24 ~ ~0 ~24 ~ ~0 firefly_bush",
+        "fill ~-24 ~ ~4 ~24 ~ ~4 firefly_bush",
+        "fill ~-24 ~ ~8 ~24 ~ ~8 firefly_bush",
+        "fill ~-24 ~ ~12 ~24 ~ ~12 firefly_bush",
+        "fill ~-24 ~ ~16 ~24 ~ ~16 firefly_bush",
+        "fill ~-24 ~ ~20 ~24 ~ ~20 firefly_bush",
+        "fill ~-24 ~ ~24 ~24 ~ ~24 firefly_bush"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "bushes-mod",
+      "scene": "bushes"
+    },
+    {
+      "label": "bushes-nolights",
+      "scene": "bushes",
+      "settings": {
+        "fireflyOptions.enableLight": false
+      }
+    },
+    {
+      "label": "bushes-vanilla",
+      "scene": "bushes",
+      "settings": {
+        "fireflyOptions.enableFireflies": false
+      }
+    }
+  ]
+}

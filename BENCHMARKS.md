@@ -31,6 +31,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-05: beach waves (`shore.json`)](#results-2026-11-05-beach-waves-shorejson)
 - [Results, 2026-11-05: G1 against ZGC (`gc.json`)](#results-2026-11-05-g1-against-zgc-gcjson)
 - [Results, 2026-11-07: rays skip air, random block check](#results-2026-11-07-rays-skip-air-random-block-check)
+- [Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)](#results-2026-11-07-firefly-bushes-firefly-bushesjson)
   - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
   - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
@@ -734,6 +735,25 @@ changes the picture.
 - **The first recording after the client starts:** Java Flight Recorder's first start slowed the game for about 8
   seconds, with frames up to a second. Since 0.4.9 the first recording waits 10 seconds longer, with a throwaway
   recording running.
+
+## Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)
+
+Firefly bushes give the mod's fireflies in place of the game's: they wink, with a halo and a light, and their bodies
+stay seen between flashes. The game still says when a bush makes one. The scene is `fireflies.json`'s stage with a row
+of bushes every fourth row, 637 bushes and no poppies, at night. OpenGL, Fabric, the machine above; commit `6d2556f9`
+with the change uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | Point Lights GPU/CPU ms |
+|---|---|---|---|
+| mod's fireflies | 1.531 (1.507-1.555) | 0.556 | 0.782 / 0.026 |
+| mod's fireflies, no lights | 0.733 (0.729-0.737) | 0.508 | 0 |
+| game's fireflies (`enableFireflies` off) | 0.734 (0.732-0.735) | 0.475 | 0.008 / 0.009 |
+
+The fireflies themselves cost nothing measurable against the game's: without lights the frame is the same. All of the
+difference is the lights, 0.78 ms, more than the poppy field's 0.49 ms (`fireflies.json`, 2026-11-04): the bushes make
+more fireflies near the camera, and the lights are capped at 64 drawn, so this is close to their worst. A natural patch
+is a handful of bushes, not 637. Lowering the cap or skipping lights close to the camera remain the places to save,
+as for the poppies. `enableLight` turns them off, and the Low performance preset already does.
 
 ## Rerunning
 

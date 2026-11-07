@@ -193,6 +193,7 @@
   "dsurround.hook.world_effects": "Effects drawn over the world: ground fog, frost, particle weather and lightning",
   "dsurround.hook.soft_particles_transparency": "Soft particles with Improved Transparency",
   "dsurround.hook.wind_blown_particles": "Wind blowing particles",
+  "dsurround.hook.firefly_bushes": "Flashing fireflies at firefly bushes",
   "dsurround.hook.burning_entities": "Flames on burning mobs",
   "dsurround.hook.death_puffs": "Dark mist when mobs die",
   "dsurround.hook.lightning_bolts": "Branching lightning in place of vanilla's bolts",

@@ -49,12 +49,20 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
     // The halo: a soft glow around the firefly, this many times its size, at this strength
     private static final float HALO_SCALE = 5F;
+    // The firefly itself is the game's dot, as big as the game draws it: the game's firefly particle is three quarters
+    // of a particle's usual size, and the dot is as much of that as the lit part is of the texture (see FireflyDot)
+    private static final float VANILLA_SIZE = 0.75F;
     private static final float HALO_ALPHA = 0.35F;
 
     // A firefly's light: yellow-green, about 560nm
     private static final float LIGHT_RED = 0.72F;
     private static final float LIGHT_GREEN = 1F;
     private static final float LIGHT_BLUE = 0.22F;
+    // Between flashes, the body: a muted shade of the light's color, a little see-through, brightening as it flashes
+    private static final float BODY_RED = 0.48F;
+    private static final float BODY_GREEN = 0.58F;
+    private static final float BODY_BLUE = 0.22F;
+    private static final float BODY_ALPHA = 0.8F;
     // Dimmer than this, nothing is drawn
     private static final float MIN_VISIBLE = 0.004F;
 
@@ -62,12 +70,21 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     private final WanderingFlight flight;
     private final WanderingFlight.Obstacles obstacles;
     private final TextureAtlasSprite haloSprite;
+    // The lit part of the sprite, drawn as the firefly; and how big
+    private final FireflyDot.Bounds dot;
+    private final float dotSize;
+    // While the firefly is being drawn: only the lit part of the sprite (see getU0)
+    private boolean drawingDot;
 
     public static Particle create(Level level, double x, double y, double z) {
 
+        // The game's firefly, a small bright dot; the end rod's sparkle if its sprites can't be had
+        SpriteSet fireflies = ParticleUtils.getSpriteProvider(ParticleTypes.FIREFLY);
+        if (fireflies != null)
+            return new FireflyParticle(level, x, y, z, fireflies, FireflyDot.bounds());
         SpriteSet spriteProvider = ParticleUtils.getSpriteProvider(ParticleTypes.END_ROD);
         if (spriteProvider != null) {
-            return new FireflyParticle(level, x, y, z, spriteProvider);
+            return new FireflyParticle(level, x, y, z, spriteProvider, FireflyDot.Bounds.WHOLE);
         }
 
         // Fallback: keep the effect alive even if the vanilla SpriteSet cache cannot be read.
@@ -82,10 +99,13 @@ public class FireflyParticle extends SimpleAnimatedParticle {
         );
     }
 
-    private FireflyParticle(Level level, double x, double y, double z, SpriteSet spriteProvider) {
+    private FireflyParticle(Level level, double x, double y, double z, SpriteSet spriteProvider, FireflyDot.Bounds dot) {
         super((ClientLevel)level, x, y, z, spriteProvider, 0F);
+        this.dot = dot;
+        this.dotSize = this.quadSize * VANILLA_SIZE * dot.size();
+        // The halo's size, from which it is drawn HALO_SCALE times as big
         this.quadSize *= 0.20f + (float)(this.random.nextGaussian() * 0.1f);
-        // Lives for a few flashes; dark in between
+        // Lives for a few flashes; only its body is seen in between
         this.flash = new FireflyFlash(this.random);
         this.lifetime = this.flash.lifetime();
         // The yellow-green of a firefly's light
@@ -112,13 +132,15 @@ public class FireflyParticle extends SimpleAnimatedParticle {
 
     @Override
     public void extract(@NotNull QuadParticleRenderState state, @NotNull Camera camera, float partialTicks) {
-        // Dark between flashes, like a real firefly
+        // The body is seen between flashes, lit only by the world around it (see getLightCoords), as the game's
+        // fireflies are; the halo and the light come with a flash
         var glow = this.flash.brightness(this.age + partialTicks);
-        if (glow < MIN_VISIBLE)
+        var body = Math.max(glow, BODY_ALPHA * this.flash.bodyAlpha(this.age + partialTicks));
+        if (body < MIN_VISIBLE)
             return;
 
         var options = Client.Config.fireflyOptions;
-        if (options.enableGlow) {
+        if (options.enableGlow && glow >= MIN_VISIBLE) {
             // Drawn as the firefly is, with the halo's sprite, size and strength swapped in for it
             var sprite = this.sprite;
             var size = this.quadSize;
@@ -130,10 +152,18 @@ public class FireflyParticle extends SimpleAnimatedParticle {
             this.quadSize = size;
         }
 
-        this.alpha = glow;
+        // The firefly itself: the lit part of its sprite, at the game's size
+        var size = this.quadSize;
+        this.quadSize = this.dotSize;
+        this.alpha = body;
+        this.setColor(Mth.lerp(glow, BODY_RED, LIGHT_RED), Mth.lerp(glow, BODY_GREEN, LIGHT_GREEN), Mth.lerp(glow, BODY_BLUE, LIGHT_BLUE));
+        this.drawingDot = true;
         super.extract(state, camera, partialTicks);
+        this.drawingDot = false;
+        this.quadSize = size;
+        this.setColor(LIGHT_RED, LIGHT_GREEN, LIGHT_BLUE);
 
-        if (PointLights.fireflyLightsOn()) {
+        if (glow >= MIN_VISIBLE && PointLights.fireflyLightsOn()) {
             PointLights.add(
                     Mth.lerp(partialTicks, this.xo, this.x),
                     Mth.lerp(partialTicks, this.yo, this.y),
@@ -141,6 +171,27 @@ public class FireflyParticle extends SimpleAnimatedParticle {
                     this.rCol, this.gCol, this.bCol,
                     PointLights.FIREFLY_STRENGTH * glow, PointLights.FIREFLY_RADIUS);
         }
+    }
+
+    // While the firefly itself is drawn, only the lit part of the sprite, so the dot sits in the middle of its halo
+    @Override
+    protected float getU0() {
+        return this.drawingDot ? this.sprite.getU(this.dot.u0()) : super.getU0();
+    }
+
+    @Override
+    protected float getU1() {
+        return this.drawingDot ? this.sprite.getU(this.dot.u1()) : super.getU1();
+    }
+
+    @Override
+    protected float getV0() {
+        return this.drawingDot ? this.sprite.getV(this.dot.v0()) : super.getV0();
+    }
+
+    @Override
+    protected float getV1() {
+        return this.drawingDot ? this.sprite.getV(this.dot.v1()) : super.getV1();
     }
 
     // Lit by its own light while it flashes, however dark it is around it (as GlowParticle)
