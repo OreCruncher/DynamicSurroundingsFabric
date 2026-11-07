@@ -52,6 +52,14 @@ public final class ContainerManager {
     }
 
     /**
+     * Creates a new instance using the root container. See {@link IServiceContainer#create}.
+     */
+    @NotNull
+    public static <T> T create(@NotNull Class<T> clazz) {
+        return getRootContainer().create(clazz);
+    }
+
+    /**
      * A stand-in for the interface that resolves it on first use. See {@link IServiceContainer#memoize}.
      */
     @NotNull

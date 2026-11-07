@@ -15,9 +15,9 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import java.util.Collection;
 
 /**
- * The effects attached to one entity. Each entity gets its own effect instances (effects aren't cacheable, so the
- * container creates new ones each time), which is why effects can keep per-entity state in their fields. Effects
- * must not be made cacheable.
+ * The effects attached to one entity. Each entity gets its own effect instances ({@code EntityEffectType} has the
+ * container create new ones each time), which is why effects can keep per-entity state in their fields. Effects
+ * must not be registered with the container, or resolved: either would share one instance among entities.
  * <p>
  * An effect that throws is reported to the failure handler and skipped; the entity's other effects still run.
  * <p>

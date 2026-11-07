@@ -25,7 +25,6 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.registry.Comparers;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -33,7 +32,6 @@ import org.orecruncher.dsurround.lib.registry.RegistryUtils;
 
 import java.util.*;
 
-@Cacheable
 public final class ViewerPlugin implements IDiagnosticPlugin {
 
     // Mod packs have a lot of tags. We are only interested in

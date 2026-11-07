@@ -31,6 +31,8 @@ public final class DependencyContainer implements IServiceContainer {
     // For registrations backed by a class the container creates: the class it creates. Registrations of an
     // existing object or a supplier have no entry (the container can't see what they depend on). Used by validate().
     private final Map<Class<?>, Class<?>> implementations = new ConcurrentHashMap<>();
+    // For create(): how to make each class asked for, so the constructor is looked up once
+    private final Map<Class<?>, Supplier<?>> creators = new ConcurrentHashMap<>();
     // The classes this thread is in the middle of creating, outermost first, to catch circular dependencies. Per
     // thread rather than under the creation lock, because per-instance factories run outside that lock.
     private final ThreadLocal<ArrayDeque<Class<?>>> creating = ThreadLocal.withInitial(ArrayDeque::new);
@@ -103,25 +105,29 @@ public final class DependencyContainer implements IServiceContainer {
         if (resolver != null)
             return (T) resolver.get();
 
-        // Not registered: create it, and register how to get it again. Done under the creation lock so two threads
-        // asking for the same class at once don't each create (and register) their own.
+        // Not registered: create it, and keep it. Done under the creation lock so two threads asking for the same
+        // class at once don't each create (and register) their own.
         synchronized (this.creationLock) {
             resolver = this.resolvers.get(clazz);
             if (resolver != null)
                 return (T) resolver.get();
 
-            var factory = this.createFactory(clazz);
-            if (clazz.isAnnotationPresent(Cacheable.class)) {
-                // A single instance for the life of the container
-                var instance = factory.get();
-                this.register(clazz, SingletonSupplier.of(instance), clazz);
-                return instance;
-            }
-
-            // A new instance each time
-            this.register(clazz, factory, clazz);
-            return factory.get();
+            // A single instance for the life of the container, so everything that asks for the class shares it
+            this.checkNotRegisteredAsAnother(clazz);
+            var instance = this.createFactory(clazz).get();
+            this.register(clazz, SingletonSupplier.of(instance), clazz);
+            return instance;
         }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T create(Class<T> clazz) {
+        if (this.resolvers.containsKey(clazz))
+            throw new DependencyException(String.format("'%s' is registered: resolve it rather than create a new one", clazz.getName()));
+        this.checkNotRegisteredAsAnother(clazz);
+        // Not under the creation lock: what the instance needs is resolved, and takes the lock, as it goes
+        return (T) this.creators.computeIfAbsent(clazz, this::createFactory).get();
     }
 
     @Override
@@ -338,6 +344,7 @@ public final class DependencyContainer implements IServiceContainer {
             try {
                 checkKeySuitability(type);
                 checkCreatable(type);
+                DependencyContainer.this.checkNotRegisteredAsAnother(type);
                 return type;
             } catch (DependencyException e) {
                 this.problems.add(neededBy != null
@@ -424,6 +431,19 @@ public final class DependencyContainer implements IServiceContainer {
             throw new DependencyException("Cannot use an Optional as a key");
         if (!Modifier.isPublic(clazz.getModifiers()))
             throw new DependencyException(String.format("Class '%s' is not public", clazz.getName()));
+    }
+
+    /**
+     * Checks that an unregistered class isn't the implementation of another registration: created on its own it
+     * would be a second instance, apart from the registered one (two {@code WeatherSimulation}s, one of them out of
+     * reach of everything that asks for {@code IWeatherSimulation}).
+     */
+    private void checkNotRegisteredAsAnother(Class<?> clazz) {
+        for (var entry : this.implementations.entrySet()) {
+            if (entry.getValue() == clazz && entry.getKey() != clazz)
+                throw new DependencyException(String.format("'%s' is registered as '%s': ask for that, or a second instance would be created apart from the registered one",
+                        clazz.getName(), entry.getKey().getName()));
+        }
     }
 
     /**

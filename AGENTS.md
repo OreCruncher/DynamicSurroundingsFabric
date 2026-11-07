@@ -68,7 +68,11 @@ is known of 26.4.
 - Wait for and grep the log: `Loaded the dsurround:pipeline/<name> shader`, `Dependency registration validated`,
   `N biome configs loaded`, mixin errors (`InvalidInjection`, `MixinApplyError`), config migration
   (`has moved to`).
-- Stopping the Gradle task leaves the game JVM running; kill it (PowerShell):
+- Quitting the game ends a development run within about 2 seconds: `lib/platform/DevExit` waits for the render (main)
+  thread to end, then halts the JVM that Architectury's thread pools would hold open until vanilla's post-main
+  watchdog crash. To quit a client you launched without killing it, close its window (PowerShell, the process found as
+  below: `(Get-Process -Id <pid>).CloseMainWindow()`); the Gradle task then ends successfully.
+  Stopping the Gradle task instead leaves the game JVM running; kill it (PowerShell):
   `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match 'KnotClient|devlaunchinjector|net.fabricmc.loader.impl.launch' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
   That doesn't match the NeoForge client (`:neoforge:runClient`). Both run as Architectury's `TransformerRuntime`, so
   match NeoForge's by its platform folder in `-Darchitectury.main.class`:
@@ -139,8 +143,7 @@ is known of 26.4.
   4. `python scripts/vanilla-server.py check neoforge [--against <single player biomes.txt>]` reports the members only
      a `c:` tag can give our tags, with any that are missing, and exits 1 if there are any. It reads the dumps from
      `<platform>/run-pack/none/config/dsurround/dumps`.
-  5. `python scripts/vanilla-server.py stop`, and stop the client as above. Quitting ends in the shutdown watchdog
-     crash and a failed Gradle task, and may leave a JVM to kill; none of that is the test failing.
+  5. `python scripts/vanilla-server.py stop`, and stop the client as above (or quit it: `DevExit` ends it).
 
   Why the script does what it does, for when something else needs a vanilla server:
   - `:neoforge:runClient` can't join. The dev client's extra mods (Biomes O' Plenty and the others `-Ppack` leaves out)
@@ -190,7 +193,11 @@ is known of 26.4.
 
 ## Architecture worth knowing
 - Dependency container (`lib/di`): classes it creates take dependencies in their constructors. Config groups are
-  registered automatically (`ConfigurationData.registerWith`). Static `ContainerManager.resolve` remains only in
+  registered automatically (`ConfigurationData.registerWith`). `resolve` gives one shared instance, registered or
+  not (an unregistered class is created once and kept); `create` makes a new one each time (entity effects, which
+  hold per-entity state). A class registered as another type's implementation (`WeatherSimulation` for
+  `IWeatherSimulation`) can't be asked for by itself: it throws, and startup validation reports it, as it would be a
+  second instance. Static `ContainerManager.resolve` remains only in
   static helpers, mixin support and codec-created objects, where nothing can inject.
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.

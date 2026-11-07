@@ -118,7 +118,8 @@ public final class PointLights {
 
     /**
      * Registers something that adds its lights just before they are drawn, rather than as it goes: to pick the ones
-     * worth drawing once all of the frame's are known (burning mobs light only the nearest few). Render thread.
+     * worth drawing once all of the frame's are known (burning mobs add theirs this way; nothing caps them beyond the
+     * {@link #MAX_DRAWN} nearest lights of the frame). Render thread.
      */
     public static void addSource(Runnable source) {
         SOURCES.add(source);

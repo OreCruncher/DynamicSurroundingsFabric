@@ -7,7 +7,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import org.orecruncher.dsurround.config.MarginPosition;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 
 import java.util.function.Predicate;
 
@@ -17,7 +16,6 @@ import java.util.function.Predicate;
  * and corners), compass first. Each overlay reports its size as it ticks (0 when not in the margin) and asks for
  * its center as it renders.
  */
-@Cacheable
 public final class MarginLayout {
 
     // Space between the screen's edge and the display, and between the compass and the watch

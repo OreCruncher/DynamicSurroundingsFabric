@@ -36,8 +36,9 @@ public enum EntityEffectType {
     WATER_SPLASH("water_splash", entity -> getInstance(WaterSplashEffect.class)),
     WATER_BOB("water_bob", entity -> getInstance(WaterBobEffect.class));
 
+    // A new one each time: each entity's effects keep their own state
     private static IEntityEffect getInstance(Class<? extends IEntityEffect> clazz) {
-        return ContainerManager.resolve(clazz);
+        return ContainerManager.create(clazz);
     }
 
     private static final Map<String, EntityEffectType> BY_NAME = Arrays.stream(values()).collect(Collectors.toMap(EntityEffectType::getName, (category) -> category));

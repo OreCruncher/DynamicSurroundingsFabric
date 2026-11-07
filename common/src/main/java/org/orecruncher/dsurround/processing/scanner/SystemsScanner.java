@@ -12,7 +12,6 @@ import org.orecruncher.dsurround.effects.IBlockEffect;
 import org.orecruncher.dsurround.effects.IEffectSystem;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scanner.SphereScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-@Cacheable
 public class SystemsScanner extends SphereScanner {
 
     private static final Predicate<IBlockEffect> EFFECT_PREDICATE = system -> {

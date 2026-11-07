@@ -35,6 +35,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigPreset;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.DevExit;
 import org.orecruncher.dsurround.profiling.ProfileScene;
 import org.orecruncher.dsurround.profiling.Profiler;
 import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
@@ -718,6 +719,7 @@ public final class ScenarioRunner {
         this.manifest.addProperty("ended", LocalDateTime.now().toString());
         this.writeManifest();
         Library.LOGGER.info("Bench: %s; results in %s", failure == null ? "done" : "failed", this.results);
+        DevExit.setExitCode(failure == null ? 0 : 1);
         Minecraft.getInstance().stop();
         // The game closes its window, but threads of other mods' can hold the JVM open after (Architectury's pools on
         // 26.2), and an unattended run would never end: everything is written by now

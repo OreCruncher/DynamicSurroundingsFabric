@@ -9,13 +9,11 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 
 /**
  * How long the GPU takes to draw the mod's heavier effects (see {@link RenderTimer}), in a section of their own. Only
  * those drawn in the last second are shown.
  */
-@Cacheable
 public final class RenderTimersPlugin implements IDiagnosticPlugin {
 
     public RenderTimersPlugin() {
