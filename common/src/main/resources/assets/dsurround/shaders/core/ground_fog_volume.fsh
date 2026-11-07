@@ -54,7 +54,8 @@ const vec3 MIST_COLOR = vec3(0.92, 0.93, 0.95);
 const float UNDER_GROUND = 1.1;
 // Where things are east-west and north-south is wrapped at this many blocks (GroundFogVolume.NOISE_WRAP)
 const float WRAP = 4620.0;
-// The noise texture's size, which it repeats at (GroundFogVolume.NOISE_SIZE)
+// The noise texture's size, which it repeats at (GroundFogVolume.NOISE_SIZE): where things are is wrapped at a
+// whole number of these cells for each noise (WRAP), so a wrap lands on the same noise
 const float NOISE_SIZE = 60.0;
 // How far, in blocks, the swirling pushes the wisps about
 const float SWIRL = 3.0;
@@ -89,16 +90,7 @@ float fog_fade(float distance) {
     return 1.0 - smoothstep(0.0, 1.0, fog);
 }
 
-// Smooth value noise, 0 to 1, a cell to a texel of the noise texture, repeating every NOISE_SIZE cells: where things
-// are is wrapped at a whole number of those for each noise (GroundFogVolume.NOISE_WRAP), so a wrap lands on the same
-// noise. The texture is read between texels in a straight line; moving the point within its cell along an S-curve
-// first rounds that off, as working out the four corners did, in one read
-float noise(vec2 p) {
-    vec2 cell = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
-}
+#include <dsurround:noise.glsl>
 
 // A column's light, from the lightmap
 vec3 columnLight(ivec2 cell) {
