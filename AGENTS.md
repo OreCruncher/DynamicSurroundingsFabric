@@ -370,9 +370,13 @@ is known of 26.4.
   drifting past 22 blocks was silent). Conditions are evaluated at the
   player, so a script on the player's own state would make players disagree. `/dsactor [kind]` summons one ahead.
   Apparitions are the one kind not made of particles: the game's villager model posed by us and written into a
-  `QuadWriter` through `ApparitionRenderer`'s own `VertexConsumer` (depth pass, then color), drawn from
-  `WorldActorHandler` in the default `IWorldRender` phase; gated by Scary Content, one at a time, met within 48 blocks
-  (dropped past 64, `Type.range`/`keepRange`), so a far one behind trees never holds the one slot. They walk around
+  `QuadWriter` through `ApparitionRenderer`'s own `VertexConsumer` (depth pass, then color), its textures a
+  villager's of its biome and a seeded profession, layered in the shader (`ApparitionLook`), drawn from
+  `WorldActorHandler` in the default `IWorldRender` phase; gated by Scary Content, up to three at once (a cell has
+  three chances a slot, at 1, 0.5 and 0.25 of the biome's: `Type.shares`, `ActorSpawns.plan`'s `index`), met within 48 blocks
+  (dropped past 64, `Type.range`/`keepRange`), so a far one behind trees never holds a place. Two
+  that meet are nudged apart as mobs are (`Apparition.makeRoom`, only onto ground it can stand on). Their
+  chances triple in the week either side of Halloween (`platform.isCurrentDateInRangeOf` in `biomes.json`). They walk around
   what is in the way (`ApparitionRoute`, A* over loaded blocks), so the way between haunts is each player's own.
   A new kind is an `ActorKind`, a row in `WorldActorHandler`'s `types` (shape, sound, config switch, where it can
   start, the ground its biome is read at, how one is made) and its class: a whirl extends `VortexActor` (life, break-up,

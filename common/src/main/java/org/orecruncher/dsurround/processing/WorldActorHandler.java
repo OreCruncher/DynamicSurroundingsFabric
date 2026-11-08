@@ -42,9 +42,11 @@ import org.orecruncher.dsurround.runtime.weather.UpperWind;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -67,10 +69,13 @@ public class WorldActorHandler extends AbstractClientHandler {
     // How far from the player actors are started, and kept, in blocks, unless their kind says nearer
     static final int RANGE = 160;
     private static final int KEEP_RANGE = RANGE + 32;
-    // An apparition is only met near: in a dark forest one farther off would be behind the trees, and as there is only
-    // one at a time, it would keep a nearer one from starting. One left behind comes back when the player is near again.
+    // An apparition is only met near: in a dark forest one farther off would be behind the trees, and as there are only
+    // a few at a time, it would keep a nearer one from starting. One left behind comes back when the player is near again.
     static final int APPARITION_RANGE = 48;
     private static final int APPARITION_KEEP_RANGE = 64;
+    // Up to three in a cell, the second and third less likely, as a share of the biome's chance; three at most at once
+    static final List<Float> APPARITION_SHARES = List.of(1F, 0.5F, 0.25F);
+    static final int APPARITION_MOST = 3;
     // How often chances are looked at, in ticks
     private static final int CHECK_TICKS = 20;
     // Where a summoned one starts, ahead of the player, in blocks
@@ -131,13 +136,16 @@ public class WorldActorHandler extends AbstractClientHandler {
      * @param range           how far from the player one is started, in blocks
      * @param keepRange       how far from the player one is kept, in blocks; past it, it is dropped, to start again
      *                        when the player comes back within range
+     * @param shares          its chances in a cell in a slot, each a share of the biome's chance: one, for most kinds
+     * @param most            how many there may be at once
      */
     private record Type<P extends ActorPath>(int maxLifetime, PathMaker<P> path, @Nullable Identifier sound,
                                              Predicate<Configuration> enabled, boolean summonsAnywhere,
-                                             Placement placement, Ground ground, Maker<P> maker, int range, int keepRange) {
+                                             Placement placement, Ground ground, Maker<P> maker, int range, int keepRange,
+                                             List<Float> shares, int most) {
         Type(int maxLifetime, PathMaker<P> path, @Nullable Identifier sound, Predicate<Configuration> enabled, boolean summonsAnywhere,
              Placement placement, Ground ground, Maker<P> maker) {
-            this(maxLifetime, path, sound, enabled, summonsAnywhere, placement, ground, maker, RANGE, KEEP_RANGE);
+            this(maxLifetime, path, sound, enabled, summonsAnywhere, placement, ground, maker, RANGE, KEEP_RANGE, List.of(1F), Integer.MAX_VALUE);
         }
     }
 
@@ -195,16 +203,16 @@ public class WorldActorHandler extends AbstractClientHandler {
                     return ground == Integer.MIN_VALUE ? heightmap(level, x, z) : ground;
                 },
                 (level, path, age, biome, sound) -> new Wisp(path, age, level.dimensionType().hasCeiling() ? Wisp.SOUL : Wisp.MARSH)));
-        // Silent, scary content, and one at a time: drawn by ApparitionRenderer, so not under a shader pack
+        // Silent, scary content, and a few at a time: drawn by ApparitionRenderer, so not under a shader pack
         this.types.put(ActorKind.APPARITION, new Type<>(ApparitionPath.MAX_LIFETIME, (x, z, seed, wind) -> ApparitionPath.of(x, z, seed), null,
                 c -> c.worldActorOptions.enableApparitions && c.scaryContent.allowScaryContent && ApparitionRenderer.isUsable(), true,
-                (level, x, z) -> this.count(ActorKind.APPARITION) == 0 && Apparition.canStart(level, x, z),
+                Apparition::canStart,
                 (level, x, z) -> {
                     var ground = Apparition.ground(level, x, z);
                     return ground == null ? heightmap(level, x, z) : ground.getY();
                 },
-                (level, path, age, biome, sound) -> this.count(ActorKind.APPARITION) == 0 ? Apparition.create(level, path, age) : null,
-                APPARITION_RANGE, APPARITION_KEEP_RANGE));
+                (level, path, age, biome, sound) -> Apparition.create(level, path, age, biome),
+                APPARITION_RANGE, APPARITION_KEEP_RANGE, APPARITION_SHARES, APPARITION_MOST));
 
         IWorldRender.EVENT.register(this::render);
 
@@ -234,10 +242,22 @@ public class WorldActorHandler extends AbstractClientHandler {
                 this.seen.remove((long) chance);
             return true;
         });
+        this.makeRoom(clientLevel);
 
         long time = clientLevel.getGameTime();
         if (time % CHECK_TICKS == 0)
             this.lookForNew(clientLevel, player, time);
+    }
+
+    // Apparitions don't stand in one another: two that meet are nudged apart
+    private void makeRoom(ClientLevel level) {
+        if (this.count(ActorKind.APPARITION) < 2)
+            return;
+        var apparitions = new ArrayList<Apparition>(APPARITION_MOST);
+        for (var actor : this.actors)
+            if (actor instanceof Apparition apparition)
+                apparitions.add(apparition);
+        Apparition.makeRoom(level, apparitions);
     }
 
     private void lookForNew(ClientLevel level, Player player, long time) {
@@ -250,10 +270,12 @@ public class WorldActorHandler extends AbstractClientHandler {
         for (var kind : ActorKind.values()) {
             if (!this.kindEnabled(kind))
                 continue;
+            int chances = this.types.get(kind).shares().size();
             for (long s = slot - this.lifetimeSlots; s <= slot; s++)
                 for (int cx = minX; cx <= maxX; cx++)
                     for (int cz = minZ; cz <= maxZ; cz++)
-                        this.consider(level, player, time, s, ActorSpawns.plan(worldSeed, cx, cz, s, kind));
+                        for (int i = 0; i < chances; i++)
+                            this.consider(level, player, time, s, ActorSpawns.plan(worldSeed, cx, cz, s, kind, i));
         }
     }
 
@@ -270,15 +292,15 @@ public class WorldActorHandler extends AbstractClientHandler {
             this.seen.put(plan.key(), slot);
             return;
         }
-        // Not yet in reach, or its ground not yet loaded: looked at again later
+        // Not yet in reach, its ground not yet loaded, or as many of its kind as there may be: looked at again later
         double x = path.x(age), z = path.z(age);
-        if (!this.inRange(player, x, z, type.range()) || !level.hasChunkAt(BlockPos.containing(x, 0, z)))
+        if (!this.inRange(player, x, z, type.range()) || !level.hasChunkAt(BlockPos.containing(x, 0, z)) || this.count(plan.kind()) >= type.most())
             return;
 
         this.seen.put(plan.key(), slot);
         var biome = biomeAt(type, level, x, z);
         var entry = this.biomeLibrary.getBiomeInfo(biome).getActor(plan.kind());
-        if (entry == null || plan.roll() >= entry.chance() || !entry.matches() || !type.placement().canStart(level, x, z))
+        if (entry == null || plan.roll() >= entry.chance() * type.shares().get(plan.index()) || !entry.matches() || !type.placement().canStart(level, x, z))
             return;
         this.start(type, level, path, age, biome, plan.key());
     }
@@ -292,14 +314,16 @@ public class WorldActorHandler extends AbstractClientHandler {
         if (!(player.level() instanceof ClientLevel clientLevel) || !this.enabled() || !this.kindEnabled(kind))
             return Summoned.OFF;
         this.follow(clientLevel);
-        // Only one apparition at a time: a summoned one takes the place of the one there is
-        if (kind == ActorKind.APPARITION)
-            this.actors.removeIf(actor -> {
-                if (actor.kind() != ActorKind.APPARITION)
-                    return false;
-                this.chances.remove(actor);
-                return true;
-            });
+        // As many as there may be already: a summoned one takes the place of one of them
+        if (this.count(kind) >= this.types.get(kind).most())
+            for (int i = 0; i < this.actors.size(); i++) {
+                var actor = this.actors.get(i);
+                if (actor.kind() == kind) {
+                    this.actors.remove(actor);
+                    this.chances.remove(actor);
+                    break;
+                }
+            }
         var look = player.getLookAngle();
         var length = Math.max(1e-3D, Math.sqrt(look.x * look.x + look.z * look.z));
         double x = player.getX() + look.x / length * SUMMON_AHEAD;
@@ -351,7 +375,7 @@ public class WorldActorHandler extends AbstractClientHandler {
             return;
         var minecraft = GameUtils.getMC();
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        var poses = new java.util.ArrayList<Apparition.Pose>(1);
+        var poses = new ArrayList<Apparition.Pose>(APPARITION_MOST);
         for (var actor : this.actors)
             if (actor instanceof Apparition apparition)
                 poses.add(apparition.pose(partialTick));

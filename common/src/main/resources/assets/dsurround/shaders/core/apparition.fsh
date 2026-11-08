@@ -3,14 +3,18 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
-// Dynamic Surroundings apparition (see ApparitionRenderer). Only the texture's brightness is kept, turned pale, white
-// in the light parts going to blue in the dark ones, and seen through. With DEPTH_ONLY defined it writes only the
-// figure's depth, where enough of it shows, so the color pass after sees only its nearest faces. Fog fades it as it
-// does anything else.
+// Dynamic Surroundings apparition (see ApparitionRenderer). A villager's textures layered as the game draws them, each
+// a cutout over the last: the villager (Sampler0), its biome's clothes (Sampler1, left out where the vertex color's
+// green says: its hat, under a profession's), its profession's (Sampler2, where the blue says there is one). Only the
+// result's brightness is kept, turned pale, white in the light parts going to blue in the dark ones, and seen through.
+// The shade is in the red. With DEPTH_ONLY defined it writes only the figure's depth, where enough of it shows, so the
+// color pass after sees only its nearest faces. Fog fades it as it does anything else.
 
 #include <minecraft:fog.glsl>
 
 uniform sampler2D Sampler0;
+uniform sampler2D Sampler1;
+uniform sampler2D Sampler2;
 
 layout(location = 0) in vec2 texCoord0;
 layout(location = 1) in vec4 vertexColor;
@@ -24,11 +28,25 @@ const float DEPTH_CUTOFF = 0.12;
 // The pale colors it goes between, dark to light
 const vec3 SHADOW = vec3(0.42, 0.55, 0.85);
 const vec3 LIGHT = vec3(0.92, 0.96, 1.0);
+// What the game's cutout drawing leaves out of a layer
+const float CUTOUT = 0.1;
 
 void main() {
     vec4 texel = texture(Sampler0, texCoord0);
+    if (vertexColor.g < 0.5) {
+        vec4 type = texture(Sampler1, texCoord0);
+        if (type.a >= CUTOUT) {
+            texel = type;
+        }
+    }
+    if (vertexColor.b > 0.5) {
+        vec4 profession = texture(Sampler2, texCoord0);
+        if (profession.a >= CUTOUT) {
+            texel = profession;
+        }
+    }
     float alpha = texel.a * vertexColor.a;
-    if (texel.a < 0.1 || alpha <= 0.004) {
+    if (texel.a < CUTOUT || alpha <= 0.004) {
         discard;
     }
 #ifdef DEPTH_ONLY

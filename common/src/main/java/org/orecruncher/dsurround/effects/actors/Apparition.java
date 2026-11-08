@@ -11,12 +11,15 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+
+import java.util.List;
 
 /**
  * An apparition: a pale figure in the shape of a villager that wanders a dark forest or a swamp at night, keeping to
@@ -34,8 +37,9 @@ public final class Apparition implements IActor {
      * Where it is and how it stands, for a frame
      *
      * @param alpha how much of it shows, 0 to 1
+     * @param look  who it was
      */
-    public record Pose(double x, double y, double z, float bodyYaw, float headYaw, float headPitch, float alpha) {
+    public record Pose(double x, double y, double z, float bodyYaw, float headYaw, float headPitch, float alpha, ApparitionLook look) {
     }
 
     // Its height, in blocks, and where it fades over, as a share of that: nothing at the knees, all of it at the waist
@@ -50,6 +54,9 @@ public final class Apparition implements IActor {
     // How fast it glides, in blocks a tick, and how near a step it must be to go on to the next
     static final double SPEED = 0.055D;
     private static final double REACHED = 0.35D;
+    // How near two may come, in blocks (a villager is 0.6 wide), and the most each is pushed apart a tick
+    static final double ROOM = 0.8D;
+    static final double NUDGE = 0.05D;
     // How quickly it rises or sinks to its footing, a share a tick, so a step up is a glide, not a jump
     private static final double SETTLE = 0.2D;
     // How fast its body and head turn, in degrees a tick, and how far its head turns from its body
@@ -69,6 +76,7 @@ public final class Apparition implements IActor {
     private static final int GROUND_DEPTH = 48;
 
     private final ApparitionPath path;
+    private final ApparitionLook look;
     private final RandomSource random;
     private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
     private final boolean[] unreachable = new boolean[ApparitionPath.HAUNTS];
@@ -92,8 +100,9 @@ public final class Apparition implements IActor {
     private float glancePitch;
     private int glanceUntil;
 
-    private Apparition(ApparitionPath path, int age, int haunt, BlockPos footing) {
+    private Apparition(ApparitionPath path, ApparitionLook look, int age, int haunt, BlockPos footing) {
         this.path = path;
+        this.look = look;
         this.age = age;
         this.random = Randomizer.create(path.seed() ^ 0x67686F7374L);
         this.goal = haunt;
@@ -105,15 +114,16 @@ public final class Apparition implements IActor {
     }
 
     /**
-     * Makes one at the haunt it would be with at its age, or the next it can stand at; null if it can stand at none
+     * Makes one at the haunt it would be with at its age, or the next it can stand at; null if it can stand at none.
+     * It looks as a villager of the biome it started in would.
      */
-    public static @Nullable Apparition create(Level level, ApparitionPath path, int age) {
+    public static @Nullable Apparition create(Level level, ApparitionPath path, int age, Biome biome) {
         int first = path.hauntAt(age);
         for (int i = 0; i < ApparitionPath.HAUNTS; i++) {
             int haunt = Math.floorMod(first + i, ApparitionPath.HAUNTS);
             var footing = ground(level, Mth.floor(path.hauntX(haunt)), Mth.floor(path.hauntZ(haunt)));
             if (footing != null)
-                return new Apparition(path, age, haunt, footing);
+                return new Apparition(path, ApparitionLook.of(level, biome, path.seed()), age, haunt, footing);
         }
         return null;
     }
@@ -186,7 +196,8 @@ public final class Apparition implements IActor {
                 Mth.rotLerp(partialTick, this.lastBodyYaw, this.bodyYaw),
                 Mth.lerp(partialTick, this.lastHeadYaw, this.headYaw),
                 Mth.lerp(partialTick, this.lastHeadPitch, this.headPitch),
-                this.path.presence(age) * Mth.clamp(shy, 0F, 1F));
+                this.path.presence(age) * Mth.clamp(shy, 0F, 1F),
+                this.look);
     }
 
     @Override
@@ -380,6 +391,61 @@ public final class Apparition implements IActor {
         // Facing back the way the player is, to watch for them
         this.bodyYaw = this.lastBodyYaw = yawOf(px - this.x, pz - this.z);
         this.headYaw = this.lastHeadYaw = 0F;
+    }
+
+    /**
+     * Keeps apparitions out of each other's way, as mobs push one another: two nearer than {@link #ROOM} are nudged
+     * apart a little each tick, each only where it could stand, so none is pushed into a wall or off a ledge
+     */
+    public static void makeRoom(ClientLevel level, List<Apparition> apparitions) {
+        for (int i = 0; i < apparitions.size(); i++) {
+            var a = apparitions.get(i);
+            for (int j = i + 1; j < apparitions.size(); j++) {
+                var b = apparitions.get(j);
+                if (Math.abs(a.y - b.y) >= HEIGHT)
+                    continue;
+                var push = separation(b.x - a.x, b.z - a.z, a.path.seed() ^ b.path.seed());
+                if (push == null)
+                    continue;
+                a.nudge(level, -push[0], -push[1]);
+                b.nudge(level, push[0], push[1]);
+            }
+        }
+    }
+
+    /**
+     * How far the second of two is pushed from the first, across the ground, this tick (the first the other way); null
+     * if they have room. Two in the very same spot go apart a way drawn from their seeds, the same for every player.
+     *
+     * @param dx       from the first to the second, in blocks
+     * @param dz       from the first to the second, in blocks
+     * @param tieBreak for the way apart when they are in the same spot
+     */
+    static double @Nullable [] separation(double dx, double dz, long tieBreak) {
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        if (distance >= ROOM)
+            return null;
+        double ux, uz;
+        if (distance < 1e-4D) {
+            double angle = Randomizer.create(tieBreak).nextDouble() * Math.PI * 2D;
+            ux = Math.cos(angle);
+            uz = Math.sin(angle);
+        } else {
+            ux = dx / distance;
+            uz = dz / distance;
+        }
+        double push = Math.min(NUDGE, (ROOM - distance) * 0.5D);
+        return new double[]{ux * push, uz * push};
+    }
+
+    // Moves it a little across the ground, if it can stand there
+    private void nudge(ClientLevel level, double dx, double dz) {
+        double nx = this.x + dx, nz = this.z + dz;
+        int bx = Mth.floor(nx), by = Mth.floor(this.y + 0.01D), bz = Mth.floor(nz);
+        if ((bx != Mth.floor(this.x) || bz != Mth.floor(this.z)) && !standable(level, this.probe, bx, by, bz))
+            return;
+        this.x = nx;
+        this.z = nz;
     }
 
     /**

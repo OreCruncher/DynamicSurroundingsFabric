@@ -3,6 +3,8 @@
 
 package org.orecruncher.dsurround.effects.actors;
 
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.ActorKind;
 
@@ -15,6 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * slot and the kind alone.
  */
 public class ActorSpawnsTests {
+
+    static {
+        // ActorKind reaches the game's registries through Constants
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
 
     private static final long SEED = 0x1234_5678_9ABCL;
 
@@ -83,5 +91,28 @@ public class ActorSpawnsTests {
                 if (ActorSpawns.plan(SEED, cx, 0, slot, ActorKind.DUST_DEVIL).roll() < 0.1F)
                     under++;
         assertEquals(0.1D, under / (double) total, 0.02D);
+    }
+
+    @Test
+    void theFirstChanceIsTheOneThereWasBeforeThereWereMore() {
+        // A world's actors start where they did before a kind had more chances in a cell
+        assertEquals(ActorSpawns.key(3, 4, 500, ActorKind.APPARITION), ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION, 0).key());
+        assertEquals(ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION), ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION, 0));
+    }
+
+    @Test
+    void eachChanceInACellIsItsOwn() {
+        var keys = new HashSet<Long>();
+        for (int i = 0; i < 3; i++) {
+            var plan = ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION, i);
+            assertEquals(i, plan.index());
+            assertEquals(plan, ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION, i), "the same for everyone");
+            assertTrue(keys.add(plan.key()), "each is looked at on its own");
+            assertEquals(3, ActorSpawns.cellOf(plan.x()), "in the same cell");
+        }
+        var first = ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION, 0);
+        var second = ActorSpawns.plan(SEED, 3, 4, 500, ActorKind.APPARITION, 1);
+        assertNotEquals(first.x(), second.x(), "somewhere else");
+        assertNotEquals(first.roll(), second.roll(), "with a roll of its own");
     }
 }

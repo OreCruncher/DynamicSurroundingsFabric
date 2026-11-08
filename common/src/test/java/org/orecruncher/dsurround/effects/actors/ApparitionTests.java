@@ -179,4 +179,32 @@ public class ApparitionTests {
         assertEquals(10F, Apparition.turnToward(0F, 90F, 10F));
         assertEquals(-10F, Apparition.turnToward(0F, 270F, 10F), "the short way round");
     }
+
+    @Test
+    void twoWithRoomAreLeftAlone() {
+        assertNull(Apparition.separation(Apparition.ROOM, 0D, 1L));
+        assertNull(Apparition.separation(3D, 4D, 1L));
+    }
+
+    @Test
+    void twoTooNearArePushedApart() {
+        var push = Apparition.separation(0.3D, 0D, 1L);
+        assertNotNull(push);
+        assertTrue(push[0] > 0D, "the second away from the first");
+        assertEquals(0D, push[1], 1e-9D, "along the line between them");
+        assertEquals(Apparition.NUDGE, push[0], 1e-9D, "a little at a time");
+
+        var close = Apparition.separation(0.78D, 0D, 1L);
+        assertNotNull(close);
+        assertEquals(0.01D, close[0], 1e-9D, "only as far as gives them room, each going half");
+    }
+
+    @Test
+    void twoInTheSameSpotGoApartTheSameWayForEveryone() {
+        var a = Apparition.separation(0D, 0D, 42L);
+        var b = Apparition.separation(0D, 0D, 42L);
+        assertNotNull(a);
+        assertArrayEquals(a, b);
+        assertEquals(Apparition.NUDGE, Math.hypot(a[0], a[1]), 1e-9D);
+    }
 }
