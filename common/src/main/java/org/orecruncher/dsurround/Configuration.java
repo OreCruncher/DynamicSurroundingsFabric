@@ -717,6 +717,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable wisps: pale lights over marshes at night, and soul-fire lights over soul sand valleys, that go out as you come near")
         public boolean enableWisps = true;
+
+        @Property
+        @Comment("Enable/disable apparitions: a pale, translucent figure that wanders dark forests and swamps at night, turning to watch you, and fades away as you come near. Off while scary content is off")
+        public boolean enableApparitions = true;
     }
 
     public static class MusicManagerOptions {

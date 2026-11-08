@@ -28,7 +28,8 @@ public enum ShaderPackFeature {
     LIGHTS(config -> config.fireflyOptions.enableLight || config.flameJetOptions.enableLight),
     SOFT_PARTICLES(config -> true),
     BURNING_FLAMES(config -> config.entityEffects.enableBurningEffect),
-    FOOTPRINTS(config -> config.entityEffects.enableFootprints || config.entityEffects.enableTrackedFootprints);
+    FOOTPRINTS(config -> config.entityEffects.enableFootprints || config.entityEffects.enableTrackedFootprints),
+    APPARITIONS(config -> config.worldActorOptions.enableApparitions && config.scaryContent.allowScaryContent);
 
     private final Predicate<Configuration> switchedOn;
 

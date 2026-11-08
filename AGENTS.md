@@ -347,16 +347,22 @@ is known of 26.4.
   Async Particles on a worker. So `tick` touches no shared state unguarded, and no `level.getRandom()` (fine in a
   constructor): an unguarded map in `WaterFoam` crashed with Particle Core (#213).
 - World actors (`effects/actors`, run by `processing/WorldActorHandler`; dust devils, snowspouts (both `GroundVortex`, a
-  `Style` each), waterspouts, firespouts and wisps so far):
+  `Style` each), waterspouts, firespouts, wisps and apparitions so far):
   client-side things that move through the world, no entities. Every player in a world sees the same ones:
   `ActorSpawns` gives each 128-block cell one chance per kind every 1200-tick slot, hashed from the world's
   `BiomeManager.biomeZoomSeed` (class tweaker), and an actor's whole life is worked out from its seed (`VortexPath`, a
-  `Shape` per kind), so one met part way through is where it is for everyone. Biomes give them through `actors` in
-  `biomes.json` (`actor`, `conditions`, `chance`: a number or a script giving one; a later rule replaces, a plain 0
-  removes), dimensions through `worldActors` in `dimensions.json`. A sound that follows one needs a range to match its
-  size: a factory volume over 1 carries it further without making it louder (a waterspout drifting past 22 blocks was
-  silent). Conditions are evaluated at the
+  `Shape` per kind), so one met part way through is where it is for everyone. One dropped as the player leaves it behind
+  forgets that its chance was looked at, so coming back finds it again (not one that is over or broke up). Biomes give
+  them through `actors` in `biomes.json` (`actor`, `conditions`, `chance`: a number or a script giving one; a later
+  rule replaces, a plain 0 removes), dimensions through `worldActors` in `dimensions.json`. A sound that follows one
+  needs a range to match its size: a factory volume over 1 carries it further without making it louder (a waterspout
+  drifting past 22 blocks was silent). Conditions are evaluated at the
   player, so a script on the player's own state would make players disagree. `/dsactor [kind]` summons one ahead.
+  Apparitions are the one kind not made of particles: the game's villager model posed by us and written into a
+  `QuadWriter` through `ApparitionRenderer`'s own `VertexConsumer` (depth pass, then color), drawn from
+  `WorldActorHandler` in the default `IWorldRender` phase; gated by Scary Content, one at a time, met within 48 blocks
+  (dropped past 64, `Type.range`/`keepRange`), so a far one behind trees never holds the one slot. They walk around
+  what is in the way (`ApparitionRoute`, A* over loaded blocks), so the way between haunts is each player's own.
   A new kind is an `ActorKind`, a row in `WorldActorHandler`'s `types` (shape, sound, config switch, where it can
   start, the ground its biome is read at, how one is made) and its class: a whirl extends `VortexActor` (life, break-up,
   sound) and gives what is under its foot and what it shows; its particles follow the funnel with a `FunnelOrbit`.

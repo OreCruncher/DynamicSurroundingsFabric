@@ -27,6 +27,7 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
   * Snowspouts whirl powder snow over snowy plains and frozen lakes on clear days
   * Firespouts whirl tongues of flame up from the Nether's lava lakes, with smoke, sparks and a roar of fire, lighting what is around them
   * Wisps: pale lights drifting low over marshes and swamps at night, going out as you come near and showing again farther off. Turquoise soul-fire wisps haunt soul sand valleys
+  * Apparitions: a pale, see-through figure in a villager's shape, fading away below the waist, that glides between its haunts in dark forests and pale gardens at night, now and then in a swamp, finding its way around trees and walls. It turns its head to watch you, and fades away as you come near, to show again farther off. Under Scary Content, one at a time, and set by the RPG preset rather than Atmosphere
   * On by default: World Actor Options, a switch for each kind, also set by the Atmosphere and Defaults presets; the Vanilla+ preset turns them off. `/dsactor` summons one ahead of you
   * Modpacks can give them to biomes with `actors` in `biomes.json`, and to dimensions with `worldActors` in `dimensions.json`
 * Firefly bushes give the mod's fireflies, which wink with a halo and a light, in place of the game's. Under Fireflies in Firefly Options

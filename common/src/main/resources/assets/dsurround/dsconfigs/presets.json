@@ -57,6 +57,7 @@
       "worldActorOptions.enableSnowspouts": false,
       "worldActorOptions.enableFirespouts": false,
       "worldActorOptions.enableWisps": false,
+      "worldActorOptions.enableApparitions": false,
       "particleTweaks.windBlowsParticles": false,
 
       "blockEffects.steamColumnEnabled": false,
@@ -145,6 +146,7 @@
       "entityEffects.enableBurningEffect": true,
       "entityEffects.enableDeathPuffs": true,
       "targetPortraitOptions.enableTargetPortrait": true,
+      "worldActorOptions.enableApparitions": true,
       "entityEffects.enableFootprints": true,
       "entityEffects.enableTrackedFootprints": true,
       "blockEffects.skullFlamesEnabled": true,
@@ -194,6 +196,7 @@
       "worldActorOptions.enableSnowspouts": true,
       "worldActorOptions.enableFirespouts": true,
       "worldActorOptions.enableWisps": true,
+      "worldActorOptions.enableApparitions": true,
       "particleTweaks.windBlowsParticles": true,
 
       "blockEffects.steamColumnEnabled": true,

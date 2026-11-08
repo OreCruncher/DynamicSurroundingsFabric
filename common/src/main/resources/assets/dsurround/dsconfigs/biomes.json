@@ -606,5 +606,27 @@
         "chance": 0.05
       }
     ]
+  },
+  {
+    "biomeSelector": "SPOOKY && !UNDERGROUND",
+    "_comment": "An apparition wanders dark forests and pale gardens at night (Scary Content)",
+    "actors": [
+      {
+        "actor": "dsurround:apparition",
+        "conditions": "diurnal.isNight()",
+        "chance": 0.1
+      }
+    ]
+  },
+  {
+    "biomeSelector": "SWAMP && !SPOOKY && !UNDERGROUND",
+    "_comment": "Now and then one wanders a swamp at night",
+    "actors": [
+      {
+        "actor": "dsurround:apparition",
+        "conditions": "diurnal.isNight()",
+        "chance": 0.015
+      }
+    ]
   }
 ]
