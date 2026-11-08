@@ -9,10 +9,10 @@ import net.minecraft.client.particle.TerrainParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
-import org.orecruncher.dsurround.effects.actors.DustDevilPath;
+import org.orecruncher.dsurround.effects.actors.VortexPath;
 
 /**
- * A bit of what a dust devil picks up (a fleck of sand, a scrap of dry grass), drawn from the block it came from as
+ * A bit of what a vortex picks up (a fleck of sand, a scrap of dry grass or seagrass), drawn from the block it came from as
  * the game's block particles are: whirled up the inside of the funnel to a height, then thrown out to fall. The world
  * itself is never changed.
  * <p>
@@ -20,7 +20,7 @@ import org.orecruncher.dsurround.effects.actors.DustDevilPath;
  * across: right for a grain of sand, but of a plant's texture, mostly see-through, that is a pixel or two or nothing. A
  * scrap of a plant is bigger, and shows more of the texture, so a twig or a few blades can be made out.
  */
-public class DustDevilDebris extends TerrainParticle {
+public class VortexDebris extends TerrainParticle {
 
     // How far in from the funnel's edge it goes around, as a share of the radius
     private static final float INSIDE = 0.7F;
@@ -28,6 +28,9 @@ public class DustDevilDebris extends TerrainParticle {
     private static final float MIN_RISE = 0.08F;
     private static final float MAX_RISE = 0.18F;
     private static final float MAX_RELEASE = 0.7F;
+    // And the highest it is thrown from, in blocks: a waterspout reaches the clouds, but what it lifts from the sea
+    // falls back long before
+    private static final float MAX_RELEASE_BLOCKS = 14F;
     // How fast it leaves the funnel when thrown out, in blocks a tick, and how long it has to fall, in ticks
     private static final double THROW = 0.25D;
     private static final int FALL_TICKS = 60;
@@ -35,7 +38,7 @@ public class DustDevilDebris extends TerrainParticle {
     private static final float SCRAP_SCALE = 3.5F;
     private static final float SCRAP_TEXTURE = 0.5F;
 
-    private final DustDevilPath path;
+    private final VortexPath path;
     private final int devilAge;
     private final double groundY;
     private final float rise;
@@ -57,11 +60,11 @@ public class DustDevilDebris extends TerrainParticle {
      * @param pos      where that block is, for its tint
      * @param scrap    a scrap of a plant, rather than a fleck of the ground
      */
-    public static Particle create(ClientLevel level, DustDevilPath path, int devilAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
-        return new DustDevilDebris(level, path, devilAge, groundY, state, pos, scrap);
+    public static Particle create(ClientLevel level, VortexPath path, int devilAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
+        return new VortexDebris(level, path, devilAge, groundY, state, pos, scrap);
     }
 
-    protected DustDevilDebris(ClientLevel level, DustDevilPath path, int devilAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
+    protected VortexDebris(ClientLevel level, VortexPath path, int devilAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
         super(level, path.x(devilAge), groundY, path.z(devilAge), 0D, 0D, 0D, state, pos);
         var random = level.getRandom();
         this.path = path;
@@ -69,7 +72,7 @@ public class DustDevilDebris extends TerrainParticle {
         this.groundY = groundY;
         this.angle = random.nextFloat() * Mth.TWO_PI;
         this.rise = Mth.lerp(random.nextFloat(), MIN_RISE, MAX_RISE);
-        this.release = path.height() * MAX_RELEASE * (0.3F + random.nextFloat() * 0.7F);
+        this.release = Math.min(path.height() * MAX_RELEASE, MAX_RELEASE_BLOCKS) * (0.3F + random.nextFloat() * 0.7F);
         this.lifetime = Mth.ceil(this.release / this.rise) + FALL_TICKS;
         this.hasPhysics = false;
         this.gravity = 0F;

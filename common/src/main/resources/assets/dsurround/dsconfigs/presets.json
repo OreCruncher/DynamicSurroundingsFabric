@@ -53,6 +53,7 @@
       "auroraOptions.enableAuroras": false,
       "worldActorOptions.enableWorldActors": false,
       "worldActorOptions.enableDustDevils": false,
+      "worldActorOptions.enableWaterspouts": false,
       "particleTweaks.windBlowsParticles": false,
 
       "blockEffects.steamColumnEnabled": false,
@@ -97,6 +98,7 @@
       "auroraOptions.enableAuroras": true,
       "worldActorOptions.enableWorldActors": true,
       "worldActorOptions.enableDustDevils": true,
+      "worldActorOptions.enableWaterspouts": true,
       "particleTweaks.windBlowsParticles": true,
       "blockEffects.waterRippleStyle": "PIXELATED_CIRCLE"
     }
@@ -182,6 +184,7 @@
       "auroraOptions.enableAuroras": true,
       "worldActorOptions.enableWorldActors": true,
       "worldActorOptions.enableDustDevils": true,
+      "worldActorOptions.enableWaterspouts": true,
       "particleTweaks.windBlowsParticles": true,
 
       "blockEffects.steamColumnEnabled": true,

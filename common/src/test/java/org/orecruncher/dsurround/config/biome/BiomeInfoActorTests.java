@@ -77,6 +77,24 @@ public class BiomeInfoActorTests {
     }
 
     @Test
+    void theChanceCanBeAScript() {
+        // The test's evaluator gives 0 for every script
+        var info = BiomeInfoMusicTests.info(rule("{\"actor\": \"dsurround:waterspout\", \"chance\": \"weather.isRaining() ? 0.03 : 0.005\"}"));
+        var entry = info.getActor(ActorKind.WATERSPOUT);
+        assertNotNull(entry);
+        assertEquals(0F, entry.chance());
+        assertTrue(entry.toString().contains("weather.isRaining()"), entry.toString());
+    }
+
+    @Test
+    void aScriptedChanceDoesntTakeTheActorAway() {
+        var info = BiomeInfoMusicTests.info(
+                rule("{\"actor\": \"dsurround:waterspout\", \"chance\": 0.2}"),
+                rule("{\"actor\": \"dsurround:waterspout\", \"chance\": \"0.1 * 0\"}"));
+        assertNotNull(info.getActor(ActorKind.WATERSPOUT));
+    }
+
+    @Test
     void aBiomeWithNoActorsGivesNone() {
         var info = BiomeInfoMusicTests.info();
         assertTrue(info.getActors().isEmpty());

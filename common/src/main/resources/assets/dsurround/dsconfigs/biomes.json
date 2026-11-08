@@ -553,5 +553,16 @@
         "chance": 0.05
       }
     ]
+  },
+  {
+    "biomeSelector": "(OCEAN || SHALLOW_OCEAN || DEEP_OCEAN) && !(COLD || ICY || SNOWY)",
+    "_comment": "Waterspouts over open sea: rare in fair weather, more often in a storm; none where the sea freezes",
+    "actors": [
+      {
+        "actor": "dsurround:waterspout",
+        "conditions": "!weather.canWaterFreeze()",
+        "chance": "weather.isRaining() ? 0.03 : 0.005"
+      }
+    ]
   }
 ]

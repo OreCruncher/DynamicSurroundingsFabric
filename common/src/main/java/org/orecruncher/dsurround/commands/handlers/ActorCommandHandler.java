@@ -26,7 +26,12 @@ public class ActorCommandHandler {
 
     public static Component summon(ActorKind kind) {
         var handler = ContainerManager.resolve(WorldActorHandler.class);
-        var summoned = GameUtils.getPlayer().map(player -> handler.summon(player, kind)).orElse(false);
-        return Component.translatable(KEY + (summoned ? "summon.success" : "summon.off"), kind.getName());
+        var summoned = GameUtils.getPlayer().map(player -> handler.summon(player, kind)).orElse(WorldActorHandler.Summoned.OFF);
+        var result = switch (summoned) {
+            case STARTED -> "summon.success";
+            case OFF -> "summon.off";
+            case NO_PLACE -> "summon.noplace";
+        };
+        return Component.translatable(KEY + result, kind.getName());
     }
 }

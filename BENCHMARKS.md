@@ -33,6 +33,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-07: rays skip air, random block check](#results-2026-11-07-rays-skip-air-random-block-check)
 - [Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)](#results-2026-11-07-firefly-bushes-firefly-bushesjson)
 - [Results, 2026-11-07: dust devils (`dust-devils.json`)](#results-2026-11-07-dust-devils-dust-devilsjson)
+- [Results, 2026-11-07: waterspouts (`waterspouts.json`)](#results-2026-11-07-waterspouts-waterspoutsjson)
   - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
   - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
@@ -774,6 +775,30 @@ Each dust devil in view costs about 0.02 ms of GPU and 0.03 ms of CPU a frame (i
 soft), and about 0.007 ms of tick. Four, more than are ever likely in view at once naturally, add 0.06 ms of GPU and 0.15
 ms of CPU a frame. Their gusts went through enhanced sound processing for about 0.6 ms a second with four and 1.6 with
 twelve. Nothing here calls for a cut; the game's Particles option thins them (Decreased) or turns them off (Minimal).
+
+## Results, 2026-11-07: waterspouts (`waterspouts.json`)
+
+Waterspouts: a funnel of cloud from the sea to the clouds (about 130 blocks, ten puffs a tick through it), a ring of
+spray and splashes at the foot, and a rush of water every few seconds. Summoned with `/dsactor` from a block of stone at
+sea level in a deep ocean, by day, facing downwind and a little up. All summoned ones start at the same spot, so six
+stand together, overlapping close to the camera: a worst case for overdraw. OpenGL, Fabric, the machine above; commit
+`34f50a15` with the waterspouts uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick | Sounds started a second |
+|---|---|---|---|---|
+| 2 waterspouts | 0.847 (0.825-0.869) | 0.499 | 0.039 | 0.6 |
+| 6 waterspouts | 0.976 (0.962-0.990) | 0.499 | 0.057 | 1.4 |
+| none (`enableWaterspouts` off) | 0.758 (0.751-0.765) | 0.404 | 0.005 | 0 |
+
+A waterspout costs about 0.04 ms of GPU a frame and well under 0.1 ms of CPU (the CPU frame is the same with two and
+six, so the difference is mostly noise around 0.1 ms), and 0.01 ms of tick, about what a dust devil costs: more puffs,
+but most of them far off and small on the screen. Two, as a storm might show, add 0.09 ms of GPU. Their rush of water
+plays long clips, which enhanced sound processing keeps updating: 1.4 ms a second with two, 2.6 with six. Nothing here
+calls for a cut.
+
+The first runs found two things: the clip carried only 22 blocks, so a waterspout drifting off past that was silent
+(its factory's volume is now 2.2, heard out to about 48 blocks), and the bench timed out arriving over deep ocean, as
+the player sinks there (it now allows a few blocks up or down, `ScenarioRunner.ARRIVE_DRIFT`).
 
 ## Rerunning
 

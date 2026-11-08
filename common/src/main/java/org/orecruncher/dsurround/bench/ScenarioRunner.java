@@ -12,6 +12,7 @@ import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.util.Mth;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.tutorial.TutorialSteps;
@@ -81,6 +82,8 @@ public final class ScenarioRunner {
     private static final int OPEN_SECONDS = 600;
     private static final int FIND_SECONDS = 300;
     private static final int ARRIVE_SECONDS = 60;
+    // How far above or below the scene's place the player may be and have arrived, in blocks
+    private static final double ARRIVE_DRIFT = 6D;
     private static final int DRAWN_SECONDS = 90;
     // At least this long after arriving before the terrain is taken as drawn: it starts out with nothing to draw
     private static final int SETTLE_SECONDS = 3;
@@ -382,7 +385,8 @@ public final class ScenarioRunner {
         this.step(tag + ": arrive", () -> {
             var player = Minecraft.getInstance().player;
             var l = arrival.location;
-            if (player == null || player.distanceToSqr(l.x(), l.y(), l.z()) > 4)
+            // Across, within two blocks; up and down, within a few, as a player put over open water sinks into it
+            if (player == null || Mth.lengthSquared(player.getX() - l.x(), player.getZ() - l.z()) > 4 || Math.abs(player.getY() - l.y()) > ARRIVE_DRIFT)
                 return false;
             // The scene's commands need the ground around loaded on the server: a fill, setblock or summon where it
             // isn't fails, and under execute as @a it fails without a word

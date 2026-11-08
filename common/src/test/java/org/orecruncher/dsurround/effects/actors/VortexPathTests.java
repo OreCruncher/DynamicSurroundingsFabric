@@ -11,12 +11,12 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * A dust devil's life, worked out ahead from where it starts, its seed and the wind.
  */
-public class DustDevilPathTests {
+public class VortexPathTests {
 
     @Test
     void itStartsWhereItWasPlanned() {
         for (long seed = 0; seed < 50; seed++) {
-            var path = DustDevilPath.of(100.5D, -40.25D, seed, 0F);
+            var path = VortexPath.of(VortexPath.DUST_DEVIL, 100.5D, -40.25D, seed, 0F);
             assertEquals(100.5D, path.x(0F), 1e-9D);
             assertEquals(-40.25D, path.z(0F), 1e-9D);
         }
@@ -24,8 +24,8 @@ public class DustDevilPathTests {
 
     @Test
     void theSameSeedGivesTheSameDevil() {
-        var a = DustDevilPath.of(0D, 0D, 42L, 1F);
-        var b = DustDevilPath.of(0D, 0D, 42L, 1F);
+        var a = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, 42L, 1F);
+        var b = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, 42L, 1F);
         assertEquals(a.lifetime(), b.lifetime());
         assertEquals(a.height(), b.height());
         for (float age = 0F; age < a.lifetime(); age += 37F) {
@@ -39,7 +39,7 @@ public class DustDevilPathTests {
     void itTravelsDownwind() {
         for (long seed = 0; seed < 50; seed++) {
             var wind = seed * 0.37F;
-            var path = DustDevilPath.of(0D, 0D, seed, wind);
+            var path = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, seed, wind);
             float end = path.lifetime();
             // Weaving, but further along the wind than across it would take back
             var along = path.x(end) * Mth.cos(wind) + path.z(end) * Mth.sin(wind);
@@ -51,7 +51,7 @@ public class DustDevilPathTests {
     void itMovesSmoothly() {
         // A puff follows it a tick at a time: no jumps
         for (long seed = 0; seed < 20; seed++) {
-            var path = DustDevilPath.of(0D, 0D, seed, 0F);
+            var path = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, seed, 0F);
             for (float age = 1F; age < path.lifetime(); age++)
                 assertTrue(Math.hypot(path.x(age) - path.x(age - 1), path.z(age) - path.z(age - 1)) < 0.3D);
         }
@@ -60,9 +60,9 @@ public class DustDevilPathTests {
     @Test
     void itGrowsAndDiesAway() {
         for (long seed = 0; seed < 50; seed++) {
-            var path = DustDevilPath.of(0D, 0D, seed, 0F);
+            var path = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, seed, 0F);
             int life = path.lifetime();
-            assertTrue(life >= DustDevilPath.MIN_LIFETIME && life <= DustDevilPath.MAX_LIFETIME);
+            assertTrue(life >= VortexPath.DUST_DEVIL.minLifetime() && life <= VortexPath.DUST_DEVIL.maxLifetime());
             assertEquals(0F, path.strength(0F));
             assertEquals(0F, path.strength(life));
             assertEquals(0F, path.strength(life + 10F));
@@ -78,9 +78,9 @@ public class DustDevilPathTests {
     @Test
     void itsFunnelOpensOutGoingUp() {
         for (long seed = 0; seed < 20; seed++) {
-            var path = DustDevilPath.of(0D, 0D, seed, 0F);
-            assertTrue(path.height() >= DustDevilPath.MIN_HEIGHT && path.height() <= DustDevilPath.MAX_HEIGHT);
-            assertEquals(DustDevilPath.BASE_RADIUS, path.radius(0F), 1e-6F);
+            var path = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, seed, 0F);
+            assertTrue(path.height() >= VortexPath.DUST_DEVIL.minHeight() && path.height() <= VortexPath.DUST_DEVIL.maxHeight());
+            assertEquals(VortexPath.DUST_DEVIL.baseRadius(), path.radius(0F), 1e-6F);
             for (float h = 0.5F; h <= path.height(); h += 0.5F)
                 assertTrue(path.radius(h) > path.radius(h - 0.5F));
             // No wider above its top
@@ -91,7 +91,7 @@ public class DustDevilPathTests {
     @Test
     void itsFunnelBendsAfterItsFoot() {
         for (long seed = 0; seed < 20; seed++) {
-            var path = DustDevilPath.of(0D, 0D, seed, 0F);
+            var path = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, seed, 0F);
             float age = path.lifetime() / 2F;
             // At the ground the axis is the foot
             assertEquals(path.x(age), path.axisX(0F, age), 1e-9D);
@@ -108,7 +108,7 @@ public class DustDevilPathTests {
 
     @Test
     void itTurnsQuickestLowDownAndOneWayOnly() {
-        var path = DustDevilPath.of(0D, 0D, 7L, 0F);
+        var path = VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, 7L, 0F);
         var low = path.spin(path.radius(0F));
         var high = path.spin(path.radius(path.height()));
         assertTrue(Math.abs(low) > Math.abs(high));
@@ -119,7 +119,7 @@ public class DustDevilPathTests {
     void someTurnEachWay() {
         int clockwise = 0;
         for (long seed = 0; seed < 100; seed++)
-            if (DustDevilPath.of(0D, 0D, seed, 0F).spin(1F) > 0F)
+            if (VortexPath.of(VortexPath.DUST_DEVIL, 0D, 0D, seed, 0F).spin(1F) > 0F)
                 clockwise++;
         assertTrue(clockwise > 25 && clockwise < 75, "clockwise " + clockwise);
     }
@@ -142,6 +142,25 @@ public class DustDevilPathTests {
         for (int i = 0; i < 40; i++)
             twoSeconds = DustDevil.blend(twoSeconds, redSand, DustDevil.COLOR_BLEND);
         assertTrue(Math.abs(((twoSeconds >> 8) & 0xFF) - 0x7F) < 0.25F * (0xE9 - 0x7F));
+    }
+
+    @Test
+    void aWaterspoutIsAsTallAsItIsGiven() {
+        var path = VortexPath.of(VortexPath.WATERSPOUT, 0D, 0D, 3L, 0F, 129F);
+        assertEquals(129F, path.height());
+        // Thin all the way up, opening out only near the clouds
+        assertTrue(path.radius(path.height() / 2F) < 2F * VortexPath.WATERSPOUT.baseRadius(), "radius " + path.radius(path.height() / 2F));
+        assertTrue(path.radius(path.height()) > path.radius(path.height() / 2F));
+        // Its top far off to one side of its foot, leaning after it
+        float age = path.lifetime() / 2F;
+        assertTrue(Math.hypot(path.axisX(path.height(), age) - path.x(age), path.axisZ(path.height(), age) - path.z(age)) > 3D);
+    }
+
+    @Test
+    void aWaterspoutReachesTheClouds() {
+        assertEquals(129F, Waterspout.height(63D, 192));
+        assertEquals(Waterspout.MIN_HEIGHT, Waterspout.height(180D, 192));
+        assertEquals(Waterspout.MAX_HEIGHT, Waterspout.height(-40D, 300));
     }
 
     @Test

@@ -15,7 +15,8 @@ import java.util.Locale;
  * devils. A biome's {@code actors} list in {@code biomes.json} names them by id ({@code dsurround:dust_devil}).
  */
 public enum ActorKind {
-    DUST_DEVIL("dust_devil");
+    DUST_DEVIL("dust_devil"),
+    WATERSPOUT("waterspout");
 
     private final Identifier id;
 

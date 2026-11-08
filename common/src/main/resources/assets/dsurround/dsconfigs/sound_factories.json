@@ -210,6 +210,15 @@
     "soundEvent": "minecraft:block.fire.ambient"
   },
   {
+    "location": "dsurround:actor/waterspout",
+    "soundEvent": "dsurround:waterfall.0",
+    "volume": 2.2,
+    "pitch": {
+      "min": 0.6,
+      "max": 0.8
+    }
+  },
+  {
     "location": "dsurround:actor/dust_devil",
     "soundEvent": "minecraft:block.sand.idle",
     "volume": 1.5,

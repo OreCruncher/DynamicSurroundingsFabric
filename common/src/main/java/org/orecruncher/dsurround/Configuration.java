@@ -701,6 +701,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable dust devils: whirls of dust crossing deserts, badlands and savannas on clear days")
         public boolean enableDustDevils = true;
+
+        @Property
+        @Comment("Enable/disable waterspouts: funnels of cloud over open sea, rare in fair weather and more often in storms")
+        public boolean enableWaterspouts = true;
     }
 
     public static class MusicManagerOptions {

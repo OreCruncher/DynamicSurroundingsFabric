@@ -173,7 +173,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
                 continue;
             }
             this.actors.removeIf(actor -> actor.kind() == kind);
-            if (config.chance() > 0F)
+            if (!config.removes())
                 this.actors.add(new ActorEntry(kind, config, this.services.conditionEvaluator()));
         }
     }

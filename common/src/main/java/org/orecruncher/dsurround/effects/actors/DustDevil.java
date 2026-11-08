@@ -11,7 +11,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
-import org.orecruncher.dsurround.effects.particles.DustDevilDebris;
+import org.orecruncher.dsurround.effects.particles.VortexDebris;
 import org.orecruncher.dsurround.effects.particles.DustDevilPuff;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
@@ -19,9 +19,9 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 /**
- * A dust devil: a whirl of dust going its way across dry ground (see {@link DustDevilPath}), drawn as puffs of dust
+ * A dust devil: a whirl of dust going its way across dry ground (see {@link VortexPath}), drawn as puffs of dust
  * rising and turning up its funnel ({@link DustDevilPuff}), a skirt of dust around its foot, and bits of sand and dry
- * plants it picks up ({@link DustDevilDebris}), with the game's own wind over sand ({@code block.sand.idle}) following
+ * plants it picks up ({@link VortexDebris}), with the game's own wind over sand ({@code block.sand.idle}) following
  * it. It starts on dusty ground; crossing water, or running into a building, a cliff or a tree, breaks it up. Its dust
  * is the ground's: crossing onto other dusty ground (red sand, coarse dirt, terracotta), it takes on that color over a
  * second or two, while over ground that gives no dust it keeps what it carries.
@@ -44,7 +44,7 @@ public final class DustDevil implements IActor {
     // How much of the way to the ground's color its dust goes in a tick
     static final float COLOR_BLEND = 0.04F;
 
-    private final DustDevilPath path;
+    private final VortexPath path;
     private final ITagLibrary tags;
     // The dust's color now, as RGB; taken straight from the ground the first time it is over dusty ground
     private int color;
@@ -66,7 +66,7 @@ public final class DustDevil implements IActor {
      * @param color the dust's color to start with, as RGB
      * @param sound its wind, if the factory is there
      */
-    public DustDevil(DustDevilPath path, int age, int color, ITagLibrary tags, @Nullable ISoundFactory sound, IAudioPlayer audioPlayer) {
+    public DustDevil(VortexPath path, int age, int color, ITagLibrary tags, @Nullable ISoundFactory sound, IAudioPlayer audioPlayer) {
         this.path = path;
         this.age = age;
         this.color = color;
@@ -165,7 +165,7 @@ public final class DustDevil implements IActor {
             if (!this.tags.is(BlockEffectTags.DUST_SOURCES, plant))
                 return;
         }
-        GameUtils.getParticleManager().add(DustDevilDebris.create(level, this.path, this.age, y, plant, this.probe.immutable(), scrap));
+        GameUtils.getParticleManager().add(VortexDebris.create(level, this.path, this.age, y, plant, this.probe.immutable(), scrap));
     }
 
     /**

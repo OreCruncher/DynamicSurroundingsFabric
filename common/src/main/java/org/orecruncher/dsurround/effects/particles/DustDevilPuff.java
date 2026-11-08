@@ -6,7 +6,7 @@ package org.orecruncher.dsurround.effects.particles;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.util.Mth;
-import org.orecruncher.dsurround.effects.actors.DustDevilPath;
+import org.orecruncher.dsurround.effects.actors.VortexPath;
 
 /**
  * A puff of dust in a dust devil: a {@link SoftPuffParticle} with the dust storms' sprites, whirled around the devil's
@@ -31,7 +31,7 @@ public class DustDevilPuff extends SoftPuffParticle {
     private static final float SKIRT_RISE = 0.03F;
     private static final float SKIRT_SPREAD = 0.05F;
 
-    private final DustDevilPath path;
+    private final VortexPath path;
     // The devil's age when the puff was made, and the ground under it then
     private final int devilAge;
     private final double groundY;
@@ -50,11 +50,11 @@ public class DustDevilPuff extends SoftPuffParticle {
      * @param strength how strong the devil is, 0 to 1: a weak one is thinner
      * @param skirt    a puff of the skirt around the foot, rather than the funnel
      */
-    public static Particle create(ClientLevel level, DustDevilPath path, int devilAge, double groundY, int color, float strength, boolean skirt) {
+    public static Particle create(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float strength, boolean skirt) {
         return new DustDevilPuff(level, path, devilAge, groundY, color, strength, skirt);
     }
 
-    protected DustDevilPuff(ClientLevel level, DustDevilPath path, int devilAge, double groundY, int color, float strength, boolean skirt) {
+    protected DustDevilPuff(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float strength, boolean skirt) {
         super(level, path.x(devilAge), groundY, path.z(devilAge), DSurroundParticleSprites.DUST.get(level.getRandom()), FADE_IN, FADE_OUT, skirt ? SKIRT_GROWTH : GROWTH);
         var random = level.getRandom();
         this.path = path;

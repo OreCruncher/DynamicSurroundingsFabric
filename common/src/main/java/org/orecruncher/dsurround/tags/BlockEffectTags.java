@@ -34,6 +34,8 @@ public class BlockEffectTags {
     public static final TagKey<Block> DUST_SOURCES = of("dust_sources");
     // Dry plants a dust devil lifts and whirls about with it
     public static final TagKey<Block> DUST_DEVIL_DEBRIS = of("dust_devil_debris");
+    // Sea plants a waterspout tears up from shallow water
+    public static final TagKey<Block> WATERSPOUT_DEBRIS = of("waterspout_debris");
     public static final TagKey<Block> WINDOWS = of("windows");
     public static final TagKey<Block> FROSTED_WINDOWS = of("frosted_windows");
     // Blocks feet leave prints in, besides those that sound like sand, gravel, snow or mud underfoot
