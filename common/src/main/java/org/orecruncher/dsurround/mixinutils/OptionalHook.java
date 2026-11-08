@@ -37,6 +37,8 @@ public enum OptionalHook {
             site("core.MixinSkyRenderer", "dsurround$tintSunsetColor")),
     FOG_TINT("Dust storm fog color",
             site("core.MixinFogRenderer", "dsurround$tintFogColor")),
+    EXTENDED_VIEW_FOG("Fog with mods that draw terrain past the render distance",
+            site("core.MixinFogRenderer", "dsurround$finishFog")),
     PRECIPITATION("Particle rain and snow",
             site("core.MixinWeatherEffectRenderer", "dsurround$renderPrecipitation"),
             site("core.MixinLevelRenderer", "dsurround$enterMainPass"),

@@ -31,6 +31,13 @@ public final class FogCompat {
     }
 
     /**
+     * A copy of {@code data}, to work on while the frame's own is left alone
+     */
+    public static FogData copy(FogData data) {
+        return withRange(data, data.environmentalStart, data.environmentalEnd);
+    }
+
+    /**
      * Sets the environmental range and the sky and cloud fog ends of {@code target}, the game's fog for this frame,
      * from {@code source}. The render distance fog is set by the game after the fog environments run, so it is left
      * alone.

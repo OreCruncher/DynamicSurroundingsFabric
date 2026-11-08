@@ -39,6 +39,7 @@ public class MixinHelpers {
     // Mixin bodies run every frame, tick or particle inside the game's own code: a failure is logged a few times and
     // the game's own behavior used in its place, rather than thrown into the game
     public static final Guard FOG_TINT_GUARD = Guard.named("Fog color tint");
+    public static final Guard FOG_FINISH_GUARD = Guard.named("Fog past the render distance");
     public static final Guard SKY_TINT_GUARD = Guard.named("Sky color tint");
     public static final Guard SUNSET_TINT_GUARD = Guard.named("Sunrise and sunset color tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");

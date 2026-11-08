@@ -401,6 +401,12 @@ is known of 26.4.
     the client thread and gone by then, so vanilla's splashes came through on grass, with vanilla's rain sounds and
     level, and `OptionalHook` saw nothing wrong. That setting takes effect at once, no world restart, so it's a quick
     way to compare. To see the order, run with `-Dmixin.debug.export=true` and read `.mixin.out` in the run folder.
+  - Fog with a mod that draws terrain past the render distance (one tried multiplies the environmental fog's range
+    only while it ends past 0.9 of the render distance): `FogHandler` holds our fog back and puts it in at the return
+    of `FogRenderer.setupFog` (`MixinFogRenderer`, priority 1100 to run after such a mod's handler there; on NeoForge
+    one may use `ViewportEvent.RenderFog`, fired before it), stretched by `processing/fog/ExtendedViewFog`. It keys off
+    `renderDistanceEnd` past the render distance, not the mod. Before this a dust storm snapped the view from 2 km to
+    230 blocks at 25% (seen in game, 2026-11-08).
   - `WindService` ticks `Wind` and publishes it via static `SceneWind` for particles to drift; `WindSounds` scales
     sound factories marked `followsWind`. `DustStorms` decides where storms raise dust.
   - `Shelter.exposure` is how open to the weather a place is (sky light, and a roof from the `MOTION_BLOCKING`
