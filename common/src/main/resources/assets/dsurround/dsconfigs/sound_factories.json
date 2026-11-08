@@ -219,6 +219,15 @@
     }
   },
   {
+    "location": "dsurround:actor/firespout",
+    "soundEvent": "minecraft:block.fire.ambient",
+    "volume": 2.0,
+    "pitch": {
+      "min": 0.5,
+      "max": 0.7
+    }
+  },
+  {
     "location": "dsurround:actor/snowspout",
     "soundEvent": "minecraft:block.sand.idle",
     "volume": 1.5,

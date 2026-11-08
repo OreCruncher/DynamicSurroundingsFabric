@@ -709,6 +709,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable snowspouts: whirls of powder snow crossing snowy plains and frozen lakes on clear days")
         public boolean enableSnowspouts = true;
+
+        @Property
+        @Comment("Enable/disable firespouts: whirls of fire over the Nether's lava lakes, lighting what is around them")
+        public boolean enableFirespouts = true;
     }
 
     public static class MusicManagerOptions {

@@ -7,7 +7,8 @@
     "seaLevel": 0,
     "alwaysOutside": true,
     "simulateWind": false,
-    "groundFog": false
+    "groundFog": false,
+    "worldActors": true
   },
   {
     "dimId": "minecraft:the_end",

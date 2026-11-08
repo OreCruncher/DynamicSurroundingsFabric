@@ -817,6 +817,26 @@ above; commit `91057c06` with the snowspouts uncommitted. Two repeats each, A B 
 A snowspout costs what a dust devil does: about 0.015 ms of GPU and 0.025 ms of CPU a frame, and 0.009 ms of tick.
 The snowflakes add little. Nothing here calls for a cut.
 
+## Results, 2026-11-08: firespouts (`firespouts.json`)
+
+Firespouts: big flame tongues whirled up a funnel 10 to 22 blocks tall, about 7 of them lighting what is around, with
+smoke, sparks and lava drops. Summoned with `/dsactor` from the middle of a walled lava lake built at height 90, at
+night, facing downwind and a little up: the two over a desert, the six over plains, as one can live 90 seconds and six
+left over spoiled the next run's two in a first try. The six aren't set against an off run of their own, and two of
+them started close to the camera, so their range is wide. OpenGL, Fabric, the machine above; commit `aa52627e` with the
+firespouts uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | Point Lights GPU ms | World Actors ms a tick |
+|---|---|---|---|---|
+| 2 firespouts | 0.546 (0.523-0.570) | 0.490 | 0.065 | 0.030 |
+| 6 firespouts | 0.903 (0.805-1.002) | 0.603 | 0.232 | 0.063 |
+| none (`enableFirespouts` off) | 0.474 (0.468-0.479) | 0.411 | 0.054 | 0.006 |
+
+A firespout costs about 0.04 ms of GPU and 0.04 ms of CPU a frame, and 0.01 ms of tick, at a fair distance: twice a
+dust devil, for flames many times a dust puff's size. Close to the camera its flames and lights fill more of the screen:
+with six, two of them near, about 0.07 ms of GPU each, a third or more of it its light. The lake's popping lava starts about 15 sounds a second in every run; the firespouts' roar adds little.
+Nothing here calls for a cut.
+
 ## Rerunning
 
 - Run every scenario from a clean tree, the machine otherwise idle, and note the commit. On 26.3 `sound.json` once

@@ -177,6 +177,19 @@ public class VortexPathTests {
     }
 
     @Test
+    void aFirespoutIsTallerAndSlowerThanADustDevil() {
+        var fire = VortexPath.FIRESPOUT;
+        var dust = VortexPath.DUST_DEVIL;
+        assertTrue(fire.maxHeight() > dust.maxHeight());
+        assertTrue(fire.maxSpeed() < dust.maxSpeed());
+        for (long seed = 0; seed < 20; seed++) {
+            var path = VortexPath.of(fire, 0D, 0D, seed, 0F);
+            assertTrue(path.lifetime() >= fire.minLifetime() && path.lifetime() <= fire.maxLifetime());
+            assertTrue(path.height() >= fire.minHeight() && path.height() <= fire.maxHeight());
+        }
+    }
+
+    @Test
     void aFractionalCountRoundsByTheRoll() {
         assertEquals(2, GroundVortex.count(2.3F, 0.5F));
         assertEquals(3, GroundVortex.count(2.3F, 0.2F));

@@ -17,7 +17,8 @@ import java.util.Locale;
 public enum ActorKind {
     DUST_DEVIL("dust_devil"),
     WATERSPOUT("waterspout"),
-    SNOWSPOUT("snowspout");
+    SNOWSPOUT("snowspout"),
+    FIRESPOUT("firespout");
 
     private final Identifier id;
 

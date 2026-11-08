@@ -575,5 +575,15 @@
         "chance": 0.03
       }
     ]
+  },
+  {
+    "biomeSelector": "NETHER",
+    "_comment": "Firespouts over the Nether's lava lakes: they start only on open lava",
+    "actors": [
+      {
+        "actor": "dsurround:firespout",
+        "chance": 0.03
+      }
+    ]
   }
 ]

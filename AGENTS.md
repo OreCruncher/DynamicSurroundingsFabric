@@ -347,7 +347,7 @@ is known of 26.4.
   Async Particles on a worker. So `tick` touches no shared state unguarded, and no `level.getRandom()` (fine in a
   constructor): an unguarded map in `WaterFoam` crashed with Particle Core (#213).
 - World actors (`effects/actors`, run by `processing/WorldActorHandler`; dust devils, snowspouts (both `GroundVortex`, a
-  `Style` each) and waterspouts so far):
+  `Style` each), waterspouts and firespouts so far):
   client-side things that move through the world, no entities. Every player in a world sees the same ones:
   `ActorSpawns` gives each 128-block cell one chance per kind every 1200-tick slot, hashed from the world's
   `BiomeManager.biomeZoomSeed` (class tweaker), and an actor's whole life is worked out from its seed (`VortexPath`, a

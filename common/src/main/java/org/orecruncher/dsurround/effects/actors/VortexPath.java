@@ -47,6 +47,9 @@ public final class VortexPath {
     // A dust devil's size, a little shorter, and quicker, as snow is lifted by a sharper wind
     public static final Shape SNOWSPOUT = new Shape(600, 1400, 160, 0.04D, 0.10D, 0.5F, 2D, 6D, 7F, 15F, 0.6F,
             0.22F, 1.6F, 0.5F, 60F, 1.4F, 1.4F);
+    // A column of fire over lava: taller than a dust devil, slower, spinning hard, and long lived
+    public static final Shape FIRESPOUT = new Shape(800, 1800, 200, 0.02D, 0.05D, 3.14F, 2D, 6D, 10F, 22F, 0.8F,
+            0.15F, 1.5F, 0.6F, 60F, 1.4F, 1.5F);
     // Tall and thin, reaching up to the clouds, its top far behind its foot and swaying wide; slower, and longer lived
     public static final Shape WATERSPOUT = new Shape(900, 2400, 300, 0.02D, 0.06D, 0.4F, 3D, 10D, 60F, 130F, 2F,
             0.06F, 2.5F, 0.6F, 400F, 1.2F, 6F);

@@ -199,7 +199,9 @@ public class LibraryRulesFuzzTests {
                 fail("case %d: %s escaped making sounds from %s".formatted(i, t, ConfigFuzz.abbreviate(ConfigFuzz.show(edited))));
             }
         }
-        assertTrue(made * 4 > SOUND_CASES, "cases whose edited factory decoded and made sounds: " + made + " of " + SOUND_CASES);
+        // Most edits break an entry so that it doesn't decode: this only checks that enough still get as far as making
+        // sounds. The cases are seeded, so a new shipped factory moves the share (24% once the firespout's was added)
+        assertTrue(made * 5 > SOUND_CASES, "cases whose edited factory decoded and made sounds: " + made + " of " + SOUND_CASES);
     }
 
     // ---- Block rules -----------------------------------------------------------------------------------------

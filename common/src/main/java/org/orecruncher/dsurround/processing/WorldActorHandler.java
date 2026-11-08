@@ -20,6 +20,7 @@ import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.actors.ActorSpawns;
+import org.orecruncher.dsurround.effects.actors.Firespout;
 import org.orecruncher.dsurround.effects.actors.GroundVortex;
 import org.orecruncher.dsurround.effects.actors.VortexPath;
 import org.orecruncher.dsurround.effects.actors.Waterspout;
@@ -53,11 +54,13 @@ public class WorldActorHandler extends AbstractClientHandler {
     private static final int CHECK_TICKS = 20;
     // The longest any actor lives, in slots, so chances from slots before it can still be running
     private static final int LIFETIME_SLOTS = Math.ceilDiv(
-            Math.max(Math.max(VortexPath.DUST_DEVIL.maxLifetime(), VortexPath.SNOWSPOUT.maxLifetime()), VortexPath.WATERSPOUT.maxLifetime()),
+            Math.max(Math.max(VortexPath.DUST_DEVIL.maxLifetime(), VortexPath.SNOWSPOUT.maxLifetime()),
+                    Math.max(VortexPath.WATERSPOUT.maxLifetime(), VortexPath.FIRESPOUT.maxLifetime())),
             ActorSpawns.SLOT_TICKS);
     // A dust devil's wind, and a waterspout's rush of water
     private static final Identifier DUST_DEVIL_SOUND = Constants.asId("actor/dust_devil");
     private static final Identifier SNOWSPOUT_SOUND = Constants.asId("actor/snowspout");
+    private static final Identifier FIRESPOUT_SOUND = Constants.asId("actor/firespout");
     private static final Identifier WATERSPOUT_SOUND = Constants.asId("actor/waterspout");
 
     /**
@@ -166,6 +169,7 @@ public class WorldActorHandler extends AbstractClientHandler {
                 var style = groundStyle(kind);
                 yield GroundVortex.canStart(style, level, this.tags, x, z) ? this.groundVortex(kind, path, age, biome) : null;
             }
+            case FIRESPOUT -> Firespout.canStart(level, x, z) ? new Firespout(path, age, this.sound(FIRESPOUT_SOUND), this.audioPlayer) : null;
             case WATERSPOUT -> {
                 if (!Waterspout.canStart(level, this.tags, x, z))
                     yield null;
@@ -181,6 +185,7 @@ public class WorldActorHandler extends AbstractClientHandler {
         return switch (kind) {
             case DUST_DEVIL -> VortexPath.DUST_DEVIL;
             case SNOWSPOUT -> VortexPath.SNOWSPOUT;
+            case FIRESPOUT -> VortexPath.FIRESPOUT;
             case WATERSPOUT -> VortexPath.WATERSPOUT;
         };
     }
@@ -216,8 +221,8 @@ public class WorldActorHandler extends AbstractClientHandler {
             this.level = clientLevel;
         }
         var biome = clientLevel.getBiome(BlockPos.containing(x, player.getY(), z)).value();
-        // A dust devil or a snowspout anywhere, for testing; a waterspout needs its water
-        IActor actor = kind == ActorKind.WATERSPOUT
+        // A dust devil or a snowspout anywhere, for testing; a waterspout needs its water, a firespout its lava
+        IActor actor = kind == ActorKind.WATERSPOUT || kind == ActorKind.FIRESPOUT
                 ? this.start(clientLevel, kind, x, z, RANDOM.nextLong(), clientLevel.getGameTime(), 0, biome)
                 : this.groundVortex(kind, VortexPath.of(shape(kind), x, z, RANDOM.nextLong(), UpperWind.heading(UpperWind.dayOf(clientLevel.getGameTime()))), 0, biome);
         if (actor == null)
@@ -242,6 +247,7 @@ public class WorldActorHandler extends AbstractClientHandler {
             case DUST_DEVIL -> this.config.worldActorOptions.enableDustDevils;
             case WATERSPOUT -> this.config.worldActorOptions.enableWaterspouts;
             case SNOWSPOUT -> this.config.worldActorOptions.enableSnowspouts;
+            case FIRESPOUT -> this.config.worldActorOptions.enableFirespouts;
         };
     }
 
@@ -274,7 +280,7 @@ public class WorldActorHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         if (!this.actors.isEmpty())
-            event.add(CollectDiagnosticsEvent.Section.Systems, "World actors: %d (dust devils %d, waterspouts %d, snowspouts %d)".formatted(this.actors.size(),
-                    this.count(ActorKind.DUST_DEVIL), this.count(ActorKind.WATERSPOUT), this.count(ActorKind.SNOWSPOUT)));
+            event.add(CollectDiagnosticsEvent.Section.Systems, "World actors: %d (dust devils %d, waterspouts %d, snowspouts %d, firespouts %d)".formatted(this.actors.size(),
+                    this.count(ActorKind.DUST_DEVIL), this.count(ActorKind.WATERSPOUT), this.count(ActorKind.SNOWSPOUT), this.count(ActorKind.FIRESPOUT)));
     }
 }
