@@ -539,7 +539,7 @@
       {
         "actor": "dsurround:dust_devil",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "chance": 0.03
+        "chance": 0.06
       }
     ]
   },
@@ -550,7 +550,7 @@
       {
         "actor": "dsurround:dust_devil",
         "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "chance": 0.05
+        "chance": 0.1
       }
     ]
   },
@@ -561,7 +561,7 @@
       {
         "actor": "dsurround:waterspout",
         "conditions": "!weather.canWaterFreeze()",
-        "chance": "weather.isRaining() ? 0.03 : 0.005"
+        "chance": "weather.isRaining() ? 0.06 : 0.01"
       }
     ]
   },
@@ -582,7 +582,7 @@
     "actors": [
       {
         "actor": "dsurround:firespout",
-        "chance": 0.03
+        "chance": 0.08
       }
     ]
   }
