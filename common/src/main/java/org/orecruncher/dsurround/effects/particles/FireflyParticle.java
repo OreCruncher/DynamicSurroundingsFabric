@@ -26,7 +26,7 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     // Fireflies, with their halos: vanilla's translucent particles with depth writes off, so halos don't hide each
     // other. The lights they cast are drawn just before them (see PointLights).
     private static final RenderPipeline PIPELINE = SoftParticles.particlePipeline("pipeline/firefly", null).build();
-    private static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, PIPELINE, RenderPipelines.OIT_PARTICLE);
+    static final SingleQuadParticle.Layer LAYER = new SingleQuadParticle.Layer(true, TextureAtlas.LOCATION_PARTICLES, PIPELINE, RenderPipelines.OIT_PARTICLE);
 
     static {
         // Drawn with a shader pack too, with the pack's program for translucent particles

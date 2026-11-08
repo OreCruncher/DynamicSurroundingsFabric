@@ -56,6 +56,7 @@
       "worldActorOptions.enableWaterspouts": false,
       "worldActorOptions.enableSnowspouts": false,
       "worldActorOptions.enableFirespouts": false,
+      "worldActorOptions.enableWisps": false,
       "particleTweaks.windBlowsParticles": false,
 
       "blockEffects.steamColumnEnabled": false,
@@ -103,6 +104,7 @@
       "worldActorOptions.enableWaterspouts": true,
       "worldActorOptions.enableSnowspouts": true,
       "worldActorOptions.enableFirespouts": true,
+      "worldActorOptions.enableWisps": true,
       "particleTweaks.windBlowsParticles": true,
       "blockEffects.waterRippleStyle": "PIXELATED_CIRCLE"
     }
@@ -191,6 +193,7 @@
       "worldActorOptions.enableWaterspouts": true,
       "worldActorOptions.enableSnowspouts": true,
       "worldActorOptions.enableFirespouts": true,
+      "worldActorOptions.enableWisps": true,
       "particleTweaks.windBlowsParticles": true,
 
       "blockEffects.steamColumnEnabled": true,

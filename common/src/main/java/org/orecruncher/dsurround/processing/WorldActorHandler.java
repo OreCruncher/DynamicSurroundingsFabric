@@ -19,12 +19,15 @@ import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.actors.ActorPath;
 import org.orecruncher.dsurround.effects.actors.ActorSpawns;
 import org.orecruncher.dsurround.effects.actors.Firespout;
 import org.orecruncher.dsurround.effects.actors.GroundVortex;
 import org.orecruncher.dsurround.effects.actors.IActor;
 import org.orecruncher.dsurround.effects.actors.VortexPath;
 import org.orecruncher.dsurround.effects.actors.Waterspout;
+import org.orecruncher.dsurround.effects.actors.Wisp;
+import org.orecruncher.dsurround.effects.actors.WispPath;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -51,7 +54,7 @@ import java.util.stream.Collectors;
  * The conditions are evaluated where the player is, as the biome's sounds are: weather and time of day are the same
  * for everyone, but a script on the player's own state would make players disagree.
  * <p>
- * What each kind is (its shape, sound, config switch, where its ground is and how one is made) is a row of
+ * What each kind is (its path, sound, config switch, where its ground is and how one is made) is a row of
  * {@link #types}: a new kind is a row there and its class.
  */
 public class WorldActorHandler extends AbstractClientHandler {
@@ -92,24 +95,34 @@ public class WorldActorHandler extends AbstractClientHandler {
     }
 
     /**
+     * One's whole life, from where it starts, its seed and the day's wind
+     */
+    @FunctionalInterface
+    private interface PathMaker<P extends ActorPath> {
+        P make(double x, double z, long seed, float windHeading);
+    }
+
+    /**
      * Makes one, where it can start; null if it can't after all
      */
     @FunctionalInterface
-    private interface Maker {
-        @Nullable IActor make(ClientLevel level, VortexPath path, int age, Biome biome, @Nullable ISoundFactory sound);
+    private interface Maker<P extends ActorPath> {
+        @Nullable IActor make(ClientLevel level, P path, int age, Biome biome, @Nullable ISoundFactory sound);
     }
 
     /**
      * What a kind of actor is
      *
-     * @param shape           its size, speed and life
-     * @param sound           the sound factory that follows it
+     * @param maxLifetime     the longest one lives, in ticks
+     * @param path            how its life is worked out
+     * @param sound           the sound factory that follows it, if any
      * @param enabled         its switch in the config
      * @param summonsAnywhere whether {@code /dsactor} starts one wherever the player looks, for testing, rather than
      *                        only where one could start
      */
-    private record Type(VortexPath.Shape shape, Identifier sound, Predicate<Configuration.WorldActorOptions> enabled,
-                        boolean summonsAnywhere, Placement placement, Ground ground, Maker maker) {
+    private record Type<P extends ActorPath>(int maxLifetime, PathMaker<P> path, @Nullable Identifier sound,
+                                             Predicate<Configuration.WorldActorOptions> enabled, boolean summonsAnywhere,
+                                             Placement placement, Ground ground, Maker<P> maker) {
     }
 
     private final IBiomeLibrary biomeLibrary;
@@ -117,7 +130,7 @@ public class WorldActorHandler extends AbstractClientHandler {
     private final IDimensionOracle dimension;
     private final ISoundLibrary soundLibrary;
     private final IAudioPlayer audioPlayer;
-    private final Map<ActorKind, Type> types = new EnumMap<>(ActorKind.class);
+    private final Map<ActorKind, Type<?>> types = new EnumMap<>(ActorKind.class);
     // The longest any actor lives, in slots, so chances from slots before it can still be running
     private final int lifetimeSlots;
     private final ObjectArray<IActor> actors = new ObjectArray<>();
@@ -135,31 +148,39 @@ public class WorldActorHandler extends AbstractClientHandler {
         this.audioPlayer = audioPlayer;
 
         // A dust devil's dust is the biome's
-        this.types.put(ActorKind.DUST_DEVIL, new Type(VortexPath.DUST_DEVIL, Constants.asId("actor/dust_devil"), o -> o.enableDustDevils, true,
+        this.types.put(ActorKind.DUST_DEVIL, new Type<>(VortexPath.DUST_DEVIL.maxLifetime(), vortex(VortexPath.DUST_DEVIL), Constants.asId("actor/dust_devil"), o -> o.enableDustDevils, true,
                 (level, x, z) -> GroundVortex.canStart(GroundVortex.DUST_DEVIL, level, tags, x, z), WorldActorHandler::heightmap,
                 (level, path, age, biome, sound) -> new GroundVortex(GroundVortex.DUST_DEVIL, path, age, DustStorms.dustColor(biome, biomeLibrary), tags, sound, audioPlayer)));
-        this.types.put(ActorKind.SNOWSPOUT, new Type(VortexPath.SNOWSPOUT, Constants.asId("actor/snowspout"), o -> o.enableSnowspouts, true,
+        this.types.put(ActorKind.SNOWSPOUT, new Type<>(VortexPath.SNOWSPOUT.maxLifetime(), vortex(VortexPath.SNOWSPOUT), Constants.asId("actor/snowspout"), o -> o.enableSnowspouts, true,
                 (level, x, z) -> GroundVortex.canStart(GroundVortex.SNOWSPOUT, level, tags, x, z), WorldActorHandler::heightmap,
                 (level, path, age, biome, sound) -> new GroundVortex(GroundVortex.SNOWSPOUT, path, age, GroundVortex.SNOW_COLOR, tags, sound, audioPlayer)));
         // As tall as from the water to the clouds
-        this.types.put(ActorKind.WATERSPOUT, new Type(VortexPath.WATERSPOUT, Constants.asId("actor/waterspout"), o -> o.enableWaterspouts, false,
+        this.types.put(ActorKind.WATERSPOUT, new Type<>(VortexPath.WATERSPOUT.maxLifetime(), vortex(VortexPath.WATERSPOUT), Constants.asId("actor/waterspout"), o -> o.enableWaterspouts, false,
                 (level, x, z) -> Waterspout.canStart(level, tags, x, z), WorldActorHandler::heightmap,
                 (level, path, age, biome, sound) -> {
                     var surface = heightmap(level, Mth.floor(path.x(age)), Mth.floor(path.z(age)));
                     return new Waterspout(path.withHeight(Waterspout.height(surface, dimension.getCloudHeight())), age, tags, sound, audioPlayer);
                 }));
         // Under the Nether's roof, its biome is the lava's, not the roof's
-        this.types.put(ActorKind.FIRESPOUT, new Type(VortexPath.FIRESPOUT, Constants.asId("actor/firespout"), o -> o.enableFirespouts, false,
+        this.types.put(ActorKind.FIRESPOUT, new Type<>(VortexPath.FIRESPOUT.maxLifetime(), vortex(VortexPath.FIRESPOUT), Constants.asId("actor/firespout"), o -> o.enableFirespouts, false,
                 Firespout::canStart,
                 (level, x, z) -> {
                     var surface = Firespout.lavaSurface(level, x, z);
                     return surface == Integer.MIN_VALUE ? heightmap(level, x, z) : surface;
                 },
                 (level, path, age, biome, sound) -> new Firespout(path, age, sound, audioPlayer)));
+        // Silent; soul fire under the Nether's roof, a marsh light anywhere else
+        this.types.put(ActorKind.WISP, new Type<>(WispPath.MAX_LIFETIME, (x, z, seed, wind) -> WispPath.of(x, z, seed), null, o -> o.enableWisps, true,
+                (level, x, z) -> Wisp.canStart(level, tags, x, z),
+                (level, x, z) -> {
+                    var ground = Wisp.ground(level, x, z);
+                    return ground == Integer.MIN_VALUE ? heightmap(level, x, z) : ground;
+                },
+                (level, path, age, biome, sound) -> new Wisp(path, age, level.dimensionType().hasCeiling() ? Wisp.SOUL : Wisp.MARSH)));
 
         if (this.types.size() != ActorKind.values().length)
             throw new IllegalStateException("A kind of world actor has no type");
-        this.lifetimeSlots = Math.ceilDiv(this.types.values().stream().mapToInt(type -> type.shape().maxLifetime()).max().orElse(0), ActorSpawns.SLOT_TICKS);
+        this.lifetimeSlots = Math.ceilDiv(this.types.values().stream().mapToInt(Type::maxLifetime).max().orElse(0), ActorSpawns.SLOT_TICKS);
     }
 
     @Override
@@ -198,8 +219,11 @@ public class WorldActorHandler extends AbstractClientHandler {
     private void consider(ClientLevel level, Player player, long time, long slot, ActorSpawns.Plan plan) {
         if (time < plan.startTick() || this.seen.containsKey(plan.key()))
             return;
-        var type = this.types.get(plan.kind());
-        var path = VortexPath.of(type.shape(), plan.x(), plan.z(), plan.seed(), windHeading(plan.startTick()));
+        this.consider(this.types.get(plan.kind()), level, player, time, slot, plan);
+    }
+
+    private <P extends ActorPath> void consider(Type<P> type, ClientLevel level, Player player, long time, long slot, ActorSpawns.Plan plan) {
+        var path = type.path().make(plan.x(), plan.z(), plan.seed(), windHeading(plan.startTick()));
         int age = (int) (time - plan.startTick());
         if (age >= path.lifetime()) {
             this.seen.put(plan.key(), slot);
@@ -231,24 +255,32 @@ public class WorldActorHandler extends AbstractClientHandler {
         var length = Math.max(1e-3D, Math.sqrt(look.x * look.x + look.z * look.z));
         double x = player.getX() + look.x / length * SUMMON_AHEAD;
         double z = player.getZ() + look.z / length * SUMMON_AHEAD;
-        var type = this.types.get(kind);
-        if (!clientLevel.hasChunkAt(BlockPos.containing(x, 0, z)) || (!type.summonsAnywhere() && !type.placement().canStart(clientLevel, x, z)))
-            return Summoned.NO_PLACE;
-        var path = VortexPath.of(type.shape(), x, z, RANDOM.nextLong(), windHeading(clientLevel.getGameTime()));
-        return this.start(type, clientLevel, path, 0, biomeAt(type, clientLevel, x, z)) ? Summoned.STARTED : Summoned.NO_PLACE;
+        return this.summon(this.types.get(kind), clientLevel, x, z);
     }
 
-    private boolean start(Type type, ClientLevel level, VortexPath path, int age, Biome biome) {
-        var actor = type.maker().make(level, path, age, biome, this.soundLibrary.getSoundFactory(type.sound()).orElse(null));
+    private <P extends ActorPath> Summoned summon(Type<P> type, ClientLevel level, double x, double z) {
+        if (!level.hasChunkAt(BlockPos.containing(x, 0, z)) || (!type.summonsAnywhere() && !type.placement().canStart(level, x, z)))
+            return Summoned.NO_PLACE;
+        var path = type.path().make(x, z, RANDOM.nextLong(), windHeading(level.getGameTime()));
+        return this.start(type, level, path, 0, biomeAt(type, level, x, z)) ? Summoned.STARTED : Summoned.NO_PLACE;
+    }
+
+    private <P extends ActorPath> boolean start(Type<P> type, ClientLevel level, P path, int age, Biome biome) {
+        var sound = type.sound() == null ? null : this.soundLibrary.getSoundFactory(type.sound()).orElse(null);
+        var actor = type.maker().make(level, path, age, biome, sound);
         if (actor == null)
             return false;
         this.actors.add(actor);
         return true;
     }
 
-    private static Biome biomeAt(Type type, ClientLevel level, double x, double z) {
+    private static Biome biomeAt(Type<?> type, ClientLevel level, double x, double z) {
         int bx = Mth.floor(x), bz = Mth.floor(z);
         return level.getBiome(new BlockPos(bx, type.ground().y(level, bx, bz), bz)).value();
+    }
+
+    private static PathMaker<VortexPath> vortex(VortexPath.Shape shape) {
+        return (x, z, seed, wind) -> VortexPath.of(shape, x, z, seed, wind);
     }
 
     private static int heightmap(ClientLevel level, int x, int z) {

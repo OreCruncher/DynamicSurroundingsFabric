@@ -1,0 +1,96 @@
+// Wisps (WorldActorHandler, Wisp, WispGlow): summoned with /dsactor as the warm-up starts, 16 blocks ahead, at night,
+// over a walled sheet of water built high over plains, so no trees hide them (in a swamp the bench stood on a canopy
+// and the leaves hid most of the lights) and no natural ones start: the scene's biome has none. Each wisp is one to four
+// lights with their halos, motes and faint lights (the fireflies' light option, set on). A summoned one has a random
+// number of lights and haunts, so compare with --spread. Two, as a marsh might show, and six, far more than ever start
+// naturally. One lives a minute at least, and can live three, so the six have a sheet of their own, over savanna, or
+// the next run's two would find them still there (the off runs clear them). Facing east, a little down. See README.md.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 12,
+  "record": 25,
+  "repeats": 2,
+  "scenes": {
+    "wisps-marsh": {
+      "biome": "minecraft:plains",
+      "yaw": -90,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "tp @s ~ 130 ~",
+        "fill ~-41 ~-2 ~-41 ~41 ~-2 ~41 stone",
+        "fill ~-41 ~-1 ~-41 ~41 ~-1 ~41 stone",
+        "fill ~-40 ~-1 ~-40 ~40 ~-1 ~40 water",
+        "setblock ~ ~-1 ~ stone"
+      ],
+      "settledCommands": [
+        "dsactor wisp",
+        "dsactor wisp"
+      ],
+      "profile": "general"
+    },
+    "wisps-marsh-many": {
+      "biome": "minecraft:savanna",
+      "yaw": -90,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "tp @s ~ 130 ~",
+        "fill ~-41 ~-2 ~-41 ~41 ~-2 ~41 stone",
+        "fill ~-41 ~-1 ~-41 ~41 ~-1 ~41 stone",
+        "fill ~-40 ~-1 ~-40 ~40 ~-1 ~40 water",
+        "setblock ~ ~-1 ~ stone"
+      ],
+      "settledCommands": [
+        "dsactor wisp",
+        "dsactor wisp",
+        "dsactor wisp",
+        "dsactor wisp",
+        "dsactor wisp",
+        "dsactor wisp"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "wisps-2",
+      "scene": "wisps-marsh",
+      "settings": {
+        "worldActorOptions.enableWisps": true,
+        "fireflyOptions.enableLight": true
+      }
+    },
+    {
+      "label": "wisps-6",
+      "scene": "wisps-marsh-many",
+      "settings": {
+        "worldActorOptions.enableWisps": true,
+        "fireflyOptions.enableLight": true
+      }
+    },
+    {
+      "label": "wisps-off",
+      "scene": "wisps-marsh",
+      "settings": {
+        "worldActorOptions.enableWisps": false,
+        "fireflyOptions.enableLight": true
+      }
+    }
+  ]
+}

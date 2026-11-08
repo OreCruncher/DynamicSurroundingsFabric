@@ -18,7 +18,8 @@ public enum ActorKind {
     DUST_DEVIL("dust_devil"),
     WATERSPOUT("waterspout"),
     SNOWSPOUT("snowspout"),
-    FIRESPOUT("firespout");
+    FIRESPOUT("firespout"),
+    WISP("wisp");
 
     private final Identifier id;
 

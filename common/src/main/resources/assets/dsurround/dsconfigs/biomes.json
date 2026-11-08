@@ -585,5 +585,26 @@
         "chance": 0.08
       }
     ]
+  },
+  {
+    "biomeSelector": "SWAMP && !UNDERGROUND",
+    "_comment": "Wisps over swamps, bogs, marshes and fens on still nights: they start over water or mud",
+    "actors": [
+      {
+        "actor": "dsurround:wisp",
+        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()",
+        "chance": 0.05
+      }
+    ]
+  },
+  {
+    "biomeSelector": "biome.getId() == 'minecraft:soul_sand_valley'",
+    "_comment": "Soul-fire wisps over the soul sand valley",
+    "actors": [
+      {
+        "actor": "dsurround:wisp",
+        "chance": 0.05
+      }
+    ]
   }
 ]

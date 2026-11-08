@@ -713,6 +713,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable firespouts: whirls of fire over the Nether's lava lakes, lighting what is around them")
         public boolean enableFirespouts = true;
+
+        @Property
+        @Comment("Enable/disable wisps: pale lights over marshes at night, and soul-fire lights over soul sand valleys, that go out as you come near")
+        public boolean enableWisps = true;
     }
 
     public static class MusicManagerOptions {

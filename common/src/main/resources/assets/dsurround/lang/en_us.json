@@ -603,6 +603,8 @@
   "dsurround.config.worldActorOptions.enableSnowspouts.tooltip": "Enable/disable snowspouts: whirls of powder snow crossing snowy plains and frozen lakes on clear days.",
   "dsurround.config.worldActorOptions.enableFirespouts": "Firespouts",
   "dsurround.config.worldActorOptions.enableFirespouts.tooltip": "Enable/disable firespouts: whirls of fire over the Nether's lava lakes, lighting what is around them.",
+  "dsurround.config.worldActorOptions.enableWisps": "Wisps",
+  "dsurround.config.worldActorOptions.enableWisps.tooltip": "Enable/disable wisps: pale lights drifting over marshes at night, and soul-fire lights over soul sand valleys. As the old stories have it, they go out as you come near.",
   "dsurround.config.musicManagerOptions": "Music Manager Options",
   "dsurround.config.musicManagerOptions.replaceMusicManager": "Replace Music Manager",
   "dsurround.config.musicManagerOptions.replaceMusicManager.tooltip": "Replace Minecraft's music manager with modded version. This will enable the use of music manager commands (/dsmm).",

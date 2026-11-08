@@ -837,6 +837,27 @@ dust devil, for flames many times a dust puff's size. Close to the camera its fl
 with six, two of them near, about 0.07 ms of GPU each, a third or more of it its light. The lake's popping lava starts about 15 sounds a second in every run; the firespouts' roar adds little.
 Nothing here calls for a cut.
 
+## Results, 2026-11-08: wisps (`wisps.json`)
+
+Wisps: one to four small lights each, a halo and a core, shedding motes, each casting a faint light of 4 blocks (the
+fireflies' light option, on in every run). Summoned with `/dsactor` 16 blocks ahead, at night, over a walled sheet of
+water built at height 130: the two over plains, the six over savanna, as one can live three minutes. A first try in
+real swamps put the player on the canopy, with the leaves hiding most of the lights. The six aren't set against an off
+run of their own. OpenGL, Fabric, the machine above; commit `542b52a8` with the wisps uncommitted. Two repeats each,
+A B C then C B A.
+
+| Run | Frame GPU ms | Point Lights GPU ms | World Actors ms a tick |
+|---|---|---|---|
+| 2 wisps | 0.790 (0.664-0.917) | 0.023 | 0.022 |
+| 6 wisps | 0.767 (0.763-0.771) | 0.045 | 0.020 |
+| none (`enableWisps` off) | 0.633 (0.624-0.643) | 0 | 0.007 |
+
+The first two-wisp run read high (0.917), as a session's first run does; its twin, 0.664, is 0.03 ms over the off
+runs. Six over savanna came to 0.13 ms more than the off runs over plains. So a wisp costs about 0.015-0.02 ms of GPU a
+frame, its lights a third of it to a half, and well under 0.01 ms of tick. The CPU frame isn't in the table: every
+recording, the off runs too, had a frame of half a second to a second and a CPU mean from 0.4 to 2 ms, with nothing to
+tie it to the wisps. Nothing here calls for a cut.
+
 ## Rerunning
 
 - Run every scenario from a clean tree, the machine otherwise idle, and note the commit. On 26.3 `sound.json` once

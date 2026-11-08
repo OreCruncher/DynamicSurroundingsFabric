@@ -38,6 +38,8 @@ public class BlockEffectTags {
     public static final TagKey<Block> WATERSPOUT_DEBRIS = of("waterspout_debris");
     // Snow and ice a snowspout starts on and whirls up as powder
     public static final TagKey<Block> SNOWSPOUT_SOURCES = of("snowspout_sources");
+    // What a wisp haunts: marsh water and mud, soul sand
+    public static final TagKey<Block> WISP_GROUNDS = of("wisp_grounds");
     public static final TagKey<Block> WINDOWS = of("windows");
     public static final TagKey<Block> FROSTED_WINDOWS = of("frosted_windows");
     // Blocks feet leave prints in, besides those that sound like sand, gravel, snow or mud underfoot

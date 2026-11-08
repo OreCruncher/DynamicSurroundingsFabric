@@ -14,7 +14,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
  * and it sways more the higher it is. How big, fast and long-lived each kind is comes from its {@link Shape}. Doesn't
  * change once made, so its particles, which may tick on other threads, follow it through it.
  */
-public final class VortexPath {
+public final class VortexPath implements ActorPath {
 
     /**
      * What a kind of vortex is like
@@ -133,6 +133,7 @@ public final class VortexPath {
         return this.shape;
     }
 
+    @Override
     public int lifetime() {
         return this.lifetime;
     }
@@ -144,10 +145,12 @@ public final class VortexPath {
     /**
      * Where it is at an age, in ticks
      */
+    @Override
     public double x(float age) {
         return this.startX + this.wayX * this.speed * age - this.wayZ * this.weaveAt(age);
     }
 
+    @Override
     public double z(float age) {
         return this.startZ + this.wayZ * this.speed * age + this.wayX * this.weaveAt(age);
     }
