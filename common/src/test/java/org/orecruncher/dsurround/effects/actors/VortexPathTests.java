@@ -146,7 +146,7 @@ public class VortexPathTests {
 
     @Test
     void aWaterspoutIsAsTallAsItIsGiven() {
-        var path = VortexPath.of(VortexPath.WATERSPOUT, 0D, 0D, 3L, 0F, 129F);
+        var path = VortexPath.of(VortexPath.WATERSPOUT, 0D, 0D, 3L, 0F).withHeight(129F);
         assertEquals(129F, path.height());
         // Thin all the way up, opening out only near the clouds
         assertTrue(path.radius(path.height() / 2F) < 2F * VortexPath.WATERSPOUT.baseRadius(), "radius " + path.radius(path.height() / 2F));
@@ -191,9 +191,9 @@ public class VortexPathTests {
 
     @Test
     void aFractionalCountRoundsByTheRoll() {
-        assertEquals(2, GroundVortex.count(2.3F, 0.5F));
-        assertEquals(3, GroundVortex.count(2.3F, 0.2F));
-        assertEquals(0, GroundVortex.count(0F, 0F));
-        assertEquals(1, GroundVortex.count(1F, 0.99F));
+        assertEquals(2, VortexActor.count(2.3F, 0.5F));
+        assertEquals(3, VortexActor.count(2.3F, 0.2F));
+        assertEquals(0, VortexActor.count(0F, 0F));
+        assertEquals(1, VortexActor.count(1F, 0.99F));
     }
 }

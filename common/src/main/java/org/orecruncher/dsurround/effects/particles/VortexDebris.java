@@ -24,7 +24,7 @@ public class VortexDebris extends TerrainParticle {
 
     // How far in from the funnel's edge it goes around, as a share of the radius
     private static final float INSIDE = 0.7F;
-    // How fast it climbs, in blocks a tick, and the share of the devil's height it can be thrown out from, at most
+    // How fast it climbs, in blocks a tick, and the share of the vortex's height it can be thrown out from, at most
     private static final float MIN_RISE = 0.08F;
     private static final float MAX_RISE = 0.18F;
     private static final float MAX_RELEASE = 0.7F;
@@ -38,13 +38,9 @@ public class VortexDebris extends TerrainParticle {
     private static final float SCRAP_SCALE = 3.5F;
     private static final float SCRAP_TEXTURE = 0.5F;
 
-    private final VortexPath path;
-    private final int devilAge;
-    private final double groundY;
+    private final FunnelOrbit orbit;
     private final float rise;
     private final float release;
-    private float height;
-    private float angle;
     private boolean thrown;
     // The part of the texture a scrap shows, from its corner; a fleck shows the game's quarter
     private final boolean scrap;
@@ -52,25 +48,22 @@ public class VortexDebris extends TerrainParticle {
     private final float scrapV;
 
     /**
-     * A piece of a block, picked up by a dust devil
+     * A piece of a block, picked up by a vortex
      *
-     * @param devilAge the devil's age now, in ticks
-     * @param groundY  the ground under the devil
+     * @param vortexAge the vortex's age now, in ticks
+     * @param groundY   the ground (or water) under the vortex
      * @param state    what it is a piece of
      * @param pos      where that block is, for its tint
      * @param scrap    a scrap of a plant, rather than a fleck of the ground
      */
-    public static Particle create(ClientLevel level, VortexPath path, int devilAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
-        return new VortexDebris(level, path, devilAge, groundY, state, pos, scrap);
+    public static Particle create(ClientLevel level, VortexPath path, int vortexAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
+        return new VortexDebris(level, path, vortexAge, groundY, state, pos, scrap);
     }
 
-    protected VortexDebris(ClientLevel level, VortexPath path, int devilAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
-        super(level, path.x(devilAge), groundY, path.z(devilAge), 0D, 0D, 0D, state, pos);
+    protected VortexDebris(ClientLevel level, VortexPath path, int vortexAge, double groundY, BlockState state, BlockPos pos, boolean scrap) {
+        super(level, path.x(vortexAge), groundY, path.z(vortexAge), 0D, 0D, 0D, state, pos);
         var random = level.getRandom();
-        this.path = path;
-        this.devilAge = devilAge;
-        this.groundY = groundY;
-        this.angle = random.nextFloat() * Mth.TWO_PI;
+        this.orbit = new FunnelOrbit(path, vortexAge, groundY, 0F, random.nextFloat() * Mth.TWO_PI, path.radius(0F) * INSIDE);
         this.rise = Mth.lerp(random.nextFloat(), MIN_RISE, MAX_RISE);
         this.release = Math.min(path.height() * MAX_RELEASE, MAX_RELEASE_BLOCKS) * (0.3F + random.nextFloat() * 0.7F);
         this.lifetime = Mth.ceil(this.release / this.rise) + FALL_TICKS;
@@ -108,26 +101,22 @@ public class VortexDebris extends TerrainParticle {
     @Override
     public void tick() {
         if (!this.thrown) {
-            this.height += this.rise;
-            var radius = this.path.radius(this.height) * INSIDE;
-            this.angle += this.path.spin(radius);
-            var devil = this.devilAge + this.age + 1;
-            var tx = this.path.axisX(this.height, devil) + Mth.cos(this.angle) * radius;
-            var tz = this.path.axisZ(this.height, devil) + Mth.sin(this.angle) * radius;
-            if (this.height >= this.release) {
+            this.orbit.climb(this.rise);
+            this.orbit.around(this.orbit.path().radius(this.orbit.height()) * INSIDE);
+            if (this.orbit.height() >= this.release) {
                 // Out of the funnel the way it was going around, and down
                 this.thrown = true;
                 this.hasPhysics = true;
                 this.gravity = 1F;
                 this.friction = 0.98F;
-                var tangent = this.angle + Mth.HALF_PI * Math.signum(this.path.spin(radius));
+                var tangent = this.orbit.tangent();
                 this.xd = Mth.cos(tangent) * THROW;
                 this.zd = Mth.sin(tangent) * THROW;
                 this.yd = 0D;
             } else {
-                this.xd = tx - this.x;
-                this.yd = this.groundY + this.height - this.y;
-                this.zd = tz - this.z;
+                this.xd = this.orbit.x(this.age + 1) - this.x;
+                this.yd = this.orbit.y() - this.y;
+                this.zd = this.orbit.z(this.age + 1) - this.z;
             }
         }
         super.tick();

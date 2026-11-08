@@ -35,14 +35,9 @@ public class WaterspoutMist extends SoftPuffParticle {
     private static final float SPRAY_RISE = 0.06F;
     private static final float SPRAY_SPREAD = 0.09F;
 
-    private final VortexPath path;
-    private final int vortexAge;
-    private final double footY;
+    private final FunnelOrbit orbit;
     private final boolean spray;
     private final float rise;
-    private float height;
-    private float angle;
-    private float radius;
 
     /**
      * A puff of a waterspout
@@ -61,25 +56,22 @@ public class WaterspoutMist extends SoftPuffParticle {
         super(level, path.x(vortexAge), footY, path.z(vortexAge), DSurroundParticleSprites.WATERFALL_MIST.get(level.getRandom()),
                 FADE_IN, FADE_OUT, spray ? SPRAY_GROWTH : FUNNEL_GROWTH);
         var random = level.getRandom();
-        this.path = path;
-        this.vortexAge = vortexAge;
-        this.footY = footY;
         this.spray = spray;
-        this.angle = random.nextFloat() * Mth.TWO_PI;
-        float shade;
+        var angle = random.nextFloat() * Mth.TWO_PI;
+        float shade, height, radius;
         if (spray) {
-            this.height = random.nextFloat() * 0.3F;
+            height = random.nextFloat() * 0.3F;
             this.rise = SPRAY_RISE * (0.5F + random.nextFloat());
-            this.radius = path.radius(0F);
+            radius = path.radius(0F);
             this.lifetime = 30 + random.nextInt(20);
             this.startSize = 0.5F + random.nextFloat() * 0.3F;
             this.peakAlpha = SPRAY_ALPHA * strength;
             shade = SPRAY_SHADE;
         } else {
-            this.height = upShare * path.height();
+            height = upShare * path.height();
             this.rise = FUNNEL_RISE * (0.5F + random.nextFloat());
             // Through the funnel, not only at its edge, so it reads as a solid column
-            this.radius = path.radius(this.height) * (0.2F + random.nextFloat() * 0.8F);
+            radius = path.radius(height) * (0.2F + random.nextFloat() * 0.8F);
             this.lifetime = 40 + random.nextInt(20);
             // Bigger up high, where the funnel is wide and seen from far below
             this.startSize = (1F + random.nextFloat() * 0.5F) * (1F + 2F * upShare);
@@ -93,7 +85,8 @@ public class WaterspoutMist extends SoftPuffParticle {
         this.friction = 1F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.15F;
-        this.setPos(this.targetX(this.vortexAge), this.footY + this.height, this.targetZ(this.vortexAge));
+        this.orbit = new FunnelOrbit(path, vortexAge, footY, height, angle, radius);
+        this.setPos(this.orbit.x(0), this.orbit.y(), this.orbit.z(0));
         this.xo = this.x;
         this.yo = this.y;
         this.zo = this.z;
@@ -102,22 +95,11 @@ public class WaterspoutMist extends SoftPuffParticle {
     @Override
     public void tick() {
         // Where it will be at the end of this tick: around the axis at its height, wherever the waterspout has got to
-        this.height += this.rise;
-        if (this.spray)
-            this.radius += SPRAY_SPREAD;
-        this.angle += this.path.spin(this.radius);
-        var vortex = this.vortexAge + this.age + 1;
-        this.xd = this.targetX(vortex) - this.x;
-        this.yd = this.footY + this.height - this.y;
-        this.zd = this.targetZ(vortex) - this.z;
+        this.orbit.climb(this.rise);
+        this.orbit.around(this.spray ? this.orbit.radius() + SPRAY_SPREAD : this.orbit.radius());
+        this.xd = this.orbit.x(this.age + 1) - this.x;
+        this.yd = this.orbit.y() - this.y;
+        this.zd = this.orbit.z(this.age + 1) - this.z;
         super.tick();
-    }
-
-    private double targetX(float vortex) {
-        return this.path.axisX(this.height, vortex) + Mth.cos(this.angle) * this.radius;
-    }
-
-    private double targetZ(float vortex) {
-        return this.path.axisZ(this.height, vortex) + Mth.sin(this.angle) * this.radius;
     }
 }

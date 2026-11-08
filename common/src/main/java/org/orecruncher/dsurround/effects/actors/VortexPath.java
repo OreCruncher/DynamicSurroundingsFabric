@@ -67,6 +67,9 @@ public final class VortexPath {
     private static final float WAVER_RATE = Mth.TWO_PI / 90F;
 
     private final Shape shape;
+    // What it was made from, for the same one at another height
+    private final long seed;
+    private final float windHeading;
     private final double startX;
     private final double startZ;
     private final double wayX;
@@ -94,15 +97,17 @@ public final class VortexPath {
     }
 
     /**
-     * One of a given height, as a waterspout reaching up to the clouds
+     * The same one, but of a given height, as a waterspout reaching up to the clouds
      */
-    public static VortexPath of(Shape shape, double x, double z, long seed, float windHeading, float height) {
-        return new VortexPath(shape, x, z, seed, windHeading, height);
+    public VortexPath withHeight(float height) {
+        return new VortexPath(this.shape, this.startX, this.startZ, this.seed, this.windHeading, height);
     }
 
     private VortexPath(Shape shape, double x, double z, long seed, float windHeading, float height) {
         var random = Randomizer.create(seed);
         this.shape = shape;
+        this.seed = seed;
+        this.windHeading = windHeading;
         this.startX = x;
         this.startZ = z;
         var heading = windHeading + (random.nextFloat() * 2F - 1F) * shape.offWind();
@@ -198,5 +203,13 @@ public final class VortexPath {
      */
     public float spin(float radius) {
         return this.spin * this.shape.spinSpeed() / Math.max(radius, this.shape.baseRadius());
+    }
+
+    /**
+     * The way something at an angle around the axis, at a radius, is going as the funnel turns, as an angle: the way
+     * it is flung when it leaves the funnel
+     */
+    public float tangent(float angle, float radius) {
+        return angle + Mth.HALF_PI * Math.signum(this.spin(radius));
     }
 }

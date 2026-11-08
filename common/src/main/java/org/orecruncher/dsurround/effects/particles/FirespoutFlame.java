@@ -25,13 +25,8 @@ public class FirespoutFlame extends FlameTongue {
     private static final float LIGHT_BRIGHTNESS = 0.6F;
     private static final float LIGHT_RADIUS = 8F;
 
-    private final VortexPath path;
-    private final int vortexAge;
-    private final double footY;
+    private final FunnelOrbit orbit;
     private final float rise;
-    private float height;
-    private float angle;
-    private float radius;
 
     /**
      * A tongue of flame in a firespout
@@ -48,18 +43,15 @@ public class FirespoutFlame extends FlameTongue {
         super(level, path.x(vortexAge), footY, path.z(vortexAge), 0D, 0D, 0D,
                 Mth.lerp(level.getRandom().nextFloat(), MIN_SCALE, MAX_SCALE), carriesLight, FIRE);
         var random = level.getRandom();
-        this.path = path;
-        this.vortexAge = vortexAge;
-        this.footY = footY;
-        this.angle = random.nextFloat() * Mth.TWO_PI;
-        this.height = random.nextFloat() * 0.5F;
+        var angle = random.nextFloat() * Mth.TWO_PI;
+        var height = random.nextFloat() * 0.5F;
         this.lifetime = 20 + random.nextInt(16);
-        this.rise = (path.height() * MAX_CLIMB * (0.4F + random.nextFloat() * 0.6F) - this.height) / this.lifetime;
-        this.radius = path.radius(this.height) * (0.5F + random.nextFloat() * 0.5F);
+        this.rise = (path.height() * MAX_CLIMB * (0.4F + random.nextFloat() * 0.6F) - height) / this.lifetime;
+        this.orbit = new FunnelOrbit(path, vortexAge, footY, height, angle, path.radius(height) * (0.5F + random.nextFloat() * 0.5F));
         // Held on the funnel: no lift or drag of its own
         this.gravity = 0F;
         this.friction = 1F;
-        this.setPos(this.targetX(vortexAge), footY + this.height, this.targetZ(vortexAge));
+        this.setPos(this.orbit.x(0), this.orbit.y(), this.orbit.z(0));
         this.xo = this.x;
         this.yo = this.y;
         this.zo = this.z;
@@ -68,13 +60,11 @@ public class FirespoutFlame extends FlameTongue {
     @Override
     public void tick() {
         // Where it will be at the end of this tick: up and around the funnel, wherever the firespout has got to
-        this.height += this.rise;
-        this.radius = Math.max(this.radius, this.path.radius(this.height) * 0.5F);
-        this.angle += this.path.spin(this.radius);
-        var vortex = this.vortexAge + this.age + 1;
-        this.xd = this.targetX(vortex) - this.x;
-        this.yd = this.footY + this.height - this.y;
-        this.zd = this.targetZ(vortex) - this.z;
+        this.orbit.climb(this.rise);
+        this.orbit.around(Math.max(this.orbit.radius(), this.orbit.path().radius(this.orbit.height()) * 0.5F));
+        this.xd = this.orbit.x(this.age + 1) - this.x;
+        this.yd = this.orbit.y() - this.y;
+        this.zd = this.orbit.z(this.age + 1) - this.z;
         super.tick();
     }
 
@@ -85,13 +75,5 @@ public class FirespoutFlame extends FlameTongue {
                 Mth.lerp(partialTick, this.yo, this.y),
                 Mth.lerp(partialTick, this.zo, this.z),
                 this.rCol, this.gCol, this.bCol, LIGHT_STRENGTH * LIGHT_BRIGHTNESS * this.brightness(partialTick), LIGHT_RADIUS);
-    }
-
-    private double targetX(float vortex) {
-        return this.path.axisX(this.height, vortex) + Mth.cos(this.angle) * this.radius;
-    }
-
-    private double targetZ(float vortex) {
-        return this.path.axisZ(this.height, vortex) + Mth.sin(this.angle) * this.radius;
     }
 }

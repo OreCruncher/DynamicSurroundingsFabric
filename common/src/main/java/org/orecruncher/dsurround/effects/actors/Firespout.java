@@ -7,6 +7,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ActorKind;
@@ -27,8 +28,11 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
  * The Nether's bedrock roof tops every column's heightmap, so the lava is found by looking down each column from a
  * fixed height for the first lava with air over it: the same for every player, wherever each stands.
  */
-public final class Firespout implements IActor {
+public final class Firespout extends VortexActor {
 
+    // Broken up off the lava in a second and a half; a roar of fire every one to one and three quarter seconds, from
+    // a little above the lava
+    private static final Traits TRAITS = new Traits(1F / 30F, 20, 15, 2D);
     // Flames a tick at full strength, the share of them that light their surroundings, smoke puffs, sparks and drops.
     // Each lit flame lights as far as a flame jet's, times its size, so a few alive at once (about 7) light it enough
     private static final float FLAMES = 12F;
@@ -37,25 +41,11 @@ public final class Firespout implements IActor {
     private static final float SPARKS = 1F;
     private static final float DROPLETS = 0.6F;
     // How far down a column the lava is looked for, in blocks
-    static final int SCAN_TOP = 100;
+    private static final int SCAN_TOP = 100;
     private static final int SCAN_DEPTH = 96;
     // How far around it the lava has to be open for one to start, in blocks
     private static final int OPEN_LAVA = 8;
-    // How fast leaving the lava breaks it up, a share of its strength a tick
-    private static final float BREAK_UP = 1F / 30F;
-    // Ticks between its sounds, this and up to this many more: each a roar of fire, overlapping the last
-    private static final int SOUND_TICKS = 20;
-    private static final int SOUND_TICKS_MORE = 15;
 
-    private final VortexPath path;
-    @Nullable
-    private final ISoundFactory sound;
-    private final IAudioPlayer audioPlayer;
-    private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
-    private int age;
-    private float intact = 1F;
-    private boolean breakingUp;
-    private int nextSound;
     // The column last looked down, and the lava's surface there, so each column is looked down once
     private int lastX = Integer.MIN_VALUE;
     private int lastZ = Integer.MIN_VALUE;
@@ -66,11 +56,7 @@ public final class Firespout implements IActor {
      * @param sound its roar, if the factory is there
      */
     public Firespout(VortexPath path, int age, @Nullable ISoundFactory sound, IAudioPlayer audioPlayer) {
-        this.path = path;
-        this.age = age;
-        this.sound = sound;
-        this.audioPlayer = audioPlayer;
-        this.nextSound = age;
+        super(TRAITS, path, age, sound, audioPlayer);
     }
 
     /**
@@ -79,21 +65,21 @@ public final class Firespout implements IActor {
     public static boolean canStart(Level level, double x, double z) {
         var probe = new BlockPos.MutableBlockPos();
         int surface = lavaSurface(level, probe, Mth.floor(x), Mth.floor(z));
-        if (surface == Integer.MIN_VALUE)
-            return false;
-        for (int i = 0; i < 8; i++) {
-            var angle = i * Mth.TWO_PI / 8F;
-            if (lavaSurface(level, probe, Mth.floor(x + Mth.cos(angle) * OPEN_LAVA), Mth.floor(z + Mth.sin(angle) * OPEN_LAVA)) != surface)
-                return false;
-        }
-        return true;
+        return surface != Integer.MIN_VALUE && allAround(x, z, OPEN_LAVA, (cx, cz) -> lavaSurface(level, probe, cx, cz) == surface);
+    }
+
+    /**
+     * The height of the lava's surface under a place, as {@link #lavaSurface} finds it
+     */
+    public static int lavaSurface(Level level, int x, int z) {
+        return lavaSurface(level, new BlockPos.MutableBlockPos(), x, z);
     }
 
     /**
      * The height of the first lava with air over it, looking down a column from {@link #SCAN_TOP}, or MIN_VALUE if
      * there is none or its chunk isn't loaded
      */
-    static int lavaSurface(Level level, BlockPos.MutableBlockPos probe, int x, int z) {
+    private static int lavaSurface(Level level, BlockPos.MutableBlockPos probe, int x, int z) {
         if (!level.hasChunkAt(probe.set(x, 0, z)))
             return Integer.MIN_VALUE;
         boolean airAbove = false;
@@ -113,54 +99,27 @@ public final class Firespout implements IActor {
     }
 
     @Override
-    public double x() {
-        return this.path.x(this.age);
-    }
-
-    @Override
-    public double z() {
-        return this.path.z(this.age);
-    }
-
-    @Override
-    public boolean tick(ClientLevel level, float particles) {
-        if (++this.age >= this.path.lifetime() || this.intact <= 0F)
-            return false;
-
-        int bx = Mth.floor(this.x()), bz = Mth.floor(this.z());
-        if (!level.hasChunkAt(this.probe.set(bx, 0, bz)))
-            return true;
-        if (bx != this.lastX || bz != this.lastZ) {
-            var surface = lavaSurface(level, this.probe, bx, bz);
+    protected double foot(ClientLevel level, int x, int z) {
+        if (x != this.lastX || z != this.lastZ) {
+            var surface = lavaSurface(level, this.probe, x, z);
             // Off the lava, or onto a lake at another height: it is a wall or a fall, either way the end of it
             if (surface == Integer.MIN_VALUE || (this.lastSurface != Integer.MIN_VALUE && surface != this.lastSurface))
-                this.breakingUp = true;
+                this.breakUp();
             else
                 this.lastSurface = surface;
-            this.lastX = bx;
-            this.lastZ = bz;
+            this.lastX = x;
+            this.lastZ = z;
         }
-        if (this.lastSurface == Integer.MIN_VALUE)
-            return false;
-        if (this.breakingUp)
-            this.intact -= BREAK_UP;
-        // The top of the lava block, where its surface is drawn
-        double footY = this.lastSurface + 0.9D;
+        // The top of the lava block, where its surface is drawn; never on lava at all, it ends at once
+        return this.lastSurface == Integer.MIN_VALUE ? Double.NaN : this.lastSurface + 0.9D;
+    }
 
-        var strength = this.path.strength(this.age) * Math.max(0F, this.intact);
-        if (strength > 0F && this.age >= this.nextSound) {
-            this.nextSound = this.age + SOUND_TICKS + level.getRandom().nextInt(SOUND_TICKS_MORE + 1);
-            if (this.sound != null)
-                this.audioPlayer.play(this.sound.createAtLocation(this.x(), footY + 2D, this.z(), strength));
-        }
-        if (particles <= 0F || strength <= 0F)
-            return true;
-
-        var random = level.getRandom();
+    @Override
+    protected void show(ClientLevel level, RandomSource random, double footY, float strength, float particles) {
         var engine = GameUtils.getParticleManager();
-        for (int i = GroundVortex.count(FLAMES * strength * particles, random.nextFloat()); i > 0; i--)
+        for (int i = count(FLAMES * strength * particles, random.nextFloat()); i > 0; i--)
             engine.add(FirespoutFlame.create(level, this.path, this.age, footY, random.nextFloat() < LIGHT_SHARE));
-        for (int i = GroundVortex.count(SMOKE * strength * particles, random.nextFloat()); i > 0; i--) {
+        for (int i = count(SMOKE * strength * particles, random.nextFloat()); i > 0; i--) {
             // From the top of the flames, spreading as it goes
             var h = this.path.height() * (0.6F + random.nextFloat() * 0.4F);
             var r = this.path.radius(h) * random.nextFloat();
@@ -168,18 +127,17 @@ public final class Firespout implements IActor {
             engine.add(SmokePuff.create(level, this.path.axisX(h, this.age) + Mth.cos(angle) * r, footY + h,
                     this.path.axisZ(h, this.age) + Mth.sin(angle) * r, 0.08D, 2F + random.nextFloat()));
         }
-        for (int i = GroundVortex.count(SPARKS * strength * particles, random.nextFloat()); i > 0; i--) {
+        for (int i = count(SPARKS * strength * particles, random.nextFloat()); i > 0; i--) {
             // Flung off the funnel the way it turns
             var h = random.nextFloat() * this.path.height() * 0.7F;
             var r = this.path.radius(h);
             var angle = random.nextFloat() * Mth.TWO_PI;
-            var spin = this.path.spin(r);
-            var tangent = angle + Mth.HALF_PI * Math.signum(spin);
-            var speed = Math.abs(spin) * r;
+            var tangent = this.path.tangent(angle, r);
+            var speed = Math.abs(this.path.spin(r)) * r;
             engine.add(FlameSpark.create(level, this.path.axisX(h, this.age) + Mth.cos(angle) * r, footY + h,
                     this.path.axisZ(h, this.age) + Mth.sin(angle) * r, Mth.cos(tangent) * speed, 0.2D, Mth.sin(tangent) * speed));
         }
-        for (int i = GroundVortex.count(DROPLETS * strength * particles, random.nextFloat()); i > 0; i--) {
+        for (int i = count(DROPLETS * strength * particles, random.nextFloat()); i > 0; i--) {
             // Thrown up and out from its foot
             var angle = random.nextFloat() * Mth.TWO_PI;
             var r = this.path.radius(0F);
@@ -187,6 +145,5 @@ public final class Firespout implements IActor {
             engine.add(LavaDroplet.create(level, this.x() + Mth.cos(angle) * r, footY + 0.2D, this.z() + Mth.sin(angle) * r,
                     Mth.cos(angle) * out, 0.35D + random.nextFloat() * 0.25D, Mth.sin(angle) * out));
         }
-        return true;
     }
 }

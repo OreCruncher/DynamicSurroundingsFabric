@@ -28,53 +28,45 @@ public class VortexPuff extends SoftPuffParticle {
     private static final float SKIRT_RISE = 0.03F;
     private static final float SKIRT_SPREAD = 0.05F;
 
-    private final VortexPath path;
-    // The devil's age when the puff was made, and the ground under it then
-    private final int devilAge;
-    private final double groundY;
+    private final FunnelOrbit orbit;
     private final boolean skirt;
     private final float rise;
-    private float height;
-    private float angle;
-    private float radius;
 
     /**
      * A puff in a vortex
      *
-     * @param devilAge the vortex's age now, in ticks
-     * @param groundY  the ground under it
+     * @param vortexAge the vortex's age now, in ticks
+     * @param groundY   the ground under it
      * @param color    what it lifts' color, as RGB
      * @param shade    how much darker it is in the air, 0 to 1 (1 as it is)
      * @param grey     how much greyer, 0 to 1 (0 as it is)
      * @param strength how strong the vortex is, 0 to 1: a weak one is thinner
      * @param skirt    a puff of the skirt around the foot, rather than the funnel
      */
-    public static Particle create(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float shade, float grey, float strength, boolean skirt) {
-        return new VortexPuff(level, path, devilAge, groundY, color, shade, grey, strength, skirt);
+    public static Particle create(ClientLevel level, VortexPath path, int vortexAge, double groundY, int color, float shade, float grey, float strength, boolean skirt) {
+        return new VortexPuff(level, path, vortexAge, groundY, color, shade, grey, strength, skirt);
     }
 
-    protected VortexPuff(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float shade, float grey, float strength, boolean skirt) {
-        super(level, path.x(devilAge), groundY, path.z(devilAge), DSurroundParticleSprites.DUST.get(level.getRandom()), FADE_IN, FADE_OUT, skirt ? SKIRT_GROWTH : GROWTH);
+    protected VortexPuff(ClientLevel level, VortexPath path, int vortexAge, double groundY, int color, float shade, float grey, float strength, boolean skirt) {
+        super(level, path.x(vortexAge), groundY, path.z(vortexAge), DSurroundParticleSprites.DUST.get(level.getRandom()), FADE_IN, FADE_OUT, skirt ? SKIRT_GROWTH : GROWTH);
         var random = level.getRandom();
-        this.path = path;
-        this.devilAge = devilAge;
-        this.groundY = groundY;
         this.skirt = skirt;
-        this.angle = random.nextFloat() * Mth.TWO_PI;
+        var angle = random.nextFloat() * Mth.TWO_PI;
+        float height, radius;
         if (skirt) {
             this.rise = SKIRT_RISE * (0.5F + random.nextFloat());
-            this.height = random.nextFloat() * 0.3F;
-            this.radius = path.radius(0F);
+            height = random.nextFloat() * 0.3F;
+            radius = path.radius(0F);
             this.lifetime = 30 + random.nextInt(20);
             this.startSize = 0.45F + random.nextFloat() * 0.2F;
             this.peakAlpha = SKIRT_ALPHA * strength;
         } else {
             // Rises the funnel in two to four seconds, from near the ground
-            this.height = random.nextFloat() * 0.5F;
-            var climb = path.height() * (0.7F + random.nextFloat() * 0.3F) - this.height;
+            height = random.nextFloat() * 0.5F;
+            var climb = path.height() * (0.7F + random.nextFloat() * 0.3F) - height;
             this.lifetime = 40 + random.nextInt(40);
             this.rise = climb / this.lifetime;
-            this.radius = path.radius(this.height);
+            radius = path.radius(height);
             this.startSize = 0.3F + random.nextFloat() * 0.2F;
             this.peakAlpha = FUNNEL_ALPHA * strength;
         }
@@ -88,7 +80,8 @@ public class VortexPuff extends SoftPuffParticle {
         this.friction = 1F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
         this.rollSpeed = (random.nextFloat() - 0.5F) * 0.2F;
-        this.setPos(this.targetX(this.devilAge), this.groundY + this.height, this.targetZ(this.devilAge));
+        this.orbit = new FunnelOrbit(path, vortexAge, groundY, height, angle, radius);
+        this.setPos(this.orbit.x(0), this.orbit.y(), this.orbit.z(0));
         this.xo = this.x;
         this.yo = this.y;
         this.zo = this.z;
@@ -96,23 +89,12 @@ public class VortexPuff extends SoftPuffParticle {
 
     @Override
     public void tick() {
-        // Where it will be at the end of this tick: up and around the funnel, wherever the devil has got to
-        this.height += this.rise;
-        this.radius = this.skirt ? this.radius + SKIRT_SPREAD : this.path.radius(this.height);
-        this.angle += this.path.spin(this.radius);
-        var devil = this.devilAge + this.age + 1;
-        this.xd = this.targetX(devil) - this.x;
-        this.yd = this.groundY + this.height - this.y;
-        this.zd = this.targetZ(devil) - this.z;
+        // Where it will be at the end of this tick: up and around the funnel, wherever the vortex has got to
+        this.orbit.climb(this.rise);
+        this.orbit.around(this.skirt ? this.orbit.radius() + SKIRT_SPREAD : this.orbit.path().radius(this.orbit.height()));
+        this.xd = this.orbit.x(this.age + 1) - this.x;
+        this.yd = this.orbit.y() - this.y;
+        this.zd = this.orbit.z(this.age + 1) - this.z;
         super.tick();
-    }
-
-    // Around the funnel's axis at its height, which bends and sways
-    private double targetX(float devil) {
-        return this.path.axisX(this.height, devil) + Mth.cos(this.angle) * this.radius;
-    }
-
-    private double targetZ(float devil) {
-        return this.path.axisZ(this.height, devil) + Mth.sin(this.angle) * this.radius;
     }
 }

@@ -357,6 +357,9 @@ is known of 26.4.
   size: a factory volume over 1 carries it further without making it louder (a waterspout drifting past 22 blocks was
   silent). Conditions are evaluated at the
   player, so a script on the player's own state would make players disagree. `/dsactor [kind]` summons one ahead.
+  A new kind is an `ActorKind`, a row in `WorldActorHandler`'s `types` (shape, sound, config switch, where it can
+  start, the ground its biome is read at, how one is made) and its class: a whirl extends `VortexActor` (life, break-up,
+  sound) and gives what is under its foot and what it shows; its particles follow the funnel with a `FunnelOrbit`.
 - Target portrait (`gui/overlay/TargetPortraitOverlay`): framed by height and width (`headBlocks`), with horses set by hand. A mob's effects aren't sent to clients, only the particles of the visible ones, so `TargetEffects` matches those back by color or type.
 - Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
   `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the

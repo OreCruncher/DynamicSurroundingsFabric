@@ -6,13 +6,13 @@ package org.orecruncher.dsurround.processing;
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.ActorKind;
@@ -22,9 +22,9 @@ import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.actors.ActorSpawns;
 import org.orecruncher.dsurround.effects.actors.Firespout;
 import org.orecruncher.dsurround.effects.actors.GroundVortex;
+import org.orecruncher.dsurround.effects.actors.IActor;
 import org.orecruncher.dsurround.effects.actors.VortexPath;
 import org.orecruncher.dsurround.effects.actors.Waterspout;
-import org.orecruncher.dsurround.effects.actors.IActor;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
@@ -35,6 +35,12 @@ import org.orecruncher.dsurround.runtime.weather.UpperWind;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 /**
  * World actors: things that move through the world on their own for a while, such as dust devils, which every player
  * nearby sees alike. Where and when one may start comes from the world's seed and the game time ({@link ActorSpawns});
@@ -44,6 +50,9 @@ import org.orecruncher.dsurround.sound.ISoundFactory;
  * <p>
  * The conditions are evaluated where the player is, as the biome's sounds are: weather and time of day are the same
  * for everyone, but a script on the player's own state would make players disagree.
+ * <p>
+ * What each kind is (its shape, sound, config switch, where its ground is and how one is made) is a row of
+ * {@link #types}: a new kind is a row there and its class.
  */
 public class WorldActorHandler extends AbstractClientHandler {
 
@@ -52,16 +61,8 @@ public class WorldActorHandler extends AbstractClientHandler {
     private static final int KEEP_RANGE = RANGE + 32;
     // How often chances are looked at, in ticks
     private static final int CHECK_TICKS = 20;
-    // The longest any actor lives, in slots, so chances from slots before it can still be running
-    private static final int LIFETIME_SLOTS = Math.ceilDiv(
-            Math.max(Math.max(VortexPath.DUST_DEVIL.maxLifetime(), VortexPath.SNOWSPOUT.maxLifetime()),
-                    Math.max(VortexPath.WATERSPOUT.maxLifetime(), VortexPath.FIRESPOUT.maxLifetime())),
-            ActorSpawns.SLOT_TICKS);
-    // A dust devil's wind, and a waterspout's rush of water
-    private static final Identifier DUST_DEVIL_SOUND = Constants.asId("actor/dust_devil");
-    private static final Identifier SNOWSPOUT_SOUND = Constants.asId("actor/snowspout");
-    private static final Identifier FIRESPOUT_SOUND = Constants.asId("actor/firespout");
-    private static final Identifier WATERSPOUT_SOUND = Constants.asId("actor/waterspout");
+    // Where a summoned one starts, ahead of the player, in blocks
+    private static final double SUMMON_AHEAD = 16D;
 
     /**
      * How a summons went
@@ -70,17 +71,55 @@ public class WorldActorHandler extends AbstractClientHandler {
         STARTED,
         // The kind is turned off, in the config or in this dimension
         OFF,
-        // Nowhere for one ahead of the player: a waterspout needs open water
+        // Nowhere for one ahead of the player: a waterspout needs open water, a firespout open lava
         NO_PLACE
     }
-    // Where a summoned one starts, ahead of the player, in blocks
-    private static final double SUMMON_AHEAD = 16D;
+
+    /**
+     * Whether one can start at a place
+     */
+    @FunctionalInterface
+    private interface Placement {
+        boolean canStart(ClientLevel level, double x, double z);
+    }
+
+    /**
+     * The height of the ground one stands on in a column, for the biome there
+     */
+    @FunctionalInterface
+    private interface Ground {
+        int y(ClientLevel level, int x, int z);
+    }
+
+    /**
+     * Makes one, where it can start; null if it can't after all
+     */
+    @FunctionalInterface
+    private interface Maker {
+        @Nullable IActor make(ClientLevel level, VortexPath path, int age, Biome biome, @Nullable ISoundFactory sound);
+    }
+
+    /**
+     * What a kind of actor is
+     *
+     * @param shape           its size, speed and life
+     * @param sound           the sound factory that follows it
+     * @param enabled         its switch in the config
+     * @param summonsAnywhere whether {@code /dsactor} starts one wherever the player looks, for testing, rather than
+     *                        only where one could start
+     */
+    private record Type(VortexPath.Shape shape, Identifier sound, Predicate<Configuration.WorldActorOptions> enabled,
+                        boolean summonsAnywhere, Placement placement, Ground ground, Maker maker) {
+    }
 
     private final IBiomeLibrary biomeLibrary;
     private final ITagLibrary tags;
     private final IDimensionOracle dimension;
     private final ISoundLibrary soundLibrary;
     private final IAudioPlayer audioPlayer;
+    private final Map<ActorKind, Type> types = new EnumMap<>(ActorKind.class);
+    // The longest any actor lives, in slots, so chances from slots before it can still be running
+    private final int lifetimeSlots;
     private final ObjectArray<IActor> actors = new ObjectArray<>();
     // The chances looked at, by key, with the slot they were in, to forget them once past
     private final Long2LongOpenHashMap seen = new Long2LongOpenHashMap();
@@ -94,6 +133,33 @@ public class WorldActorHandler extends AbstractClientHandler {
         this.dimension = dimension;
         this.soundLibrary = soundLibrary;
         this.audioPlayer = audioPlayer;
+
+        // A dust devil's dust is the biome's
+        this.types.put(ActorKind.DUST_DEVIL, new Type(VortexPath.DUST_DEVIL, Constants.asId("actor/dust_devil"), o -> o.enableDustDevils, true,
+                (level, x, z) -> GroundVortex.canStart(GroundVortex.DUST_DEVIL, level, tags, x, z), WorldActorHandler::heightmap,
+                (level, path, age, biome, sound) -> new GroundVortex(GroundVortex.DUST_DEVIL, path, age, DustStorms.dustColor(biome, biomeLibrary), tags, sound, audioPlayer)));
+        this.types.put(ActorKind.SNOWSPOUT, new Type(VortexPath.SNOWSPOUT, Constants.asId("actor/snowspout"), o -> o.enableSnowspouts, true,
+                (level, x, z) -> GroundVortex.canStart(GroundVortex.SNOWSPOUT, level, tags, x, z), WorldActorHandler::heightmap,
+                (level, path, age, biome, sound) -> new GroundVortex(GroundVortex.SNOWSPOUT, path, age, GroundVortex.SNOW_COLOR, tags, sound, audioPlayer)));
+        // As tall as from the water to the clouds
+        this.types.put(ActorKind.WATERSPOUT, new Type(VortexPath.WATERSPOUT, Constants.asId("actor/waterspout"), o -> o.enableWaterspouts, false,
+                (level, x, z) -> Waterspout.canStart(level, tags, x, z), WorldActorHandler::heightmap,
+                (level, path, age, biome, sound) -> {
+                    var surface = heightmap(level, Mth.floor(path.x(age)), Mth.floor(path.z(age)));
+                    return new Waterspout(path.withHeight(Waterspout.height(surface, dimension.getCloudHeight())), age, tags, sound, audioPlayer);
+                }));
+        // Under the Nether's roof, its biome is the lava's, not the roof's
+        this.types.put(ActorKind.FIRESPOUT, new Type(VortexPath.FIRESPOUT, Constants.asId("actor/firespout"), o -> o.enableFirespouts, false,
+                Firespout::canStart,
+                (level, x, z) -> {
+                    var surface = Firespout.lavaSurface(level, x, z);
+                    return surface == Integer.MIN_VALUE ? heightmap(level, x, z) : surface;
+                },
+                (level, path, age, biome, sound) -> new Firespout(path, age, sound, audioPlayer)));
+
+        if (this.types.size() != ActorKind.values().length)
+            throw new IllegalStateException("A kind of world actor has no type");
+        this.lifetimeSlots = Math.ceilDiv(this.types.values().stream().mapToInt(type -> type.shape().maxLifetime()).max().orElse(0), ActorSpawns.SLOT_TICKS);
     }
 
     @Override
@@ -102,10 +168,7 @@ public class WorldActorHandler extends AbstractClientHandler {
             this.clear();
             return;
         }
-        if (clientLevel != this.level) {
-            this.clear();
-            this.level = clientLevel;
-        }
+        this.follow(clientLevel);
 
         var particles = particleShare(GameUtils.getGameSettings().particles().get());
         this.actors.removeIf(actor -> !actor.tick(clientLevel, particles) || !this.inRange(player, actor.x(), actor.z(), KEEP_RANGE) || !this.kindEnabled(actor.kind()));
@@ -117,7 +180,7 @@ public class WorldActorHandler extends AbstractClientHandler {
 
     private void lookForNew(ClientLevel level, Player player, long time) {
         long slot = ActorSpawns.slotOf(time);
-        this.seen.long2LongEntrySet().removeIf(entry -> entry.getLongValue() < slot - LIFETIME_SLOTS);
+        this.seen.long2LongEntrySet().removeIf(entry -> entry.getLongValue() < slot - this.lifetimeSlots);
 
         long worldSeed = level.getBiomeManager().biomeZoomSeed;
         int minX = ActorSpawns.cellOf(player.getX() - RANGE), maxX = ActorSpawns.cellOf(player.getX() + RANGE);
@@ -125,7 +188,7 @@ public class WorldActorHandler extends AbstractClientHandler {
         for (var kind : ActorKind.values()) {
             if (!this.kindEnabled(kind))
                 continue;
-            for (long s = slot - LIFETIME_SLOTS; s <= slot; s++)
+            for (long s = slot - this.lifetimeSlots; s <= slot; s++)
                 for (int cx = minX; cx <= maxX; cx++)
                     for (int cz = minZ; cz <= maxZ; cz++)
                         this.consider(level, player, time, s, ActorSpawns.plan(worldSeed, cx, cz, s, kind));
@@ -135,7 +198,8 @@ public class WorldActorHandler extends AbstractClientHandler {
     private void consider(ClientLevel level, Player player, long time, long slot, ActorSpawns.Plan plan) {
         if (time < plan.startTick() || this.seen.containsKey(plan.key()))
             return;
-        var path = VortexPath.of(shape(plan.kind()), plan.x(), plan.z(), plan.seed(), UpperWind.heading(UpperWind.dayOf(plan.startTick())));
+        var type = this.types.get(plan.kind());
+        var path = VortexPath.of(type.shape(), plan.x(), plan.z(), plan.seed(), windHeading(plan.startTick()));
         int age = (int) (time - plan.startTick());
         if (age >= path.lifetime()) {
             this.seen.put(plan.key(), slot);
@@ -143,65 +207,15 @@ public class WorldActorHandler extends AbstractClientHandler {
         }
         // Not yet in reach, or its ground not yet loaded: looked at again later
         double x = path.x(age), z = path.z(age);
-        var pos = BlockPos.containing(x, 0, z);
-        if (!this.inRange(player, x, z, RANGE) || !level.hasChunkAt(pos))
+        if (!this.inRange(player, x, z, RANGE) || !level.hasChunkAt(BlockPos.containing(x, 0, z)))
             return;
 
         this.seen.put(plan.key(), slot);
-        var biome = level.getBiome(pos.atY(level.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ()))).value();
+        var biome = biomeAt(type, level, x, z);
         var entry = this.biomeLibrary.getBiomeInfo(biome).getActor(plan.kind());
-        if (entry == null || plan.roll() >= entry.chance() || !entry.matches())
+        if (entry == null || plan.roll() >= entry.chance() || !entry.matches() || !type.placement().canStart(level, x, z))
             return;
-        var actor = this.start(level, plan.kind(), plan.x(), plan.z(), plan.seed(), plan.startTick(), age, biome);
-        if (actor != null)
-            this.actors.add(actor);
-    }
-
-    /**
-     * One of a kind, if it can start where it is now (as its path has it at this age), or null
-     */
-    private @Nullable IActor start(ClientLevel level, ActorKind kind, double startX, double startZ, long seed, long startTick, int age, Biome biome) {
-        var wind = UpperWind.heading(UpperWind.dayOf(startTick));
-        var path = VortexPath.of(shape(kind), startX, startZ, seed, wind);
-        double x = path.x(age), z = path.z(age);
-        return switch (kind) {
-            case DUST_DEVIL, SNOWSPOUT -> {
-                var style = groundStyle(kind);
-                yield GroundVortex.canStart(style, level, this.tags, x, z) ? this.groundVortex(kind, path, age, biome) : null;
-            }
-            case FIRESPOUT -> Firespout.canStart(level, x, z) ? new Firespout(path, age, this.sound(FIRESPOUT_SOUND), this.audioPlayer) : null;
-            case WATERSPOUT -> {
-                if (!Waterspout.canStart(level, this.tags, x, z))
-                    yield null;
-                // As tall as from the water to the clouds
-                var surface = level.getHeight(Heightmap.Types.MOTION_BLOCKING, Mth.floor(x), Mth.floor(z));
-                var height = Waterspout.height(surface, this.dimension.getCloudHeight());
-                yield new Waterspout(VortexPath.of(VortexPath.WATERSPOUT, startX, startZ, seed, wind, height), age, this.tags, this.sound(WATERSPOUT_SOUND), this.audioPlayer);
-            }
-        };
-    }
-
-    private static VortexPath.Shape shape(ActorKind kind) {
-        return switch (kind) {
-            case DUST_DEVIL -> VortexPath.DUST_DEVIL;
-            case SNOWSPOUT -> VortexPath.SNOWSPOUT;
-            case FIRESPOUT -> VortexPath.FIRESPOUT;
-            case WATERSPOUT -> VortexPath.WATERSPOUT;
-        };
-    }
-
-    private static GroundVortex.Style groundStyle(ActorKind kind) {
-        return kind == ActorKind.SNOWSPOUT ? GroundVortex.SNOWSPOUT : GroundVortex.DUST_DEVIL;
-    }
-
-    private GroundVortex groundVortex(ActorKind kind, VortexPath path, int age, Biome biome) {
-        return kind == ActorKind.SNOWSPOUT
-                ? new GroundVortex(GroundVortex.SNOWSPOUT, path, age, GroundVortex.SNOW_COLOR, this.tags, this.sound(SNOWSPOUT_SOUND), this.audioPlayer)
-                : new GroundVortex(GroundVortex.DUST_DEVIL, path, age, DustStorms.dustColor(biome, this.biomeLibrary), this.tags, this.sound(DUST_DEVIL_SOUND), this.audioPlayer);
-    }
-
-    private @Nullable ISoundFactory sound(Identifier id) {
-        return this.soundLibrary.getSoundFactory(id).orElse(null);
+        this.start(type, level, path, age, biome);
     }
 
     /**
@@ -212,23 +226,38 @@ public class WorldActorHandler extends AbstractClientHandler {
     public Summoned summon(Player player, ActorKind kind) {
         if (!(player.level() instanceof ClientLevel clientLevel) || !this.enabled() || !this.kindEnabled(kind))
             return Summoned.OFF;
+        this.follow(clientLevel);
         var look = player.getLookAngle();
         var length = Math.max(1e-3D, Math.sqrt(look.x * look.x + look.z * look.z));
         double x = player.getX() + look.x / length * SUMMON_AHEAD;
         double z = player.getZ() + look.z / length * SUMMON_AHEAD;
-        if (clientLevel != this.level) {
-            this.clear();
-            this.level = clientLevel;
-        }
-        var biome = clientLevel.getBiome(BlockPos.containing(x, player.getY(), z)).value();
-        // A dust devil or a snowspout anywhere, for testing; a waterspout needs its water, a firespout its lava
-        IActor actor = kind == ActorKind.WATERSPOUT || kind == ActorKind.FIRESPOUT
-                ? this.start(clientLevel, kind, x, z, RANDOM.nextLong(), clientLevel.getGameTime(), 0, biome)
-                : this.groundVortex(kind, VortexPath.of(shape(kind), x, z, RANDOM.nextLong(), UpperWind.heading(UpperWind.dayOf(clientLevel.getGameTime()))), 0, biome);
-        if (actor == null)
+        var type = this.types.get(kind);
+        if (!clientLevel.hasChunkAt(BlockPos.containing(x, 0, z)) || (!type.summonsAnywhere() && !type.placement().canStart(clientLevel, x, z)))
             return Summoned.NO_PLACE;
+        var path = VortexPath.of(type.shape(), x, z, RANDOM.nextLong(), windHeading(clientLevel.getGameTime()));
+        return this.start(type, clientLevel, path, 0, biomeAt(type, clientLevel, x, z)) ? Summoned.STARTED : Summoned.NO_PLACE;
+    }
+
+    private boolean start(Type type, ClientLevel level, VortexPath path, int age, Biome biome) {
+        var actor = type.maker().make(level, path, age, biome, this.soundLibrary.getSoundFactory(type.sound()).orElse(null));
+        if (actor == null)
+            return false;
         this.actors.add(actor);
-        return Summoned.STARTED;
+        return true;
+    }
+
+    private static Biome biomeAt(Type type, ClientLevel level, double x, double z) {
+        int bx = Mth.floor(x), bz = Mth.floor(z);
+        return level.getBiome(new BlockPos(bx, type.ground().y(level, bx, bz), bz)).value();
+    }
+
+    private static int heightmap(ClientLevel level, int x, int z) {
+        return level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+    }
+
+    // The way the wind blows on the day one starts
+    private static float windHeading(long startTick) {
+        return UpperWind.heading(UpperWind.dayOf(startTick));
     }
 
     /**
@@ -243,12 +272,7 @@ public class WorldActorHandler extends AbstractClientHandler {
     }
 
     private boolean kindEnabled(ActorKind kind) {
-        return switch (kind) {
-            case DUST_DEVIL -> this.config.worldActorOptions.enableDustDevils;
-            case WATERSPOUT -> this.config.worldActorOptions.enableWaterspouts;
-            case SNOWSPOUT -> this.config.worldActorOptions.enableSnowspouts;
-            case FIRESPOUT -> this.config.worldActorOptions.enableFirespouts;
-        };
+        return this.types.get(kind).enabled().test(this.config.worldActorOptions);
     }
 
     private boolean inRange(Player player, double x, double z, int range) {
@@ -266,6 +290,14 @@ public class WorldActorHandler extends AbstractClientHandler {
         };
     }
 
+    // A new level is a fresh start
+    private void follow(ClientLevel level) {
+        if (level != this.level) {
+            this.clear();
+            this.level = level;
+        }
+    }
+
     private void clear() {
         this.actors.clear();
         this.seen.clear();
@@ -280,7 +312,7 @@ public class WorldActorHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         if (!this.actors.isEmpty())
-            event.add(CollectDiagnosticsEvent.Section.Systems, "World actors: %d (dust devils %d, waterspouts %d, snowspouts %d, firespouts %d)".formatted(this.actors.size(),
-                    this.count(ActorKind.DUST_DEVIL), this.count(ActorKind.WATERSPOUT), this.count(ActorKind.SNOWSPOUT), this.count(ActorKind.FIRESPOUT)));
+            event.add(CollectDiagnosticsEvent.Section.Systems, "World actors: %d (%s)".formatted(this.actors.size(),
+                    Arrays.stream(ActorKind.values()).map(kind -> kind.getName() + " " + this.count(kind)).collect(Collectors.joining(", "))));
     }
 }

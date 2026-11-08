@@ -7,6 +7,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
@@ -26,8 +27,10 @@ import org.orecruncher.dsurround.tags.FluidTags;
  * splashes, seagrass and kelp torn up from shallow water ({@link VortexDebris}), and a rush of water following it. It
  * starts over open water; coming ashore, or onto ice, breaks it up.
  */
-public final class Waterspout implements IActor {
+public final class Waterspout extends VortexActor {
 
+    // Broken up by land or ice in two seconds; a rush of water every two to three and a half seconds
+    private static final Traits TRAITS = new Traits(1F / 40F, 40, 30, 1D);
     // Puffs a tick at full strength, in the funnel and in the spray, splashes, and the chance a tick of tearing
     // something up
     private static final float FUNNEL_PUFFS = 10F;
@@ -42,34 +45,16 @@ public final class Waterspout implements IActor {
     // How tall it can be, in blocks, whatever the clouds' height
     static final float MIN_HEIGHT = 40F;
     static final float MAX_HEIGHT = 160F;
-    // How fast land or ice breaks it up, a share of its strength a tick
-    private static final float BREAK_UP = 1F / 40F;
-    // Ticks between its sounds, this and up to this many more: each a rush of water, overlapping the last
-    private static final int SOUND_TICKS = 40;
-    private static final int SOUND_TICKS_MORE = 30;
 
-    private final VortexPath path;
     private final ITagLibrary tags;
-    @Nullable
-    private final ISoundFactory sound;
-    private final IAudioPlayer audioPlayer;
-    private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
-    private int age;
-    private float intact = 1F;
-    private boolean breakingUp;
-    private int nextSound;
 
     /**
      * @param age   how far into its life it is already, in ticks, for one a player comes upon part way through
      * @param sound its rush of water, if the factory is there
      */
     public Waterspout(VortexPath path, int age, ITagLibrary tags, @Nullable ISoundFactory sound, IAudioPlayer audioPlayer) {
-        this.path = path;
-        this.age = age;
+        super(TRAITS, path, age, sound, audioPlayer);
         this.tags = tags;
-        this.sound = sound;
-        this.audioPlayer = audioPlayer;
-        this.nextSound = age;
     }
 
     /**
@@ -84,17 +69,10 @@ public final class Waterspout implements IActor {
      */
     public static boolean canStart(Level level, ITagLibrary tags, double x, double z) {
         var probe = new BlockPos.MutableBlockPos();
-        int bx = Mth.floor(x), bz = Mth.floor(z);
-        int surface = surface(level, probe, bx, bz);
-        if (surface == Integer.MIN_VALUE || !isOpenWater(level, tags, probe.set(bx, surface, bz)))
+        int surface = surface(level, probe, Mth.floor(x), Mth.floor(z));
+        if (surface == Integer.MIN_VALUE || !isOpenWater(level, tags, probe.set(Mth.floor(x), surface, Mth.floor(z))))
             return false;
-        for (int i = 0; i < 8; i++) {
-            var angle = i * Mth.TWO_PI / 8F;
-            int cx = Mth.floor(x + Mth.cos(angle) * OPEN_WATER), cz = Mth.floor(z + Mth.sin(angle) * OPEN_WATER);
-            if (surface(level, probe, cx, cz) != surface || !isOpenWater(level, tags, probe.set(cx, surface, cz)))
-                return false;
-        }
-        return true;
+        return allAround(x, z, OPEN_WATER, (cx, cz) -> surface(level, probe, cx, cz) == surface && isOpenWater(level, tags, probe.set(cx, surface, cz)));
     }
 
     // The top block of a column, or MIN_VALUE if its chunk isn't loaded
@@ -115,54 +93,28 @@ public final class Waterspout implements IActor {
     }
 
     @Override
-    public double x() {
-        return this.path.x(this.age);
-    }
-
-    @Override
-    public double z() {
-        return this.path.z(this.age);
-    }
-
-    @Override
-    public boolean tick(ClientLevel level, float particles) {
-        if (++this.age >= this.path.lifetime() || this.intact <= 0F)
-            return false;
-
-        int bx = Mth.floor(this.x()), bz = Mth.floor(this.z());
-        int surface = surface(level, this.probe, bx, bz);
-        if (surface == Integer.MIN_VALUE)
-            return true;
-        if (!isOpenWater(level, this.tags, this.probe.set(bx, surface, bz)))
-            this.breakingUp = true;
-        if (this.breakingUp)
-            this.intact -= BREAK_UP;
+    protected double foot(ClientLevel level, int x, int z) {
+        int surface = surface(level, this.probe, x, z);
+        if (!isOpenWater(level, this.tags, this.probe.set(x, surface, z)))
+            this.breakUp();
         // Just under the top of the water block, where the surface is drawn
-        double footY = surface + 0.9D;
+        return surface + 0.9D;
+    }
 
-        var strength = this.path.strength(this.age) * Math.max(0F, this.intact);
-        if (strength > 0F && this.age >= this.nextSound) {
-            this.nextSound = this.age + SOUND_TICKS + level.getRandom().nextInt(SOUND_TICKS_MORE + 1);
-            if (this.sound != null)
-                this.audioPlayer.play(this.sound.createAtLocation(this.x(), footY + 1D, this.z(), strength));
-        }
-        if (particles <= 0F || strength <= 0F)
-            return true;
-
-        var random = level.getRandom();
+    @Override
+    protected void show(ClientLevel level, RandomSource random, double footY, float strength, float particles) {
         var engine = GameUtils.getParticleManager();
-        for (int i = GroundVortex.count(FUNNEL_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
+        for (int i = count(FUNNEL_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
             engine.add(WaterspoutMist.create(level, this.path, this.age, footY, strength, false, random.nextFloat()));
-        for (int i = GroundVortex.count(SPRAY_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
+        for (int i = count(SPRAY_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
             engine.add(WaterspoutMist.create(level, this.path, this.age, footY, strength, true, 0F));
-        for (int i = GroundVortex.count(SPLASHES * strength * particles, random.nextFloat()); i > 0; i--) {
+        for (int i = count(SPLASHES * strength * particles, random.nextFloat()); i > 0; i--) {
             var angle = random.nextFloat() * Mth.TWO_PI;
             var r = this.path.radius(0F) + random.nextFloat() * 2F;
             level.addParticle(ParticleTypes.SPLASH, this.x() + Mth.cos(angle) * r, footY + 0.1D, this.z() + Mth.sin(angle) * r, 0D, 0.1D, 0D);
         }
         if (random.nextFloat() < DEBRIS_CHANCE * strength * particles)
-            this.tearUp(level, footY, surface, random.nextFloat(), random.nextFloat());
-        return true;
+            this.tearUp(level, footY, Mth.floor(footY), random.nextFloat(), random.nextFloat());
     }
 
     /**

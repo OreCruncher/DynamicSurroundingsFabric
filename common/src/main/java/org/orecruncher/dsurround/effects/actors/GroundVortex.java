@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -30,7 +31,7 @@ import org.orecruncher.dsurround.tags.BlockEffectTags;
  * takes on that color over a second or two, while over ground that gives no dust it keeps what it carries. A
  * snowspout's is always white, with snowflakes whirling in it.
  */
-public final class GroundVortex implements IActor {
+public final class GroundVortex extends VortexActor {
 
     /**
      * What a kind of ground vortex is like
@@ -56,39 +57,27 @@ public final class GroundVortex implements IActor {
     // White, for a snowspout
     public static final int SNOW_COLOR = 0xFFFFFF;
 
+    // Broken up by water or a wall in a second and a half; a gust of wind every one and a half to two and a half
+    // seconds, from just over the ground
+    private static final Traits TRAITS = new Traits(1F / 30F, 30, 20, 1D);
     // Puffs a tick at full strength, up the funnel and around the foot, and the chance a tick of picking something up
     private static final float FUNNEL_PUFFS = 5F;
     private static final float SKIRT_PUFFS = 2F;
     private static final float DEBRIS_CHANCE = 0.5F;
     // How far from its axis it picks things up, in blocks
     private static final float PICK_UP_REACH = 1.5F;
-    // How fast water or a wall breaks it up, a share of its strength a tick
-    private static final float BREAK_UP = 1F / 30F;
     // How far the ground can rise under its foot in a step and it still climbs it, in blocks: more is a wall
     private static final int CLIMB = 2;
-    // Ticks between its sounds, this and up to this many more: each one a gust of wind, overlapping the last
-    private static final int SOUND_TICKS = 30;
-    private static final int SOUND_TICKS_MORE = 20;
     // How much of the way to the ground's color its dust goes in a tick
     static final float COLOR_BLEND = 0.04F;
 
     private final Style style;
-    private final VortexPath path;
     private final ITagLibrary tags;
     // The dust's color now, as RGB; taken straight from the ground the first time it is over dusty ground
     private int color;
     private boolean colorFromGround;
-    @Nullable
-    private final ISoundFactory sound;
-    private final IAudioPlayer audioPlayer;
-    private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
-    private int age;
-    // 1 until it crosses water or meets a wall, then down to 0
-    private float intact = 1F;
-    private boolean breakingUp;
     // The ground under its foot last tick, to see a wall coming; none yet
     private int lastGroundY = Integer.MIN_VALUE;
-    private int nextSound;
 
     /**
      * @param age   how far into its life it is already, in ticks, for one a player comes upon part way through
@@ -96,14 +85,10 @@ public final class GroundVortex implements IActor {
      * @param sound its wind, if the factory is there
      */
     public GroundVortex(Style style, VortexPath path, int age, int color, ITagLibrary tags, @Nullable ISoundFactory sound, IAudioPlayer audioPlayer) {
+        super(TRAITS, path, age, sound, audioPlayer);
         this.style = style;
-        this.path = path;
-        this.age = age;
         this.color = color;
         this.tags = tags;
-        this.sound = sound;
-        this.audioPlayer = audioPlayer;
-        this.nextSound = age;
     }
 
     /**
@@ -125,51 +110,27 @@ public final class GroundVortex implements IActor {
     }
 
     @Override
-    public double x() {
-        return this.path.x(this.age);
-    }
-
-    @Override
-    public double z() {
-        return this.path.z(this.age);
-    }
-
-    @Override
-    public boolean tick(ClientLevel level, float particles) {
-        if (++this.age >= this.path.lifetime() || this.intact <= 0F)
-            return false;
-
-        int bx = Mth.floor(this.x()), bz = Mth.floor(this.z());
-        if (!level.hasChunkAt(this.probe.set(bx, 0, bz)))
-            return true;
-        int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, bx, bz);
-        if (!level.getFluidState(this.probe.set(bx, groundY - 1, bz)).isEmpty()
+    protected double foot(ClientLevel level, int x, int z) {
+        int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+        if (!level.getFluidState(this.probe.set(x, groundY - 1, z)).isEmpty()
                 || (this.lastGroundY != Integer.MIN_VALUE && groundY - this.lastGroundY > CLIMB))
-            this.breakingUp = true;
+            this.breakUp();
         // Against a wall it stays at the foot of it rather than climbing onto the roof
-        if (!this.breakingUp || this.lastGroundY == Integer.MIN_VALUE)
+        if (!this.isBreakingUp() || this.lastGroundY == Integer.MIN_VALUE)
             this.lastGroundY = groundY;
         else
             groundY = Math.min(groundY, this.lastGroundY);
-        if (this.breakingUp)
-            this.intact -= BREAK_UP;
-        var ground = level.getBlockState(this.probe.set(bx, groundY - 1, bz));
+        var ground = level.getBlockState(this.probe.set(x, groundY - 1, z));
         if (this.style.groundColor() && this.tags.is(this.style.sources(), ground)) {
             var dust = ground.getMapColor(level, this.probe).col;
             this.color = this.colorFromGround ? blend(this.color, dust, COLOR_BLEND) : dust;
             this.colorFromGround = true;
         }
+        return groundY;
+    }
 
-        var strength = this.path.strength(this.age) * Math.max(0F, this.intact);
-        if (strength > 0F && this.age >= this.nextSound) {
-            this.nextSound = this.age + SOUND_TICKS + level.getRandom().nextInt(SOUND_TICKS_MORE + 1);
-            if (this.sound != null)
-                this.audioPlayer.play(this.sound.createAtLocation(this.x(), groundY + 1D, this.z(), strength));
-        }
-        if (particles <= 0F || strength <= 0F)
-            return true;
-
-        var random = level.getRandom();
+    @Override
+    protected void show(ClientLevel level, RandomSource random, double groundY, float strength, float particles) {
         var engine = GameUtils.getParticleManager();
         for (int i = count(FUNNEL_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
             engine.add(VortexPuff.create(level, this.path, this.age, groundY, this.color, this.style.shade(), this.style.grey(), strength, false));
@@ -180,14 +141,13 @@ public final class GroundVortex implements IActor {
             var h = random.nextFloat() * this.path.height();
             var angle = random.nextFloat() * Mth.TWO_PI;
             var r = this.path.radius(h);
-            var tangent = angle + Mth.HALF_PI * Math.signum(this.path.spin(r));
-            var speed = this.path.spin(r) * r;
+            var tangent = this.path.tangent(angle, r);
+            var speed = Math.abs(this.path.spin(r)) * r;
             level.addParticle(ParticleTypes.SNOWFLAKE, this.path.axisX(h, this.age) + Mth.cos(angle) * r, groundY + h,
-                    this.path.axisZ(h, this.age) + Mth.sin(angle) * r, Mth.cos(tangent) * Math.abs(speed), 0.05D, Mth.sin(tangent) * Math.abs(speed));
+                    this.path.axisZ(h, this.age) + Mth.sin(angle) * r, Mth.cos(tangent) * speed, 0.05D, Mth.sin(tangent) * speed);
         }
         if (random.nextFloat() < DEBRIS_CHANCE * strength * particles)
             this.pickUp(level, random.nextFloat(), random.nextFloat());
-        return true;
     }
 
     /**
@@ -222,13 +182,5 @@ public final class GroundVortex implements IActor {
         if (g == ((from >> 8) & 0xFF)) g += Integer.signum(((to >> 8) & 0xFF) - g);
         if (b == (from & 0xFF)) b += Integer.signum((to & 0xFF) - b);
         return (r << 16) | (g << 8) | b;
-    }
-
-    /**
-     * A whole number of things for a fractional count: the whole part, and one more as often as the fraction says
-     */
-    static int count(float expected, float roll) {
-        int whole = (int) expected;
-        return whole + (roll < expected - whole ? 1 : 0);
     }
 }
