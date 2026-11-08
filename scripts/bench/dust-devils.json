@@ -1,0 +1,91 @@
+// Dust devils (WorldActorHandler, DustDevilPuff, DustDevilDebris): summoned with /dsactor as the warm-up starts, on a
+// flat platform of sand built high over a desert, so no wall or water breaks them up and nothing else is in view. At
+// night, so none start on their own: each run has only the summoned ones. A summoned one has a random size and path, so
+// compare with --spread. Four, as a few could be in view on a busy afternoon, and twelve, far more than ever start
+// naturally. A dust devil lives 37 seconds at least: the warm-up and the recording fit in that. Facing east, downwind
+// on the bench world's day (the time is held), so they travel away from the camera and stay in view: facing south they
+// drifted out of it to the left, and their drawing went unmeasured. See README.md.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 12,
+  "record": 25,
+  "repeats": 2,
+  "scenes": {
+    "devils": {
+      "biome": "minecraft:desert",
+      "yaw": -90,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "tp @s ~ 201 ~",
+        "fill ~-64 ~-2 ~-64 ~64 ~-2 ~64 sandstone",
+        "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 sand"
+      ],
+      "settledCommands": [
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil"
+      ],
+      "profile": "general"
+    },
+    "many": {
+      "biome": "minecraft:desert",
+      "yaw": -90,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "tp @s ~ 201 ~",
+        "fill ~-64 ~-2 ~-64 ~64 ~-2 ~64 sandstone",
+        "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 sand"
+      ],
+      "settledCommands": [
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil",
+        "dsactor dust_devil"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "devils-4",
+      "scene": "devils"
+    },
+    {
+      "label": "devils-12",
+      "scene": "many"
+    },
+    {
+      "label": "devils-off",
+      "scene": "devils",
+      "settings": {
+        "worldActorOptions.enableDustDevils": false
+      }
+    }
+  ]
+}

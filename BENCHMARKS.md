@@ -32,6 +32,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-05: G1 against ZGC (`gc.json`)](#results-2026-11-05-g1-against-zgc-gcjson)
 - [Results, 2026-11-07: rays skip air, random block check](#results-2026-11-07-rays-skip-air-random-block-check)
 - [Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)](#results-2026-11-07-firefly-bushes-firefly-bushesjson)
+- [Results, 2026-11-07: dust devils (`dust-devils.json`)](#results-2026-11-07-dust-devils-dust-devilsjson)
   - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
   - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
@@ -754,6 +755,25 @@ difference is the lights, 0.78 ms, more than the poppy field's 0.49 ms (`firefli
 more fireflies near the camera, and the lights are capped at 64 drawn, so this is close to their worst. A natural patch
 is a handful of bushes, not 637. Lowering the cap or skipping lights close to the camera remain the places to save,
 as for the poppies. `enableLight` turns them off, and the Low performance preset already does.
+
+## Results, 2026-11-07: dust devils (`dust-devils.json`)
+
+Dust devils, the first world actors: puffs of dust whirled up a funnel, a skirt at the foot, debris, and a gust of the
+game's sand wind every couple of seconds. Summoned with `/dsactor` on a flat platform of sand over a desert, at night so
+none start on their own, facing downwind so they travel away from the camera and stay in view (a first pass facing
+south lost them off the side of the frame, and with them their drawing). OpenGL, Fabric, the machine above; commit
+`97b2504f`. Two repeats each, A B C then C B A. A summoned one has a random size and path, so the spreads are wide.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick | Sounds started a second |
+|---|---|---|---|---|
+| 4 dust devils | 0.445 (0.440-0.449) | 0.395 | 0.061 | 2.4 |
+| 12 dust devils | 0.635 (0.625-0.645) | 0.585 | 0.092 | 6.3 |
+| none (`enableDustDevils` off) | 0.384 (0.382-0.385) | 0.249 | 0.005 | 0.5 |
+
+Each dust devil in view costs about 0.02 ms of GPU and 0.03 ms of CPU a frame (its particles, a few hundred puffs, drawn
+soft), and about 0.007 ms of tick. Four, more than are ever likely in view at once naturally, add 0.06 ms of GPU and 0.15
+ms of CPU a frame. Their gusts went through enhanced sound processing for about 0.6 ms a second with four and 1.6 with
+twelve. Nothing here calls for a cut; the game's Particles option thins them (Decreased) or turns them off (Minimal).
 
 ## Rerunning
 
