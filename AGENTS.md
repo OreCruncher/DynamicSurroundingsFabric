@@ -195,6 +195,8 @@ is known of 26.4.
 - Anything touching `Blocks`, `BiomeTrait`, tag classes, etc. needs the game bootstrapped first. Use a static block
   at the top of the test class (before static fields that use those classes), not `@BeforeAll`:
   `static { SharedConstants.tryDetectVersion(); Bootstrap.bootStrap(); }`
+- Item stacks in tests need their default components: call `testing/ItemComponents.bind()` after the bootstrap
+  (26.x binds them only once registries load; without it, "Components not bound yet").
 - No mocking library. `testing/Fakes.of(Interface.class, Map.of("method", args -> ...))` makes proxy fakes;
   `lib/threading/RecordingLog` captures logging; `Randomizer.create(seed)` for repeatable randomness.
 - Resource files from tests: anchor on a mod-owned file (`/assets/dsurround/lang/en_us.json`) — other `assets`

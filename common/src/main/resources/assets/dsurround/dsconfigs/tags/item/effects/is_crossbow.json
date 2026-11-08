@@ -11,6 +11,10 @@
     {
       "id": "#forge:tools/crossbows",
       "required": false
+    },
+    {
+      "id": "#minecraft:enchantable/crossbow",
+      "required": false
     }
   ]
 }

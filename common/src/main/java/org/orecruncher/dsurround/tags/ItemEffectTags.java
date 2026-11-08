@@ -16,6 +16,7 @@ public class ItemEffectTags {
     static final Collection<TagKey<Item>> TAGS = new HashSet<>();
 
     public static final TagKey<Item> AXES = of("is_axe");
+    public static final TagKey<Item> PICKAXES = of("is_pickaxe");
     public static final TagKey<Item> BOOKS = of("is_book");
     public static final TagKey<Item> BOWS = of("is_bow");
     public static final TagKey<Item> CROSSBOWS = of("is_crossbow");

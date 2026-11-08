@@ -42,6 +42,9 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * `/dsmm whatsplaying` names the game's music tracks as the game's "now playing" message does, such as "C418 - Sweden", in your language
 * A volume or pitch in a sound configuration that isn't a number the mod can use, such as `-1e400`, is reported as an error instead of giving the sound a broken pitch
 * Beach waves and mud footprints follow the storm strength `/dsweather` holds
+* Modded tools and weapons get their equip and swing sounds without being tagged: an item no tag names is known by what it does (drawn like a bow, raised like a shield, what its tool mines, whether it is a weapon). On NeoForge, modded fishing rods, maces and spears tagged the convention way are now found
+* Pickaxes have an item class of their own, sounding as axes do for now
+* More blocks have effects: new 26.3 plants rustle and crunch underfoot, wool slabs and leaf litter soak up rain, and blocks from Biomes O' Plenty, BetterEnd, BetterNether, Ecologics, Promenade, Terrestria, Wilder Wild and Enderscape are covered
 
 > ### DynamicSurroundings-26.3-5.1.0
 
