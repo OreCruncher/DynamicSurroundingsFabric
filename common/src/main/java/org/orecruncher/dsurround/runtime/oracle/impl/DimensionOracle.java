@@ -81,4 +81,8 @@ public final class DimensionOracle implements IDimensionOracle {
     public boolean dynamicClouds() {
         return this.dimensionInfo.get().dynamicClouds();
     }
+
+    public boolean worldActors() {
+        return this.dimensionInfo.get().worldActors();
+    }
 }

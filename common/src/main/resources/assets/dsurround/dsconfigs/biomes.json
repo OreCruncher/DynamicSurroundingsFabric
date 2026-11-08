@@ -531,5 +531,27 @@
         "type": "addition"
       }
     ]
+  },
+  {
+    "biomeSelector": "(DESERT || BADLANDS) && !(LUSH || UNDERGROUND)",
+    "_comment": "Dust devils on clear days: they start on sand, red sand, terracotta and coarse dirt",
+    "actors": [
+      {
+        "actor": "dsurround:dust_devil",
+        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "chance": 0.03
+      }
+    ]
+  },
+  {
+    "biomeSelector": "SAVANNA && !UNDERGROUND",
+    "_comment": "Dust devils on clear days, from the savanna's patches of coarse dirt",
+    "actors": [
+      {
+        "actor": "dsurround:dust_devil",
+        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "chance": 0.05
+      }
+    ]
   }
 ]

@@ -63,4 +63,9 @@ public interface IDimensionOracle {
      * Whether the mod's clouds are drawn here, in place of vanilla's
      */
     boolean dynamicClouds();
+
+    /**
+     * Whether world actors (dust devils and the like) appear here, in the biomes given them
+     */
+    boolean worldActors();
 }

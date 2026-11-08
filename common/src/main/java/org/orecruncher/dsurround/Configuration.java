@@ -105,6 +105,10 @@ public class Configuration extends ConfigurationData {
     public final AuroraOptions auroraOptions = new AuroraOptions();
 
     @Property
+    @Comment("Configuration options for world actors: dust devils and the like")
+    public final WorldActorOptions worldActorOptions = new WorldActorOptions();
+
+    @Property
     @Comment("Configuration options for modded Music Manager")
     public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
 
@@ -687,6 +691,16 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("A bright moon washes out faint auroras, as it does the real ones")
         public boolean moonWashout = true;
+    }
+
+    public static class WorldActorOptions {
+        @Property
+        @Comment("Enable/disable world actors: things that move through the world on their own, such as dust devils, seen alike by everyone nearby")
+        public boolean enableWorldActors = true;
+
+        @Property
+        @Comment("Enable/disable dust devils: whirls of dust crossing deserts, badlands and savannas on clear days")
+        public boolean enableDustDevils = true;
     }
 
     public static class MusicManagerOptions {

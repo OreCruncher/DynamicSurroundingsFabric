@@ -51,6 +51,8 @@
       "soundOptions.replaceThunderSounds": false,
       "fogOptions.enableFogEffects": false,
       "auroraOptions.enableAuroras": false,
+      "worldActorOptions.enableWorldActors": false,
+      "worldActorOptions.enableDustDevils": false,
       "particleTweaks.windBlowsParticles": false,
 
       "blockEffects.steamColumnEnabled": false,
@@ -93,6 +95,8 @@
       "fogOptions.enableBiomeFog": true,
       "fogOptions.enableWeatherFog": true,
       "auroraOptions.enableAuroras": true,
+      "worldActorOptions.enableWorldActors": true,
+      "worldActorOptions.enableDustDevils": true,
       "particleTweaks.windBlowsParticles": true,
       "blockEffects.waterRippleStyle": "PIXELATED_CIRCLE"
     }
@@ -176,6 +180,8 @@
       "fogOptions.enableBiomeFog": true,
       "fogOptions.enableWeatherFog": true,
       "auroraOptions.enableAuroras": true,
+      "worldActorOptions.enableWorldActors": true,
+      "worldActorOptions.enableDustDevils": true,
       "particleTweaks.windBlowsParticles": true,
 
       "blockEffects.steamColumnEnabled": true,

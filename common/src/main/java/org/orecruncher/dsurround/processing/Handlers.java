@@ -65,6 +65,7 @@ public class Handlers {
         this.register(FootprintHandler.class);
         this.register(BoatRingHandler.class);
         this.register(ShoreWaveHandler.class);
+        this.register(WorldActorHandler.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(PrecipitationHandler.class);
@@ -187,6 +188,7 @@ public class Handlers {
             .registerSingleton(FootprintHandler.class)
             .registerSingleton(BoatRingHandler.class)
             .registerSingleton(ShoreWaveHandler.class)
+            .registerSingleton(WorldActorHandler.class)
             .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
             .registerSingleton(AuroraHandler.class)

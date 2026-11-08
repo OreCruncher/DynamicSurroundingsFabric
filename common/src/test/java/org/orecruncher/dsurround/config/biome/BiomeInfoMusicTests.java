@@ -87,7 +87,7 @@ public class BiomeInfoMusicTests {
         for (var s : sounds)
             acoustics.add(new AcousticConfig(id(s), Script.TRUE, WeightValue.of(10), SoundEventType.MUSIC));
         return new BiomeConfigRule(Script.TRUE, Optional.empty(), 0, false, List.of(), clearSounds, false,
-                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), acoustics);
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), acoustics, List.of());
     }
 
     private static Set<Identifier> choices(BiomeInfo info, Optional<Music> vanilla) {

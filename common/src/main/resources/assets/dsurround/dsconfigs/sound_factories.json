@@ -210,6 +210,15 @@
     "soundEvent": "minecraft:block.fire.ambient"
   },
   {
+    "location": "dsurround:actor/dust_devil",
+    "soundEvent": "minecraft:block.sand.idle",
+    "volume": 1.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.1
+    }
+  },
+  {
     "location": "dsurround:brush_step/brush",
     "soundEvent": "dsurround:footsteps.brush_through",
     "category": "PLAYER",

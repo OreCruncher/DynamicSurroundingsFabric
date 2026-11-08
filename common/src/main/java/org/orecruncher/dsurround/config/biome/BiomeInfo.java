@@ -12,6 +12,8 @@ import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
+import org.orecruncher.dsurround.config.ActorEntry;
+import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.ConfigServices;
@@ -47,6 +49,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     private final AcousticEntryCollection additionalSounds;
     private final AcousticEntryCollection musicSounds;
     private final ObjectArray<String> comments;
+    private final ObjectArray<ActorEntry> actors;
     @Nullable
     private final TextColor fogColor;
     private final FogDensity fogDensity;
@@ -72,6 +75,7 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         this.additionalSounds = builder.additionalSounds;
         this.musicSounds = builder.musicSounds;
         this.comments = builder.comments;
+        this.actors = builder.actors;
         this.fogColor = builder.fogColor;
         this.fogDensity = builder.fogDensity;
         this.groundFog = builder.groundFog;
@@ -205,6 +209,23 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
         };
     }
 
+    /**
+     * The world actors the biome gives
+     */
+    public Collection<ActorEntry> getActors() {
+        return this.actors;
+    }
+
+    /**
+     * The biome's entry for a kind of world actor, or null if it gives none
+     */
+    public @Nullable ActorEntry getActor(ActorKind kind) {
+        for (var actor : this.actors)
+            if (actor.kind() == kind)
+                return actor;
+        return null;
+    }
+
     public Collection<String> getComments() {
         return this.comments;
     }
@@ -227,6 +248,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
 
         builder.append("\nfogDensity: ").append(this.fogDensity.getName());
         builder.append("\ngroundFog: ").append(this.groundFog.getName());
+        if (!this.actors.isEmpty())
+            builder.append("\nactors: ").append(this.actors.stream().map(ActorEntry::toString).collect(Collectors.joining(", ")));
 
         if (this.fogColor != null) {
             builder.append(", fogColor: ").append(this.fogColor.formatValue());

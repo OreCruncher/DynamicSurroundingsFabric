@@ -13,6 +13,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
+import org.orecruncher.dsurround.config.ActorEntry;
+import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.AcousticConfig;
@@ -43,6 +45,8 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
     final AcousticEntryCollection additionalSounds = new AcousticEntryCollection();
     final AcousticEntryCollection musicSounds = new AcousticEntryCollection();
     final ObjectArray<String> comments = new ObjectArray<>();
+    // At most one of each kind: a later rule's replaces an earlier one's
+    final ObjectArray<ActorEntry> actors = new ObjectArray<>();
     @Nullable
     TextColor fogColor;
     FogDensity fogDensity = FogDensity.NONE;
@@ -161,6 +165,17 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
             if (!targetCollection.add(acousticEntry))
                 this.services.logger().warn("[%s] Duplicate acoustic entry: %s", this.biomeName, sr.toString());
         }
+
+        for (var config : entry.actors()) {
+            var kind = ActorKind.byId(config.actor());
+            if (kind == null) {
+                this.services.logger().warn("[%s] Unknown world actor: %s", this.biomeName, config.actor());
+                continue;
+            }
+            this.actors.removeIf(actor -> actor.kind() == kind);
+            if (config.chance() > 0F)
+                this.actors.add(new ActorEntry(kind, config, this.services.conditionEvaluator()));
+        }
     }
 
     /**
@@ -176,6 +191,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
         this.additionalSounds.trim();
         this.musicSounds.trim();
         this.comments.trim();
+        this.actors.trim();
 
         return new BiomeInfo(this);
     }

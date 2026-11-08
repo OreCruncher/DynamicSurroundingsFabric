@@ -346,6 +346,13 @@ is known of 26.4.
   A particle's `tick` isn't always on the client thread: Particle Core ticks particles on several threads at once, and
   Async Particles on a worker. So `tick` touches no shared state unguarded, and no `level.getRandom()` (fine in a
   constructor): an unguarded map in `WaterFoam` crashed with Particle Core (#213).
+- World actors (`effects/actors`, run by `processing/WorldActorHandler`; dust devils so far): client-side things that
+  move through the world, no entities. Every player in a world sees the same ones: `ActorSpawns` gives each 128-block
+  cell one chance per kind every 1200-tick slot, hashed from the world's `BiomeManager.biomeZoomSeed` (class tweaker),
+  and an actor's whole life is worked out from its seed (`DustDevilPath`), so one met part way through is where it is
+  for everyone. Biomes give them through `actors` in `biomes.json` (`actor`, `conditions`, `chance`; a later rule
+  replaces, chance 0 removes), dimensions through `worldActors` in `dimensions.json`. Conditions are evaluated at the
+  player, so a script on the player's own state would make players disagree. `/dsactor [kind]` summons one ahead.
 - Target portrait (`gui/overlay/TargetPortraitOverlay`): framed by height and width (`headBlocks`), with horses set by hand. A mob's effects aren't sent to clients, only the particles of the visible ones, so `TargetEffects` matches those back by color or type.
 - Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
   `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
