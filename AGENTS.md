@@ -51,6 +51,11 @@ is known of 26.4.
   block, `--mod <jar>` a mod's, `--untagged` only those with none) with the effect tags and `blocks.json` rules it gets
   and the vanilla/`c:` tags that say what it is, for judging what is missing; first it lists our entries naming a block
   or tag the jars don't have (a rename drops a block from an effect silently). Run it on every Minecraft upgrade.
+  For mods: `python scripts/biome-mod-survey.py [--version 26.3] [--min-downloads N] [--slug s ...] [--list]` finds
+  Modrinth's biome mods for the version past a download count (a million by default; less libraries and datapacks),
+  fetches each (SHA-1 checked, read only as a zip) into `build/biome-mods/<version>/`, drops those with no blocks and
+  writes each survey beside it. Judge them, then add entries to `assets/<mod id>/dsconfigs/tags/block/effects/`, each
+  `"required": false`; prefer the mod's own tags (`#promenade:leaf_piles`, BetterX's `#wover:vegetation/vines`).
 - Minecraft version popularity: `python scripts/modrinth-version-stats.py [slug ...]` prints Modrinth's download
   share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events

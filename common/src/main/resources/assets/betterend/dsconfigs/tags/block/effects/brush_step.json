@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "#wover:vegetation/vines",
+      "required": false
+    },
+    {
+      "id": "betterend:umbrella_moss_tall",
+      "required": false
+    },
+    {
+      "id": "betterend:twisted_umbrella_moss_tall",
+      "required": false
+    }
+  ]
+}

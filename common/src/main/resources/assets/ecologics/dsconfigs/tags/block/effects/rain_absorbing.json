@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "ecologics:moss_layer",
+      "required": false
+    },
+    {
+      "id": "ecologics:pale_moss_layer",
+      "required": false
+    },
+    {
+      "id": "ecologics:surface_moss",
+      "required": false
+    }
+  ]
+}

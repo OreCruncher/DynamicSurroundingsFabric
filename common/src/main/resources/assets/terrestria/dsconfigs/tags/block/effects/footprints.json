@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "terrestria:andisol_dirt_path",
+      "required": false
+    },
+    {
+      "id": "terrestria:andisol_farmland",
+      "required": false
+    }
+  ]
+}

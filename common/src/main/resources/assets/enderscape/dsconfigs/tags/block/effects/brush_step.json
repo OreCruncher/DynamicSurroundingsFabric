@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "enderscape:blinklight_vines_body",
+      "required": false
+    },
+    {
+      "id": "enderscape:blinklight_vines_head",
+      "required": false
+    },
+    {
+      "id": "enderscape:puruberry_vine",
+      "required": false
+    },
+    {
+      "id": "enderscape:veiled_vines",
+      "required": false
+    }
+  ]
+}
