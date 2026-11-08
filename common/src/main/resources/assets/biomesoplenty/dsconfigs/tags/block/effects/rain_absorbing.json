@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "biomesoplenty:maple_leaf_litter",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:glowing_moss_carpet",
+      "required": false
+    },
+    {
+      "id": "#biomesoplenty:flower_petal_blocks",
+      "required": false
+    }
+  ]
+}

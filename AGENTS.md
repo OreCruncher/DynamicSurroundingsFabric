@@ -47,6 +47,10 @@ is known of 26.4.
   or a script's shebang). `python scripts/license-headers.py` adds missing ones and brings the copyright line in step
   with `LICENSE` (change the years there, then run it); `--check` only reports. Files with another holder's notice are
   skipped. New files: add the header (the IDE's event template has it).
+- Block effects by block: `python scripts/block-effect-survey.py` lists each block new since 1.21.1 (`--all` every
+  block, `--mod <jar>` a mod's, `--untagged` only those with none) with the effect tags and `blocks.json` rules it gets
+  and the vanilla/`c:` tags that say what it is, for judging what is missing; first it lists our entries naming a block
+  or tag the jars don't have (a rename drops a block from an effect silently). Run it on every Minecraft upgrade.
 - Minecraft version popularity: `python scripts/modrinth-version-stats.py [slug ...]` prints Modrinth's download
   share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events

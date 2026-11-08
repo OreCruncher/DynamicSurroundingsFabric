@@ -14,6 +14,10 @@
     "minecraft:cave_vines_plant",
     "minecraft:tall_seagrass",
     "minecraft:kelp_plant",
+    "minecraft:pale_hanging_moss",
+    "minecraft:bush",
+    "minecraft:firefly_bush",
+    "minecraft:red_shrub",
     {
       "id": "#c:saplings",
       "required": false
