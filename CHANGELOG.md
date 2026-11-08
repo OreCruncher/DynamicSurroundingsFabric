@@ -1,3 +1,47 @@
+> ### DynamicSurroundings-26.3-5.2.0
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that move through the world on their own, the same for every player in it.
+
+**All Loaders**
+* JAVA 25+  
+* Architectury 22.0.5+
+
+**Fabric**
+* Fabric Loader >= 0.20.1
+* Fabric API >= 0.165.2+26.3
+
+**NeoForge**
+* NeoForge 26.3.0.101+
+
+**AI Disclosure**
+* Built the world actors and the firefly bush fireflies, and measured each with benchmark runs
+* Wrote tests that feed the mod's configuration broken values, which found sound settings that gave broken pitches, and fixed them
+* Found a fog jump with mods that draw distant terrain by running one alongside the mod, and fixed it on this side
+
+**What's New**
+* World actors: things that move through the world on their own. Every player in a world sees the same ones in the same places, as each one's path comes from the world's seed
+  * Dust devils cross deserts, badlands and savannas on clear days: dust whirling up a swaying funnel in the color of the ground, lifting sand and dry plants. Water or a wall breaks one up
+  * Waterspouts reach from the sea to the clouds over oceans that aren't cold, more often in a storm, with spray at the foot and seagrass and kelp torn up from shallow water. Coming ashore or onto ice breaks one up
+  * Snowspouts whirl powder snow over snowy plains and frozen lakes on clear days
+  * Firespouts whirl tongues of flame up from the Nether's lava lakes, with smoke, sparks and a roar of fire, lighting what is around them
+  * Wisps: pale lights drifting low over marshes and swamps at night, going out as you come near and showing again farther off. Turquoise soul-fire wisps haunt soul sand valleys
+  * On by default: World Actor Options, a switch for each kind, also set by the Atmosphere and Defaults presets; the Vanilla+ preset turns them off. `/dsactor` summons one ahead of you
+  * Modpacks can give them to biomes with `actors` in `biomes.json`, and to dimensions with `worldActors` in `dimensions.json`
+* Firefly bushes give the mod's fireflies, which wink with a halo and a light, in place of the game's. Under Fireflies in Firefly Options
+* `/dsconflicts` lists the effects a shader pack keeps off, of those switched on in the configuration
+
+**Changes**
+* The mod's fireflies are drawn as the game's firefly, a dot that stays seen between flashes and takes the light's color as it flashes, in place of the end rod's sparkle. A resource pack's firefly texture is used
+* With a mod that draws terrain past the render distance, fog from dust storms, biomes and mornings closes in smoothly from the far horizon. A dust storm made the view jump from the horizon to about 230 blocks at a quarter of its strength
+* Sheet lightning lights the dynamic clouds through a storm's fog; with dynamic clouds on it was all but invisible
+* Enhanced sounds trace through open air for about half the work
+* On NeoForge, the mod reads other mods' files through NeoForge rather than opening each mod's jar and keeping it open, which took 36 MB of memory in a pack of 120 mods
+* `/dsmm whatsplaying` names the game's music tracks as the game's "now playing" message does, such as "C418 - Sweden", in your language
+* A volume or pitch in a sound configuration that isn't a number the mod can use, such as `-1e400`, is reported as an error instead of giving the sound a broken pitch
+* Beach waves and mud footprints follow the storm strength `/dsweather` holds
+
 > ### DynamicSurroundings-26.3-5.1.0
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
