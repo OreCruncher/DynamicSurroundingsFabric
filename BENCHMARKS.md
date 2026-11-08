@@ -34,6 +34,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)](#results-2026-11-07-firefly-bushes-firefly-bushesjson)
 - [Results, 2026-11-07: dust devils (`dust-devils.json`)](#results-2026-11-07-dust-devils-dust-devilsjson)
 - [Results, 2026-11-07: waterspouts (`waterspouts.json`)](#results-2026-11-07-waterspouts-waterspoutsjson)
+- [Results, 2026-11-07: snowspouts (`snowspouts.json`)](#results-2026-11-07-snowspouts-snowspoutsjson)
   - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
   - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
@@ -799,6 +800,22 @@ calls for a cut.
 The first runs found two things: the clip carried only 22 blocks, so a waterspout drifting off past that was silent
 (its factory's volume is now 2.2, heard out to about 48 blocks), and the bench timed out arriving over deep ocean, as
 the player sinks there (it now allows a few blocks up or down, `ScenarioRunner.ARRIVE_DRIFT`).
+
+## Results, 2026-11-07: snowspouts (`snowspouts.json`)
+
+Snowspouts: a dust devil of powder snow (`GroundVortex`, as dust devils now are), with the game's snowflakes whirling
+in it. Summoned with `/dsactor` on a platform of snow over snowy plains, at night, facing downwind, as in
+`dust-devils.json`. An aurora was up and the player's breath showed, in every run alike. OpenGL, Fabric, the machine
+above; commit `91057c06` with the snowspouts uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick | Sounds started a second |
+|---|---|---|---|---|
+| 4 snowspouts | 0.683 (0.640-0.727) | 0.400 | 0.059 | 1.6 |
+| 12 snowspouts | 0.778 (0.760-0.796) | 0.585 | 0.111 | 5.2 |
+| none (`enableSnowspouts` off) | 0.612 (0.607-0.617) | 0.306 | 0.005 | 0 |
+
+A snowspout costs what a dust devil does: about 0.015 ms of GPU and 0.025 ms of CPU a frame, and 0.009 ms of tick.
+The snowflakes add little. Nothing here calls for a cut.
 
 ## Rerunning
 

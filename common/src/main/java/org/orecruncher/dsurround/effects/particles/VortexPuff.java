@@ -9,11 +9,11 @@ import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.effects.actors.VortexPath;
 
 /**
- * A puff of dust in a dust devil: a {@link SoftPuffParticle} with the dust storms' sprites, whirled around the devil's
- * axis as it rises up the funnel, following the devil as it travels. A skirt puff stays low instead, spreading out
- * around the foot.
+ * A puff of dust or powder snow in a dust devil or a snowspout: a {@link SoftPuffParticle} with the dust storms'
+ * sprites, whirled around the axis as it rises up the funnel, following the vortex as it travels. A skirt puff stays
+ * low instead, spreading out around the foot.
  */
-public class DustDevilPuff extends SoftPuffParticle {
+public class VortexPuff extends SoftPuffParticle {
 
     // Fractions of its life spent fading in at the start and out at the end
     private static final float FADE_IN = 0.15F;
@@ -24,9 +24,6 @@ public class DustDevilPuff extends SoftPuffParticle {
     // How thick, at full strength, in the funnel and in the skirt
     private static final float FUNNEL_ALPHA = 0.3F;
     private static final float SKIRT_ALPHA = 0.25F;
-    // The dust's color is the ground's, from the map: in the air it is darker, and greyer, as dust scatters the light
-    private static final float SHADE = 0.72F;
-    private static final float GREY = 0.35F;
     // How fast a skirt puff rises and spreads, in blocks a tick
     private static final float SKIRT_RISE = 0.03F;
     private static final float SKIRT_SPREAD = 0.05F;
@@ -42,19 +39,21 @@ public class DustDevilPuff extends SoftPuffParticle {
     private float radius;
 
     /**
-     * A puff in a dust devil
+     * A puff in a vortex
      *
-     * @param devilAge the devil's age now, in ticks
-     * @param groundY  the ground under the devil
-     * @param color    the dust's color, as RGB
-     * @param strength how strong the devil is, 0 to 1: a weak one is thinner
+     * @param devilAge the vortex's age now, in ticks
+     * @param groundY  the ground under it
+     * @param color    what it lifts' color, as RGB
+     * @param shade    how much darker it is in the air, 0 to 1 (1 as it is)
+     * @param grey     how much greyer, 0 to 1 (0 as it is)
+     * @param strength how strong the vortex is, 0 to 1: a weak one is thinner
      * @param skirt    a puff of the skirt around the foot, rather than the funnel
      */
-    public static Particle create(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float strength, boolean skirt) {
-        return new DustDevilPuff(level, path, devilAge, groundY, color, strength, skirt);
+    public static Particle create(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float shade, float grey, float strength, boolean skirt) {
+        return new VortexPuff(level, path, devilAge, groundY, color, shade, grey, strength, skirt);
     }
 
-    protected DustDevilPuff(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float strength, boolean skirt) {
+    protected VortexPuff(ClientLevel level, VortexPath path, int devilAge, double groundY, int color, float shade, float grey, float strength, boolean skirt) {
         super(level, path.x(devilAge), groundY, path.z(devilAge), DSurroundParticleSprites.DUST.get(level.getRandom()), FADE_IN, FADE_OUT, skirt ? SKIRT_GROWTH : GROWTH);
         var random = level.getRandom();
         this.path = path;
@@ -81,10 +80,10 @@ public class DustDevilPuff extends SoftPuffParticle {
         }
         this.quadSize = this.startSize;
         float r = ((color >> 16) & 0xFF) / 255F, g = ((color >> 8) & 0xFF) / 255F, b = (color & 0xFF) / 255F;
-        float grey = (r + g + b) / 3F;
-        this.rCol = Mth.lerp(GREY, r, grey) * SHADE;
-        this.gCol = Mth.lerp(GREY, g, grey) * SHADE;
-        this.bCol = Mth.lerp(GREY, b, grey) * SHADE;
+        float mean = (r + g + b) / 3F;
+        this.rCol = Mth.lerp(grey, r, mean) * shade;
+        this.gCol = Mth.lerp(grey, g, mean) * shade;
+        this.bCol = Mth.lerp(grey, b, mean) * shade;
         this.gravity = 0F;
         this.friction = 1F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;

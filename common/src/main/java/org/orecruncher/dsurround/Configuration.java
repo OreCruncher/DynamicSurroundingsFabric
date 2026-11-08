@@ -705,6 +705,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable waterspouts: funnels of cloud over open sea, rare in fair weather and more often in storms")
         public boolean enableWaterspouts = true;
+
+        @Property
+        @Comment("Enable/disable snowspouts: whirls of powder snow crossing snowy plains and frozen lakes on clear days")
+        public boolean enableSnowspouts = true;
     }
 
     public static class MusicManagerOptions {

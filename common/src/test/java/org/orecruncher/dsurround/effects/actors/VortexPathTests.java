@@ -127,20 +127,20 @@ public class VortexPathTests {
     @Test
     void itsDustTakesOnTheGroundsColorAndGetsThere() {
         int sand = 0xF7E9A3, redSand = 0xD87F33;
-        assertEquals(sand, DustDevil.blend(sand, sand, DustDevil.COLOR_BLEND));
-        var halfway = DustDevil.blend(sand, redSand, 0.5F);
+        assertEquals(sand, GroundVortex.blend(sand, sand, GroundVortex.COLOR_BLEND));
+        var halfway = GroundVortex.blend(sand, redSand, 0.5F);
         assertTrue(((halfway >> 16) & 0xFF) < 0xF7 && ((halfway >> 16) & 0xFF) > 0xD8);
         // Step by step it reaches the new color, not stopping a step short
         int color = sand, steps = 0;
         while (color != redSand && steps < 1000) {
-            color = DustDevil.blend(color, redSand, DustDevil.COLOR_BLEND);
+            color = GroundVortex.blend(color, redSand, GroundVortex.COLOR_BLEND);
             steps++;
         }
         assertEquals(redSand, color);
         // Mostly there in a couple of seconds
         int twoSeconds = sand;
         for (int i = 0; i < 40; i++)
-            twoSeconds = DustDevil.blend(twoSeconds, redSand, DustDevil.COLOR_BLEND);
+            twoSeconds = GroundVortex.blend(twoSeconds, redSand, GroundVortex.COLOR_BLEND);
         assertTrue(Math.abs(((twoSeconds >> 8) & 0xFF) - 0x7F) < 0.25F * (0xE9 - 0x7F));
     }
 
@@ -164,10 +164,23 @@ public class VortexPathTests {
     }
 
     @Test
+    void aSnowspoutIsADustDevilsSizeAndQuicker() {
+        var snow = VortexPath.SNOWSPOUT;
+        var dust = VortexPath.DUST_DEVIL;
+        assertTrue(snow.maxHeight() <= dust.maxHeight());
+        assertTrue(snow.maxSpeed() > dust.maxSpeed());
+        for (long seed = 0; seed < 20; seed++) {
+            var path = VortexPath.of(snow, 0D, 0D, seed, 0F);
+            assertTrue(path.lifetime() >= snow.minLifetime() && path.lifetime() <= snow.maxLifetime());
+            assertTrue(path.height() >= snow.minHeight() && path.height() <= snow.maxHeight());
+        }
+    }
+
+    @Test
     void aFractionalCountRoundsByTheRoll() {
-        assertEquals(2, DustDevil.count(2.3F, 0.5F));
-        assertEquals(3, DustDevil.count(2.3F, 0.2F));
-        assertEquals(0, DustDevil.count(0F, 0F));
-        assertEquals(1, DustDevil.count(1F, 0.99F));
+        assertEquals(2, GroundVortex.count(2.3F, 0.5F));
+        assertEquals(3, GroundVortex.count(2.3F, 0.2F));
+        assertEquals(0, GroundVortex.count(0F, 0F));
+        assertEquals(1, GroundVortex.count(1F, 0.99F));
     }
 }

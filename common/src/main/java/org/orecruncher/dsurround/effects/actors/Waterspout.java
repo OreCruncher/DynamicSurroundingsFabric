@@ -151,11 +151,11 @@ public final class Waterspout implements IActor {
 
         var random = level.getRandom();
         var engine = GameUtils.getParticleManager();
-        for (int i = DustDevil.count(FUNNEL_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
+        for (int i = GroundVortex.count(FUNNEL_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
             engine.add(WaterspoutMist.create(level, this.path, this.age, footY, strength, false, random.nextFloat()));
-        for (int i = DustDevil.count(SPRAY_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
+        for (int i = GroundVortex.count(SPRAY_PUFFS * strength * particles, random.nextFloat()); i > 0; i--)
             engine.add(WaterspoutMist.create(level, this.path, this.age, footY, strength, true, 0F));
-        for (int i = DustDevil.count(SPLASHES * strength * particles, random.nextFloat()); i > 0; i--) {
+        for (int i = GroundVortex.count(SPLASHES * strength * particles, random.nextFloat()); i > 0; i--) {
             var angle = random.nextFloat() * Mth.TWO_PI;
             var r = this.path.radius(0F) + random.nextFloat() * 2F;
             level.addParticle(ParticleTypes.SPLASH, this.x() + Mth.cos(angle) * r, footY + 0.1D, this.z() + Mth.sin(angle) * r, 0D, 0.1D, 0D);

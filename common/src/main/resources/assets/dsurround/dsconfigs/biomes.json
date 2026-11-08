@@ -564,5 +564,16 @@
         "chance": "weather.isRaining() ? 0.03 : 0.005"
       }
     ]
+  },
+  {
+    "biomeSelector": "(SNOWY || ICY) && !(FOREST || MOUNTAIN || UNDERGROUND || OCEAN || SHALLOW_OCEAN || DEEP_OCEAN || RIVER || BEACH)",
+    "_comment": "Snowspouts on clear days: whirls of powder snow over snowy plains and frozen lakes",
+    "actors": [
+      {
+        "actor": "dsurround:snowspout",
+        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "chance": 0.03
+      }
+    ]
   }
 ]

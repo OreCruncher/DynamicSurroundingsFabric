@@ -1,0 +1,90 @@
+// Snowspouts (WorldActorHandler, GroundVortex, VortexPuff): summoned with /dsactor as the warm-up starts, on a flat
+// platform of snow built high over snowy plains, so no wall or water breaks them up and nothing else is in view. At
+// night, so none start on their own: each run has only the summoned ones. A summoned one has a random size and path, so
+// compare with --spread. Four and twelve, as in dust-devils.json. A snowspout lives 30 seconds at least: the warm-up and
+// the recording fit in that. Facing east, downwind on the bench world's day (the time is held). The scenes have names of
+// their own: the bench world remembers each by name, and "snow" is the weather scenarios'. See README.md.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 10,
+  "record": 20,
+  "repeats": 2,
+  "scenes": {
+    "snowspouts": {
+      "biome": "minecraft:snowy_plains",
+      "yaw": -90,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "tp @s ~ 201 ~",
+        "fill ~-64 ~-2 ~-64 ~64 ~-2 ~64 stone",
+        "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 snow_block"
+      ],
+      "settledCommands": [
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout"
+      ],
+      "profile": "general"
+    },
+    "snowspouts-many": {
+      "biome": "minecraft:snowy_plains",
+      "yaw": -90,
+      "pitch": 10,
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "tp @s ~ 201 ~",
+        "fill ~-64 ~-2 ~-64 ~64 ~-2 ~64 stone",
+        "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 snow_block"
+      ],
+      "settledCommands": [
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout",
+        "dsactor snowspout"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "snowspouts-4",
+      "scene": "snowspouts"
+    },
+    {
+      "label": "snowspouts-12",
+      "scene": "snowspouts-many"
+    },
+    {
+      "label": "snowspouts-off",
+      "scene": "snowspouts",
+      "settings": {
+        "worldActorOptions.enableSnowspouts": false
+      }
+    }
+  ]
+}
