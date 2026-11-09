@@ -56,6 +56,10 @@ is known of 26.4.
   fetches each (SHA-1 checked, read only as a zip) into `build/biome-mods/<version>/`, drops those with no blocks and
   writes each survey beside it. Judge them, then add entries to `assets/<mod id>/dsconfigs/tags/block/effects/`, each
   `"required": false`; prefer the mod's own tags (`#promenade:leaf_piles`, BetterX's `#wover:vegetation/vines`).
+- Rewriting biome selectors (moving a fragment into `scripts.json`, say): `python scripts/biome-selector-diff.py
+  [--since REV] [--dump biomes.txt]` checks each rule matches the same biomes as at REV (HEAD by default), def.
+  functions expanded: proved over every combination of its traits and terms, and checked on each biome of a
+  `/dsdump biomes` file (the newest found). Rules pair by position. Exits 1 on any difference.
 - Minecraft version popularity: `python scripts/modrinth-version-stats.py [slug ...]` prints Modrinth's download
   share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events

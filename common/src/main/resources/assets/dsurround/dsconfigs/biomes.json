@@ -1,6 +1,6 @@
 [
   {
-    "biomeSelector": "OVERWORLD && !(WINDSWEPT || MOUNTAIN || WASTELAND || DESERT || BADLANDS || (COLD && ICY) || UNDERGROUND)",
+    "biomeSelector": "OVERWORLD && !(WINDSWEPT || MOUNTAIN || WASTELAND || def.isArid() || def.isFrozen() || UNDERGROUND)",
     "_comment": "Storm wind, where the biome has no wind of its own: as loud as the wind blows",
     "acoustics": [
       {
@@ -37,7 +37,7 @@
     ]
   },
   {
-    "biomeSelector": "(DESERT || BADLANDS) && !(WINDSWEPT || MOUNTAIN || LUSH)",
+    "biomeSelector": "def.isArid() && !(WINDSWEPT || MOUNTAIN || LUSH)",
     "_comment": "Desert/Badlands Wind",
     "acoustics": [
       {
@@ -60,7 +60,7 @@
     ]
   },
   {
-    "biomeSelector": "COLD && ICY",
+    "biomeSelector": "def.isFrozen()",
     "_comment": "Arctic Wind",
     "acoustics": [
       {
@@ -111,7 +111,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && def.isTemperate()",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
@@ -135,7 +135,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
+    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && def.isTemperate()",
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {
@@ -190,7 +190,7 @@
     ]
   },
   {
-    "biomeSelector": "lib.oneof(biome.getId(), 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
+    "biomeSelector": "def.isFrozenOcean()",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
     "fogColor": "#DCDBDF",
     "fogDensity": "normal"
@@ -205,7 +205,7 @@
     ]
   },
   {
-    "biomeSelector": "OCEAN || SHALLOW_OCEAN",
+    "biomeSelector": "def.isShallowOcean()",
     "_comment": "Ocean background",
     "acoustics": [
       {
@@ -263,12 +263,12 @@
     "fogDensity": "medium"
   },
   {
-    "biomeSelector": "!(NETHER || END) && biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
+    "biomeSelector": "!def.isOtherDimension() && biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "#FFEA97"
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
+    "biomeSelector": "def.isOpenLand() && !(MUSHROOM || SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
     "_comment": "Coyote",
     "acoustics": [
       {
@@ -279,7 +279,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || SNOWY || JUNGLE || HOT || BEACH)",
+    "biomeSelector": "def.isOpenLand() && !(SNOWY || JUNGLE || HOT || BEACH)",
     "_comment": "Crow",
     "acoustics": [
       {
@@ -290,7 +290,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
+    "biomeSelector": "def.isOpenLand() && !(DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
     "_comment": "Owl",
     "acoustics": [
       {
@@ -301,7 +301,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(HOT || SWAMP || DEAD || COLD || OCEAN || SHALLOW_OCEAN || WASTELAND || JUNGLE)",
+    "biomeSelector": "FOREST && !def.isShallowOcean() && !(HOT || SWAMP || DEAD || COLD || WASTELAND || JUNGLE)",
     "_comment": "Birds",
     "acoustics": [
       {
@@ -317,7 +317,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(END || NETHER || OCEAN || SHALLOW_OCEAN || RIVER)",
+    "biomeSelector": "FOREST && !(def.isOtherDimension() || def.isShallowOcean() || RIVER)",
     "_comment": "Woodpecker",
     "acoustics": [
       {
@@ -328,7 +328,7 @@
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SHALLOW_OCEAN || SNOWY || NETHER || END)",
+    "biomeSelector": "!(UNDERGROUND || def.isShallowOcean() || def.isOtherDimension()) && !(MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || SNOWY)",
     "_comment": "Raptors",
     "acoustics": [
       {
@@ -350,7 +350,7 @@
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || END)",
+    "biomeSelector" : "def.isWooded() && !(SWAMP || WASTELAND || JUNGLE || DEAD || def.isOtherDimension())",
     "_comment": "Turtledove",
     "acoustics": [
       {
@@ -361,7 +361,7 @@
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && (SNOWY || COLD)",
+    "biomeSelector" : "def.isWooded() && (SNOWY || COLD)",
     "_comment": "Silent forest",
     "acoustics": [
       {
@@ -377,7 +377,7 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "SPOOKY && !(NETHER || END || UNDERGROUND)",
+    "biomeSelector": "def.isHaunted() && !def.isOtherDimension()",
     "_comment": "Fog density for spooky biomes, above ground: fog is the sky's, and a spooky cave (the deep dark, Biomes O' Plenty's spider nest) would fill with it. Mist lies on the ground.",
     "fogDensity": "medium",
     "groundFog": "heavy"
@@ -403,7 +403,7 @@
     ]
   },
   {
-    "biomeSelector": "UNDERGROUND && !(CAVE || NETHER || END)",
+    "biomeSelector": "UNDERGROUND && !(CAVE || def.isOtherDimension())",
     "_comment": "Underground and not in a cave",
     "acoustics": [
       {
@@ -533,7 +533,7 @@
     ]
   },
   {
-    "biomeSelector": "(DESERT || BADLANDS) && !(LUSH || UNDERGROUND)",
+    "biomeSelector": "def.isArid() && !(LUSH || UNDERGROUND)",
     "_comment": "Dust devils on clear days: they start on sand, red sand, terracotta and coarse dirt",
     "actors": [
       {
@@ -555,7 +555,7 @@
     ]
   },
   {
-    "biomeSelector": "(OCEAN || SHALLOW_OCEAN || DEEP_OCEAN) && !(COLD || ICY || SNOWY)",
+    "biomeSelector": "def.isAnyOcean() && !(COLD || ICY || SNOWY)",
     "_comment": "Waterspouts over open sea: rare in fair weather, more often in a storm; none where the sea freezes",
     "actors": [
       {
@@ -566,7 +566,7 @@
     ]
   },
   {
-    "biomeSelector": "(SNOWY || ICY) && !(FOREST || MOUNTAIN || UNDERGROUND || OCEAN || SHALLOW_OCEAN || DEEP_OCEAN || RIVER || BEACH)",
+    "biomeSelector": "(SNOWY || ICY) && !(FOREST || MOUNTAIN || UNDERGROUND || def.isAnyOcean() || RIVER || BEACH)",
     "_comment": "Snowspouts on clear days: whirls of powder snow over snowy plains and frozen lakes",
     "actors": [
       {

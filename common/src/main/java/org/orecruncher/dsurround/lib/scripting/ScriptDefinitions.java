@@ -70,9 +70,10 @@ public record ScriptDefinitions(Map<String, Definition> definitions) {
 
     /**
      * Defines the constants and one section's functions in an engine, in place of what was defined before. Each
-     * problem is described to {@code problems}, and what it concerns is left out.
+     * problem is described to {@code problems}, and what it concerns is left out. Contexts use
+     * {@link ExecutionContext#define}; this is for a bare engine, as tests make.
      */
-    void defineIn(ScriptEngine engine, Section functions, Consumer<String> problems) {
+    public void defineIn(ScriptEngine engine, Section functions, Consumer<String> problems) {
         engine.clearDefinitions();
         var available = new TreeMap<String, Definition>(String.CASE_INSENSITIVE_ORDER);
         for (var definition : this.definitions.values()) {

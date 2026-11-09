@@ -13,6 +13,17 @@
     "HALLOWEEN_FACTOR": 3
   },
   "biome": {
+    "_oceans": "Deep oceans are DEEP_OCEAN alone, not OCEAN or SHALLOW_OCEAN",
+    "isShallowOcean": "OCEAN || SHALLOW_OCEAN",
+    "isAnyOcean": "def.isShallowOcean() || DEEP_OCEAN",
+    "isFrozenOcean": "lib.oneof(biome.getId(), 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
+    "isOtherDimension": "NETHER || END",
+    "_openLand": "The Overworld's surface away from water",
+    "isOpenLand": "!(UNDERGROUND || def.isShallowOcean() || RIVER || def.isOtherDimension())",
+    "isTemperate": "lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
+    "isWooded": "FOREST || CONIFEROUS || DECIDUOUS",
+    "isArid": "DESERT || BADLANDS",
+    "isFrozen": "COLD && ICY",
     "isHaunted": "SPOOKY && !UNDERGROUND"
   },
   "conditions": {
