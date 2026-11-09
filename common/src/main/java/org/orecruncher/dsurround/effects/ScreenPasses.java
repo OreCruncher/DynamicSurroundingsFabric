@@ -56,8 +56,17 @@ public final class ScreenPasses {
      */
     public static void draw(Supplier<String> label, GpuTextureView color, Optional<Vector4fc> clear, RenderPipeline pipeline,
                             Consumer<RenderPass> bind) {
+        draw(label, color, clear, pipeline, 3, bind);
+    }
+
+    /**
+     * The same, with as many vertices as the vertex shader makes its triangles from (two triangles over part of the
+     * screen, say), rather than the one triangle over all of it
+     */
+    public static void draw(Supplier<String> label, GpuTextureView color, Optional<Vector4fc> clear, RenderPipeline pipeline,
+                            int vertices, Consumer<RenderPass> bind) {
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(label, color, clear, null, OptionalDouble.empty())) {
-            draw(pass, pipeline, bind);
+            draw(pass, pipeline, vertices, bind);
         }
     }
 
@@ -66,14 +75,14 @@ public final class ScreenPasses {
      */
     public static void draw(RenderPassDescriptor descriptor, RenderPipeline pipeline, Consumer<RenderPass> bind) {
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(descriptor)) {
-            draw(pass, pipeline, bind);
+            draw(pass, pipeline, 3, bind);
         }
     }
 
-    private static void draw(RenderPass pass, RenderPipeline pipeline, Consumer<RenderPass> bind) {
+    private static void draw(RenderPass pass, RenderPipeline pipeline, int vertices, Consumer<RenderPass> bind) {
         pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
         bind.accept(pass);
-        pass.draw(3, 1, 0, 0);
+        pass.draw(vertices, 1, 0, 0);
     }
 
     /**

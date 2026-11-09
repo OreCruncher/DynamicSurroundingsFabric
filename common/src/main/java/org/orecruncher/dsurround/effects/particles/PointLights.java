@@ -7,32 +7,29 @@ import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BindGroupLayouts;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.LevelProjection;
-import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
-import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.effects.ScreenPasses;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -50,28 +47,33 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class PointLights {
 
     private static final String POINT_LIGHT_INFO = "PointLightInfo";
-    private static final int POINT_LIGHT_INFO_SIZE = new Std140SizeCalculator().putMat4f().putFloat().get();
+    // As shaders/include/point_lights.glsl lays it out: the projection's inverse, the parameters, the area the lights
+    // cover, then three vec4s a light
+    private static final int LIGHT_VEC4S = 3;
+    private static final int POINT_LIGHT_INFO_SIZE;
+
+    static {
+        var size = new Std140SizeCalculator().putMat4f().putVec4().putVec4();
+        for (int i = 0; i < PointLightFrame.MAX_DRAWN * LIGHT_VEC4S; i++)
+            size.putVec4();
+        POINT_LIGHT_INFO_SIZE = size.get();
+    }
+
     private static final Matrix4f INV_PROJECTION = new Matrix4f();
     private static final BindGroupLayout POINT_LIGHT_LAYOUT = BindGroupLayout.builder()
             .withUniform(POINT_LIGHT_INFO, UniformType.UNIFORM_BUFFER)
             .withUniform(SoftParticles.DEPTH_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
 
-    // The shader finds what each light reaches itself, so nothing is tested against depth; and its squares may face
-    // either way. The shader gives its light already scaled by its strength, and both are simply added.
-    private static final RenderPipeline PIPELINE = RenderPipeline.builder()
-            .withLocation(Constants.asId("pipeline/point_light"))
-            .withVertexShader(Constants.asId("core/point_light"))
-            .withFragmentShader(Constants.asId("core/point_light"))
-            .withBindGroupLayout(BindGroupLayouts.GLOBALS)
-            .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
-            .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+    // All the frame's lights in one pass, two triangles over the part of the screen they can light between them. The
+    // shader finds what each light reaches itself, so nothing is tested against depth. It gives the light already
+    // scaled by its strength, and both are simply added.
+    private static final RenderPipeline PIPELINE = ScreenPasses.pipeline("pipeline/point_light", "core/point_light", "core/point_light")
             .withBindGroupLayout(POINT_LIGHT_LAYOUT)
             .withColorTargetState(new ColorTargetState(new BlendFunction(BlendFactor.ONE, BlendFactor.ONE)))
-            .withCull(false)
-            .withVertexBinding(0, DefaultVertexFormat.POSITION_TEX_COLOR)
-            .withPrimitiveTopology(PrimitiveTopology.QUADS)
             .build();
+    // Two triangles
+    private static final int VERTICES = 6;
 
     public static final ModShader SHADER = new ModShader(PIPELINE, "point lights", "fireflies and flame jets will not light their surroundings", Library.LOGGER);
 
@@ -108,12 +110,8 @@ public final class PointLights {
         SOURCES.add(source);
     }
 
-    // Created on first use, on the render thread
-    @Nullable
-    private static QuadWriter quads;
-    private static final MeshDraw MESH_DRAW = new MeshDraw("point lights");
-    // What it holds doesn't change while the device lives: made once, with no MappableRingBuffer (rotating one sets a
-    // fence, which held the GPU idle for 2 ms a frame after the aurora on 1.21.11, AMD)
+    // Made on first use and written each frame, with no MappableRingBuffer (rotating one sets a fence, which held the GPU
+    // idle for 2 ms a frame after the aurora on 1.21.11, AMD)
     @Nullable
     private static GpuBuffer lightInfo;
 
@@ -193,11 +191,10 @@ public final class PointLights {
 
     /**
      * Draws the lights recorded since the last call into {@code target}, then forgets them. Called outside any render
-     * pass, after the scene's depth has been captured.
-     *
-     * @param transforms the camera's, as the particles are drawn with them (see SoftParticles.renderWorld)
+     * pass, after the scene's depth has been captured, with the camera's transforms set as the particles are drawn with
+     * them (see SoftParticles.renderWorld).
      */
-    public static void draw(RenderTarget target, GpuBufferSlice transforms) {
+    public static void draw(RenderTarget target) {
         // Lights gathered elsewhere during the frame, to be added now that it is known which are wanted
         for (int i = 0; i < SOURCES.size(); i++)
             SOURCES.get(i).run();
@@ -206,47 +203,51 @@ public final class PointLights {
         if (n == 0 || System.nanoTime() - lastAdded > STALE_NANOS || !isAvailable() || !SoftParticles.hasSceneDepth())
             return;
         RENDER_TIMER.begin();
-        SHADER.run(() -> drawLights(target, n, transforms), () -> {});
+        SHADER.run(() -> drawLights(target, n), () -> {});
         RENDER_TIMER.end();
     }
 
-    private static void drawLights(RenderTarget target, int n, GpuBufferSlice transforms) {
-        var device = RenderSystem.getDevice();
-
+    private static void drawLights(RenderTarget target, int n) {
         FRAME.select(lights, n);
         if (FRAME.count() == 0)
             return;
-        if (quads == null)
-            quads = new QuadWriter(QuadWriter.Format.POSITION_TEX_COLOR);
-        quads.begin(FRAME.count());
-        for (int l = 0; l < FRAME.count(); l++) {
-            float x = FRAME.value(l, 0), y = FRAME.value(l, 1), z = FRAME.value(l, 2);
-            // All four at the center; the vertex shader spreads them out. Each corner is given at the light's
-            // radius, which is how the shader knows it.
-            float radius = FRAME.value(l, 7);
-            int color = QuadWriter.color(FRAME.value(l, 3), FRAME.value(l, 4), FRAME.value(l, 5), FRAME.value(l, 6));
-            quads.vertex(x, y, z, -radius, -radius, color);
-            quads.vertex(x, y, z, radius, -radius, color);
-            quads.vertex(x, y, z, radius, radius, color);
-            quads.vertex(x, y, z, -radius, radius, color);
-        }
-
-        // The projection's inverse, worked out once a frame here rather than for each pixel of each light in the shader
-        if (lightInfo == null)
-            lightInfo = device.createBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, POINT_LIGHT_INFO_SIZE);
-        var zeroToOne = device.getDeviceInfo().isZZeroToOne();
-        try (var stack = MemoryStack.stackPush()) {
-            var data = Std140Builder.onStack(stack, POINT_LIGHT_INFO_SIZE)
-                    .putMat4f(INV_PROJECTION.set(LevelProjection.get()).invert())
-                    .putFloat(zeroToOne ? 1F : 0F)
-                    .get();
-            device.createCommandEncoder().writeToBuffer(lightInfo.slice(), data);
-        }
-
+        var projection = LevelProjection.get();
+        FRAME.place(RenderSystem.getModelViewMatrixCopy(), projection);
+        if (FRAME.placedCount() == 0)
+            return;
+        pack(projection);
         var info = lightInfo;
-        MESH_DRAW.draw(quads, PIPELINE, target, transforms, pass -> {
+        ScreenPasses.draw(() -> "Dynamic Surroundings point lights", target.getColorTextureView(), Optional.empty(), PIPELINE, VERTICES, pass -> {
             SoftParticles.bindSceneDepth(pass);
             pass.setUniform(POINT_LIGHT_INFO, info);
         });
+    }
+
+    /**
+     * Writes the frame's lights into the uniform block (see shaders/include/point_lights.glsl): the projection's inverse,
+     * worked out once here rather than for each pixel, then FRAME's placed lights in order
+     */
+    private static void pack(Matrix4fc projection) {
+        var device = RenderSystem.getDevice();
+        if (lightInfo == null)
+            lightInfo = device.createBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, POINT_LIGHT_INFO_SIZE);
+        int placed = FRAME.placedCount();
+        try (var stack = MemoryStack.stackPush()) {
+            var builder = Std140Builder.onStack(stack, POINT_LIGHT_INFO_SIZE)
+                    .putMat4f(INV_PROJECTION.set(projection).invert())
+                    .putVec4(device.getDeviceInfo().isZZeroToOne() ? 1F : 0F, placed, 0F, 0F)
+                    .putVec4(FRAME.area(0), FRAME.area(1), FRAME.area(2), FRAME.area(3));
+            for (int l = 0; l < PointLightFrame.MAX_DRAWN; l++) {
+                for (int v = 0; v < LIGHT_VEC4S; v++) {
+                    if (l < placed) {
+                        int k = v * 4;
+                        builder.putVec4(FRAME.placed(l, k), FRAME.placed(l, k + 1), FRAME.placed(l, k + 2), FRAME.placed(l, k + 3));
+                    } else {
+                        builder.putVec4(0F, 0F, 0F, 0F);
+                    }
+                }
+            }
+            device.createCommandEncoder().writeToBuffer(lightInfo.slice(), builder.get());
+        }
     }
 }

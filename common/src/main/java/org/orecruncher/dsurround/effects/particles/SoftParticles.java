@@ -273,7 +273,7 @@ public final class SoftParticles {
         else if (hasSceneDepth())
             SHADER.run(() -> DEPTH_COPY.copyTo(target), () -> {});
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
-        PointLights.draw(target, transforms);
+        PointLights.draw(target);
         Streaks.draw(target, transforms);
     }
 

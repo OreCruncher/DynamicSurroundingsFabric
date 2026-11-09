@@ -445,6 +445,26 @@ same session, before and after (`fireflies.json`, `burning-lights.json`, two run
 About a third off the lights where there are many (fireflies aren't seeded, so a little of it is the swarm). The burning
 crowd's lights are too few to tell.
 
+**All the lights in one pass (2026-11-09, 5.2.0, Fabric, OpenGL):** in place of a square a light, each pixel reading the
+depth and working out where it is for every light over it, two triangles over the part of the screen the lights cover
+between them, each pixel reading the depth once and testing each light's square (`PointLightFrame.place` works the
+squares out). Against the runs above with the inverse out of the shader (the night before; `off` and `nolights` frames
+within 0.01 ms of them):
+
+| Run | Frame GPU ms, before / after | Point Lights GPU, before / after |
+|---|---|---|
+| fireflies default | 1.241 / 1.068 | 0.350 / 0.204 |
+| fireflies no glow | 1.211 / 1.062 | 0.332 / 0.203 |
+| burning default | 0.373 / 0.330 | 0.033 / 0.029 |
+
+From 0.52 ms before either change to 0.20: the lights went from a third of the frame to a fifth. The screenshots' lights
+add as much brightness as before.
+
+**Cap of 128 lights instead of 64** (fading from 96 instead of 48; one-pass lights, same morning, `off` and `nolights`
+within 0.01 ms): Point Lights 0.294 and 0.306 ms (default, no glow) against 0.204 and 0.203, frame GPU 1.155 against
+1.068. Half as much again for lights further off, which the screenshots barely show (a little more faint glow toward the
+back of the field). The cap stays at 64.
+
 ### Rain and snow on 26.3
 
 | Run | Precipitation GPU/CPU, OpenGL | Vulkan | Waiting for Quads CPU, OpenGL / Vulkan | Precipitation Handler ms/tick |

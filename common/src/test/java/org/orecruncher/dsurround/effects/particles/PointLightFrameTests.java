@@ -3,6 +3,9 @@
 
 package org.orecruncher.dsurround.effects.particles;
 
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -129,5 +132,77 @@ public class PointLightFrameTests {
 
         assertEquals(1, frame.count());
         assertEquals(4F, frame.value(0, 0));
+    }
+
+    // Where lights are placed on screen: looking down -z with no turn, a 70 degree, 16:9 projection
+    private static final Matrix4f VIEW = new Matrix4f();
+    private static final Matrix4f PROJECTION = new Matrix4f().perspective((float) Math.toRadians(70), 16F / 9F, 0.05F, 1000F);
+
+    // One light at full strength at x, y, z from the camera, of the given radius, placed
+    private static PointLightFrame placedAt(float x, float y, float z, float radius) {
+        var lights = new float[STRIDE];
+        lights[0] = x;
+        lights[1] = y;
+        lights[2] = z;
+        lights[3] = lights[4] = lights[5] = 1F;
+        lights[6] = 1F;
+        lights[7] = radius;
+        var frame = new PointLightFrame();
+        frame.select(lights, 1);
+        frame.place(VIEW, PROJECTION);
+        return frame;
+    }
+
+    @Test
+    void aLightAheadCoversItsSphereOnScreen() {
+        var frame = placedAt(2F, 1F, -10F, 1.75F);
+
+        assertEquals(1, frame.placedCount());
+        assertEquals(-10F, frame.placed(0, 2), 1e-5F);
+        assertEquals(1.75F, frame.placed(0, 3));
+        float x0 = frame.placed(0, 8), y0 = frame.placed(0, 9), x1 = frame.placed(0, 10), y1 = frame.placed(0, 11);
+        assertTrue(x0 < x1 && y0 < y1);
+        assertTrue(x1 - x0 < 1F, "a small part of the screen");
+        // Points all around the sphere's edge, as the camera sees it, fall within its part of the screen
+        var center = new Vector3f(2F, 1F, -10F);
+        var dir = new Vector3f(center).normalize();
+        var a = new Vector3f(dir).cross(0F, 1F, 0F).normalize();
+        var b = new Vector3f(a).cross(dir).normalize();
+        for (int k = 0; k < 64; k++) {
+            double angle = k * Math.PI * 2 / 64;
+            var p = new Vector3f(center).add(new Vector3f(a).mul((float) Math.cos(angle) * 1.75F)).add(new Vector3f(b).mul((float) Math.sin(angle) * 1.75F));
+            var clip = PROJECTION.transform(new Vector4f(p, 1F));
+            float nx = clip.x / clip.w, ny = clip.y / clip.w;
+            assertTrue(nx >= x0 - 1e-5F && nx <= x1 + 1e-5F && ny >= y0 - 1e-5F && ny <= y1 + 1e-5F, "edge point " + k);
+        }
+        // The area all the lights cover is this one's
+        assertEquals(x0, frame.area(0));
+        assertEquals(y1, frame.area(3));
+    }
+
+    @Test
+    void aLightAroundTheCameraCoversTheWholeScreen() {
+        var frame = placedAt(0.5F, 0F, 0.5F, 1.75F);
+
+        assertEquals(1, frame.placedCount());
+        assertEquals(-1F, frame.placed(0, 8));
+        assertEquals(-1F, frame.placed(0, 9));
+        assertEquals(1F, frame.placed(0, 10));
+        assertEquals(1F, frame.placed(0, 11));
+    }
+
+    @Test
+    void lightsBehindTheCameraOrOffScreenAreLeftOut() {
+        assertEquals(0, placedAt(0F, 0F, 10F, 1.75F).placedCount(), "behind");
+        assertEquals(0, placedAt(40F, 0F, -10F, 1.75F).placedCount(), "far to the side");
+    }
+
+    @Test
+    void aLightPartlyOffScreenIsClippedToIt() {
+        var frame = placedAt(13F, 0F, -10F, 1.75F);
+
+        assertEquals(1, frame.placedCount());
+        assertEquals(1F, frame.placed(0, 10));
+        assertTrue(frame.placed(0, 8) < 1F);
     }
 }
