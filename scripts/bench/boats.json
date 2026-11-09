@@ -18,12 +18,13 @@
       "biome": "minecraft:flower_forest",
       "pitch": 25,
       "boatSpeed": 0.35,
+      "offset": [160, 0],
       "commands": [
         "time set 6000",
         "weather clear",
         // A season set by another scenario stays in the world: in winter the pool freezes, trapping the boats
         "season set mid_summer",
-        "tp @s ~160 150 ~",
+        "tp @s ~ 150 ~",
         "kill @e[type=minecraft:oak_boat]",
         "fill ~-24 ~-3 ~-24 ~24 ~1 ~24 stone",
         "fill ~-23 ~-2 ~-23 ~23 ~1 ~23 air",

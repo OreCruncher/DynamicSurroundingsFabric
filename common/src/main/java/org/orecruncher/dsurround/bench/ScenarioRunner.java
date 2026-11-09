@@ -364,8 +364,15 @@ public final class ScenarioRunner {
             return true;
         }, 0);
         this.step(tag + ": find the scene", () -> {
-            if (arrival.found == null)
-                arrival.found = this.sceneLocation(run.scene(), scene, result);
+            if (arrival.found == null) {
+                var found = this.sceneLocation(run.scene(), scene, result);
+                // Arriving to one side of the place, if the scene says so: its ground loaded before its commands run
+                if (scene.offsetX() != 0 || scene.offsetZ() != 0) {
+                    var server = server();
+                    found = found.thenCompose(l -> server.submit(() -> SceneFinder.offset(server.overworld(), l, scene.offsetX(), scene.offsetZ())));
+                }
+                arrival.found = found;
+            }
             if (!arrival.found.isDone())
                 return false;
             arrival.location = arrival.found.join();

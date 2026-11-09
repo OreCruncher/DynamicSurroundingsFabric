@@ -18,11 +18,12 @@
     "shore-calm": {
       "biome": "minecraft:flower_forest",
       "pitch": 25,
+      "offset": [160, 0],
       "commands": [
         "time set 6000",
         "weather clear",
         "season set mid_summer",
-        "tp @s ~160 150 ~",
+        "tp @s ~ 150 ~",
         "kill @e[type=minecraft:oak_boat]",
         "fill ~-30 ~-3 ~-30 ~30 ~-1 ~30 sandstone",
         "fill ~-30 ~ ~-30 ~30 ~4 ~30 air",
@@ -34,10 +35,11 @@
     "shore-storm": {
       "biome": "minecraft:flower_forest",
       "pitch": 25,
+      "offset": [160, 0],
       "commands": [
         "time set 6000",
         "season set mid_summer",
-        "tp @s ~160 150 ~",
+        "tp @s ~ 150 ~",
         "kill @e[type=minecraft:oak_boat]",
         "fill ~-30 ~-3 ~-30 ~30 ~-1 ~30 sandstone",
         "fill ~-30 ~ ~-30 ~30 ~4 ~30 air",

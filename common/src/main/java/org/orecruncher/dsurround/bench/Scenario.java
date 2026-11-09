@@ -63,9 +63,13 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      * @param sounds   sounds played around the player from the end of the commands to the end of the recording
      * @param boatSpeed how fast the boats near the player are kept going around them, in blocks a tick; 0 leaves them be
      * @param flySpeed  how fast the player is flown east, in blocks a tick, through terrain; 0 leaves them where they are
+     * @param offsetX   how far east of the scene's place the player arrives, in blocks, on the ground there (a stage built
+     *                  up in the air stands to one side of the place, roofing no scene on the ground there); and
+     *                  {@code offsetZ} south
      */
     public record Scene(@Nullable String biome, @Nullable Float yaw, @Nullable Float pitch, List<String> commands,
-                        List<String> settledCommands, String profile, List<String> shotCommands, int shotDelay, List<Sounds> sounds, double boatSpeed, double flySpeed) {
+                        List<String> settledCommands, String profile, List<String> shotCommands, int shotDelay, List<Sounds> sounds, double boatSpeed, double flySpeed,
+                        int offsetX, int offsetZ) {
     }
 
     /**
@@ -118,7 +122,9 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                     s.has("shotDelay") ? Math.max(0, s.get("shotDelay").getAsInt()) : 0,
                     sounds(s),
                     s.has("boatSpeed") ? s.get("boatSpeed").getAsDouble() : 0D,
-                    s.has("flySpeed") ? s.get("flySpeed").getAsDouble() : 0D));
+                    s.has("flySpeed") ? s.get("flySpeed").getAsDouble() : 0D,
+                    s.has("offset") ? s.getAsJsonArray("offset").get(0).getAsInt() : 0,
+                    s.has("offset") ? s.getAsJsonArray("offset").get(1).getAsInt() : 0));
         }
 
         // Named groups of settings, for runs to share ("use"): such as every effect turned off

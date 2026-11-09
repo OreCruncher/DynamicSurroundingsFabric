@@ -51,6 +51,32 @@ public class ScenarioTests {
     }
 
     @Test
+    void aSceneMayArriveToOneSideOfItsPlace() {
+        var scenario = parse("""
+                {"scenes": {"raised": {"offset": [160, -40]}, "plain": {}},
+                 "runs": [{"scene": "raised"}]}""");
+        assertEquals(160, scenario.scenes().get("raised").offsetX());
+        assertEquals(-40, scenario.scenes().get("raised").offsetZ());
+        assertEquals(0, scenario.scenes().get("plain").offsetX());
+        assertEquals(0, scenario.scenes().get("plain").offsetZ());
+    }
+
+    @Test
+    void movedScenariosHaveNoSidewaysTeleport() throws Exception {
+        // A sideways tp in the commands lands the stage's fills where nothing is loaded yet: they fail, and the player
+        // falls to the ground. Raised stages stand aside with "offset" instead (README.md, "Raised stages")
+        for (var name : List.of("dust-devils", "snowspouts", "firespouts", "boats", "shore", "wisps")) {
+            var scenario = Scenario.read(Path.of("../scripts/bench/" + name + ".json"));
+            for (var entry : scenario.scenes().entrySet()) {
+                var scene = entry.getValue();
+                assertTrue(scene.offsetX() != 0 || scene.offsetZ() != 0, name + ": " + entry.getKey() + " stands on its place");
+                for (var command : scene.commands())
+                    assertFalse(command.matches("tp @s ~-?\\d+ .*"), name + ": " + command);
+            }
+        }
+    }
+
+    @Test
     void scenesMayRunCommandsOnceSettled() {
         var scenario = parse("""
                 {"scenes": {"stage": {"commands": ["fill"], "settledCommands": ["fill again"]}, "plain": {}},

@@ -1,7 +1,7 @@
 // Firespouts (WorldActorHandler, Firespout, FirespoutFlame): summoned with /dsactor as the warm-up starts, from the
 // middle of a lava lake built over a desert, walled so it doesn't spill: the bench finds overworld biomes only, and a
 // firespout needs nothing of the Nether but open lava. Its lava is below 100, where a firespout looks down from (no roof
-// is needed). Built 160 blocks west of the scene's place, so it roofs no scene there (see README.md, "Raised stages").
+// is needed). Built 160 blocks west of the scene's place ("offset"), so it roofs no scene there (see README.md).
 // At night, so its light shows. A summoned one has a
 // random size and path, so compare with --spread. Two, as a lake might show, and six, far more than ever start
 // naturally. One lives 40 seconds at least, and takes 10 to grow: the warm-up and the recording fit in that, but it can
@@ -31,10 +31,11 @@
       "biome": "minecraft:desert",
       "yaw": -90,
       "pitch": -10,
+      "offset": [-160, 0],
       "commands": [
         "time set 18000",
         "weather clear",
-        "tp @s ~-160 90 ~",
+        "tp @s ~ 90 ~",
         "fill ~-65 ~-2 ~-65 ~65 ~-2 ~65 netherrack",
         "fill ~-65 ~-1 ~-65 ~65 ~-1 ~65 netherrack",
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 lava",
@@ -50,10 +51,11 @@
       "biome": "minecraft:plains",
       "yaw": -90,
       "pitch": -10,
+      "offset": [-160, 0],
       "commands": [
         "time set 18000",
         "weather clear",
-        "tp @s ~-160 90 ~",
+        "tp @s ~ 90 ~",
         "fill ~-65 ~-2 ~-65 ~65 ~-2 ~65 netherrack",
         "fill ~-65 ~-1 ~-65 ~65 ~-1 ~65 netherrack",
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 lava",
