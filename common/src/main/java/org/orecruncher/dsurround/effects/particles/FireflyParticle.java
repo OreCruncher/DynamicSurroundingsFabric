@@ -50,8 +50,9 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     // The halo: a soft glow around the firefly, this many times its size, at this strength
     private static final float HALO_SCALE = 5F;
     // The firefly itself is the game's dot, as big as the game draws it: the game's firefly particle is three quarters
-    // of a particle's usual size, and the dot is as much of that as the lit part is of the texture (see FireflyDot)
-    private static final float VANILLA_SIZE = 0.75F;
+    // of a particle's usual size, scaled by 1.5 when its provider makes it (FireflyParticle.FireflyProvider), and the
+    // dot is as much of that as the lit part is of the texture (see FireflyDot)
+    private static final float VANILLA_SIZE = 0.75F * 1.5F;
     private static final float HALO_ALPHA = 0.35F;
 
     // A firefly's light: yellow-green, about 560nm
