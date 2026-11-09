@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.IntPredicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -178,6 +179,29 @@ public class ApparitionTests {
         assertEquals(90F, Apparition.yawOf(-1, 0), 1e-4F);
         assertEquals(10F, Apparition.turnToward(0F, 90F, 10F));
         assertEquals(-10F, Apparition.turnToward(0F, 270F, 10F), "the short way round");
+    }
+
+    @Test
+    void underARoofItStandsOnTheFloorNearestThePlayer() {
+        // A Nether column: lava sea floor at 31, a valley floor at 40, a ledge at 58, the roof's top at 128 (never reached)
+        IntPredicate floors = y -> y == 31 || y == 40 || y == 58 || y == 128;
+        assertEquals(40, RoofedGround.nearest(42, 1, 125, floors), "the valley floor, just below the player");
+        assertEquals(58, RoofedGround.nearest(50, 1, 125, floors), "a little above wins over farther below");
+        assertEquals(40, RoofedGround.nearest(45, 1, 125, floors), "nearer below wins over farther above");
+        assertNull(RoofedGround.nearest(120, 1, 125, floors), "never the roof's top, and nothing near");
+        assertNull(RoofedGround.nearest(64, 1, 125, y -> false));
+    }
+
+    @Test
+    void underARoofTheSearchStaysBelowTheRoofAndAboveTheFloor() {
+        var asked = new java.util.ArrayList<Integer>();
+        RoofedGround.nearest(5, 1, 20, y -> {
+            asked.add(y);
+            return false;
+        });
+        assertTrue(asked.stream().allMatch(y -> y >= 1 && y <= 20), asked.toString());
+        assertEquals(5, asked.getFirst(), "the reference first");
+        assertEquals(17, asked.stream().mapToInt(Integer::intValue).max().orElseThrow(), "no more than 12 above");
     }
 
     @Test

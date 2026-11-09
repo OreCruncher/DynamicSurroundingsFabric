@@ -382,6 +382,10 @@ is known of 26.4.
   that meet are nudged apart as mobs are (`Apparition.makeRoom`, only onto ground it can stand on). Their
   chances triple in the week either side of Halloween (`platform.isCurrentDateInRangeOf` in `biomes.json`). They walk around
   what is in the way (`ApparitionRoute`, A* over loaded blocks), so the way between haunts is each player's own.
+  Under a roof (the Nether's) the heightmap is the roof, so ground is looked for nearest a height (`RoofedGround`): the
+  player's for one starting, a wisp light's own last ground after; and wisps are met within 64 blocks there
+  (`Type.roofedRange`), as cliffs hide farther ones. The Nether has no night (`diurnal.isNight()` is false), so its rules
+  have no night condition.
   A new kind is an `ActorKind`, a row in `WorldActorHandler`'s `types` (shape, sound, config switch, where it can
   start, the ground its biome is read at, how one is made) and its class: a whirl extends `VortexActor` (life, break-up,
   sound) and gives what is under its foot and what it shows; its particles follow the funnel with a `FunnelOrbit`.

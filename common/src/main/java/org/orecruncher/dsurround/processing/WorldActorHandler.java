@@ -10,6 +10,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
@@ -76,6 +77,10 @@ public class WorldActorHandler extends AbstractClientHandler {
     // Up to three in a cell, the second and third less likely, as a share of the biome's chance; three at most at once
     static final List<Float> APPARITION_SHARES = List.of(1F, 0.5F, 0.25F);
     static final int APPARITION_MOST = 3;
+    // Under a roof (the Nether's) wisps are met nearer: past this its cliffs and pillars hide them, and their ground is
+    // looked for near the player's height, which a far part of a valley isn't at
+    static final int ROOFED_WISP_RANGE = 64;
+    private static final int ROOFED_WISP_KEEP_RANGE = 80;
     // How often chances are looked at, in ticks
     private static final int CHECK_TICKS = 20;
     // Where a summoned one starts, ahead of the player, in blocks
@@ -138,14 +143,26 @@ public class WorldActorHandler extends AbstractClientHandler {
      *                        when the player comes back within range
      * @param shares          its chances in a cell in a slot, each a share of the biome's chance: one, for most kinds
      * @param most            how many there may be at once
+     * @param roofedRange     how far from the player one is started under a roof, in blocks
+     * @param roofedKeepRange how far from the player one is kept under a roof, in blocks
      */
     private record Type<P extends ActorPath>(int maxLifetime, PathMaker<P> path, @Nullable Identifier sound,
                                              Predicate<Configuration> enabled, boolean summonsAnywhere,
                                              Placement placement, Ground ground, Maker<P> maker, int range, int keepRange,
-                                             List<Float> shares, int most) {
+                                             List<Float> shares, int most, int roofedRange, int roofedKeepRange) {
         Type(int maxLifetime, PathMaker<P> path, @Nullable Identifier sound, Predicate<Configuration> enabled, boolean summonsAnywhere,
              Placement placement, Ground ground, Maker<P> maker) {
-            this(maxLifetime, path, sound, enabled, summonsAnywhere, placement, ground, maker, RANGE, KEEP_RANGE, List.of(1F), Integer.MAX_VALUE);
+            this(maxLifetime, path, sound, enabled, summonsAnywhere, placement, ground, maker, RANGE, KEEP_RANGE, List.of(1F), Integer.MAX_VALUE,
+                    RANGE, KEEP_RANGE);
+        }
+
+        // How far one is started from the player in a level, and kept, in blocks
+        int range(Level level) {
+            return level.dimensionType().hasCeiling() ? this.roofedRange : this.range;
+        }
+
+        int keepRange(Level level) {
+            return level.dimensionType().hasCeiling() ? this.roofedKeepRange : this.keepRange;
         }
     }
 
@@ -202,7 +219,8 @@ public class WorldActorHandler extends AbstractClientHandler {
                     var ground = Wisp.ground(level, x, z);
                     return ground == Integer.MIN_VALUE ? heightmap(level, x, z) : ground;
                 },
-                (level, path, age, biome, sound) -> new Wisp(path, age, level.dimensionType().hasCeiling() ? Wisp.SOUL : Wisp.MARSH)));
+                (level, path, age, biome, sound) -> new Wisp(path, age, level.dimensionType().hasCeiling() ? Wisp.SOUL : Wisp.MARSH),
+                RANGE, KEEP_RANGE, List.of(1F), Integer.MAX_VALUE, ROOFED_WISP_RANGE, ROOFED_WISP_KEEP_RANGE));
         // Silent, scary content, and a few at a time: drawn by ApparitionRenderer, so not under a shader pack
         this.types.put(ActorKind.APPARITION, new Type<>(ApparitionPath.MAX_LIFETIME, (x, z, seed, wind) -> ApparitionPath.of(x, z, seed), null,
                 c -> c.worldActorOptions.enableApparitions && c.scaryContent.allowScaryContent && ApparitionRenderer.isUsable(), true,
@@ -212,7 +230,7 @@ public class WorldActorHandler extends AbstractClientHandler {
                     return ground == null ? heightmap(level, x, z) : ground.getY();
                 },
                 (level, path, age, biome, sound) -> Apparition.create(level, path, age, biome),
-                APPARITION_RANGE, APPARITION_KEEP_RANGE, APPARITION_SHARES, APPARITION_MOST));
+                APPARITION_RANGE, APPARITION_KEEP_RANGE, APPARITION_SHARES, APPARITION_MOST, APPARITION_RANGE, APPARITION_KEEP_RANGE));
 
         IWorldRender.EVENT.register(this::render);
 
@@ -232,7 +250,7 @@ public class WorldActorHandler extends AbstractClientHandler {
         var particles = particleShare(GameUtils.getGameSettings().particles().get());
         this.actors.removeIf(actor -> {
             boolean over = !actor.tick(clientLevel, particles);
-            if (!over && this.inRange(player, actor.x(), actor.z(), this.types.get(actor.kind()).keepRange()) && this.kindEnabled(actor.kind()))
+            if (!over && this.inRange(player, actor.x(), actor.z(), this.types.get(actor.kind()).keepRange(clientLevel)) && this.kindEnabled(actor.kind()))
                 return false;
             var chance = this.chances.remove(actor);
             // Left behind or switched off, not over: its chance is looked at again, so coming back (or switching it
@@ -294,7 +312,7 @@ public class WorldActorHandler extends AbstractClientHandler {
         }
         // Not yet in reach, its ground not yet loaded, or as many of its kind as there may be: looked at again later
         double x = path.x(age), z = path.z(age);
-        if (!this.inRange(player, x, z, type.range()) || !level.hasChunkAt(BlockPos.containing(x, 0, z)) || this.count(plan.kind()) >= type.most())
+        if (!this.inRange(player, x, z, type.range(level)) || !level.hasChunkAt(BlockPos.containing(x, 0, z)) || this.count(plan.kind()) >= type.most())
             return;
 
         this.seen.put(plan.key(), slot);

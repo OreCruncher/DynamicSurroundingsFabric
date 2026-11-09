@@ -16,6 +16,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 import java.util.Arrays;
+import java.util.function.IntPredicate;
 
 /**
  * A will-o'-the-wisp: a few pale lights drifting low over a marsh at night, or soul-fire lights over a soul sand valley,
@@ -46,8 +47,7 @@ public final class Wisp implements IActor {
     private static final float MOTES = 0.12F;
     // How quickly a light follows the ground's height under it, a share a tick, so a step isn't a jump
     private static final float SETTLE = 0.15F;
-    // Where it looks for the ground under the Nether's roof, from and how far down, in blocks
-    private static final int SCAN_TOP = 100;
+    // How far down it looks for the ground, in blocks
     private static final int SCAN_DEPTH = 96;
 
     private final WispPath path;
@@ -80,6 +80,8 @@ public final class Wisp implements IActor {
         this.lastZ = new int[count];
         this.lastGround = new int[count];
         Arrays.fill(this.lastX, Integer.MIN_VALUE);
+        // No ground yet: under a roof the first is looked for near the player's height
+        Arrays.fill(this.lastGround, Integer.MIN_VALUE);
         Arrays.fill(this.lightY, Double.NaN);
     }
 
@@ -88,34 +90,43 @@ public final class Wisp implements IActor {
      */
     public static boolean canStart(Level level, ITagLibrary tags, double x, double z) {
         var probe = new BlockPos.MutableBlockPos();
-        int ground = ground(level, probe, Mth.floor(x), Mth.floor(z));
+        int ground = ground(level, probe, Mth.floor(x), Mth.floor(z), Integer.MIN_VALUE);
         return ground != Integer.MIN_VALUE && tags.is(BlockEffectTags.WISP_GROUNDS, level.getBlockState(probe.set(Mth.floor(x), ground, Mth.floor(z))));
     }
 
     /**
      * The height of what a wisp floats over in a column: water, or ground it can't pass through, under any leaves, and
-     * under the Nether's roof the first floor with room over it; MIN_VALUE if there is none or its chunk isn't loaded
+     * under the Nether's roof the floor with room over it nearest the player's height (see {@link RoofedGround});
+     * MIN_VALUE if there is none or its chunk isn't loaded
      */
     public static int ground(Level level, int x, int z) {
-        return ground(level, new BlockPos.MutableBlockPos(), x, z);
+        return ground(level, new BlockPos.MutableBlockPos(), x, z, Integer.MIN_VALUE);
     }
 
-    private static int ground(Level level, BlockPos.MutableBlockPos probe, int x, int z) {
+    /**
+     * @param near under a roof, the height to look nearest: a light's last ground, so it doesn't jump to the floor the
+     *             player has climbed to; MIN_VALUE for the player's
+     */
+    private static int ground(Level level, BlockPos.MutableBlockPos probe, int x, int z, int near) {
         if (!level.hasChunkAt(probe.set(x, 0, z)))
             return Integer.MIN_VALUE;
-        // Under a roof the heightmap is the roof: look down from a fixed height for room with a floor under it
-        boolean roofed = level.dimensionType().hasCeiling();
-        int top = roofed ? SCAN_TOP : level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z) - 1;
-        int bottom = Math.max(level.getMinY(), top - SCAN_DEPTH);
-        boolean open = !roofed;
-        for (int y = top; y >= bottom; y--) {
-            var state = level.getBlockState(probe.set(x, y, z));
-            boolean floor = !state.getFluidState().isEmpty() || (state.isSolid() && !state.is(BlockTags.LEAVES));
-            if (floor && open)
-                return y;
-            open = !floor;
+        if (level.dimensionType().hasCeiling()) {
+            IntPredicate floorWithRoom = y -> isFloor(level, probe.set(x, y, z)) && !isFloor(level, probe.set(x, y + 1, z));
+            var found = near == Integer.MIN_VALUE ? RoofedGround.nearPlayer(level, floorWithRoom) : RoofedGround.near(level, near, floorWithRoom);
+            return found == null ? Integer.MIN_VALUE : found;
         }
+        int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z) - 1;
+        int bottom = Math.max(level.getMinY(), top - SCAN_DEPTH);
+        for (int y = top; y >= bottom; y--)
+            if (isFloor(level, probe.set(x, y, z)))
+                return y;
         return Integer.MIN_VALUE;
+    }
+
+    // Water, or ground it can't pass through; not leaves
+    private static boolean isFloor(Level level, BlockPos pos) {
+        var state = level.getBlockState(pos);
+        return !state.getFluidState().isEmpty() || (state.isSolid() && !state.is(BlockTags.LEAVES));
     }
 
     @Override
@@ -213,7 +224,8 @@ public final class Wisp implements IActor {
         if (x != this.lastX[light] || z != this.lastZ[light]) {
             this.lastX[light] = x;
             this.lastZ[light] = z;
-            this.lastGround[light] = ground(level, this.probe, x, z);
+            // Under a roof, from the light's last ground: it follows its own floor, not the player's
+            this.lastGround[light] = ground(level, this.probe, x, z, this.lastGround[light]);
         }
         var y = this.lastGround[light];
         if (y == Integer.MIN_VALUE)

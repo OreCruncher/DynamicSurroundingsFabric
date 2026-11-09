@@ -10,6 +10,9 @@
   "constants": {
     "APPARITION_CHANCE": 0.1,
     "SWAMP_APPARITION_CHANCE": 0.015,
+    "_netherApparitions": "No night in the Nether, so its chance holds all the time",
+    "NETHER_APPARITION_CHANCE": 0.02,
+    "NETHER_WISP_CHANCE": 0.1,
     "HALLOWEEN_FACTOR": 3
   },
   "biome": {

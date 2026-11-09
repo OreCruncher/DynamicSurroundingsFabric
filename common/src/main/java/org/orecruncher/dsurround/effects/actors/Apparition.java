@@ -137,12 +137,15 @@ public final class Apparition implements IActor {
 
     /**
      * Where its feet would be on the ground in a column: the first place it can stand, looking down from the top, under
-     * any leaves; null if there is none or its chunk isn't loaded
+     * any leaves; under a roof (the Nether's), the floor nearest the player's height. Null if there is none or its chunk
+     * isn't loaded.
      */
     public static @Nullable BlockPos ground(Level level, int x, int z) {
         var probe = new BlockPos.MutableBlockPos(x, 0, z);
         if (!level.hasChunkAt(probe))
             return null;
+        if (level.dimensionType().hasCeiling())
+            return RoofedGround.nearPlayer(level, height -> standable(level, probe, x, height, z)) instanceof Integer y ? new BlockPos(x, y, z) : null;
         int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
         for (int y = top; y >= Math.max(level.getMinY() + 1, top - GROUND_DEPTH); y--)
             if (standable(level, probe, x, y, z))

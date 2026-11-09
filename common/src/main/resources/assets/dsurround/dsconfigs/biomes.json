@@ -598,12 +598,12 @@
     ]
   },
   {
-    "biomeSelector": "biome.getId() == 'minecraft:soul_sand_valley'",
-    "_comment": "Soul-fire wisps over the soul sand valley",
+    "biomeSelector": "def.isHaunted() && NETHER",
+    "_comment": "Soul-fire wisps over soul sand valleys and other spooky Nether biomes, at any time: the Nether has no night",
     "actors": [
       {
         "actor": "dsurround:wisp",
-        "chance": 0.05
+        "chance": "def.NETHER_WISP_CHANCE"
       }
     ]
   },
@@ -626,6 +626,16 @@
         "actor": "dsurround:apparition",
         "conditions": "diurnal.isNight()",
         "chance": "def.SWAMP_APPARITION_CHANCE * def.halloweenFactor()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "def.isHaunted() && NETHER",
+    "_comment": "Apparitions haunt soul sand valleys: the Nether has no night, so always, and less often than a dark forest at night",
+    "actors": [
+      {
+        "actor": "dsurround:apparition",
+        "chance": "def.NETHER_APPARITION_CHANCE * def.halloweenFactor()"
       }
     ]
   }
