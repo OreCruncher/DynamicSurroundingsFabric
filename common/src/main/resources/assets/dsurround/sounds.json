@@ -446,15 +446,6 @@
 			}
 		]
 	},
-	"dimension.theend": {
-		"sounds": [
-			{
-				"name": "dsurround:ambient/end/end",
-				"volume": 0.2,
-				"stream": true
-			}
-		]
-	},
 	"bird": {
 		"subtitle": "dsurround.sound.caption.bird",
 		"sounds": [
@@ -859,14 +850,6 @@
 			}
 		]
 	},
-	"insectcrawl": {
-		"subtitle": "dsurround.sound.caption.insects",
-		"sounds": [
-			"dsurround:ambient/insects/crawl1",
-			"dsurround:ambient/insects/crawl2",
-			"dsurround:ambient/insects/crawl3"
-		]
-	},
 	"newsprint": {
 		"subtitle": "dsurround.sound.caption.pageflip",
 		"sounds": [
@@ -1093,23 +1076,6 @@
 			"dsurround:ambient/village/dogbark4",
 			"dsurround:ambient/village/dogbark5",
 			"dsurround:ambient/village/dogbark6"
-		]
-	},
-	"dimension.nether": {
-		"ds_credits": [
-			{
-				"name": "Creepy Dungeon Ambience",
-				"author": "DrMinky",
-				"website": "https://www.freesound.org/people/DrMinky",
-				"license": "Attribution"
-			}
-		],
-		"sounds": [
-			{
-				"name": "dsurround:ambient/dimension/nether",
-				"volume": 0.3,
-				"stream": true
-			}
 		]
 	},
 	"item.bow.equip": {

@@ -137,10 +137,6 @@ Others:
 
 * S: [UnderwaterDrowning01.wav](https://www.freesound.org/people/Abolla/sounds/213914/) by [Abolla](https://www.freesound.org/people/Abolla/) | License: Creative Commons 0
 
-*dsurround:dimension.nether*
-
-* S: [Creepy Dungeon Ambience](https://www.freesound.org/people/DrMinky/sounds/166187/) by [DrMinky](https://www.freesound.org/people/DrMinky/) | License: Attribution
-
 *dsurround:crow*
 
 * S: [ANML_M_Ext_Crow_Calls_Single1.wav](https://www.freesound.org/people/conleec/sounds/173866/) by [conleec](https://www.freesound.org/people/conleec/) | License: Creative Commons 0
@@ -187,7 +183,7 @@ Others:
 
 *dsurround:item.sword.swing / dsurround:item.sword.equip / dsurround:item.blunt.swing / dsurround:item.blunt.equip / dsurround:item.tool.equip / dsurround:item.shield.equip / dsurround:item.shield.use / dsurround:item.bow.equip*
 
-* Made from footstep sounds of [Presence Footsteps](https://github.com/Hurricaaane/Presence-Footsteps) by Hurricaaane (Ha3) | License: [WTFPL v2](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1290546-presence-footsteps-an-overly-complicated-sound) | Modified: some used as they are, others altered
+* Made from footstep sounds of [Presence Footsteps](https://github.com/Hurricaaane/Presence-Footsteps) by Hurricaaane (Ha3) | License: [WTFPL v2](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1290546-presence-footsteps-an-overly-complicated-sound) | Modified: altered
 
 *dsurround:weather.rain*
 
@@ -196,3 +192,7 @@ Others:
 *dsurround:electricarc*
 
 * S: [Welding_Electric Sparks.wav](https://freesound.org/people/weaveofkev/sounds/396240/) by [weaveofkev](https://freesound.org/people/weaveofkev/) | License: Creative Commons 0 | Modified: five bursts cut, made mono, levels matched
+
+*dsurround:player.tummy*
+
+* S: [Stomach Growling](https://soundbible.com/1300-Stomach-Growling.html) by XxBirdoxX, via SoundBible | License: [Sampling Plus 1.0](https://creativecommons.org/licenses/sampling+/1.0/) | Modified: three growls cut
