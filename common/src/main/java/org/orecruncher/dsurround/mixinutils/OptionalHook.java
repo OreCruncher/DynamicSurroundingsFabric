@@ -43,6 +43,8 @@ public enum OptionalHook {
             site("core.MixinWeatherEffectRenderer", "dsurround$renderPrecipitation"),
             site("core.MixinLevelRenderer", "dsurround$enterMainPass"),
             site("core.MixinLevelRenderer", "dsurround$leaveMainPass")),
+    VANILLA_WEATHER_SKIPPED("Vanilla's rain and snow left unprepared under particle rain and snow",
+            site("core.MixinLevelExtractor", "dsurround$skipVanillaWeather")),
     WORLD_EFFECTS("Effects drawn over the world: ground fog, frost, particle weather and lightning",
             site("core.MixinLevelRenderer", "dsurround$renderWorld")),
     SOFT_PARTICLES_TRANSPARENCY("Soft particles with Improved Transparency",

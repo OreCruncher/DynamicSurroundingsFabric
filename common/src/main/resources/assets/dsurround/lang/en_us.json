@@ -192,6 +192,7 @@
   "dsurround.hook.fog_tint": "Dust storm fog color",
   "dsurround.hook.extended_view_fog": "Fog with mods that draw terrain past the render distance",
   "dsurround.hook.precipitation": "Particle rain and snow",
+  "dsurround.hook.vanilla_weather_skipped": "Vanilla's rain and snow left unprepared under particle rain and snow",
   "dsurround.hook.storm_rain": "Storm strength in vanilla's rain and snow",
   "dsurround.hook.rain_sounds": "Storm rain sounds",
   "dsurround.hook.spray_ripples": "Ripples where spray falls on water",

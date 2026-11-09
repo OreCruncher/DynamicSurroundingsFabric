@@ -507,6 +507,26 @@ The timer was taken out again. (The bench world was deleted first: raised stages
 plains and snowy plains spots, the firespouts' lava lake at y 88-90 and the snowspouts' platform at y 199-200, had
 roofed the precipitation stages, and no drops were drawn.)
 
+**Vanilla's weather left unprepared (2026-11-09, 5.2.0, Fabric, OpenGL):** vanilla still worked out its rain and snow
+columns every frame (`WeatherEffectRenderer.extractRenderState`, from `LevelExtractor.extract`), only for their drawing
+to be canceled; a recording of rain High had it in a quarter of the render thread's samples, with Serene Seasons'
+temperature lookup for each column (its `getPrecipitationAt` hook) and 860 MB of allocations in 43 seconds between them.
+`MixinLevelExtractor` skips that call while particle weather replaces vanilla's (`OptionalHook.VANILLA_WEATHER_SKIPPED`).
+The same session, the skip turned off for "before":
+
+| Run | fps, before / after | Frame ms (1000 / fps) | Frame GPU ms |
+|---|---|---|---|
+| rain Low | 976 / 1026 | 1.025 / 0.975 | 0.651 / 0.641 |
+| rain Medium | 840 / 973 | 1.190 / 1.028 | 0.712 / 0.673 |
+| rain High | 609 / 798 | 1.642 / 1.253 | 0.976 / 0.764 |
+| snow Low | 820 / 860 | 1.220 / 1.163 | 0.772 / 0.778 |
+| snow Medium | 754 / 844 | 1.326 / 1.185 | 0.815 / 0.801 |
+| snow High | 507 / 593 | 1.972 / 1.686 | 1.184 / 0.998 |
+
+The GPU gains too (vanilla's `prepare` built and uploaded vertices from those columns). The frame's CPU column isn't
+the measure here: with the render thread done sooner, it waits longer for the quads' thread ("Waiting for Quads" at
+snow High 0.511 ms before, 1.103 after), which is now what holds a heavy storm's frame.
+
 **Open:** waiting for the quads' thread has grown. Precipitation's CPU on NeoForge 1.21.11 was 0.091 ms at rain Medium
 and 0.168 at High; here 0.475 and 1.068, and at High the wait is over half of the frame's CPU. The step's own time
 has grown far less (Precipitation Handler at High, 0.246 ms a tick on Fabric 1.21.11, 0.297 here). The cause isn't
