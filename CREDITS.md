@@ -30,7 +30,7 @@ Others:
 
 * S: [Fiji Beach (Stereo)128kbps.mp3](https://www.freesound.org/people/c97059890/sounds/21754/) by [c97059890](https://www.freesound.org/people/c97059890/) | License: Creative Commons 0
 
-*dsurround:bigrockslide / dsurround:rockslide*
+*dsurround:bigrockfall / dsurround:rockfall*
 
 * S: [Rockfall in mine.wav](https://www.freesound.org/people/Benboncan/sounds/60085/) by [Benboncan](https://www.freesound.org/people/Benboncan/) | License: Attribution
 * S: [Rocks falling over rocks, over a steep hill, like a cliff.flac](https://www.freesound.org/people/gfrog/sounds/190505/) by [gfrog](https://www.freesound.org/people/gfrog/) | License: Creative Commons 0
@@ -97,7 +97,7 @@ Others:
 
 * S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
 
-*dsurround:underriver / dsurround:underocean / dsurround:underdeepocean*
+*dsurround:biome.river.under / dsurround:biome.ocean.under / dsurround:biome.ocean.deep.under*
 
 * S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
 
@@ -145,11 +145,7 @@ Others:
 
 * S: [ANML_M_Ext_Crow_Calls_Single1.wav](https://www.freesound.org/people/conleec/sounds/173866/) by [conleec](https://www.freesound.org/people/conleec/) | License: Creative Commons 0
 
-*dsurround:bog*
-
-* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
-
-*dsurround:biome.desert.wind*
+*dsurround:biome.wind.desert*
 
 * S: [desertwind1FINAL.wav](https://www.freesound.org/people/nageor/sounds/112296/) by [nageor](https://www.freesound.org/people/nageor/) | License: Creative Commons 0
 
@@ -168,3 +164,35 @@ Others:
 *dsurround:biome.forest.silent*
 
 * S: [Silent forest](https://freesound.org/people/ZHR%C3%98/sounds/753418/) by [ZHRØ](https://freesound.org/people/ZHR%C3%98/) | License: Creative Commons 0
+
+*dsurround:bird*
+
+* S: [Happy birds](https://freesound.org/people/sphion/sounds/158527/) by [sphion](https://freesound.org/people/sphion/) | License: Creative Commons 0
+
+*dsurround:woodpecker*
+
+* S: [FX WOODPECKER.wav](https://freesound.org/people/DjangoAltona/sounds/102972/) by [DjangoAltona](https://freesound.org/people/DjangoAltona/) | License: Creative Commons 0
+
+*dsurround:raptor*
+
+* S: [HawkMP3VersionWinterJan22nd2017.mp3](https://freesound.org/people/kvgarlic/sounds/377759/) by [kvgarlic](https://freesound.org/people/kvgarlic/) | License: Creative Commons 0 | Used for: red_shouldered_hawk
+
+*dsurround:item.tool.swing*
+
+* S: [Swing Whoosh.wav](https://freesound.org/people/yutface/sounds/257015/) by [yutface](https://freesound.org/people/yutface/) | License: Creative Commons 0
+
+*dsurround:item.potion.equip*
+
+* S: [Water + glass bottle, sloshing 2](https://freesound.org/people/giddster/sounds/386426/) by [giddster](https://freesound.org/people/giddster/) | License: Creative Commons 0
+
+*dsurround:item.sword.swing / dsurround:item.sword.equip / dsurround:item.blunt.swing / dsurround:item.blunt.equip / dsurround:item.tool.equip / dsurround:item.shield.equip / dsurround:item.shield.use / dsurround:item.bow.equip*
+
+* Made from footstep sounds of [Presence Footsteps](https://github.com/Hurricaaane/Presence-Footsteps) by Hurricaaane (Ha3) | License: [WTFPL v2](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1290546-presence-footsteps-an-overly-complicated-sound) | Modified: some used as they are, others altered
+
+*dsurround:weather.rain*
+
+* S: rain_calm1-4 from [Better Rain](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/2134067-better-rain-v0-15-bug-fixes) by Wirsbo | License: none stated; the author asks to be credited
+
+*dsurround:electricarc*
+
+* S: [Welding_Electric Sparks.wav](https://freesound.org/people/weaveofkev/sounds/396240/) by [weaveofkev](https://freesound.org/people/weaveofkev/) | License: Creative Commons 0 | Modified: five bursts cut, made mono, levels matched

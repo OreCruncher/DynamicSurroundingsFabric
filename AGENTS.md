@@ -64,6 +64,13 @@ is known of 26.4.
   share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
   whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
+- Cutting a sound's clips from a source recording (needs ffmpeg with libvorbis): `python scripts/sound-cut.py
+  scripts/sound-recipes/<name>.json --source <file> [--install]`. The recipe names the source (link, author, license)
+  and each clip's start and end; clips are cut in float, made mono, faded, brought to the recipe's level (the loudest
+  50 ms window, as the survey measures it) under a -1 dBTP ceiling, and encoded once, into `build/sound-rework/<name>/`
+  with a report against the files they replace; `--install` copies them over. Sources stay outside the repository.
+  A click far over a clip's level only reaches the level by limiting (it says so, and dulls the snap): pick calmer
+  stretches instead.
 - Game jar for `javap` (check real signatures rather than assuming; 26.3 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.

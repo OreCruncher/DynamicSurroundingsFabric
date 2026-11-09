@@ -1,0 +1,22 @@
+{
+  "name": "electricarc",
+  "source": {
+    "title": "Welding_Electric Sparks.wav",
+    "url": "https://freesound.org/people/weaveofkev/sounds/396240/",
+    "author": "weaveofkev",
+    "license": "CC0",
+    "file": "396240__weaveofkev__welding_electric-sparks.wav",
+    "notes": "48 kHz 24-bit stereo, 4.5 s; clean (noise floor about -111 dB, no tonal peaks); sixteen separate bursts. Replaces a Sound Fishing Bruitages download whose licence forbids sharing the sounds on their own."
+  },
+  "settings": {
+    "target_rms_peak": -22.0
+  },
+  "clips": [
+    {"file": "ambient/electricity/electricarc1", "start": 0.12, "end": 0.64, "notes": "steady crackle"},
+    {"file": "ambient/electricity/electricarc2", "start": 2.28, "end": 2.65, "notes": "two pops"},
+    {"file": "ambient/electricity/electricarc3", "start": 3.45, "end": 3.73, "notes": "a short crackle"},
+    {"file": "ambient/electricity/electricarc4", "start": 2.73, "end": 3.40, "notes": "two linked crackles"},
+    {"file": "ambient/electricity/electricarc5", "start": 3.97, "end": 4.30, "notes": "a short burst"}
+  ],
+  "rejected": "0.76-1.12 s (sharp spits) and 1.61-2.17 s (the loudest burst): each holds one click about 29 dB over its level, which only reaches the others' level with 7-12 dB of limiting, dulling the snap"
+}
