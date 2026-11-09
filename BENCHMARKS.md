@@ -87,6 +87,18 @@ A swamp at dawn, standing on its floor in the mist.
 
 The fog's own CPU time is 0.02 ms in each case; Ground Fog Handler takes 0.04 ms a tick.
 
+**Fewer reads in the march (2026-11-09, 5.2.0, Fabric, OpenGL):** the swirl's two directions from one read of a noise
+texture with a second noise in green (`noise2`), and the scene's distance from the depth the march already read rather
+than reading it again. The same session, before and after (`off` frames 0.775 and 0.772):
+
+| Run | Frame GPU ms, before / after | Ground Fog GPU | March |
+|---|---|---|---|
+| Fast | 0.997 / 0.978 | 0.213 / 0.195 | 0.121 / 0.103 |
+| Fancy | 1.194 / 1.155 | 0.395 / 0.357 | 0.292 / 0.255 |
+| Fabulous | 2.156 / 2.023 | 1.336 / 1.203 | 1.157 / 1.026 |
+
+The march 11-15% cheaper; smooth and composite unchanged.
+
 At 2560x1369, the size of the window the ATM10 recordings were made in, on the same floor (a one-off scenario, not
 committed): Fancy 0.83 ms of fog GPU, Fabulous 2.64 ms (march 1.94).
 

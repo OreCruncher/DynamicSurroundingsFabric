@@ -13,3 +13,11 @@ float noise(vec2 p) {
     f = f * f * (3.0 - 2.0 * f);
     return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
 }
+
+// Two independent smooth value noises at the same point, from the texture's red and green, for the price of one read
+vec2 noise2(vec2 p) {
+    vec2 cell = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).rg;
+}

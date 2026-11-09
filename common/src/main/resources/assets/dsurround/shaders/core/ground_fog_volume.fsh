@@ -155,8 +155,8 @@ float mist(vec3 p, float fromCamera, float stepLength) {
         return m * 0.5;
     }
     // The wisps are pushed about by a slowly changing field, so they curl and eddy rather than only sliding along
-    vec2 swirl = vec2(noise(at / 7.0 + vec2(Drift.z * 0.04, 0.0)),
-                      noise(at / 7.0 + vec2(19.0, -Drift.z * 0.04))) - 0.5;
+    // Both of its directions from one read: two independent noises at the same point (noise2)
+    vec2 swirl = noise2(at / 7.0 + vec2(Drift.z * 0.04, 0.0)) - 0.5;
     // Never clearing entirely between them, and scaled so the mist is as thick on average as without the floor. Half,
     // their average, where the steps are too long for them, and further off
     float wisp = 0.5;
@@ -275,6 +275,7 @@ void main() {
         length_ = length(viewed.xyz / viewed.w);
     }
     fragColor = mist_along(dir, length_);
-    // After fragColor: written the other way around, fragColor is lost on Vulkan (seen on AMD, driver 26.10.1)
-    sceneDistance = distance_at(DepthSampler, pixel);
+    // After fragColor: written the other way around, fragColor is lost on Vulkan (seen on AMD, driver 26.10.1). From
+    // the depth already read: pixel is within the screen
+    sceneDistance = distance_from_depth(depth, pixel);
 }

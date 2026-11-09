@@ -43,7 +43,7 @@ public class GroundFogVolumeTests {
     void theWrapIsAWholeNumberOfEachNoisesRepeats() throws IOException {
         // Regression: the noise's place in the world was wrapped where the noise didn't repeat, so it jumped there. Each
         // noise repeats every NOISE_SIZE of its cells, so the wrap must be a whole number of those
-        var sizes = Pattern.compile("noise\\((?!vec2 p)[^;]*?/ ([0-9.]+)").matcher(shader());
+        var sizes = Pattern.compile("noise2?\\((?!vec2 p)[^;]*?/ ([0-9.]+)").matcher(shader());
         int found = 0;
         while (sizes.find()) {
             float size = Float.parseFloat(sizes.group(1));
@@ -51,6 +51,6 @@ public class GroundFogVolumeTests {
             assertEquals(Math.round(repeats), repeats, 1e-4F, "noise of " + size + " blocks a cell repeats " + repeats + " times");
             found++;
         }
-        assertEquals(5, found, "patches, the two swirls, wisps and tufts");
+        assertEquals(4, found, "patches, the swirl (both its directions in one read), wisps and tufts");
     }
 }
