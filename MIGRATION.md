@@ -54,6 +54,13 @@ don't link.
 - **Not confirmed:** Vulkan as the default from snapshot 1 is from the web, not from the jar. Comparing vanilla's shader
   includes failed (the extraction came back empty), so they are unchecked.
 - **Dependencies** on that date: Fabric API had 26.4 builds (0.165.4+26.4); none found for NeoForge or Architectury.
+- **Vulkan buffer writes (check on 26.4).** 26.3's `VulkanCommandEncoder.writeToBuffer` stages the data, copies it
+  with `vkCmdCopyBuffer`, then records a memory barrier `ALL_COMMANDS → ALL_COMMANDS` for every read and write, which
+  drains the GPU's queue at every upload. Measured 2026-11-09 (`BENCHMARKS.md`, "The drops' upload on Vulkan"): the
+  drops' upload is about half their GPU time at Medium and up. Not worked around on 26.3 (opt-in there, 0.15 ms of
+  precipitation at rain High). On 26.4, run `precipitation.json` with `-PgraphicsBackend=vulkan` first: if the barrier
+  is still that broad (and more so if Vulkan is the default), do every mesh's upload before any drawing (one drain, not
+  one an upload), or fewer bytes a drop. Instanced drops would help either backend, mostly the CPU's "Waiting for Quads".
 
 Plan: ship on 26.3, wait for NeoForge and Architectury, run `version-compat.py` again on the release, and start with
 the frame's order.

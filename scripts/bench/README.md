@@ -94,6 +94,19 @@ mobs, a lava pool, water sources up in the air: see `performance-rest.json`), wh
 Otherwise stand there in the bench world and run `/dsbench mark <name>`, which remembers the position and where you
 look; a marked scene is used as it is, even when the scene has a biome. `/dsbench list` lists the world's scenes.
 
+### Raised stages
+
+Scenes of the same biome share its place, and what a scene builds stays in the world. A stage built up in the air (a
+lava lake, a sand platform, a pool) over that place roofs every scene on the ground there: the precipitation scenes
+drew no rain or snow under the firespouts' lake and the snowspouts' platform, and burning mobs under a roof don't burn.
+So a raised stage stands to one side, with the horizontal part of its `tp`: `"tp @s ~160 201 ~"`, more than the stage's
+half-width plus the ground scenes' own, and the other way (`~-160`) from any other raised stage over the same biome.
+The scene's remembered place doesn't move: only where its commands take the player. Taken so far: `~160` for dust
+devils (desert), snowspouts (snowy plains), boats and beach waves (flower forest; they rebuild each other's), wisps
+(plains and savanna); `~-160` for firespouts (desert and plains). The sound scenes' small boxes at y 245 stay over their
+savanna place. If a world was used before this, delete it (`<platform>/run-bench/saves/bench`): it is made again from
+the seed, with the same places.
+
 ## Modpacks
 
 The mod alongside a Modrinth modpack, to find what other mods break (and what breaks ours): conflicts, hooks that

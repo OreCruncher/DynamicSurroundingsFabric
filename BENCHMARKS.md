@@ -488,6 +488,25 @@ back of the field). The cap stays at 64.
 | snow Medium | 0.020/0.299 | 0.078/0.165 | 0.168 / 0.076 | 0.171 |
 | snow High | 0.040/0.815 | 0.138/0.579 | 0.608 / 0.448 | 0.295 |
 
+**The drops' upload on Vulkan (2026-11-09, 5.2.0, Fabric, AMD 26.10.1, a fresh bench world):** a temporary GPU timer
+around `MeshDraw.upload` for the rain and snow drops alone (the largest mesh; a timer measures one span a frame, so the
+flecks', streaks' and spots' uploads aren't in it), against "- Drops", which holds it and the dust, flecks and streaks:
+
+| Run | Precipitation GPU | - Drops | - Drops Upload | - Damp Spots |
+|---|---|---|---|---|
+| rain Low | 0.049 | 0.030 | 0.010 | 0.018 |
+| rain Medium | 0.088 | 0.061 | 0.030 | 0.027 |
+| rain High | 0.151 | 0.106 | 0.059 | 0.044 |
+| snow Low | 0.042 | 0.036 | 0.012 | 0.006 |
+| snow Medium | 0.079 | 0.072 | 0.038 | 0.006 |
+| snow High | 0.138 | 0.130 | 0.074 | 0.008 |
+
+The copy of the drops' vertices is about half of "- Drops" from Medium up, and grows with the drops; the drawing is the
+rest, flecks and dust included. Fewer bytes a drop (a smaller vertex, or an instance a drop) is where the GPU time is.
+The timer was taken out again. (The bench world was deleted first: raised stages other scenarios build over the shared
+plains and snowy plains spots, the firespouts' lava lake at y 88-90 and the snowspouts' platform at y 199-200, had
+roofed the precipitation stages, and no drops were drawn.)
+
 **Open:** waiting for the quads' thread has grown. Precipitation's CPU on NeoForge 1.21.11 was 0.091 ms at rain Medium
 and 0.168 at High; here 0.475 and 1.068, and at High the wait is over half of the frame's CPU. The step's own time
 has grown far less (Precipitation Handler at High, 0.246 ms a tick on Fabric 1.21.11, 0.297 here). The cause isn't

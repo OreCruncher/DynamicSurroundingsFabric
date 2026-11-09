@@ -30,7 +30,7 @@
       "commands": [
         "time set 18000",
         "weather clear",
-        "tp @s ~ 201 ~",
+        "tp @s ~160 201 ~",
         "fill ~-64 ~-2 ~-64 ~64 ~-2 ~64 stone",
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 snow_block"
       ],
@@ -49,7 +49,7 @@
       "commands": [
         "time set 18000",
         "weather clear",
-        "tp @s ~ 201 ~",
+        "tp @s ~160 201 ~",
         "fill ~-64 ~-2 ~-64 ~64 ~-2 ~64 stone",
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 snow_block"
       ],

@@ -31,7 +31,7 @@
       "commands": [
         "time set 18000",
         "weather clear",
-        "tp @s ~ 130 ~",
+        "tp @s ~160 130 ~",
         "fill ~-41 ~-2 ~-41 ~41 ~-2 ~41 stone",
         "fill ~-41 ~-1 ~-41 ~41 ~-1 ~41 stone",
         "fill ~-40 ~-1 ~-40 ~40 ~-1 ~40 water",
@@ -50,7 +50,7 @@
       "commands": [
         "time set 18000",
         "weather clear",
-        "tp @s ~ 130 ~",
+        "tp @s ~160 130 ~",
         "fill ~-41 ~-2 ~-41 ~41 ~-2 ~41 stone",
         "fill ~-41 ~-1 ~-41 ~41 ~-1 ~41 stone",
         "fill ~-40 ~-1 ~-40 ~40 ~-1 ~40 water",

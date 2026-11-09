@@ -23,7 +23,7 @@
         "weather clear",
         // A season set by another scenario stays in the world: in winter the pool freezes, trapping the boats
         "season set mid_summer",
-        "tp @s ~ 150 ~",
+        "tp @s ~160 150 ~",
         "kill @e[type=minecraft:oak_boat]",
         "fill ~-24 ~-3 ~-24 ~24 ~1 ~24 stone",
         "fill ~-23 ~-2 ~-23 ~23 ~1 ~23 air",
