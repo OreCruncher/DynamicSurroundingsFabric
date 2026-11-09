@@ -28,11 +28,15 @@ import org.orecruncher.dsurround.testing.Fakes;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -139,6 +143,31 @@ public class ScriptDefinitionLoaderTests {
                 new DiurnalVariables(oracle), new PlayerVariables(oracle),
                 new WeatherVariables(oracle, seasons, Fakes.of(IWeatherSimulation.class, Map.of()), null),
                 new EnvironmentState(null), new GlobalVariables(new Configuration()), new SeasonVariables(seasons));
+    }
+
+    @Test
+    void everyDefinitionTheShippedConfigsUseIsDefined() throws Exception {
+        // A mistyped def. name in a rule would only fail that rule, quietly: a sound that never plays
+        var defined = this.load(modFile()).definitions();
+        var anchor = Objects.requireNonNull(ScriptDefinitionLoaderTests.class.getResource("/assets/dsurround/lang/en_us.json"));
+        var assets = Path.of(anchor.toURI()).getParent().getParent().getParent();
+        var used = Pattern.compile("def\\.[A-Za-z_][A-Za-z0-9_]*");
+        var missing = new ArrayList<String>();
+        int found = 0;
+        try (Stream<Path> files = Files.walk(assets)) {
+            for (var file : files.filter(f -> f.toString().endsWith(".json") && f.toString().replace('\\', '/').contains("/dsconfigs/")).toList()) {
+                if (file.getFileName().toString().equals("scripts.json"))
+                    continue;
+                var matcher = used.matcher(Files.readString(file, StandardCharsets.UTF_8));
+                while (matcher.find()) {
+                    found++;
+                    if (!defined.containsKey(matcher.group()))
+                        missing.add(assets.relativize(file) + ": " + matcher.group());
+                }
+            }
+        }
+        assertTrue(found > 0, "the configs use definitions");
+        assertEquals(List.of(), missing);
     }
 
     @Test

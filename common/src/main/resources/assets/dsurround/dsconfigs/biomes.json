@@ -55,7 +55,7 @@
       },
       {
         "factory": "biome.crickets",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
@@ -88,11 +88,11 @@
     "acoustics": [
       {
         "factory": "biome.savanna.day",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()"
+        "conditions": "def.isFairDay()"
       },
       {
         "factory": "biome.savanna.night",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()"
+        "conditions": "def.isFairNight()"
       }
     ]
   },
@@ -102,11 +102,11 @@
     "acoustics": [
       {
         "factory": "biome.plains",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
@@ -116,11 +116,11 @@
     "acoustics": [
       {
         "factory": "biome.forest",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
@@ -130,7 +130,7 @@
     "acoustics": [
       {
         "factory": "biome.forest.pine",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       }
     ]
   },
@@ -140,11 +140,11 @@
     "acoustics": [
       {
         "factory": "biome.forest.deep",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets.deep",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
@@ -154,7 +154,7 @@
     "acoustics": [
       {
         "factory": "biome.forest",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       }
     ]
   },
@@ -164,7 +164,7 @@
     "acoustics": [
       {
         "factory": "wolf",
-        "conditions": "weather.isNotRaining() && diurnal.isNight() && global.allowScary()",
+        "conditions": "def.isFairNight() && global.allowScary()",
         "type": "mood"
       }
     ]
@@ -252,7 +252,7 @@
     "acoustics": [
       {
         "factory": "biome.bog",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets",
@@ -273,7 +273,7 @@
     "acoustics": [
       {
         "factory": "coyote",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()",
+        "conditions": "def.isFairNight()",
         "type": "mood"
       }
     ]
@@ -284,7 +284,7 @@
     "acoustics": [
       {
         "factory": "crow",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
@@ -295,7 +295,7 @@
     "acoustics": [
       {
         "factory": "owl",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()",
+        "conditions": "def.isFairNight()",
         "type": "mood"
       }
     ]
@@ -306,12 +306,12 @@
     "acoustics": [
       {
         "factory": "bird",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       },
       {
         "factory": "nightingale",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
@@ -322,7 +322,7 @@
     "acoustics": [
       {
         "factory": "woodpecker",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
@@ -333,7 +333,7 @@
     "acoustics": [
       {
         "factory": "raptor",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
@@ -344,7 +344,7 @@
     "acoustics": [
       {
         "factory": "loon",
-        "conditions": "weather.isNotRaining() && !diurnal.isNight()",
+        "conditions": "def.isFairDaylight()",
         "type": "mood"
       }
     ]
@@ -355,7 +355,7 @@
     "acoustics": [
       {
         "factory": "turtledove",
-        "conditions": "weather.isNotRaining() && !diurnal.isNight()",
+        "conditions": "def.isFairDaylight()",
         "type": "mood"
       }
     ]
@@ -366,7 +366,7 @@
     "acoustics": [
       {
         "factory": "biome.forest.silent",
-        "conditions": "weather.isNotRaining() && !diurnal.isNight()"
+        "conditions": "def.isFairDaylight()"
       }
     ]
   },
@@ -408,7 +408,7 @@
     "acoustics": [
       {
         "factory": "monstergrowl",
-        "conditions": "diurnal.isNight() && global.allowScary()",
+        "conditions": "def.isScaryNight()",
         "type": "mood",
         "weight": 10
       }
@@ -439,7 +439,7 @@
       },
       {
         "factory": "monstergrowl",
-        "conditions": "diurnal.isNight() && global.allowScary()",
+        "conditions": "def.isScaryNight()",
         "type": "mood",
         "weight": 10
       }
@@ -501,17 +501,17 @@
     "acoustics": [
       {
         "factory": "biome.village.rooster",
-        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isSunrise() && weather.isNotRaining()",
+        "conditions": "def.isOutInVillage() && diurnal.isSunrise() && weather.isNotRaining()",
         "type": "addition"
       },
       {
         "factory": "biome.village.anvil",
-        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isDay() && weather.isNotRaining()",
+        "conditions": "def.isOutInVillage() && def.isFairDay()",
         "type": "addition"
       },
       {
         "factory": "biome.village.dogbark",
-        "conditions": "state.isInVillage() && !state.isInside() && weather.isNotRaining()",
+        "conditions": "def.isOutInVillage() && weather.isNotRaining()",
         "type": "addition"
       }
     ]
@@ -538,7 +538,7 @@
     "actors": [
       {
         "actor": "dsurround:dust_devil",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "chance": 0.06
       }
     ]
@@ -549,7 +549,7 @@
     "actors": [
       {
         "actor": "dsurround:dust_devil",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "chance": 0.1
       }
     ]
@@ -571,7 +571,7 @@
     "actors": [
       {
         "actor": "dsurround:snowspout",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "chance": 0.03
       }
     ]
@@ -592,7 +592,7 @@
     "actors": [
       {
         "actor": "dsurround:wisp",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()",
+        "conditions": "def.isMildNight()",
         "chance": 0.05
       }
     ]

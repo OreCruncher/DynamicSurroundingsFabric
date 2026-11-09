@@ -16,6 +16,16 @@
     "isHaunted": "SPOOKY && !UNDERGROUND"
   },
   "conditions": {
+    "_weather": "Fair is not raining; mild is fair and warm enough that water doesn't freeze (insects, frogs)",
+    "isFairDay": "weather.isNotRaining() && diurnal.isDay()",
+    "isFairNight": "weather.isNotRaining() && diurnal.isNight()",
+    "_daylight": "Not night: the day with its sunrise and sunset, for what sings at dawn and dusk",
+    "isFairDaylight": "weather.isNotRaining() && !diurnal.isNight()",
+    "isMild": "weather.isNotRaining() && !weather.canWaterFreeze()",
+    "isMildDay": "def.isMild() && diurnal.isDay()",
+    "isMildNight": "def.isMild() && diurnal.isNight()",
+    "isScaryNight": "diurnal.isNight() && global.allowScary()",
+    "isOutInVillage": "state.isInVillage() && !state.isInside()",
     "isHalloween": "platform.isCurrentDateInRangeOf(10, 31, 7)",
     "halloweenFactor": "def.isHalloween() ? def.HALLOWEEN_FACTOR : 1"
   }
