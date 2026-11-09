@@ -3,7 +3,6 @@
 
 package org.orecruncher.dsurround.config.libraries.impl;
 
-import org.orecruncher.dsurround.runtime.PlatformFunctions;
 import com.mojang.serialization.Codec;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.core.Registry;
@@ -23,19 +22,22 @@ import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.eventing.IReloadEvent;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.function.Guard;
+import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.function.Guard;
+import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.registry.RegistryUtils;
-import org.orecruncher.dsurround.lib.collections.ObjectArray;
-import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.PlatformFunctions;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -93,6 +95,11 @@ public final class BiomeLibrary implements IBiomeLibrary {
         this.ruleFailures = LogThrottle.oncePerKey(this.logger, "biome rule failures", "the next reload");
         this.applyRules = Guard.named("Applying biome rules", this.logger, Guard.UNLIMITED);
         this.biomeConditionEvaluator = new BiomeConditionEvaluator(this, this.logger, platformFunctions);
+    }
+
+    @Override
+    public void defineScripts(ScriptDefinitions definitions, Consumer<String> problems) {
+        this.biomeConditionEvaluator.define(definitions, problems);
     }
 
     @Override

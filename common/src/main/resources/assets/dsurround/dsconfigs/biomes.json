@@ -608,13 +608,13 @@
     ]
   },
   {
-    "biomeSelector": "SPOOKY && !UNDERGROUND",
-    "_comment": "Apparitions wander dark forests and pale gardens at night (Scary Content), three times as often in the week either side of Halloween",
+    "biomeSelector": "def.isHaunted()",
+    "_comment": "Apparitions wander dark forests and pale gardens at night (Scary Content), more often around Halloween (scripts.json)",
     "actors": [
       {
         "actor": "dsurround:apparition",
         "conditions": "diurnal.isNight()",
-        "chance": "platform.isCurrentDateInRangeOf(10, 31, 7) ? 0.3 : 0.1"
+        "chance": "def.APPARITION_CHANCE * def.halloweenFactor()"
       }
     ]
   },
@@ -625,7 +625,7 @@
       {
         "actor": "dsurround:apparition",
         "conditions": "diurnal.isNight()",
-        "chance": "platform.isCurrentDateInRangeOf(10, 31, 7) ? 0.045 : 0.015"
+        "chance": "def.SWAMP_APPARITION_CHANCE * def.halloweenFactor()"
       }
     ]
   }

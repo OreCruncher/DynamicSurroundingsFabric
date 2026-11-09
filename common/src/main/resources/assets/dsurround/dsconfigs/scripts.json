@@ -1,0 +1,22 @@
+// Constants and functions for scripts (see lib/scripting/ScriptDefinitions and config/ScriptDefinitionLoader). Scripts
+// use them under "def.": def.APPARITION_CHANCE, def.isHalloween(). Names are written here without it.
+// - "constants": true or false, a number, or a string; every script sees them
+// - "biome": expressions for biome rules (biomeSelector), of biome traits such as SPOOKY
+// - "conditions": expressions for every other script (conditions, chances), of diurnal, weather, player and the rest
+// A function takes no arguments, may use the constants and the other functions of its section, and nothing defined in
+// code can be replaced. Modpacks add their own in config/dsurround/configs/<namespace>/scripts.json or a resource pack;
+// a later file's definition of a name replaces ours.
+{
+  "constants": {
+    "APPARITION_CHANCE": 0.1,
+    "SWAMP_APPARITION_CHANCE": 0.015,
+    "HALLOWEEN_FACTOR": 3
+  },
+  "biome": {
+    "isHaunted": "SPOOKY && !UNDERGROUND"
+  },
+  "conditions": {
+    "isHalloween": "platform.isCurrentDateInRangeOf(10, 31, 7)",
+    "halloweenFactor": "def.isHalloween() ? def.HALLOWEEN_FACTOR : 1"
+  }
+}

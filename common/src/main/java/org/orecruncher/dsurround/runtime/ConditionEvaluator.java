@@ -10,7 +10,10 @@ import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
 import org.orecruncher.dsurround.runtime.variables.*;
+
+import java.util.function.Consumer;
 
 public final class ConditionEvaluator implements IConditionEvaluator {
 
@@ -60,5 +63,10 @@ public final class ConditionEvaluator implements IConditionEvaluator {
     public Object eval(final Script conditions) {
         // ExecutionContext.eval() handles and logs script errors itself
         return this.context.eval(conditions).orElse(false);
+    }
+
+    @Override
+    public void defineScripts(ScriptDefinitions definitions, Consumer<String> problems) {
+        this.context.define(definitions, ScriptDefinitions.Section.CONDITIONS, problems);
     }
 }

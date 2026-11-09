@@ -243,8 +243,8 @@ public final class ConfigFuzz {
                     var parts = relative.split("/");
                     if (parts.length < 3 || !parts[1].equals("dsconfigs"))
                         continue;
-                    // Not read with a codec: PresetLoaderTests covers it
-                    if (parts[2].equals("presets.json"))
+                    // Not read with a codec: PresetLoaderTests and ScriptDefinitionLoaderTests cover them
+                    if (parts[2].equals("presets.json") || parts[2].equals("scripts.json"))
                         continue;
                     var kind = parts[2].equals("tags") ? TAGS : switch (parts[2]) {
                         case "biomes.json" -> BIOMES;

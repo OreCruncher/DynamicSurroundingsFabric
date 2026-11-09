@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * Holds a script engine along with its variable sets, and evaluates scripts against it.
@@ -59,6 +60,18 @@ public final class ExecutionContext {
 
     public void configureScripting(IConfigureScripting config) {
         config.configure(this.engine);
+        this.onDefinitionsChanged();
+    }
+
+    /**
+     * Defines the config files' constants and one section's functions, in place of what was defined before; scripts
+     * compile again with them. Each problem is described to {@code problems}, and what it concerns is left out.
+     */
+    public void define(ScriptDefinitions definitions, ScriptDefinitions.Section functions, Consumer<String> problems) {
+        Preconditions.checkNotNull(definitions);
+        definitions.defineIn(this.engine, functions, problems);
+        // Compiled scripts hold the definitions they were compiled with
+        this.expressions.clear();
         this.onDefinitionsChanged();
     }
 

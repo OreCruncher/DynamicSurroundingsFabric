@@ -394,6 +394,15 @@ is known of 26.4.
   A new one needs a `dsurround.conflict.<name>` entry in `en_us` (a test checks).
   Effects a shader pack keeps off are listed in `lib/compat/ShaderPackFeature`, which `/dsconflicts` reports while one
   is in use (those switched on in the config); a new one needs a `dsurround.shader_pack.<name>` entry (a test checks).
+- Script definitions (`dsconfigs/scripts.json`, any namespace; `config/ScriptDefinitionLoader`, `lib/scripting/ScriptDefinitions`):
+  `constants`, `biome` and `conditions` sections, names written bare and used as `def.NAME` / `def.name()`. Loaded at
+  VERY_HIGH, before the biome library checks its rules; ours first, a later file's name replaces (logged, whatever its
+  section). Constants go to both engines (`BiomeConditionEvaluator` for `biomeSelector`, `ConditionEvaluator` for
+  the rest), each section's functions to its own (`defineScripts`). `Environment` keeps them in a layer of their own,
+  replaced whole each reload; `def.` is reserved, so code can't use it and a definition can't replace code. Functions
+  take no arguments, may use each other (compiled in dependency order; loops and unknown or other-section names are
+  reported and left out with what uses them); one of constants and pure functions folds to a constant. Names ignore
+  case, as every script name does. `ConfigFuzz` skips the file; `ScriptDefinitionsTests` fuzzes it.
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
 - Biome traits (`config/biome/biometraits`) hold tables of what vanilla has, so **on every Minecraft version upgrade

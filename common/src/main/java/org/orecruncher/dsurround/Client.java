@@ -23,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.PresetLoader;
+import org.orecruncher.dsurround.config.ScriptDefinitionLoader;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
@@ -164,6 +165,7 @@ public final class Client {
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
                 .registerSingleton(PresetLoader.class)
+                .registerSingleton(ScriptDefinitionLoader.class)
                 .registerSingleton(IDimensionOracle.class, DimensionOracle.class)
                 .registerSingleton(ILevelOracle.class, LevelOracle.class)
                 .registerSingleton(IMinecraftClock.class, MinecraftClock.class)
@@ -217,6 +219,8 @@ public final class Client {
         // notification.
         IReloadEvent.EVENT.register(container.resolve(ISoundLibrary.class)::reload, HandlerPriority.VERY_HIGH);
         IReloadEvent.EVENT.register(container.resolve(ITagLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        // Before anything whose scripts use the definitions: the biome rules are checked as the biome library loads
+        IReloadEvent.EVENT.register(container.resolve(ScriptDefinitionLoader.class)::reload, HandlerPriority.VERY_HIGH);
         IReloadEvent.EVENT.register(container.resolve(IBiomeLibrary.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(container.resolve(IBlockLibrary.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);
