@@ -39,6 +39,8 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * With a mod that draws terrain past the render distance, fog from dust storms, biomes and mornings closes in smoothly from the far horizon. A dust storm made the view jump from the horizon to about 230 blocks at a quarter of its strength
 * Sheet lightning lights the dynamic clouds through a storm's fog; with dynamic clouds on it was all but invisible
 * Enhanced sounds trace through open air for about half the work
+* The lights fireflies and flame jets cast are drawn all at once, for less than half the GPU time in a field of fireflies; ground fog takes 11-15% less
+* Ground fog lies under huge mushrooms and Biomes O' Plenty's giant flowers, as it does under trees, rather than on top of them with streaks of mist hanging from their edges. Modpacks can add other mods' canopies to the `dsurround:effects/fog_canopy` block tag
 * On NeoForge, the mod reads other mods' files through NeoForge rather than opening each mod's jar and keeping it open, which took 36 MB of memory in a pack of 120 mods
 * `/dsmm whatsplaying` names the game's music tracks as the game's "now playing" message does, such as "C418 - Sweden", in your language
 * A volume or pitch in a sound configuration that isn't a number the mod can use, such as `-1e400`, is reported as an error instead of giving the sound a broken pitch

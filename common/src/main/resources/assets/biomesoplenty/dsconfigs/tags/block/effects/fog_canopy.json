@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "#biomesoplenty:flower_petal_blocks",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:glowshroom_block",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:toadstool_block",
+      "required": false
+    }
+  ]
+}
