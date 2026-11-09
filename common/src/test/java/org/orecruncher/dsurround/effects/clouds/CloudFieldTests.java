@@ -151,6 +151,40 @@ public class CloudFieldTests {
     }
 
     @Test
+    void farCellsTakeTurnsOverSeveralRounds() {
+        // A grid reaching past the near cells, as vanilla's default Cloud Distance makes it
+        int radius = CloudField.NEAR_CELLS + 8;
+        var cover = CloudCover.of(0.2F, 0F, AFTERNOON, 0.7F, 0.6F);
+        var field = new CloudField();
+        field.update(cover, 0, 0, radius, 0, 1F, 0F);
+        var before = copy(field);
+        // Much later, on tick 1043: turn 3 of the near cells' 20, and of the far cells' 60, turn 43 (the third round)
+        long tick = 1043;
+        int turn = (int) (tick % 20);
+        int farTurn = (int) (tick % (20 * CloudField.FAR_TURNS));
+        field.update(cover, 0, 0, radius, 50, 1F, 0F, tick, turn, 20);
+        int near = 0, far = 0;
+        for (int j = 0; j < field.size(); j++)
+            for (int i = 0; i < field.size(); i++) {
+                int cx = field.originX() + i;
+                int cz = field.originZ() + j;
+                boolean same = before[0][i + j * field.size()] == field.top(CloudField.Layer.LOW, i, j)
+                        && before[1][i + j * field.size()] == field.top(CloudField.Layer.HIGH, i, j);
+                if (same)
+                    continue;
+                if (Math.max(Math.abs(i - radius), Math.abs(j - radius)) > CloudField.NEAR_CELLS) {
+                    far++;
+                    assertEquals(farTurn, CloudField.turnOf(cx, cz, 20 * CloudField.FAR_TURNS), "a far cell changed out of turn");
+                } else {
+                    near++;
+                    assertEquals(turn, CloudField.turnOf(cx, cz, 20), "a near cell changed out of turn");
+                }
+            }
+        assertTrue(near > 0, "some near cells changed");
+        assertTrue(far > 0, "some far cells changed");
+    }
+
+    @Test
     void turnsAreSpreadEvenly() {
         int[] counts = new int[20];
         for (int z = -50; z < 50; z++)

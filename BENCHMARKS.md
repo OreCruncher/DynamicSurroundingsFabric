@@ -288,6 +288,22 @@ Drawing ours costs at most about 0.1 ms of GPU more than vanilla's, in the storm
 the tick: working out the field (`- Field *`) is about 0.3 ms a tick in every weather, about half of all the handlers'
 time in these scenes.
 
+**A cheaper field (2026-11-09, 5.2.0, Fabric, OpenGL, Cloud Distance 64 so the grid at its 97 by 97 most; vanilla's
+default, 128, is the same):** a recording put half the field's time in the cells' noise and half in looking up the
+biome under each cell, half of that in `BiomeManager.getBiome`'s blurred borders. Now the biome is the 4 by 4 square's
+own (`getNoiseBiome`), and cells past 24 from the camera's (`CloudField.NEAR_CELLS`, three quarters of that grid) are
+worked out once in 3 rounds of turns rather than every round. Cloud Handler a tick, each repeat, the same session:
+
+| Run | Before | After | fps, before / after |
+|---|---|---|---|
+| fair, dynamic | 0.34, 0.33 | 0.24, 0.22 | 1104 / 1092 |
+| storm, dynamic | 0.39, (2.45) | 0.31, 0.30 | 784 / 856 |
+| tall clouds, dynamic | 0.35, 0.35 | 0.29, 0.28 | 822 / 872 |
+
+The 2.45 is one repeat whose 95th percentile tick was 1.04 ms: a few long ticks, most likely the whole grid worked out
+at once as `/dsweather clouds` took hold (every cell, with the biome cache cold), skew its mean. That full rework is
+still the field's longest tick.
+
 ### Aurora, classic (`aurora.json`)
 
 A clear winter night facing north, every night with an aurora (chance 100), standing on the ground. The scene has

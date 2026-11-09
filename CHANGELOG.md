@@ -41,6 +41,7 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Enhanced sounds trace through open air for about half the work
 * The lights fireflies and flame jets cast are drawn all at once, for less than half the GPU time in a field of fireflies; ground fog takes 11-15% less
 * Rain and snow: the game no longer works out its own weather for drawing while the mod's particle weather replaces it, which took up to a quarter of the render thread in a heavy storm (more with Serene Seasons). Frames in heavy rain are up to a quarter shorter
+* Dynamic clouds take a fifth to a third less of each tick: far clouds, past about the render distance, change shape less often, and the biome under a cloud is read more cheaply
 * Ground fog lies under huge mushrooms and Biomes O' Plenty's giant flowers, as it does under trees, rather than on top of them with streaks of mist hanging from their edges. Modpacks can add other mods' canopies to the `dsurround:effects/fog_canopy` block tag
 * On NeoForge, the mod reads other mods' files through NeoForge rather than opening each mod's jar and keeping it open, which took 36 MB of memory in a pack of 120 mods
 * `/dsmm whatsplaying` names the game's music tracks as the game's "now playing" message does, such as "C418 - Sweden", in your language

@@ -23,6 +23,7 @@ import java.util.Arrays;
  * sky jumping. A cell already in a cloud stays until the noise is clearly out of it, and its height changes only once
  * the noise is clearly a step away, so a cell near the edge doesn't flicker in and out. When the camera moves into another
  * cell the grid's columns are moved with it, and only the cells new to it are worked out.
+ * Cells far from the camera's (past {@link #NEAR_CELLS}) have a turn only every {@link #FAR_TURNS} rounds of turns.
  * <p>
  * A cell that changes keeps the column it had before for {@link #FADE_TICKS}, so the change can be drawn fading in or
  * out (see {@link CloudMesh}): what is in both columns is settled, what is in only one is changing. It isn't worked out
@@ -62,6 +63,13 @@ public final class CloudField {
      * change is over before the next can start
      */
     public static final int FADE_TICKS = 20;
+    /**
+     * Cells further than this from the camera's, either way, are worked out once in {@link #FAR_TURNS} times as many
+     * updates as those nearer: about the render distance, past which a cloud a step taller or gone a few seconds later
+     * isn't seen, and where most of a large grid's cells are (three quarters at vanilla's default Cloud Distance)
+     */
+    static final int NEAR_CELLS = 24;
+    static final int FAR_TURNS = 3;
     // A change long enough ago to be over
     private static final int LONG_AGO = Integer.MIN_VALUE;
     // A share of the cells under a deck hang a step lower, ragged, once the base has lowered this far
@@ -174,7 +182,8 @@ public final class CloudField {
      * @param streakX the way the high streaks run, for their noise; and {@code streakZ}
      * @param tick    the tick it is, which a change is timed from: one more than the last update's, as a rule
      * @param turn    whose turn it is, 0 to {@code turns - 1}: each cell has its own, scattered
-     * @param turns   how many turns there are: each cell is worked out again once in this many calls
+     * @param turns   how many turns there are: each cell is worked out again once in this many calls, or (far from the
+     *                camera's, past {@link #NEAR_CELLS}) once in {@link #FAR_TURNS} times as many
      * @return whether anything changed
      */
     public boolean update(Cover covers, int centerX, int centerZ, int radius, double time, float streakX, float streakZ,
@@ -193,12 +202,17 @@ public final class CloudField {
             changed = true;
         }
 
+        // The far cells' turn: they take turns over FAR_TURNS rounds of the near cells', one round after another
+        int farTurns = turns * FAR_TURNS;
+        int farTurn = turns <= 1 ? 0 : turn + turns * (int) Math.floorMod(Math.floorDiv(tick, (long) turns), (long) FAR_TURNS);
+
         float length = Mth.sqrt(streakX * streakX + streakZ * streakZ);
         float alongX = length > 0F ? streakX / length : 1F;
         float alongZ = length > 0F ? streakZ / length : 0F;
 
         for (int j = 0; j < this.size; j++) {
             int cz = this.originZ + j;
+            int fromCameraZ = Math.abs(j - radius);
             for (int i = 0; i < this.size; i++) {
                 int cx = this.originX + i;
                 int index = i + j * this.size;
@@ -209,7 +223,8 @@ public final class CloudField {
                     this.turnHash[index] = turnHash(cx, cz);
                 } else if (!nowKnown) {
                     changed |= this.fadeEnds(index, tick);
-                    if (!this.isDue(index, tick, turn, turns))
+                    boolean far = Math.max(Math.abs(i - radius), fromCameraZ) > NEAR_CELLS;
+                    if (!(far ? this.isDue(index, tick, farTurn, farTurns) : this.isDue(index, tick, turn, turns)))
                         continue;
                 }
 

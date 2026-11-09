@@ -384,7 +384,6 @@ public class CloudHandler extends AbstractClientHandler {
 
         private final IBiomeLibrary biomeLibrary;
         private final CloudCover[] byWetness = new CloudCover[WETNESS_STEPS + 1];
-        private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         @Nullable
         private ClientLevel level;
         private double driftX;
@@ -467,7 +466,9 @@ public class CloudHandler extends AbstractClientHandler {
             float known = this.wetness.get(square);
             if (!Float.isNaN(known))
                 return known;
-            var biome = current.getBiome(this.pos.set(x, this.sampleY, z)).value();
+            // The biome of the 4 by 4 square itself, not vanilla's blurred borders between squares (BiomeManager.getBiome
+            // hashes neighboring points for those): clouds are 12 blocks wide, and this was half of the clouds' tick
+            var biome = current.getNoiseBiome(x >> 2, this.sampleY >> 2, z >> 2).value();
             float wet = this.biomeLibrary.getBiomeInfo(biome).getDownfall();
             this.wetness.put(square, wet);
             return wet;
