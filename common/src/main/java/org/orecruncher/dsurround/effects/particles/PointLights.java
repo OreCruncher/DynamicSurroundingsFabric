@@ -20,9 +20,11 @@ import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.Constants;
+import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.QuadWriter;
@@ -48,7 +50,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class PointLights {
 
     private static final String POINT_LIGHT_INFO = "PointLightInfo";
-    private static final int POINT_LIGHT_INFO_SIZE = new Std140SizeCalculator().putFloat().get();
+    private static final int POINT_LIGHT_INFO_SIZE = new Std140SizeCalculator().putMat4f().putFloat().get();
+    private static final Matrix4f INV_PROJECTION = new Matrix4f();
     private static final BindGroupLayout POINT_LIGHT_LAYOUT = BindGroupLayout.builder()
             .withUniform(POINT_LIGHT_INFO, UniformType.UNIFORM_BUFFER)
             .withUniform(SoftParticles.DEPTH_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
@@ -228,12 +231,16 @@ public final class PointLights {
             quads.vertex(x, y, z, -radius, radius, color);
         }
 
-        if (lightInfo == null) {
-            var zeroToOne = device.getDeviceInfo().isZZeroToOne();
-            try (var stack = MemoryStack.stackPush()) {
-                var data = Std140Builder.onStack(stack, POINT_LIGHT_INFO_SIZE).putFloat(zeroToOne ? 1F : 0F).get();
-                lightInfo = device.createBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM, data);
-            }
+        // The projection's inverse, worked out once a frame here rather than for each pixel of each light in the shader
+        if (lightInfo == null)
+            lightInfo = device.createBuffer(() -> "Dynamic Surroundings point light UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, POINT_LIGHT_INFO_SIZE);
+        var zeroToOne = device.getDeviceInfo().isZZeroToOne();
+        try (var stack = MemoryStack.stackPush()) {
+            var data = Std140Builder.onStack(stack, POINT_LIGHT_INFO_SIZE)
+                    .putMat4f(INV_PROJECTION.set(LevelProjection.get()).invert())
+                    .putFloat(zeroToOne ? 1F : 0F)
+                    .get();
+            device.createCommandEncoder().writeToBuffer(lightInfo.slice(), data);
         }
 
         var info = lightInfo;

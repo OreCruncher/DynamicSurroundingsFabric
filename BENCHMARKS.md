@@ -432,6 +432,19 @@ Lowering the cap or skipping lights close to the camera are the places to save; 
 lights were drawn. A block's effects are made as the config loads, so the scene runs `dsreload` for `enableFireflies`
 to take effect, and to undo it in the next run.
 
+**The projection's inverse out of the shader (2026-11-08, 5.2.0, Fabric, OpenGL):** `point_light.fsh` inverted
+`ProjMat` for each pixel of each light; `PointLights` now works it out once a frame (`InvProjMat` in its block). The
+same session, before and after (`fireflies.json`, `burning-lights.json`, two runs a label):
+
+| Run | Frame GPU ms, before / after | Point Lights GPU, before / after |
+|---|---|---|
+| fireflies default | 1.397 / 1.241 | 0.515 / 0.350 |
+| fireflies no glow | 1.424 / 1.211 | 0.546 / 0.332 |
+| burning default | 0.359 / 0.373 | 0.037 / 0.033 |
+
+About a third off the lights where there are many (fireflies aren't seeded, so a little of it is the swarm). The burning
+crowd's lights are too few to tell.
+
 ### Rain and snow on 26.3
 
 | Run | Precipitation GPU/CPU, OpenGL | Vulkan | Waiting for Quads CPU, OpenGL / Vulkan | Precipitation Handler ms/tick |
