@@ -1,0 +1,26 @@
+{
+  "name": "sparse_forest",
+  "source": {
+    "title": "001_forrest.wav",
+    "url": "https://freesound.org/people/joepsporck/sounds/262037/",
+    "author": "joepsporck",
+    "license": "CC0",
+    "file": "262037__joepsporck__001_forrest.wav",
+    "prepare": "python scripts/sound-clean.py <file> sparse_forest_matched.wav --match <the mod's old ambient/outside/sparse_forest.ogg> 2.11, then --source sparse_forest_matched.wav",
+    "notes": "The old loop (biome.forest's until 2026-11-10, now the sparse forests') was 46 s of it from 2.1 s, its tone reshaped: matched again with --match, a slightly longer loop, 32 kHz."
+  },
+  "settings": {
+    "rate": 32000,
+    "quality": 4,
+    "highpass": 20,
+    "target_rms": -54.1
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/sparse_forest",
+      "start": 1.0,
+      "end": 49.5,
+      "loop": 3.0
+    }
+  ]
+}

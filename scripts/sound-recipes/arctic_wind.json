@@ -1,0 +1,30 @@
+{
+  "name": "arctic_wind",
+  "source": {
+    "title": "Howling Wind Ambience",
+    "url": "https://freesound.org/people/DBlover/sounds/405601/",
+    "author": "DBlover",
+    "license": "CC0",
+    "file": "405601__dblover__howling-wind-ambience.mp3",
+    "notes": "48 kHz stereo MP3, 85 s: a rumbling howl, nearly all under 200 Hz, with gusts thudding on the microphone (under 65 Hz) at 0.7-7.9, 14, 21-22, 49, 56, 63 and 69 s. The old loop was 13.6 s of it from 53.2 s (r 1.00), stereo at 44.1 kHz. Cut again 2026-11-10: 40 s from 25 s, kept stereo, the rumble turned down and the thuds high-passed away. Bass -4 dB under 150 Hz (chosen over -8); the level matches the old loop's loudness (-30.5 LUFS), as its average level was mostly sub-bass."
+  },
+  "settings": {
+    "channel": "stereo",
+    "rate": 24000,
+    "quality": 3,
+    "highpass": 40,
+    "bass": [
+      -4,
+      150
+    ],
+    "target_rms": -30.5
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/arctic_wind",
+      "start": 25.0,
+      "end": 65.0,
+      "loop": 3.0
+    }
+  ]
+}

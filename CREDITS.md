@@ -75,23 +75,23 @@ Others:
 
 *dsurround:biome.wind / dsurround:biome.wind.hills / dsurround:biome.wind.mountains*
 
-* S: [Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).](https://www.freesound.org/people/felix.blume/sounds/156414/) by [felix.blume](https://www.freesound.org/people/felix.blume/) | License: Creative Commons 0
+* S: [Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).](https://www.freesound.org/people/felix.blume/sounds/156414/) by [felix.blume](https://www.freesound.org/people/felix.blume/) | License: Creative Commons 0 | Modified: a 62 s loop cut, made mono, toned to the old loop, level matched
 
 *dsurround:biome.wind.arctic*
 
-* S: [Howling Wind Ambience](https://freesound.org/people/DBlover/sounds/405601/) by [DBlover](https://freesound.org/people/DBlover/) | License: Creative Commons 0
+* S: [Howling Wind Ambience](https://freesound.org/people/DBlover/sounds/405601/) by [DBlover](https://freesound.org/people/DBlover/) | License: Creative Commons 0 | Modified: a 40 s loop cut, bass reduced, level matched
 
-*dsurround:biome.ocean / dsurround:biome.ocean.deep / dsurround:biome.ocean.deep.under*
+*dsurround:biome.ocean / dsurround:biome.ocean.deep*
 
 * S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.bog*
 
-* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: an 87 s loop cut, made mono, tone matched to the old loop, level matched
 
 *dsurround:biome.river / dsurround:biome.river.under / dsurround:biome.ocean.under / dsurround:biome.ocean.deep.under*
 
-* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: loops cut, made mono; the ocean and deep ocean slowed (pitch with it) and toned to the old loops
 
 *dsurround:biome.plains*
 
@@ -111,7 +111,7 @@ Others:
 
 *dsurround:biome.forest.sparse*
 
-* S: [001_forrest.wav](https://www.freesound.org/people/joepsporck/sounds/262037/) by [joepsporck](https://www.freesound.org/people/joepsporck/) | License: Creative Commons 0
+* S: [001_forrest.wav](https://www.freesound.org/people/joepsporck/sounds/262037/) by [joepsporck](https://www.freesound.org/people/joepsporck/) | License: Creative Commons 0 | Modified: a loop cut, made mono, tone matched to the old loop, level matched
 
 *dsurround:biome.forest.deep*
 
@@ -147,7 +147,7 @@ Others:
 
 *dsurround:biome.water.under*
 
-* S: [UnderwaterDrowning01.wav](https://www.freesound.org/people/Abolla/sounds/213914/) by [Abolla](https://www.freesound.org/people/Abolla/) | License: Creative Commons 0
+* S: [UnderwaterDrowning01.wav](https://www.freesound.org/people/Abolla/sounds/213914/) by [Abolla](https://www.freesound.org/people/Abolla/) | License: Creative Commons 0 | Modified: a loop cut, level matched
 
 *dsurround:crow*
 
@@ -176,7 +176,7 @@ Others:
 
 *dsurround:biome.wind.desert*
 
-* S: [desertwind1FINAL.wav](https://www.freesound.org/people/nageor/sounds/112296/) by [nageor](https://www.freesound.org/people/nageor/) | License: Creative Commons 0
+* S: [desertwind1FINAL.wav](https://freesound.org/people/slugzilla/sounds/112296/) by [slugzilla](https://freesound.org/people/slugzilla/) | License: Creative Commons 0 | Modified: a loop cut, tone matched to the old loop, level matched
 
 *dsurround:biome.savanna.night*
 
@@ -184,7 +184,7 @@ Others:
 
 *dsurround:biome.savanna.day*
 
-* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: a 60 s loop cut, made mono, tone matched to the old loop, level matched
 
 *dsurround:turtledove*
 

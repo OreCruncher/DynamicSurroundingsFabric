@@ -95,7 +95,10 @@ is known of 26.4.
   WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral
   denoising also takes down quiet calls it mistakes for noise (a pack's chorus lost as much as its background). Noise
   that swells (surf) needs a higher profile percentile, `--noise-pct 70 --over 2`, where calls are a small part of
-  the recording (the owls, `--denoise -15`: 10 dB more off the surf, the hoots whole; a lower floor left the rest of it warbling).
+  the recording (the owls, `--denoise -15`: 10 dB more off the surf, the hoots whole; a lower floor left the rest of it warbling). `--match REF START` gives a
+  longer or cleaner cut the tone of the old file cut from the same recording (REF, found at START by `sound-match.py`).
+  `sound-cut.py` also takes `"bass": [dB, Hz]` (a low shelf) and `"channel": "stereo"` (an ambience kept stereo);
+  level a loop whose rumble or hiss changed by loudness (`ebur128`), not by RMS.
 - Game jar for `javap` (check real signatures rather than assuming; 26.3 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.

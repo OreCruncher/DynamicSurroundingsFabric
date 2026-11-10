@@ -29,12 +29,16 @@ SOUNDS = os.path.join(ROOT, "common", "src", "main", "resources", "assets", "dsu
 DEFAULTS = {
     # Hz; mono for positional sounds (Minecraft only places mono ones)
     "rate": 44100,
-    "channel": "mix",           # mix, left or right
+    # mix, left or right: mono, for positional sounds (Minecraft only places mono ones); stereo keeps both, for an
+    # ambience that plays around the player rather than from a place
+    "channel": "mix",
     "highpass": 80,             # Hz: rumble and DC offset out; 0 for none
     "lowpass": 0,               # Hz: 0 for none
     # [dB, Hz]: a high shelf, turning down everything over Hz by dB (a negative gain) while keeping the sound's
     # shape; for a call bright in the ear's most sensitive range (2-5 kHz), where a low-pass would cut into it
     "treble": None,
+    # [dB, Hz]: a low shelf, turning everything under Hz up or down by dB, for a rumble that is too heavy
+    "bass": None,
     "pad_before": 0.005,        # seconds of the source kept before a clip's start, faded in
     "pad_after": 0.03,          # and after its end, faded out
     "fade_in": 0.003,
@@ -66,12 +70,16 @@ def run(cmd):
 
 def cut(source, clip, s, work):
     out = os.path.join(work, clip["file"].replace("/", "_") + ".wav")
-    pan = {"mix": "pan=mono|c0=0.5*c0+0.5*c1", "left": "pan=mono|c0=c0", "right": "pan=mono|c0=c1"}[s["channel"]]
+    pan = {"mix": "pan=mono|c0=0.5*c0+0.5*c1", "left": "pan=mono|c0=c0", "right": "pan=mono|c0=c1",
+           "stereo": "aformat=channel_layouts=stereo"}[s["channel"]]
     filters = []
     if s["highpass"]:
         filters.append(f"highpass=f={s['highpass']}")
     if s["lowpass"]:
         filters.append(f"lowpass=f={s['lowpass']}")
+    if s["bass"]:
+        gain, hz = s["bass"]
+        filters.append(f"bass=g={gain}:f={hz}")
     if s["treble"]:
         gain, hz = s["treble"]
         filters.append(f"treble=g={gain}:f={hz}")

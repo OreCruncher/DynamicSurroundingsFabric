@@ -179,8 +179,8 @@
 		"ds_credits": [
 			{
 				"name": "desertwind1FINAL.wav",
-				"author": "nageor",
-				"website": "https://www.freesound.org/people/nageor",
+				"author": "slugzilla",
+				"website": "https://www.freesound.org/people/slugzilla",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -906,9 +906,9 @@
 	"biome.ocean.deep.under": {
 		"ds_credits": [
 			{
-				"name": "ocean waves surround me.wav",
-				"author": "bohitomi",
-				"website": "https://www.freesound.org/people/bohitomi",
+				"name": "underwater ambience.wav",
+				"author": "AlienXXX",
+				"website": "https://www.freesound.org/people/AlienXXX",
 				"license": "Attribution"
 			}
 		],

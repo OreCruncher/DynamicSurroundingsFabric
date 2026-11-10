@@ -1,0 +1,28 @@
+{
+  "name": "thunder_yoyodaman",
+  "source": {
+    "title": "Thunder 1",
+    "url": "https://freesound.org/people/Yoyodaman234/sounds/253953/",
+    "author": "Yoyodaman234",
+    "license": "CC0",
+    "file": "253953__yoyodaman234__thunder-1.wav",
+    "notes": "Cut again 2026-11-10 from the original (sound-match: r 0.99-1.00 against the old file, which started 0.61 s in): the same stretch, at 22050 Hz (its content stops well under 11025 Hz), the old loudest-50-ms level."
+  },
+  "settings": {
+    "rate": 22050,
+    "quality": 4,
+    "highpass": 20,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.005,
+    "fade_out": 0.3,
+    "target_rms_peak": -10.8
+  },
+  "clips": [
+    {
+      "file": "ambient/weather/thunder3",
+      "start": 0.61,
+      "end": 15.2
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "underwater_ocean",
+  "source": {
+    "title": "underwater ambience.wav",
+    "url": "https://freesound.org/people/AlienXXX/sounds/218276/",
+    "author": "AlienXXX",
+    "license": "CC BY 4.0",
+    "file": "218276__alienxxx__underwater-ambience.wav",
+    "prepare": "ffmpeg -i <file> -af \"asetrate=44100*0.85,aresample=44100:resampler=soxr\" alien_ocean.wav (slowed to 0.85x, pitch with it), then python scripts/sound-clean.py alien_ocean.wav ocean_matched.wav --match <the mod's old ambient/underwater/ocean.ogg> 0.2, then --source ocean_matched.wav",
+    "notes": "44.1 kHz stereo, 10.6 s. The old loop, credited to this recording, matched no part of it at any speed: rebuilt 2026-11-10 from it, slowed to 0.85x (pitch and time together, a bigger body of water than the underwater river, which is this recording as it is) and given the old loop's tone with --match."
+  },
+  "settings": {"rate": 16000, "quality": 4, "highpass": 20, "target_rms": -47.5},
+  "clips": [{"file": "ambient/underwater/ocean", "start": 0.2, "end": 11.0, "loop": 1.3}]
+}

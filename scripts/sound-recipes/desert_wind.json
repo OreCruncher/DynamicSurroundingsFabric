@@ -1,0 +1,26 @@
+{
+  "name": "desert_wind",
+  "source": {
+    "title": "desertwind1FINAL.wav",
+    "url": "https://freesound.org/people/slugzilla/sounds/112296/",
+    "author": "slugzilla",
+    "license": "CC0",
+    "file": "112296__slugzilla__desertwind1final.wav",
+    "prepare": "python scripts/sound-clean.py <file> desert_wind_matched.wav --match <the mod's old ambient/outside/desert_wind.ogg> 5.44, then --source desert_wind_matched.wav",
+    "notes": "Made by breathing in through an emergency whistle (the uploader's notes). The old loop was 14.3 s of it from 5.44 s, its tone reshaped (darker over 1 kHz, by up to 20 dB): matched again with --match, the loop nearly the whole recording."
+  },
+  "settings": {
+    "rate": 16000,
+    "quality": 4,
+    "highpass": 20,
+    "target_rms": -40.2
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/desert_wind",
+      "start": 0.3,
+      "end": 16.6,
+      "loop": 3.0
+    }
+  ]
+}

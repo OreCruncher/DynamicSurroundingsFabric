@@ -1,0 +1,25 @@
+{
+  "name": "underwater_water",
+  "source": {
+    "title": "UnderwaterDrowning01.wav",
+    "url": "https://freesound.org/people/Abolla/sounds/213914/",
+    "author": "Abolla",
+    "license": "CC0",
+    "file": "213914__abolla__underwaterdrowning01.wav",
+    "notes": "48 kHz mono, 28.7 s: the old loop was its first 23 s (r 1.00), untouched; its content stops under 1 kHz. Cut again at 16 kHz, a little longer."
+  },
+  "settings": {
+    "rate": 16000,
+    "quality": 4,
+    "highpass": 20,
+    "target_rms": -48.8
+  },
+  "clips": [
+    {
+      "file": "ambient/underwater/water",
+      "start": 0.1,
+      "end": 25.5,
+      "loop": 3.0
+    }
+  ]
+}

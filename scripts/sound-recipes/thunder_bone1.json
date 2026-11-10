@@ -1,0 +1,28 @@
+{
+  "name": "thunder_bone1",
+  "source": {
+    "title": "Thunder - 1",
+    "url": "https://freesound.org/people/bone666138/sounds/198857/",
+    "author": "bone666138",
+    "license": "CC BY 4.0",
+    "file": "198857__bone666138__thunder-1.wav",
+    "notes": "Cut again 2026-11-10 from the original (sound-match: r 0.99-1.00 against the old file, which started 10.68 s in): the same stretch, at 16000 Hz (its content stops well under 8000 Hz), the old loudest-50-ms level."
+  },
+  "settings": {
+    "rate": 16000,
+    "quality": 4,
+    "highpass": 20,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.005,
+    "fade_out": 0.3,
+    "target_rms_peak": -6.8
+  },
+  "clips": [
+    {
+      "file": "ambient/weather/thunder6",
+      "start": 10.68,
+      "end": 21.04
+    }
+  ]
+}

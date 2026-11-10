@@ -1,0 +1,14 @@
+{
+  "name": "wind",
+  "source": {
+    "title": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
+    "url": "https://freesound.org/people/felix.blume/sounds/156414/",
+    "author": "felix.blume",
+    "license": "CC0",
+    "file": "156414__felixblume__wind-blowing-into-some-cactus-spine-on-the-top-of-the-mountain-in-the-desert-of-atacama-chile.wav",
+    "prepare": "python scripts/sound-clean.py <file> wind_matched.wav --match <the mod's old ambient/outside/wind.ogg> 0.5, then --source wind_matched.wav",
+    "notes": "96 kHz 24-bit stereo, 120 s: strong gusts for the first 45 s, a lull, a gust at 60 s, calmer after 65 s; low thumps at 110-111 s. The old wind loop (43.7 s at 96 kHz, credited to this recording) matches no part of it at any speed: replaced 2026-11-10 by a loop of it, given the old loop's tone (much darker over 1 kHz) with --match. 0.5-63 s: the gusts, the lull and the next gust."
+  },
+  "settings": {"rate": 16000, "quality": 4, "highpass": 20, "target_rms": -34.8},
+  "clips": [{"file": "ambient/outside/wind", "start": 0.5, "end": 63.0, "loop": 3.0}]
+}

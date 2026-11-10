@@ -5,7 +5,7 @@
 speed change, written as a mono 32-bit float WAV (keep it outside the repository, as the sources are).
 
 Usage: python scripts/sound-clean.py IN OUT [--highpass HZ] [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P]
-       [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]
+       [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X] [--match REF START]
 
 Needs numpy (pip install numpy) and ffmpeg (with Rubber Band for --tempo).
   --highpass, --lowpass  4-pole high-pass and 2-pole low-pass, first: rumble under a call, hiss over it. Try these
@@ -20,6 +20,10 @@ Needs numpy (pip install numpy) and ffmpeg (with Rubber Band for --tempo).
   --dereverb  the late reverb at each frame predicted from the signal 50 ms before, decayed at the room's T60 in
            seconds (Lebart et al.), and taken out the same way, no lower than FLOOR_DB (-15 keeps a little room)
   --tempo  faster (over 1) or slower, pitch kept (Rubber Band), after the rest
+  --match  REF START: the tone of an old file cut from this recording (REF, cut from START seconds, as sound-match.py
+           finds it), measured band by band against the same stretch here and applied as a fixed EQ to the whole
+           recording, so a longer or cleaner cut keeps the sound players know. Third-octave bands, smoothed, at most
+           18 dB either way; bands with nothing in them are left alone
 The recipe's source notes should give the command, so the clips can be cut again from the original download.
 """
 import argparse
@@ -39,6 +43,7 @@ p.add_argument("--noise-pct", type=float, default=15)
 p.add_argument("--over", type=float, default=1.5)
 p.add_argument("--dereverb", type=float, nargs=2, default=None, metavar=("T60", "FLOOR_DB"))
 p.add_argument("--tempo", type=float, default=1.0)
+p.add_argument("--match", nargs=2, default=None, metavar=("REF", "START"))
 a = p.parse_args()
 
 rate = int(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_entries", "stream=sample_rate",
@@ -105,6 +110,36 @@ if a.dereverb:
     X = X * G
     P = np.abs(X) ** 2
     report.append(f"dereverb T60 {t60} s, floor {floor_db} dB: mean gain {20 * np.log10(G.mean()):.1f} dB")
+if a.match:
+    ref_path, start = a.match[0], float(a.match[1])
+    ref = np.frombuffer(subprocess.run(["ffmpeg", "-v", "error", "-i", ref_path, "-ac", "1", "-ar", str(rate), "-f", "f32le",
+                                        "-"], capture_output=True, check=True, stdin=subprocess.DEVNULL).stdout,
+                        dtype=np.float32).astype(np.float64)
+    i0 = int(start * rate)
+    seg = x[i0:i0 + len(ref)]
+    ref = ref[:len(seg)]
+    f = np.fft.rfftfreq(N, 1 / rate)
+    Pr, Ps = (np.abs(stft(ref)) ** 2).mean(axis=0), (np.abs(stft(seg)) ** 2).mean(axis=0)
+    centers = [c for c in 20 * 2 ** (np.arange(0, 40) / 3) if c < rate / 2 * 0.95]
+    gains = []
+    for c in centers:
+        band = (f >= c / 2 ** (1 / 6)) & (f < c * 2 ** (1 / 6))
+        if not band.any():
+            gains.append(np.nan)
+            continue
+        lr, ls = 10 * np.log10(Pr[band].sum() + 1e-30), 10 * np.log10(Ps[band].sum() + 1e-30)
+        live = lr > 10 * np.log10(Pr.sum() + 1e-30) - 60 and ls > 10 * np.log10(Ps.sum() + 1e-30) - 60
+        gains.append(lr - ls if live else np.nan)
+    gains = np.array(gains)
+    known = ~np.isnan(gains)
+    # the overall level isn't the EQ's business (sound-cut.py levels the clips): off first, then the limit
+    gains = np.clip(gains - np.median(gains[known]), -18, 18)
+    gains = np.interp(np.arange(len(gains)), np.flatnonzero(known), gains[known])     # empty bands take their neighbors'
+    gains = np.convolve(np.pad(gains, 1, mode="edge"), [0.25, 0.5, 0.25], mode="valid")
+    curve = np.interp(np.log2(np.maximum(f, 1)), np.log2(centers), gains)
+    X = X * 10 ** (curve / 20)
+    report.append("matched the tone of " + os.path.basename(ref_path) + " (by octave: " + ", ".join(
+        f"{c:.0f} Hz {g:+.0f}" for c, g in list(zip(centers, gains))[::3]) + " dB)")
 if a.denoise is not None:
     # A single frame's power in a bin of noise scatters widely (its 15th percentile is about 8 dB under the mean, and
     # took out little): averaged over a quarter second it holds near the noise's level, calls apart

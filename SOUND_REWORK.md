@@ -59,6 +59,26 @@ made exclusive, so each forest biome plays one forest loop (checked against a `/
 `SPARSE_VEGETATION || SWAMP`. Pitch factories (0.9-1.1, or 0.85-1.15 for the wolf) on wolf, whales, loon, seagulls,
 flock, owl and nightingale.
 
+## Re-encoding the streamed sounds (2026-11-10)
+
+The 31 streamed loops were surveyed for how high their content reaches against how they were stored (`sound-cut.py`'s
+report gives sizes). 16 were remade from their originals (all in the author's `New Sounds/originals`, with every
+other download of the rework), matched to each old file first with `sound-match.py`, for 3.26 MB down to about 2.2 MB
+with several loops longer:
+- Thunder 1-6, cut again from their originals at 16-32 kHz: thunder1 swuing, 2 bone666138 "Thunder - 2", 3
+  Yoyodaman234, 4 aaronstar, 5 sarson, 6 bone666138 "Thunder - 1" (each r 1.00, the same stretch).
+- Desert wind, sparse forest, bog (87 s), savanna day (60 s, moved past low thumps): the old loops' tone had been
+  reshaped (matched only within a band, r 0.80-0.95), so the originals were given it again with `sound-clean.py
+  --match` before cutting. The desert wind is slugzilla's, not "nageor"'s: credit fixed.
+- Underwater river and water: the originals untouched (r 0.99-1.00), recut.
+- Wind, underwater ocean and deep ocean matched nothing (wind: not felix.blume's Atacama wind at any speed, nor in any
+  band): rebuilt from their credited recordings (the wind toned to the old loop; ocean and deep ocean AlienXXX's,
+  slowed to 0.85x and 0.70x and toned), so the credits are now true. `biome.ocean.deep.under` credits AlienXXX.
+- Arctic wind: DBlover's howl (r 1.00), 40 s, kept stereo (`"channel": "stereo"`), bass -4 dB (`"bass"`) and the
+  gusts' thuds high-passed; leveled by loudness (LUFS), as its average level was mostly sub-bass.
+- Left as they were: the loops made in this rework (already 16-24 kHz), pine forest (re-encoding grew it), crickets
+  and savanna night (content to 20 kHz), river, beach, ocean and plains (smaller only with audible loss).
+
 ## How sounds are made now
 
 - `scripts/sound-cut.py` cuts clips from a source as a recipe says: mono, filtered, faded, brought to a level, encoded
