@@ -187,7 +187,11 @@ Others:
 
 *dsurround:weather.rain*
 
-* S: rain_calm1-4 from [Better Rain](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/2134067-better-rain-v0-15-bug-fixes) by Wirsbo | License: none stated; the author asks to be credited
+* S: [even more rain.wav](https://freesound.org/people/mlaramie/sounds/193876/) by [mlaramie](https://freesound.org/people/mlaramie/) | License: Creative Commons 0 | Modified: four stretches cut, faded in and out, levels matched
+
+*dsurround:weather.rain.medium*
+
+* S: [Medium rain](https://freesound.org/people/Ryding/sounds/718518/) by [Ryding](https://freesound.org/people/Ryding/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: four stretches cut, made mono, faded in and out, levels matched
 
 *dsurround:electricarc*
 

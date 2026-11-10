@@ -73,8 +73,8 @@ public class MixinClientLevel {
     }
 
     /**
-     * The rain sound, as 1.12.2 had it: the mod's calm rain, louder as the storm strengthens, with vanilla's heavier
-     * rain blended in from a moderate storm up. Both of the rain tick's sounds, the rain in the open and on a roof above,
+     * The rain sound, as 1.12.2 had it: the mod's calm rain, louder as the storm strengthens, with a medium rain
+     * through middling storms and vanilla's heavier rain blended in from a moderate storm up. Both of the rain tick's sounds, the rain in the open and on a roof above,
      * come through here (Level.playLocalSound at a BlockPos calls this); each keeps vanilla's volume and pitch for where
      * it is, scaled. Only while vanilla's rain is ticked (see MixinHelpers.rainTickThread).
      */
@@ -90,18 +90,24 @@ public class MixinClientLevel {
         try {
             // The shares are worked out before anything plays, so a failure leaves vanilla's sound, played once
             float calmVolume;
+            float medium;
             float heavy;
             SoundEvent calm;
+            SoundEvent mediumRain;
             try {
                 var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
                 calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
+                mediumRain = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN_MEDIUM);
                 calmVolume = volume * StormSounds.calmShare(rainLevel);
+                medium = StormSounds.mediumShare(rainLevel);
                 heavy = StormSounds.heavyShare(rainLevel);
             } catch (Throwable t) {
                 MixinHelpers.RAIN_SOUND_GUARD.failed(t);
                 return;
             }
             level.playLocalSound(x, y, z, calm, source, calmVolume, pitch, distanceDelay);
+            if (medium > 0F)
+                level.playLocalSound(x, y, z, mediumRain, source, volume * medium, pitch, distanceDelay);
             if (heavy > 0F)
                 level.playLocalSound(x, y, z, sound, source, volume * heavy, pitch, distanceDelay);
             ci.cancel();

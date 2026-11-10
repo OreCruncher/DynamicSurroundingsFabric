@@ -13,7 +13,7 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for how storms sound: the calm rain, vanilla's heavier rain blended in, and the dust.
+ * Tests for how storms sound: the calm rain, the medium rain, vanilla's heavier rain blended in, and the dust.
  */
 public class StormSoundsTests {
 
@@ -41,6 +41,27 @@ public class StormSoundsTests {
     }
 
     @Test
+    void theMediumRainFillsTheMiddleOfTheStorm() {
+        assertEquals(0F, StormSounds.mediumShare(0.1F));
+        assertEquals(0F, StormSounds.mediumShare(StormSounds.MEDIUM_FROM));
+        assertEquals(1F, StormSounds.mediumShare(StormSounds.MEDIUM_FULL), 1e-6F);
+        assertEquals(1F, StormSounds.mediumShare(StormSounds.MEDIUM_FADE), 1e-6F);
+        assertEquals(0F, StormSounds.mediumShare(1F), 1e-6F);
+        // Up smoothly, then down smoothly, with no step anywhere
+        float last = 0F;
+        for (float level = 0F; level <= 1F; level += 0.01F) {
+            var share = StormSounds.mediumShare(level);
+            assertTrue(share >= 0F && share <= 1F, "within 0 to 1, at " + level);
+            assertTrue(Math.abs(share - last) < 0.1F, "no step, at " + level);
+            if (level <= StormSounds.MEDIUM_FULL)
+                assertTrue(share >= last, "rises, at " + level);
+            else if (level >= StormSounds.MEDIUM_FADE)
+                assertTrue(share <= last + 1e-6F, "falls, at " + level);
+            last = share;
+        }
+    }
+
+    @Test
     void theDustFollowsTheStorm() {
         assertTrue(StormSounds.dustVolume(0.2F) < StormSounds.dustVolume(1F));
         assertEquals(StormSounds.DUST_VOLUME, StormSounds.dustVolume(1F), 1e-6F);
@@ -61,7 +82,7 @@ public class StormSoundsTests {
     void theSoundsAreDefinedAndTheirFilesShipped() throws Exception {
         try (var stream = Objects.requireNonNull(StormSoundsTests.class.getResourceAsStream("/assets/dsurround/sounds.json"))) {
             var sounds = JsonParser.parseReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).getAsJsonObject();
-            for (var location : new String[]{StormSounds.RAIN.getPath(), StormSounds.DUST.getPath()}) {
+            for (var location : new String[]{StormSounds.RAIN.getPath(), StormSounds.RAIN_MEDIUM.getPath(), StormSounds.DUST.getPath()}) {
                 assertTrue(sounds.has(location), location);
                 for (var entry : sounds.getAsJsonObject(location).getAsJsonArray("sounds")) {
                     var name = entry.getAsString();

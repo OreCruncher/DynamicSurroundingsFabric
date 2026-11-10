@@ -1,0 +1,27 @@
+{
+  "name": "rain_medium",
+  "source": {
+    "title": "Medium rain",
+    "url": "https://freesound.org/people/Ryding/sounds/718518/",
+    "author": "Ryding",
+    "license": "CC BY 4.0",
+    "file": "718518__ryding__medium-rain.wav",
+    "notes": "48 kHz 16-bit stereo, 94 s of steady rain, mixed to mono. Between the calm rain and vanilla's: a mid-heavy wash with little low end (63 Hz band 10-17 dB down) and few sharp drops (about 2 a second). Stretches picked for few drops and a steady level (scratchpad rain_pick.py)."
+  },
+  "settings": {
+    "highpass": 30,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.6,
+    "fade_out": 0.5,
+    "target_rms_peak": -43.4,
+    "limit": false
+  },
+  "clips": [
+    {"file": "ambient/weather/rain_medium1", "start": 13.5, "end": 15.5},
+    {"file": "ambient/weather/rain_medium2", "start": 20.5, "end": 22.5},
+    {"file": "ambient/weather/rain_medium3", "start": 48.5, "end": 50.5},
+    {"file": "ambient/weather/rain_medium4", "start": 51.5, "end": 53.5}
+  ],
+  "shape": "2 s swells (0.6 s in, 0.5 s out), as the calm rain's, played with it in place of each of vanilla's rain sounds (MixinClientLevel.dsurround$rainSound) in middling storms (StormSounds.mediumShare). Same average level as the calm rain before its share."
+}

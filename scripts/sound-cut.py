@@ -145,7 +145,8 @@ def main():
         if new["true_peak"] is not None and new["true_peak"] > s["max_true_peak"]:
             print(f"    true peak over {s['max_true_peak']} dBTP")
             problems += 1
-        if new["lead_silence"] >= 0.05:
+        # A recipe's long fade-in (a swell) reads as silence at its start: only what goes past it counts
+        if new["lead_silence"] >= max(0.05, s["fade_in"]):
             print(f"    {new['lead_silence']:.2f} s of leading silence")
             problems += 1
     if any(c.get("limited") for c, *_ in rows):

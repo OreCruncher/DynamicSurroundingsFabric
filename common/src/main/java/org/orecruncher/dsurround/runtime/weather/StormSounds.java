@@ -8,9 +8,9 @@ import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.Constants;
 
 /**
- * How storms sound, as 1.12.2 had them: rain is the mod's calm rain, louder as the storm strengthens, with vanilla's
- * heavier rain blended in from a moderate storm up, so a drizzle patters and a downpour roars. Dust storms blow a dust
- * sound where the dust is.
+ * How storms sound, as 1.12.2 had them: rain is the mod's calm rain, louder as the storm strengthens, with a medium
+ * rain through middling storms and vanilla's heavier rain blended in from a moderate storm up, so a drizzle patters,
+ * a steady rain hisses and a downpour roars. Dust storms blow a dust sound where the dust is.
  * <p>
  * Volumes are shares of the volume vanilla gives its rain sound where it is played (louder in the open than on a roof
  * above), so the two stay in step with it.
@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.Constants;
 public final class StormSounds {
 
     public static final Identifier RAIN = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain");
+    public static final Identifier RAIN_MEDIUM = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain.medium");
     public static final Identifier DUST = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.dust");
 
     /**
@@ -29,6 +30,13 @@ public final class StormSounds {
      */
     static final float HEAVY_FROM = 0.5F;
     static final float HEAVY_FULL = 0.9F;
+    /**
+     * The medium rain comes in from {@link #MEDIUM_FROM}, is at vanilla's volume from {@link #MEDIUM_FULL}, and gives
+     * way to vanilla's heavier rain from {@link #MEDIUM_FADE}, gone at full strength
+     */
+    static final float MEDIUM_FROM = 0.2F;
+    static final float MEDIUM_FULL = 0.5F;
+    static final float MEDIUM_FADE = 0.7F;
     /**
      * The dust sound's volume, as vanilla's rain is in the open, and how far its pitch varies either way, as it is a
      * single sound
@@ -54,7 +62,19 @@ public final class StormSounds {
      * Vanilla's heavier rain at a storm's strength, as a share of its own volume: none in light rain, rising smoothly
      */
     public static float heavyShare(float rainLevel) {
-        var t = Mth.clamp((rainLevel - HEAVY_FROM) / (HEAVY_FULL - HEAVY_FROM), 0F, 1F);
+        return smoothStep(HEAVY_FROM, HEAVY_FULL, rainLevel);
+    }
+
+    /**
+     * The medium rain at a storm's strength, as a share of vanilla's volume: none in a drizzle, rising smoothly, then
+     * giving way as the downpour comes in
+     */
+    public static float mediumShare(float rainLevel) {
+        return smoothStep(MEDIUM_FROM, MEDIUM_FULL, rainLevel) * (1F - smoothStep(MEDIUM_FADE, 1F, rainLevel));
+    }
+
+    private static float smoothStep(float from, float to, float x) {
+        var t = Mth.clamp((x - from) / (to - from), 0F, 1F);
         return t * t * (3F - 2F * t);
     }
 

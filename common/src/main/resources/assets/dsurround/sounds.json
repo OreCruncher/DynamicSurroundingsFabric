@@ -1651,6 +1651,14 @@
 			"dsurround:ambient/weather/rain_calm4"
 		]
 	},
+	"weather.rain.medium": {
+		"sounds": [
+			"dsurround:ambient/weather/rain_medium1",
+			"dsurround:ambient/weather/rain_medium2",
+			"dsurround:ambient/weather/rain_medium3",
+			"dsurround:ambient/weather/rain_medium4"
+		]
+	},
 	"weather.dust": {
 		"sounds": [
 			"dsurround:ambient/weather/dust"
