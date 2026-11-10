@@ -71,6 +71,10 @@ is known of 26.4.
   with a report against the files they replace; `--install` copies them over. Sources stay outside the repository.
   A click far over a clip's level only reaches the level by limiting (it says so, and dulls the snap): pick calmer
   stretches instead.
+- Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
+  [--lowpass HZ] [--denoise FLOOR_DB] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float WAV outside the repository;
+  the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral denoising also takes down
+  quiet calls it mistakes for noise (a pack's chorus lost as much as its background).
 - Game jar for `javap` (check real signatures rather than assuming; 26.3 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.

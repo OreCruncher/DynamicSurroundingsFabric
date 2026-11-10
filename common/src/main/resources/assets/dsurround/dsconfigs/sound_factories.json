@@ -499,5 +499,13 @@
     "location": "dsurround:biome.wind.arctic",
     "soundEvent": "dsurround:biome.wind.arctic",
     "followsWind": true
+  },
+  {
+    "location": "dsurround:wolf",
+    "soundEvent": "dsurround:wolf",
+    "pitch": {
+      "min": 0.85,
+      "max": 1.15
+    }
   }
 ]

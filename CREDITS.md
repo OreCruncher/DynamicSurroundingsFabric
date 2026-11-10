@@ -173,6 +173,14 @@ Others:
 
 * S: [HawkMP3VersionWinterJan22nd2017.mp3](https://freesound.org/people/kvgarlic/sounds/377759/) by [kvgarlic](https://freesound.org/people/kvgarlic/) | License: Creative Commons 0 | Used for: red_shouldered_hawk
 
+*dsurround:wolf*
+
+* S: [Cooper Creek 20160313_014852 solitary wolf howl very clear.wav](https://freesound.org/people/betchkal/sounds/500646/) by [betchkal](https://freesound.org/people/betchkal/) | License: Creative Commons 0 | Modified: four howls cut, reverb reduced, sped up 1.4x with the pitch kept, levels matched
+
+*dsurround:bees*
+
+* S: [Bee](https://www.nps.gov/subjects/sound/sounds-bee.htm), Yosemite National Park, from the [Natural Sounds Sound Gallery](https://www.nps.gov/subjects/sound/gallery.htm) of the U.S. National Park Service | License: Public domain (U.S. government work)
+
 *dsurround:item.tool.swing*
 
 * S: [Swing Whoosh.wav](https://freesound.org/people/yutface/sounds/257015/) by [yutface](https://freesound.org/people/yutface/) | License: Creative Commons 0
