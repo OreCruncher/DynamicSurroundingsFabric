@@ -1070,8 +1070,24 @@
 		"subtitle": "dsurround.sound.caption.player.jump",
 		"sounds": [
 			{
-				"name": "dsurround:ambient/steve/jump",
-				"volume": 0.8
+				"name": "dsurround:ambient/steve/jump1",
+				"volume": 0.28
+			},
+			{
+				"name": "dsurround:ambient/steve/jump2",
+				"volume": 0.28
+			},
+			{
+				"name": "dsurround:ambient/steve/jump3",
+				"volume": 0.28
+			},
+			{
+				"name": "dsurround:ambient/steve/jump4",
+				"volume": 0.28
+			},
+			{
+				"name": "dsurround:ambient/steve/jump5",
+				"volume": 0.28
 			}
 		]
 	},

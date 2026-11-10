@@ -1,0 +1,47 @@
+{
+  "name": "jump_salem",
+  "source": {
+    "title": "Soft Male Vocal, Short Pained/Exhertion Groans - Vocal Efforts",
+    "url": "https://freesound.org/people/salemaudio/sounds/803168/",
+    "author": "salemaudio",
+    "license": "CC0",
+    "file": "803168__salemaudio__soft-male-vocal-short-painedexhertion-groans-vocal-efforts.wav",
+    "prepare": "ffmpeg -i <file> -ac 1 -af \"rubberband=pitch=1.1892:formant=shifted:pitchq=quality\" -c:a pcm_f32le salem_p3.wav (up 3 semitones, the formants with it, the length kept), then --source salem_p3.wav",
+    "notes": "44.1 kHz stereo, 15 s, a Neat King Bee into an Audient Evo 4: ten soft grunts and sighs by one man, 75-89 dB over a near-silent background. The first five, low soft 'hup' sounds (140-1600 Hz), are the jump; the later ones rise into pained and knockout sounds and are left out. Raised 3 semitones, pitch and formants together, so the voice reads as neither man nor woman (chosen by ear from 0, +2, +3 and +4); the jump factory varies it 0.9-1.1 as it plays."
+  },
+  "settings": {
+    "highpass": 80,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.005,
+    "fade_out": 0.08,
+    "target_rms_peak": -24.0
+  },
+  "clips": [
+    {
+      "file": "ambient/steve/jump1",
+      "start": 0.0,
+      "end": 0.62
+    },
+    {
+      "file": "ambient/steve/jump2",
+      "start": 1.47,
+      "end": 2.02
+    },
+    {
+      "file": "ambient/steve/jump3",
+      "start": 2.83,
+      "end": 3.38
+    },
+    {
+      "file": "ambient/steve/jump4",
+      "start": 4.09,
+      "end": 4.76
+    },
+    {
+      "file": "ambient/steve/jump5",
+      "start": 5.45,
+      "end": 6.44
+    }
+  ]
+}
