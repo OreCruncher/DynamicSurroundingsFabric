@@ -214,6 +214,10 @@ Others:
 
 * Made from footstep sounds of [Presence Footsteps](https://github.com/Hurricaaane/Presence-Footsteps) by Hurricaaane (Ha3) | License: [WTFPL v2](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1290546-presence-footsteps-an-overly-complicated-sound) | Modified: altered
 
+*dsurround:lilypad.frog / dsurround:ice / dsurround:soulsand.laughter / dsurround:monstergrowl / dsurround:pageflip / dsurround:pageflipheavy / dsurround:newsprint / dsurround:netherbrick.breathing / dsurround:item.bow.pull / dsurround:item.bow.loose / dsurround:item.bow.loose.skeleton*
+
+* S: Public domain recordings; the original sources weren't recorded when they were added | License: Public domain
+
 *dsurround:weather.rain*
 
 * S: [even more rain.wav](https://freesound.org/people/mlaramie/sounds/193876/) by [mlaramie](https://freesound.org/people/mlaramie/) | License: Creative Commons 0 | Modified: four stretches cut, faded in and out, levels matched
