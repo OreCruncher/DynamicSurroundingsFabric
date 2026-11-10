@@ -72,7 +72,7 @@ is known of 26.4.
   A click far over a clip's level only reaches the level by limiting (it says so, and dulls the snap): pick calmer
   stretches instead. A biome's looping ambience is a clip with `"loop": <seconds>` (the recording after its end
   crossfaded into its start, so it repeats without a seam) and `"target_rms"` in the settings (the whole clip's level:
-  its loudest moment is only a bird close by). Longer loops are welcome (less repetition); keep them small with
+  its loudest moment is only a bird close by). A call bright in the ear's most sensitive range takes `"treble": [dB, Hz]`, a high shelf (the eagle: -10 dB above 2 kHz). Longer loops are welcome (less repetition); keep them small with
   `"rate"` and `"quality"` (24000 and 2 kept a 130 s cricket loop at 555 kB). The report gives each file's size.
 - A droning ambience made from noise, the mod's own with nothing to credit (needs numpy and ffmpeg): `python
   scripts/drone-synth.py OUT.ogg [--center HZ] [--width OCT] [--resonance DB] [--rumble DB] [--drift DB] [--pulse HZ

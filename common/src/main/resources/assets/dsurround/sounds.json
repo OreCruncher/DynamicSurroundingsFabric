@@ -530,18 +530,18 @@
 	"raptor": {
 		"subtitle": "dsurround.sound.caption.raptor",
 		"sounds": [
-			{
-				"name": "dsurround:ambient/birds/bald_eagle_chirp",
-				"weight": 2
-			},
-			{
-				"name": "dsurround:ambient/birds/red_tailed_hawk",
-				"weight": 1
-			},
-			{
-				"name": "dsurround:ambient/birds/red_shouldered_hawk",
-				"weight": 2
-			}
+			"dsurround:ambient/birds/red_shouldered_hawk",
+			"dsurround:ambient/birds/red_shouldered_hawk2",
+			"dsurround:ambient/birds/red_shouldered_hawk3"
+		]
+	},
+	"eagle": {
+		"subtitle": "dsurround.sound.caption.eagle",
+		"sounds": [
+			"dsurround:ambient/birds/bald_eagle1",
+			"dsurround:ambient/birds/bald_eagle2",
+			"dsurround:ambient/birds/bald_eagle3",
+			"dsurround:ambient/birds/bald_eagle4"
 		]
 	},
 	"crow": {

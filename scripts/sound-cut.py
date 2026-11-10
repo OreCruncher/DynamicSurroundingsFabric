@@ -32,6 +32,9 @@ DEFAULTS = {
     "channel": "mix",           # mix, left or right
     "highpass": 80,             # Hz: rumble and DC offset out; 0 for none
     "lowpass": 0,               # Hz: 0 for none
+    # [dB, Hz]: a high shelf, turning down everything over Hz by dB (a negative gain) while keeping the sound's
+    # shape; for a call bright in the ear's most sensitive range (2-5 kHz), where a low-pass would cut into it
+    "treble": None,
     "pad_before": 0.005,        # seconds of the source kept before a clip's start, faded in
     "pad_after": 0.03,          # and after its end, faded out
     "fade_in": 0.003,
@@ -69,6 +72,9 @@ def cut(source, clip, s, work):
         filters.append(f"highpass=f={s['highpass']}")
     if s["lowpass"]:
         filters.append(f"lowpass=f={s['lowpass']}")
+    if s["treble"]:
+        gain, hz = s["treble"]
+        filters.append(f"treble=g={gain}:f={hz}")
     if clip.get("loop"):
         return cut_loop(source, clip, s, out, pan, filters)
     start = max(0.0, clip["start"] - s["pad_before"])

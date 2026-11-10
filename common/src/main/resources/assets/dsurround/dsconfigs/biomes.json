@@ -351,12 +351,19 @@
   },
   {
     "biomeSelector": "!(UNDERGROUND || def.isShallowOcean() || def.isOtherDimension()) && !(MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || SNOWY)",
-    "_comment": "Raptors",
+    "_comment": "Raptors: hawks and eagles, as often as each other",
     "acoustics": [
       {
         "factory": "raptor",
         "conditions": "def.isFairDay()",
-        "type": "mood"
+        "type": "mood",
+        "weight": 5
+      },
+      {
+        "factory": "eagle",
+        "conditions": "def.isFairDay()",
+        "type": "mood",
+        "weight": 5
       }
     ]
   },

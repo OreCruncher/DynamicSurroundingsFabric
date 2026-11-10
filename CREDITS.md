@@ -213,6 +213,11 @@ Others:
 *dsurround:raptor*
 
 * S: [HawkMP3VersionWinterJan22nd2017.mp3](https://freesound.org/people/kvgarlic/sounds/377759/) by [kvgarlic](https://freesound.org/people/kvgarlic/) | License: Creative Commons 0 | Used for: red_shouldered_hawk
+* S: [Bird - Red-shouldered hawk](https://freesound.org/people/Vrymaa/sounds/770032/) by [Vrymaa](https://freesound.org/people/Vrymaa/) | License: Creative Commons 0 | Used for: red_shouldered_hawk2-3 | Modified: two calls cut, high-passed, levels matched
+
+*dsurround:eagle*
+
+* S: [Bald Eagle Calls / Chirps](https://freesound.org/people/Kinoton/sounds/832476/) by [Kinoton](https://freesound.org/people/Kinoton/) | License: Creative Commons 0 | Modified: four phrases cut, high-passed, highs softened, levels matched
 
 *dsurround:wolf*
 
