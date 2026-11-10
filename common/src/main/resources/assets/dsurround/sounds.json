@@ -802,6 +802,54 @@
 			{
 				"name": "dsurround:ambient/whale/whale5",
 				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/whale6",
+				"volume": 0.3
+			}
+		]
+	},
+	"whale.right": {
+		"sounds": [
+			{
+				"name": "dsurround:ambient/whale/right1",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right5",
+				"volume": 0.3
+			}
+		]
+	},
+	"whale.minke": {
+		"sounds": [
+			{
+				"name": "dsurround:ambient/whale/minke1",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/minke2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/minke3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/minke4",
+				"volume": 0.3
 			}
 		]
 	},

@@ -1,0 +1,41 @@
+{
+  "name": "whale_right_upcall",
+  "source": {
+    "title": "North Atlantic right whale upcalls",
+    "url": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+    "author": "NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch",
+    "license": "Public domain (U.S. government work)",
+    "file": "Eugl-upcall-NOAA-PAGroup-01-right-clip-1.mp3",
+    "notes": "8 kHz mono MP3, 13 s: four rising 'whoops' of about 1 s at 94-234 Hz over rumble below 100 Hz, which the high-pass takes."
+  },
+  "settings": {
+    "highpass": 70,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.05,
+    "fade_out": 0.3,
+    "target_rms_peak": -9.0
+  },
+  "clips": [
+    {
+      "file": "ambient/whale/right1",
+      "start": 1.15,
+      "end": 2.25
+    },
+    {
+      "file": "ambient/whale/right2",
+      "start": 4.45,
+      "end": 5.95
+    },
+    {
+      "file": "ambient/whale/right3",
+      "start": 7.65,
+      "end": 9.05
+    },
+    {
+      "file": "ambient/whale/right4",
+      "start": 11.25,
+      "end": 12.55
+    }
+  ]
+}

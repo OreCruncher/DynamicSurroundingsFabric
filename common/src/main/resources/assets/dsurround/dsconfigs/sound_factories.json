@@ -507,5 +507,29 @@
       "min": 0.85,
       "max": 1.15
     }
+  },
+  {
+    "location": "dsurround:whale",
+    "soundEvent": "dsurround:whale",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:whale.right",
+    "soundEvent": "dsurround:whale.right",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:whale.minke",
+    "soundEvent": "dsurround:whale.minke",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
   }
 ]

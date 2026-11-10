@@ -177,6 +177,10 @@ Others:
 
 * S: [Cooper Creek 20160313_014852 solitary wolf howl very clear.wav](https://freesound.org/people/betchkal/sounds/500646/) by [betchkal](https://freesound.org/people/betchkal/) | License: Creative Commons 0 | Modified: four howls cut, reverb reduced, sped up 1.4x with the pitch kept, levels matched
 
+*dsurround:whale / dsurround:whale.right / dsurround:whale.minke*
+
+* S: Humpback whale song, North Atlantic right whale upcalls and sounds, minke whale pulse trains, from [Sounds in the Ocean](https://www.fisheries.noaa.gov/national/science-data/sounds-ocean) by NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch | License: Public domain (U.S. government work) | Modified: calls cut, made mono, levels matched
+
 *dsurround:bees*
 
 * S: [Bee](https://www.nps.gov/subjects/sound/sounds-bee.htm), Yosemite National Park, from the [Natural Sounds Sound Gallery](https://www.nps.gov/subjects/sound/gallery.htm) of the U.S. National Park Service | License: Public domain (U.S. government work)

@@ -464,6 +464,15 @@
       {
         "factory": "whale",
         "type": "mood"
+      },
+      {
+        "factory": "whale.right",
+        "type": "mood"
+      },
+      {
+        "factory": "whale.minke",
+        "type": "mood",
+        "weight": 3
       }
     ]
   },

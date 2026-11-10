@@ -1,0 +1,51 @@
+{
+  "name": "whale_humpback",
+  "source": {
+    "title": "Humpback whale song",
+    "url": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+    "author": "NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch",
+    "license": "Public domain (U.S. government work)",
+    "file": "Meno-song-NOAA-PAGroup-13-humpback-clip.mp3",
+    "notes": "8 kHz mono MP3 (about 40 kbps), 55 s of song: units of 0.6-4 s at 50-500 Hz, up to 31 dB over the sea's background. Each clip a phrase of one to three units, about as long as the old whale clips (4-10 s). Low fidelity, but the calls are well inside its band, and the mod plays them underwater."
+  },
+  "settings": {
+    "highpass": 40,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.1,
+    "fade_out": 0.5,
+    "target_rms_peak": -9.0
+  },
+  "clips": [
+    {
+      "file": "ambient/whale/whale1",
+      "start": 6.6,
+      "end": 10.8
+    },
+    {
+      "file": "ambient/whale/whale2",
+      "start": 13.4,
+      "end": 19.2
+    },
+    {
+      "file": "ambient/whale/whale3",
+      "start": 20.7,
+      "end": 28.6
+    },
+    {
+      "file": "ambient/whale/whale4",
+      "start": 31.0,
+      "end": 37.7
+    },
+    {
+      "file": "ambient/whale/whale5",
+      "start": 38.5,
+      "end": 45.4
+    },
+    {
+      "file": "ambient/whale/whale6",
+      "start": 47.1,
+      "end": 53.6
+    }
+  ]
+}

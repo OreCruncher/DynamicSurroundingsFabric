@@ -1,0 +1,27 @@
+{
+  "name": "whale_right_moan",
+  "source": {
+    "title": "North Atlantic right whale, mixed sounds",
+    "url": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+    "author": "NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch",
+    "license": "Public domain (U.S. government work)",
+    "file": "Eugl-multisound-NOAA-PAGroup-01-right-whale-clip.mp3",
+    "notes": "8 kHz mono MP3, 27 s: a moan (2.7-5.6 s, 11 dB over the background), faint grunts, and two 'gunshot' cracks near the end, left out."
+  },
+  "settings": {
+    "highpass": 70,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.2,
+    "fade_out": 0.5,
+    "target_rms_peak": -9.0
+  },
+  "clips": [
+    {
+      "file": "ambient/whale/right5",
+      "start": 2.55,
+      "end": 6.5,
+      "notes": "the moan, with a grunt after it"
+    }
+  ]
+}
