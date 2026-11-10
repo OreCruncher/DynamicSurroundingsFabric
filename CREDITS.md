@@ -197,6 +197,10 @@ Others:
 
 * S: [Welding_Electric Sparks.wav](https://freesound.org/people/weaveofkev/sounds/396240/) by [weaveofkev](https://freesound.org/people/weaveofkev/) | License: Creative Commons 0 | Modified: five bursts cut, made mono, levels matched
 
+*dsurround:player.heartbeat*
+
+* S: [Heartbeat](https://freesound.org/people/acertingart/sounds/266531/) by [acertingart](https://freesound.org/people/acertingart/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: one beat cut, made mono, level matched
+
 *dsurround:player.tummy*
 
 * S: [Stomach Growling](https://soundbible.com/1300-Stomach-Growling.html) by XxBirdoxX, via SoundBible | License: [Sampling Plus 1.0](https://creativecommons.org/licenses/sampling+/1.0/) | Modified: three growls cut
