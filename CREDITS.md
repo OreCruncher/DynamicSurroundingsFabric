@@ -32,7 +32,7 @@ Others:
 
 *dsurround:bigrockfall / dsurround:rockfall*
 
-* S: [Rockfall in mine.wav](https://www.freesound.org/people/Benboncan/sounds/60085/) by [Benboncan](https://www.freesound.org/people/Benboncan/) | License: Attribution
+* S: [Rockfall in mine.wav](https://www.freesound.org/people/Benboncan/sounds/60085/) by [Benboncan](https://www.freesound.org/people/Benboncan/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 * S: [Rocks falling over rocks, over a steep hill, like a cliff.flac](https://www.freesound.org/people/gfrog/sounds/190505/) by [gfrog](https://www.freesound.org/people/gfrog/) | License: Creative Commons 0
 * S: [Rocks.wav](https://www.freesound.org/people/adamgryu/sounds/336023/) by [adamgryu](https://www.freesound.org/people/adamgryu/) | License: Creative Commons 0
 
@@ -47,19 +47,19 @@ Others:
 *dsurround:thunder*
 
 * S: [Thunder 1](https://www.freesound.org/people/Yoyodaman234/sounds/253953/) by [Yoyodaman234](https://www.freesound.org/people/Yoyodaman234/) | License: Creative Commons 0
-* S: [Donner1.wav](https://www.freesound.org/people/swuing/sounds/37774/) by [swuing](https://www.freesound.org/people/swuing/) | License: Attribution
-* S: [Thunder - 1](https://www.freesound.org/people/bone666138/sounds/198857/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: Attribution
-* S: [Thunder - 2](https://www.freesound.org/people/bone666138/sounds/198858/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: Attribution
+* S: [Donner1.wav](https://www.freesound.org/people/swuing/sounds/37774/) by [swuing](https://www.freesound.org/people/swuing/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [Thunder - 1](https://www.freesound.org/people/bone666138/sounds/198857/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [Thunder - 2](https://www.freesound.org/people/bone666138/sounds/198858/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 * S: [Distant Thunder.wav](https://www.freesound.org/people/sarson/sounds/195522/) by [sarson](https://www.freesound.org/people/sarson/) | License: Creative Commons 0
 * S: [NM-Mejor-Lado-Thunder-01.wav](https://www.freesound.org/people/aaronstar/sounds/194849/) by [aaronstar](https://www.freesound.org/people/aaronstar/) | License: Creative Commons 0
 
 *dsurround:waterfall.0*
 
-* S: [Waterfall Winspit Dorset.wav](https://www.freesound.org/people/genghis%20attenborough/sounds/28266/) by [genghis attenborough](https://www.freesound.org/people/genghis%20attenborough/) | License: Attribution Noncommercial 
+* S: [Waterfall Winspit Dorset.wav](https://www.freesound.org/people/genghis%20attenborough/sounds/28266/) by [genghis attenborough](https://www.freesound.org/people/genghis%20attenborough/) | License: [Creative Commons Attribution-NonCommercial 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 
 
 *dsurround:waterfall.1*
 
-* S: [Waterfall, Small, B.wav](https://www.freesound.org/people/InspectorJ/sounds/365921/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
+* S: [Waterfall, Small, B.wav](https://www.freesound.org/people/InspectorJ/sounds/365921/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:waterfall.2*
 
@@ -71,7 +71,7 @@ Others:
 
 *dsurround:waterfall.4*
 
-* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
+* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:waterfall.5*
 
@@ -87,23 +87,19 @@ Others:
 
 *dsurround:biome.ocean / dsurround:biome.ocean.deep / dsurround:biome.ocean.deep.under*
 
-* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: Attribution
-
-*dsurround:biome.river / dsurround:biome.ocean.under*
-
-* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
+* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.bog*
 
-* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
+* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
-*dsurround:biome.river.under / dsurround:biome.ocean.under / dsurround:biome.ocean.deep.under*
+*dsurround:biome.river / dsurround:biome.river.under / dsurround:biome.ocean.under / dsurround:biome.ocean.deep.under*
 
-* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
+* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.plains*
 
-* S: [Calm Morning Outdoor Ambience](https://www.freesound.org/people/blouhond/sounds/157947/) by [blouhond](https://www.freesound.org/people/blouhond/) | License: Attribution
+* S: [Calm Morning Outdoor Ambience](https://www.freesound.org/people/blouhond/sounds/157947/) by [blouhond](https://www.freesound.org/people/blouhond/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.jungle*
 
@@ -143,11 +139,11 @@ Others:
 
 *dsurround:biome.village.anvil*
 
-* S: [Anvil](https://www.freesound.org/people/MrAuralization/sounds/274846/) by [MrAuralization](https://www.freesound.org/people/MrAuralization/) | License: Attribution
+* S: [Anvil](https://www.freesound.org/people/MrAuralization/sounds/274846/) by [MrAuralization](https://www.freesound.org/people/MrAuralization/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:waterdrips*
 
-* S: [Dripping, Very Fast, A.wav](https://www.freesound.org/people/InspectorJ/sounds/343761/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
+* S: [Dripping, Very Fast, A.wav](https://www.freesound.org/people/InspectorJ/sounds/343761/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.village.dogbark*
 
@@ -188,11 +184,11 @@ Others:
 
 *dsurround:biome.savanna.night*
 
-* S: [MerlothPark_crickets2.WAV](https://www.freesound.org/people/reinsamba/sounds/58236/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: Attribution
+* S: [MerlothPark_crickets2.WAV](https://www.freesound.org/people/reinsamba/sounds/58236/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.savanna.day*
 
-* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: Attribution
+* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:turtledove*
 
@@ -212,7 +208,7 @@ Others:
 
 *dsurround:raptor*
 
-* S: [HawkMP3VersionWinterJan22nd2017.mp3](https://freesound.org/people/kvgarlic/sounds/377759/) by [kvgarlic](https://freesound.org/people/kvgarlic/) | License: Creative Commons 0 | Used for: red_shouldered_hawk
+* S: [HawkMP3VersionWinterJan22nd2017.mp3](https://freesound.org/people/kvgarlic/sounds/377759/) by [kvgarlic](https://freesound.org/people/kvgarlic/) | License: Creative Commons 0 | Used for: red_shouldered_hawk | Modified: 5 s cut, made mono
 * S: [Bird - Red-shouldered hawk](https://freesound.org/people/Vrymaa/sounds/770032/) by [Vrymaa](https://freesound.org/people/Vrymaa/) | License: Creative Commons 0 | Used for: red_shouldered_hawk2-3 | Modified: two calls cut, high-passed, levels matched
 
 *dsurround:eagle*
