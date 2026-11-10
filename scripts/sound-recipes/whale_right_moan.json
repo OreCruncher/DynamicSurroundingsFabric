@@ -6,7 +6,8 @@
     "author": "NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch",
     "license": "Public domain (U.S. government work)",
     "file": "Eugl-multisound-NOAA-PAGroup-01-right-whale-clip.mp3",
-    "notes": "8 kHz mono MP3, 27 s: a moan (2.7-5.6 s, 11 dB over the background), faint grunts, and two 'gunshot' cracks near the end, left out."
+    "prepare": "ffmpeg -i <file> -ar 48000 -c:a pcm_f32le src48.wav; python scripts/sound-clean.py src48.wav right_moan_clean.wav --highpass 70 --lowpass 500 --denoise -12 --noise-pct 70 --over 2, then --source right_moan_clean.wav",
+    "notes": "8 kHz mono MP3, 27 s: a moan (2.7-5.6 s, 11 dB over the background), faint grunts, and two 'gunshot' cracks near the end, left out. Converted to 48 kHz first, then low-passed at 500 Hz (the background was mostly above it: 8 dB under the moan became 23) and denoised (34 dB)."
   },
   "settings": {
     "highpass": 70,

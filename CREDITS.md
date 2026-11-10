@@ -192,7 +192,7 @@ Others:
 
 *dsurround:whale / dsurround:whale.right / dsurround:whale.minke*
 
-* S: Humpback whale song, North Atlantic right whale upcalls and sounds, minke whale pulse trains, from [Sounds in the Ocean](https://www.fisheries.noaa.gov/national/science-data/sounds-ocean) by NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch | License: Public domain (U.S. government work) | Modified: calls cut, made mono, levels matched
+* S: Humpback whale song, North Atlantic right whale upcalls and sounds, minke whale pulse trains, from [Sounds in the Ocean](https://www.fisheries.noaa.gov/national/science-data/sounds-ocean) by NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch | License: Public domain (U.S. government work) | Modified: calls cut, made mono, filtered, right whale background noise reduced, levels matched
 
 *dsurround:bees*
 

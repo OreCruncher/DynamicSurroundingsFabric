@@ -6,7 +6,8 @@
     "author": "NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch",
     "license": "Public domain (U.S. government work)",
     "file": "Eugl-upcall-NOAA-PAGroup-01-right-clip-1.mp3",
-    "notes": "8 kHz mono MP3, 13 s: four rising 'whoops' of about 1 s at 94-234 Hz over rumble below 100 Hz, which the high-pass takes."
+    "prepare": "ffmpeg -i <file> -ar 48000 -c:a pcm_f32le src48.wav; python scripts/sound-clean.py src48.wav right_up_clean.wav --highpass 70 --lowpass 500 --denoise -12 --noise-pct 70 --over 2, then --source right_up_clean.wav",
+    "notes": "8 kHz mono MP3, 13 s: four rising 'whoops' of about 1 s at 94-234 Hz over rumble below 100 Hz, which the high-pass takes. Converted to 48 kHz first (the cleaner's window is a fixed 2048 samples, a quarter second at 8 kHz), then low-passed at 500 Hz and denoised: the background between upcalls went from 12 to 22 dB under them, the calls about 1 dB down."
   },
   "settings": {
     "highpass": 70,
