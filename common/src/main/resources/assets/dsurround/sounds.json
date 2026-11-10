@@ -1870,7 +1870,12 @@
 	},
 	"weather.dust": {
 		"sounds": [
-			"dsurround:ambient/weather/dust"
+			"dsurround:ambient/weather/dust1",
+			"dsurround:ambient/weather/dust2",
+			"dsurround:ambient/weather/dust3",
+			"dsurround:ambient/weather/dust4",
+			"dsurround:ambient/weather/dust5",
+			"dsurround:ambient/weather/dust6"
 		]
 	}
 }

@@ -242,6 +242,10 @@ Others:
 
 * S: [Medium rain](https://freesound.org/people/Ryding/sounds/718518/) by [Ryding](https://freesound.org/people/Ryding/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: four stretches cut, made mono, faded in and out, levels matched
 
+*dsurround:weather.dust*
+
+* S: [Desert sand - Dune atmosphere](https://freesound.org/people/Vrymaa/sounds/825860/) by [Vrymaa](https://freesound.org/people/Vrymaa/) | License: Creative Commons 0 | Modified: six stretches cut, high-passed, faded in and out, levels matched
+
 *dsurround:electricarc*
 
 * S: [Welding_Electric Sparks.wav](https://freesound.org/people/weaveofkev/sounds/396240/) by [weaveofkev](https://freesound.org/people/weaveofkev/) | License: Creative Commons 0 | Modified: five bursts cut, made mono, levels matched
