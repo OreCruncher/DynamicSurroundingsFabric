@@ -19,6 +19,7 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Built the world actors and the firefly bush fireflies, and measured each with benchmark runs
 * Wrote tests that feed the mod's configuration broken values, which found sound settings that gave broken pitches, and fixed them
 * Found a fog jump with mods that draw distant terrain by running one alongside the mod, and fixed it on this side
+* Traced the sources of the mod's sounds, and cut, cleaned and leveled the replacements chosen by ear
 
 **What's New**
 * World actors: things that move through the world on their own. Every player in a world sees the same ones in the same places, as each one's path comes from the world's seed
@@ -33,14 +34,20 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Firefly bushes give the mod's fireflies, which wink with a halo and a light, in place of the game's. Under Fireflies in Firefly Options
 * `/dsconflicts` lists the effects a shader pack keeps off, of those switched on in the configuration
 * Script definitions: modpacks can name constants and functions in `dsconfigs/scripts.json` and use them in any script as `def.NAME` and `def.name()`, such as `def.isHalloween()`. Functions are for biome rules (traits such as `SPOOKY`) or for the rest (`diurnal.isNight()` and the like), may use one another, and are checked as they load: a mistyped name or a loop is reported with the file it is in. A later file's definition replaces ours; nothing defined in the mod can be replaced
-* Underground, a deeper drone takes over from the cave hush below y 0, the two blending over 8 blocks
 * Biome loops can follow the player: modpacks can give a loop in `biomes.json` a `volume` script (0 to 1), such as `math.sqrt(lib.smoothStep(-4, 4, player.getY()))` to bring a sound in by height. `lib.smoothStep(from, to, x)` is new for blends like it
+
+**Sounds**
+* Replaced: calm rain, heartbeat, wolf howls, whale song (humpback), loon, seagulls, owl, nightingale, eagle, player jump, the hotbar's equip click, electric arc, dust storm, the forest, deep forest and jungle loops, deep forest crickets, the cave drone underground, the biggest waterfalls, and the waterspout
+* Cleaned: the silent forest loop
+* Added: a medium rain between the calm rain and the game's downpour, right whale and minke whale calls, a seagull flock, more red-shouldered hawk calls, loops for sparse forests and for sparse and swampy jungles, and a deeper drone below y 0 that blends with the cave drone
+* Removed: the red-tailed hawk, and sounds nothing played (insect crawl, Nether and End ambience, water drops)
+* Wolves, whales, loons, seagulls, owls, nightingales and the hotbar click vary in pitch as they play
+* Every sound is credited in `CREDITS.md`, and all allow commercial use
 
 **Changes**
 * The mod's fireflies are drawn as the game's firefly, a dot that stays seen between flashes and takes the light's color as it flashes, in place of the end rod's sparkle. A resource pack's firefly texture is used
 * With a mod that draws terrain past the render distance, fog from dust storms, biomes and mornings closes in smoothly from the far horizon. A dust storm made the view jump from the horizon to about 230 blocks at a quarter of its strength
 * Sheet lightning lights the dynamic clouds through a storm's fog; with dynamic clouds on it was all but invisible
-* Rain sounds: a new calm rain, and a medium rain between it and the game's downpour as a storm strengthens
 * Enhanced sounds trace through open air for about half the work
 * The lights fireflies and flame jets cast are drawn all at once, for less than half the GPU time in a field of fireflies; ground fog takes 11-15% less
 * Rain and snow: the game no longer works out its own weather for drawing while the mod's particle weather replaces it, which took up to a quarter of the render thread in a heavy storm (more with Serene Seasons). Frames in heavy rain are up to a quarter shorter

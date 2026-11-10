@@ -82,6 +82,14 @@ is known of 26.4.
   HZ] [--ring MS] [--latch MS] [--level DB] [--seed N]`: a snap and a ringing tone, an optional second catch and slide.
   A crisp double click: `--slide 0 --tock 1700 --ring 8 --latch 45` (tried for the hotbar's utility equip, which
   became a softened recorded click instead).
+- Finding and judging sources (numpy and ffmpeg, but for the search): `python scripts/freesound-search.py "query"...
+  [--license cc0|by] [--user NAME --previews DIR]` shortlists Freesound from its pages (read each description: a
+  remix, someone else's recording or a vintage transfer can carry CC0); `sound-calls.py FILE [GAP]` maps a
+  recording's calls (where to cut, how far over the floor); `sound-ambience.py FILE` shows an ambience's level over
+  time and its events (where to loop, what intrudes); `sound-match.py SOUND CANDIDATE... [--speeds] [--contour]` asks
+  whether a sound was cut from a candidate (strict r on every sample: a cut scores 0.9-1.0, unrelated 0.1-0.4; tonal
+  calls need `--contour`). `SOUND_REWORK.md` is the record of the 2026-11 sound rework: every sound's source, what was
+  searched and ruled out, and why each change was made.
 - Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
   [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P] [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float
   WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral
