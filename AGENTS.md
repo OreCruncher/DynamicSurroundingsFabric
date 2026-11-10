@@ -72,9 +72,11 @@ is known of 26.4.
   A click far over a clip's level only reaches the level by limiting (it says so, and dulls the snap): pick calmer
   stretches instead.
 - Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
-  [--lowpass HZ] [--denoise FLOOR_DB] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float WAV outside the repository;
-  the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral denoising also takes down
-  quiet calls it mistakes for noise (a pack's chorus lost as much as its background).
+  [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P] [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float
+  WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral
+  denoising also takes down quiet calls it mistakes for noise (a pack's chorus lost as much as its background). Noise
+  that swells (surf) needs a higher profile percentile, `--noise-pct 70 --over 2`, where calls are a small part of
+  the recording (the owls, `--denoise -15`: 10 dB more off the surf, the hoots whole; a lower floor left the rest of it warbling).
 - Game jar for `javap` (check real signatures rather than assuming; 26.3 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.

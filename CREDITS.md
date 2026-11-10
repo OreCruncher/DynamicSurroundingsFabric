@@ -145,6 +145,10 @@ Others:
 
 * S: [Loon / Diver call 3](https://freesound.org/people/nicStage/sounds/432603/) by [nicStage](https://freesound.org/people/nicStage/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: wails and a yodel cut, made mono, high-passed, levels matched
 
+*dsurround:owl*
+
+* S: [Great Horned Owl Duet at Canaveral Seashore](https://freesound.org/people/felix.blume/sounds/612651/) by [felix.blume](https://freesound.org/people/felix.blume/) | License: Creative Commons 0 | Modified: hoot sequences cut, made mono, filtered, surf reduced, levels matched
+
 *dsurround:seagulls*
 
 * S: [Herring Gull 1.wav](https://freesound.org/people/Canardo55/sounds/538016/) and [Herring Gull 2.wav](https://freesound.org/people/Canardo55/sounds/538015/) by [Canardo55](https://freesound.org/people/Canardo55/) | License: Creative Commons 0 | Modified: calls cut, made mono, high-passed, levels matched

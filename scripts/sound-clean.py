@@ -4,16 +4,19 @@
 """Cleans a source recording before sound-cut.py cuts it: filtering, spectral noise removal, late-reverb removal and a
 speed change, written as a mono 32-bit float WAV (keep it outside the repository, as the sources are).
 
-Usage: python scripts/sound-clean.py IN OUT [--highpass HZ] [--lowpass HZ] [--denoise FLOOR_DB]
-       [--dereverb T60 FLOOR_DB] [--tempo X]
+Usage: python scripts/sound-clean.py IN OUT [--highpass HZ] [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P]
+       [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]
 
 Needs numpy (pip install numpy) and ffmpeg (with Rubber Band for --tempo).
   --highpass, --lowpass  4-pole high-pass and 2-pole low-pass, first: rumble under a call, hiss over it. Try these
            before --denoise where the noise sits outside the call's band: it costs the call nothing
-  --denoise  a noise profile per frequency bin (its 15th percentile power over the recording, which moving calls barely
-           touch), taken out by a smoothed Wiener-style gain no lower than FLOOR_DB (-10 light, -20 strong), so what
-           is left of the noise stays natural. Where the "noise" is quiet calling (a pack's chorus) it takes the calls
-           down with it: filter instead
+  --denoise  a noise profile per frequency bin (the power averaged over a quarter second, its 15th percentile over the
+           recording, which moving calls barely touch), taken out by a smoothed Wiener-style gain no lower than
+           FLOOR_DB (-10 light, -20 strong), so what is left of the noise stays natural. Where the "noise" is quiet
+           calling (a pack's chorus) it takes the calls down with it: filter instead
+  --noise-pct, --over  the profile's percentile (15) and how far over it a bin must stand to be kept (1.5). For noise
+           that swells (surf), the quiet moments' profile lets each swell through: a higher percentile (70) with
+           --over 2 takes it, where calls fill only a small part of the recording (an owl's hoots kept whole)
   --dereverb  the late reverb at each frame predicted from the signal 50 ms before, decayed at the room's T60 in
            seconds (Lebart et al.), and taken out the same way, no lower than FLOOR_DB (-15 keeps a little room)
   --tempo  faster (over 1) or slower, pitch kept (Rubber Band), after the rest
@@ -32,6 +35,8 @@ p.add_argument("out")
 p.add_argument("--highpass", type=float, default=0)
 p.add_argument("--lowpass", type=float, default=0)
 p.add_argument("--denoise", type=float, default=None, metavar="FLOOR_DB")
+p.add_argument("--noise-pct", type=float, default=15)
+p.add_argument("--over", type=float, default=1.5)
 p.add_argument("--dereverb", type=float, nargs=2, default=None, metavar=("T60", "FLOOR_DB"))
 p.add_argument("--tempo", type=float, default=1.0)
 a = p.parse_args()
@@ -101,10 +106,14 @@ if a.dereverb:
     P = np.abs(X) ** 2
     report.append(f"dereverb T60 {t60} s, floor {floor_db} dB: mean gain {20 * np.log10(G.mean()):.1f} dB")
 if a.denoise is not None:
-    noise = np.percentile(P, 15, axis=0)
-    G = gain(smooth_time(P, 0.5), noise, a.denoise)
+    # A single frame's power in a bin of noise scatters widely (its 15th percentile is about 8 dB under the mean, and
+    # took out little): averaged over a quarter second it holds near the noise's level, calls apart
+    k = max(1, round(0.25 * rate / H))
+    c = np.cumsum(np.vstack([np.zeros((1, P.shape[1])), P]), axis=0)
+    noise = np.percentile((c[k:] - c[:-k]) / k, a.noise_pct, axis=0)
+    G = gain(smooth_time(P, 0.5), noise, a.denoise, over=a.over)
     X = X * G
-    report.append(f"denoise floor {a.denoise} dB: mean gain {20 * np.log10(G.mean()):.1f} dB")
+    report.append(f"denoise floor {a.denoise} dB, profile at {a.noise_pct:g}%, over x{a.over:g}: mean gain {20 * np.log10(G.mean()):.1f} dB")
 y = istft(X, len(x)).astype(np.float32)
 
 with tempfile.TemporaryDirectory() as tmp:

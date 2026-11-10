@@ -525,6 +525,38 @@
 			{
 				"name": "dsurround:ambient/owl/owl3",
 				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl5",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl6",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl7",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl8",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl9",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl10",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl11",
+				"volume": 0.3
 			}
 		]
 	},
