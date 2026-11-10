@@ -1,0 +1,26 @@
+{
+  "name": "seagulls_herring2",
+  "source": {
+    "title": "Herring Gull 2.wav",
+    "url": "https://freesound.org/people/Canardo55/sounds/538015/",
+    "author": "Canardo55",
+    "license": "CC0",
+    "file": "538015__canardo55__herring-gull-2.wav",
+    "notes": "48 kHz stereo, 21 s, the same recordist and gull style as Herring Gull 1, without its boat: calls at 1-2.5 kHz 33-40 dB over a background mostly under 1 kHz. Two short low thumps (4.0 and 5.6 s, 140-360 Hz) are left out; the 600 Hz high-pass takes the rest of the background."
+  },
+  "settings": {
+    "highpass": 600,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.02,
+    "fade_out": 0.1,
+    "target_rms_peak": -10.0
+  },
+  "clips": [
+    {"file": "ambient/seagulls/seagulls4", "start": 0.22, "end": 1.75, "notes": "a call (the file opens on the last of another)"},
+    {"file": "ambient/seagulls/seagulls5", "start": 2.50, "end": 3.90},
+    {"file": "ambient/seagulls/seagulls6", "start": 6.70, "end": 8.55, "notes": "two notes"},
+    {"file": "ambient/seagulls/seagulls7", "start": 12.45, "end": 17.60, "notes": "a long call"},
+    {"file": "ambient/seagulls/seagulls8", "start": 17.95, "end": 20.40}
+  ]
+}

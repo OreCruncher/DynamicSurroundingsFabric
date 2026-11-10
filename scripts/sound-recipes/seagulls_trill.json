@@ -1,0 +1,22 @@
+{
+  "name": "seagulls_trill",
+  "source": {
+    "title": "Seagull trill and whine",
+    "url": "https://freesound.org/people/nigelcoop/sounds/75195/",
+    "author": "nigelcoop",
+    "license": "CC0",
+    "file": "75195__nigelcoop__seagull-trill-and-whine.wav",
+    "notes": "44.1 kHz stereo, 1.9 s: one gull's trill and whine, 71 dB over a near-silent background."
+  },
+  "settings": {
+    "highpass": 600,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.02,
+    "fade_out": 0.1,
+    "target_rms_peak": -10.0
+  },
+  "clips": [
+    {"file": "ambient/seagulls/seagulls9", "start": 0.12, "end": 1.90}
+  ]
+}

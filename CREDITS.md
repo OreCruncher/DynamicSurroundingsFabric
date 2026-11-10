@@ -141,6 +141,15 @@ Others:
 
 * S: [ANML_M_Ext_Crow_Calls_Single1.wav](https://www.freesound.org/people/conleec/sounds/173866/) by [conleec](https://www.freesound.org/people/conleec/) | License: Creative Commons 0
 
+*dsurround:loon*
+
+* S: [Loon / Diver call 3](https://freesound.org/people/nicStage/sounds/432603/) by [nicStage](https://freesound.org/people/nicStage/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: wails and a yodel cut, made mono, high-passed, levels matched
+
+*dsurround:seagulls*
+
+* S: [Herring Gull 1.wav](https://freesound.org/people/Canardo55/sounds/538016/) and [Herring Gull 2.wav](https://freesound.org/people/Canardo55/sounds/538015/) by [Canardo55](https://freesound.org/people/Canardo55/) | License: Creative Commons 0 | Modified: calls cut, made mono, high-passed, levels matched
+* S: [Seagull trill and whine](https://freesound.org/people/nigelcoop/sounds/75195/) by [nigelcoop](https://freesound.org/people/nigelcoop/) | License: Creative Commons 0
+
 *dsurround:biome.wind.desert*
 
 * S: [desertwind1FINAL.wav](https://www.freesound.org/people/nageor/sounds/112296/) by [nageor](https://www.freesound.org/people/nageor/) | License: Creative Commons 0

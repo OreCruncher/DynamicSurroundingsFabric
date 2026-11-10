@@ -536,6 +536,18 @@
 			},
 			{
 				"name": "dsurround:ambient/birds/loon2"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon3"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon4"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon5"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon6"
 			}
 		]
 	},
@@ -673,6 +685,34 @@
 			},
 			{
 				"name": "dsurround:ambient/seagulls/seagulls2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls5",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls6",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls7",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls8",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls9",
 				"volume": 0.3
 			}
 		]
