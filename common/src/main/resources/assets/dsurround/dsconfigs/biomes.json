@@ -185,6 +185,12 @@
       {
         "factory": "seagulls",
         "conditions": "diurnal.isDay()",
+        "type": "mood",
+        "weight": 4
+      },
+      {
+        "factory": "seagulls.flock",
+        "conditions": "diurnal.isDay()",
         "type": "mood"
       }
     ]

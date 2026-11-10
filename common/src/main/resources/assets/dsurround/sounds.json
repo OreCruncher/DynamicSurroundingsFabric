@@ -749,6 +749,39 @@
 			}
 		]
 	},
+	"seagulls.flock": {
+		"subtitle": "dsurround.sound.caption.seagulls",
+		"sounds": [
+			{
+				"name": "dsurround:ambient/seagulls/flock1",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock5",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock6",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock7",
+				"volume": 0.3
+			}
+		]
+	},
 	"coyote": {
 		"subtitle": "dsurround.sound.caption.howling",
 		"ds_credits": [

@@ -154,6 +154,10 @@ Others:
 * S: [Herring Gull 1.wav](https://freesound.org/people/Canardo55/sounds/538016/) and [Herring Gull 2.wav](https://freesound.org/people/Canardo55/sounds/538015/) by [Canardo55](https://freesound.org/people/Canardo55/) | License: Creative Commons 0 | Modified: calls cut, made mono, high-passed, levels matched
 * S: [Seagull trill and whine](https://freesound.org/people/nigelcoop/sounds/75195/) by [nigelcoop](https://freesound.org/people/nigelcoop/) | License: Creative Commons 0
 
+*dsurround:seagulls.flock*
+
+* S: [Seagulls / gaviotas clean wildtrack](https://freesound.org/people/Soojay/sounds/462462/) by [Soojay](https://freesound.org/people/Soojay/) | License: Creative Commons 0 | Modified: stretches of calling cut, made mono, filtered, surf and wind reduced, levels matched
+
 *dsurround:biome.wind.desert*
 
 * S: [desertwind1FINAL.wav](https://www.freesound.org/people/nageor/sounds/112296/) by [nageor](https://www.freesound.org/people/nageor/) | License: Creative Commons 0

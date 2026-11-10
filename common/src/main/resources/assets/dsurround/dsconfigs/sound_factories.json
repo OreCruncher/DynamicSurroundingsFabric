@@ -549,6 +549,14 @@
     }
   },
   {
+    "location": "dsurround:seagulls.flock",
+    "soundEvent": "dsurround:seagulls.flock",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
     "location": "dsurround:owl",
     "soundEvent": "dsurround:owl",
     "pitch": {

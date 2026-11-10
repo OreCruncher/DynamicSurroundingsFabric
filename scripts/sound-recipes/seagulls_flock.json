@@ -1,0 +1,29 @@
+{
+  "name": "seagulls_flock",
+  "source": {
+    "title": "Seagulls / gaviotas clean wildtrack",
+    "url": "https://freesound.org/people/Soojay/sounds/462462/",
+    "author": "Soojay",
+    "license": "CC0",
+    "file": "462462__soojay__seagulls-gaviotas-clean-wildtrack.wav",
+    "prepare": "python scripts/sound-clean.py <file> flock_clean.wav --highpass 700 --lowpass 5000 --denoise -12, then --source flock_clean.wav",
+    "notes": "48 kHz stereo, 76 s: a flock calling (900-3600 Hz) for about 62 s, then none, over surf and wind. The wind's rumble (under 30 Hz) and the surf (mostly under 500 Hz) are louder than the gulls unfiltered, which once made the surf look inseparable; above 700 Hz the gull-free end is 37 dB under the loud chorus and 22 dB under the quietest calling, and the denoise, its profile from that end, takes about 6 dB more. Stretches of calling cut whole: the 'background' between one gull's calls is the rest of the flock."
+  },
+  "settings": {
+    "highpass": 700,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.1,
+    "fade_out": 0.4,
+    "target_rms_peak": -12.0
+  },
+  "clips": [
+    {"file": "ambient/seagulls/flock1", "start": 0.96, "end": 5.14},
+    {"file": "ambient/seagulls/flock2", "start": 7.70, "end": 13.40, "notes": "the loudest stretch"},
+    {"file": "ambient/seagulls/flock3", "start": 19.15, "end": 24.95},
+    {"file": "ambient/seagulls/flock4", "start": 25.60, "end": 31.30},
+    {"file": "ambient/seagulls/flock5", "start": 36.30, "end": 42.00},
+    {"file": "ambient/seagulls/flock6", "start": 43.45, "end": 47.95},
+    {"file": "ambient/seagulls/flock7", "start": 48.05, "end": 52.10}
+  ]
+}
