@@ -82,6 +82,8 @@ is known of 26.4.
   HZ] [--ring MS] [--latch MS] [--level DB] [--seed N]`: a snap and a ringing tone, an optional second catch and slide.
   A crisp double click: `--slide 0 --tock 1700 --ring 8 --latch 45` (tried for the hotbar's utility equip, which
   became a softened recorded click instead).
+- After changing `CREDITS.md`, `python scripts/credits-sync.py [--write]` brings `sounds.json`'s `ds_credits` (shown in
+  the sound settings and the now-playing toast) in line with it; `CREDITS.md` is the one to trust.
 - Finding and judging sources (numpy and ffmpeg, but for the search): `python scripts/freesound-search.py "query"...
   [--license cc0|by] [--user NAME --previews DIR]` shortlists Freesound from its pages (read each description: a
   remix, someone else's recording or a vintage transfer can carry CC0); `sound-calls.py FILE [GAP]` maps a
