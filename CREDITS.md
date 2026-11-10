@@ -235,6 +235,10 @@ Others:
 
 * S: [Swing Whoosh.wav](https://freesound.org/people/yutface/sounds/257015/) by [yutface](https://freesound.org/people/yutface/) | License: Creative Commons 0
 
+*dsurround:item.utility.equip*
+
+* S: [Zippo click sound](https://opengameart.org/content/zippo-click-sound) by dawith (submitted by qubodup), via OpenGameArt | License: Creative Commons 0 | Modified: the click cut, softened (high shelf), level matched
+
 *dsurround:item.potion.equip*
 
 * S: [Water + glass bottle, sloshing 2](https://freesound.org/people/giddster/sounds/386426/) by [giddster](https://freesound.org/people/giddster/) | License: Creative Commons 0

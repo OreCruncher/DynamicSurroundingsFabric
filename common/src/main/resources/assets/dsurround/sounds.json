@@ -1411,7 +1411,7 @@
 	},
 	"item.utility.equip": {
 		"sounds": [
-			"dsurround:items/utility_draw"
+			"dsurround:items/utility_zippo"
 		]
 	},
 	"item.shield.equip": {

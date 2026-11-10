@@ -78,6 +78,10 @@ is known of 26.4.
   scripts/drone-synth.py OUT.ogg [--center HZ] [--width OCT] [--resonance DB] [--rumble DB] [--drift DB] [--pulse HZ
   DB] [--lufs L]`: a band of noise with a hum on its center, drifting in color, made over the whole loop so it repeats
   without a seam. Give the command in the notes beside what it made; the same arguments and seed give the same file.
+- A short click, the mod's own (needs numpy and ffmpeg): `python scripts/click-synth.py OUT.ogg [--slide MS] [--tock
+  HZ] [--ring MS] [--latch MS] [--level DB] [--seed N]`: a snap and a ringing tone, an optional second catch and slide.
+  A crisp double click: `--slide 0 --tock 1700 --ring 8 --latch 45` (tried for the hotbar's utility equip, which
+  became a softened recorded click instead).
 - Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
   [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P] [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float
   WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral
