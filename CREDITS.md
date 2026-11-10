@@ -107,7 +107,19 @@ Others:
 
 *dsurround:biome.forest*
 
+* S: [sfx_amb_forest_spring_afternoon-01.wav](https://freesound.org/people/bajko/sounds/385280/) by [bajko](https://freesound.org/people/bajko/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, level matched
+
+*dsurround:biome.forest.sparse*
+
 * S: [001_forrest.wav](https://www.freesound.org/people/joepsporck/sounds/262037/) by [joepsporck](https://www.freesound.org/people/joepsporck/) | License: Creative Commons 0
+
+*dsurround:biome.forest.deep*
+
+* S: [Sussex Woodland & Meadow Bird Sounds, Evening.MP3](https://freesound.org/people/Vonora/sounds/269559/) by [Vonora](https://freesound.org/people/Vonora/) | License: Creative Commons 0 | Modified: cut into a loop, high-passed (an airplane's rumble taken out), level matched
+
+*dsurround:biome.crickets.deep*
+
+* S: [Crickets chirping in the Night at the Forest 001](https://freesound.org/people/Borgory/sounds/751465/) by [Borgory](https://freesound.org/people/Borgory/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, filtered (low hum and a high insect's trill taken out), level matched
 
 *dsurround:biome.forest.pine*
 
@@ -176,7 +188,7 @@ Others:
 
 *dsurround:biome.forest.silent*
 
-* S: [Silent forest](https://freesound.org/people/ZHR%C3%98/sounds/753418/) by [ZHRØ](https://freesound.org/people/ZHR%C3%98/) | License: Creative Commons 0
+* S: [Silent forest](https://freesound.org/people/ZHR%C3%98/sounds/753418/) by [ZHRØ](https://freesound.org/people/ZHR%C3%98/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, filtered (rumble and hiss reduced), level matched
 
 *dsurround:bird*
 

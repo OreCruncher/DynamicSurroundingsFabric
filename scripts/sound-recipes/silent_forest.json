@@ -1,0 +1,26 @@
+{
+  "name": "silent_forest",
+  "source": {
+    "title": "Silent forest",
+    "url": "https://freesound.org/people/ZHR%C3%98/sounds/753418/",
+    "author": "ZHRØ",
+    "license": "CC0",
+    "file": "753418__zhr__silent-forest.wav",
+    "prepare": "python scripts/sound-clean.py <file> silent_clean.wav --highpass 250 --lowpass 9000 --denoise -12, then --source silent_clean.wav",
+    "notes": "96 kHz 32-bit stereo, 39 s: a still forest, scattered bird calls at 4.5-8.5 kHz over a faint, even hiss, under a steady rumble below 200 Hz (its loudest part) with wind bursts under 22 Hz at 2.5-3.1 s. The 250 Hz high-pass takes the rumble and the bursts, the 9 kHz low-pass the hiss over the birds, and a gentle denoise 8 dB of the hiss under them (the birds 25 dB over it became 32). The level is the old file's less the 1.2 dB the hiss made up, so the birds play as loud as the old file's would without its rumble. The mod's file was the whole recording at 96 kHz (1.1 MB); the loop is nearly all of it, crossfaded."
+  },
+  "settings": {
+    "rate": 24000,
+    "quality": 2,
+    "highpass": 0,
+    "target_rms": -49.9
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/silent_forest",
+      "start": 0.3,
+      "end": 36.3,
+      "loop": 3.0
+    }
+  ]
+}

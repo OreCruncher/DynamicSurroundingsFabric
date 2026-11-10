@@ -1,0 +1,20 @@
+{
+  "name": "forest",
+  "source": {
+    "title": "sfx_amb_forest_spring_afternoon-01.wav",
+    "url": "https://freesound.org/people/bajko/sounds/385280/",
+    "author": "bajko",
+    "license": "CC0",
+    "file": "385280__bajko__sfx_amb_forest_spring_afternoon-01.wav",
+    "notes": "Stereo, 137 s, Bratislava (Koliba), Slovakia, Olympus LS-11: a heavy spring afternoon bird chorus over a quiet low end. A click at its very start is left out."
+  },
+  "settings": {
+    "rate": 24000,
+    "quality": 2,
+    "highpass": 100,
+    "target_rms": -54.1
+  },
+  "clips": [
+    {"file": "ambient/outside/forest", "start": 2.0, "end": 131.0, "loop": 3.0}
+  ]
+}

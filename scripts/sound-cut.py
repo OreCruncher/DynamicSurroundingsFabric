@@ -6,7 +6,8 @@
 Usage: python scripts/sound-cut.py RECIPE --source FILE [--out DIR] [--install]
 
 A recipe (scripts/sound-recipes/<name>.json) names the source (link, author, license), the settings and each clip's
-start and end in the source, in seconds. Each clip is cut in 32-bit float with a short lead-in and tail, made mono,
+start and end in the source, in seconds; a clip with "loop": SECONDS is an ambience that repeats, its end crossfaded
+into its start over that many seconds of the recording after it. Each clip is cut in 32-bit float with a short lead-in and tail, made mono,
 high-passed, faded in and out, resampled, brought to the target level (the loudest 50 ms window's RMS, as
 sound-survey.py measures it: the measure for short sounds), kept under the true peak ceiling, and encoded to Ogg Vorbis
 once, at the end. The clips go to build/sound-rework/<name>/ for review with a report: each clip's level, true peak
@@ -36,6 +37,9 @@ DEFAULTS = {
     "fade_in": 0.003,
     "fade_out": 0.03,
     "target_rms_peak": -22.0,   # dB, the loudest 50 ms window
+    # dB, the whole clip's RMS instead, when set: for an ambience, whose loudest moment (a bird close by) says little of
+    # how loud it plays
+    "target_rms": None,
     "max_true_peak": -1.0,      # dBTP: Vorbis can push peaks up
     # Spiky clips (sparks, clicks) can't reach the target level under the ceiling: a fast limiter shaves the spikes,
     # a few milliseconds each, so the rest can. Only what would cross the ceiling is touched. False leaves them quieter
@@ -58,19 +62,43 @@ def run(cmd):
 
 
 def cut(source, clip, s, work):
+    out = os.path.join(work, clip["file"].replace("/", "_") + ".wav")
+    pan = {"mix": "pan=mono|c0=0.5*c0+0.5*c1", "left": "pan=mono|c0=c0", "right": "pan=mono|c0=c1"}[s["channel"]]
+    filters = []
+    if s["highpass"]:
+        filters.append(f"highpass=f={s['highpass']}")
+    if s["lowpass"]:
+        filters.append(f"lowpass=f={s['lowpass']}")
+    if clip.get("loop"):
+        return cut_loop(source, clip, s, out, pan, filters)
     start = max(0.0, clip["start"] - s["pad_before"])
     end = clip["end"] + s["pad_after"]
     length = end - start
-    pan = {"mix": "pan=mono|c0=0.5*c0+0.5*c1", "left": "pan=mono|c0=c0", "right": "pan=mono|c0=c1"}[s["channel"]]
-    chain = [f"atrim=start={start:.4f}:end={end:.4f}", "asetpts=PTS-STARTPTS", pan]
-    if s["highpass"]:
-        chain.append(f"highpass=f={s['highpass']}")
-    if s["lowpass"]:
-        chain.append(f"lowpass=f={s['lowpass']}")
+    chain = [f"atrim=start={start:.4f}:end={end:.4f}", "asetpts=PTS-STARTPTS", pan] + filters
     chain += [f"afade=t=in:d={s['fade_in']}", f"afade=t=out:st={length - s['fade_out']:.4f}:d={s['fade_out']}",
               f"aresample={s['rate']}:resampler=soxr"]
-    out = os.path.join(work, clip["file"].replace("/", "_") + ".wav")
     run(["ffmpeg", "-v", "error", "-y", "-i", source, "-af", ",".join(chain), "-c:a", "pcm_f32le", out])
+    return out
+
+
+def cut_loop(source, clip, s, out, pan, filters):
+    """A clip that plays over and over (a biome's ambience): start to end, with the "loop" seconds of the recording
+    after its end crossfaded into its start (equal power, as the two are unrelated sound). Played again, its end runs
+    on into what followed it in the recording, so the seam has no gap, fade or dip. No fades or pads."""
+    xf = clip["loop"]
+    start, end = clip["start"], clip["end"]
+    length = end - start
+    if xf <= 0 or xf * 2 > length:
+        sys.exit(f"{clip['file']}: loop crossfade {xf} s doesn't fit a {length:.2f} s clip")
+    pre = ",".join([f"atrim=start={start:.4f}:end={end + xf:.4f}", "asetpts=PTS-STARTPTS", pan] + filters)
+    graph = (f"[0:a]{pre},asplit=3[a][b][c];"
+             f"[a]atrim=end={xf:.4f},afade=t=in:d={xf:.4f}:curve=qsin[head];"
+             f"[b]atrim=start={length:.4f},asetpts=PTS-STARTPTS,afade=t=out:d={xf:.4f}:curve=qsin[tail];"
+             f"[head][tail]amix=inputs=2:normalize=0:duration=first[seam];"
+             f"[c]atrim=start={xf:.4f}:end={length:.4f},asetpts=PTS-STARTPTS[body];"
+             f"[seam][body]concat=n=2:v=0:a=1,aresample={s['rate']}:resampler=soxr[out]")
+    run(["ffmpeg", "-v", "error", "-y", "-i", source, "-filter_complex", graph, "-map", "[out]", "-c:a", "pcm_f32le",
+         out])
     return out
 
 
@@ -96,7 +124,9 @@ def main():
             wav = cut(args.source, clip, s, work)
             raw = survey.measure(wav)
             # To the target level, the spikes over the ceiling limited; or, not limiting, never over the ceiling
-            gain = s["target_rms_peak"] - raw["rms_peak"]
+            measure = "rms" if s["target_rms"] is not None else "rms_peak"
+            target = s["target_rms"] if s["target_rms"] is not None else s["target_rms_peak"]
+            gain = target - raw[measure]
             limited = raw["true_peak"] is not None and raw["true_peak"] + gain > s["max_true_peak"] - 0.5
             if limited and not s["limit"]:
                 gain = s["max_true_peak"] - 0.5 - raw["true_peak"]
@@ -115,7 +145,7 @@ def main():
                 run(["ffmpeg", "-v", "error", "-y", "-i", wav, "-af", ",".join(chain), "-c:a", "libvorbis",
                      "-q:a", str(s["quality"]), ogg])
                 new = survey.measure(ogg)
-                short = s["target_rms_peak"] - new["rms_peak"]
+                short = target - new[measure]
                 if not limit or abs(short) <= 0.5:
                     break
                 gain += short
@@ -134,24 +164,30 @@ def main():
                         recipe["source"]["url"], recipe["source"]["license"]])
 
     print(f"{name}: {len(rows)} clips from {recipe['source']['title']} ({recipe['source']['license']}) -> {out_dir}")
-    print(f"  {'file':34} {'length':>7} {'rms peak':>9} {'true pk':>8}   was {'length':>7} {'rms peak':>9} {'true pk':>8}")
+    measure = "rms" if s["target_rms"] is not None else "rms_peak"
+    label = "rms" if measure == "rms" else "rms peak"
+    print(f"  {'file':34} {'length':>7} {label:>9} {'true pk':>8} {'size':>7}   was {'length':>7} {label:>9} "
+          f"{'true pk':>8} {'size':>7}")
     problems = 0
     for clip, new, old, gain in rows:
-        line = f"  {clip['file']:34} {new['seconds']:6.2f}s {new['rms_peak']:8.1f} {new['true_peak']:8.1f}"
+        kb = os.path.getsize(os.path.join(out_dir, os.path.basename(clip["file"]) + ".ogg")) / 1024
+        line = f"  {clip['file']:34} {new['seconds']:6.2f}s {new[measure]:8.1f} {new['true_peak']:8.1f} {kb:5.0f}kB"
         line += " L" if clip.get("limited") else "  "
         if old:
-            line += f"       {old['seconds']:6.2f}s {old['rms_peak']:8.1f} {old['true_peak']:8.1f}"
+            old_kb = os.path.getsize(os.path.join(SOUNDS, clip["file"] + ".ogg")) / 1024
+            line += f"     {old['seconds']:6.2f}s {old[measure]:8.1f} {old['true_peak']:8.1f} {old_kb:5.0f}kB"
         print(line)
         if new["true_peak"] is not None and new["true_peak"] > s["max_true_peak"]:
             print(f"    true peak over {s['max_true_peak']} dBTP")
             problems += 1
         # A recipe's long fade-in (a swell) reads as silence at its start: only what goes past it counts
-        if new["lead_silence"] >= max(0.05, s["fade_in"]):
+        # A loop has no start to hear (its start is the crossfaded seam), and a quiet ambience reads as silence there
+        if not clip.get("loop") and new["lead_silence"] >= max(0.05, s["fade_in"]):
             print(f"    {new['lead_silence']:.2f} s of leading silence")
             problems += 1
     if any(c.get("limited") for c, *_ in rows):
         print("  L: spikes limited to reach the level")
-    levels = [n["rms_peak"] for _, n, _, _ in rows if n["rms_peak"] is not None]
+    levels = [n[measure] for _, n, _, _ in rows if n[measure] is not None]
     if levels and max(levels) - min(levels) >= 6:
         print(f"  variants differ by {max(levels) - min(levels):.1f} dB (sound-survey.py flags 6 or more)")
         problems += 1

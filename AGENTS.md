@@ -70,7 +70,10 @@ is known of 26.4.
   50 ms window, as the survey measures it) under a -1 dBTP ceiling, and encoded once, into `build/sound-rework/<name>/`
   with a report against the files they replace; `--install` copies them over. Sources stay outside the repository.
   A click far over a clip's level only reaches the level by limiting (it says so, and dulls the snap): pick calmer
-  stretches instead.
+  stretches instead. A biome's looping ambience is a clip with `"loop": <seconds>` (the recording after its end
+  crossfaded into its start, so it repeats without a seam) and `"target_rms"` in the settings (the whole clip's level:
+  its loudest moment is only a bird close by). Longer loops are welcome (less repetition); keep them small with
+  `"rate"` and `"quality"` (24000 and 2 kept a 130 s cricket loop at 555 kB). The report gives each file's size.
 - Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
   [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P] [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float
   WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral

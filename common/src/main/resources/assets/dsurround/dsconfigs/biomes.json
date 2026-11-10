@@ -111,7 +111,7 @@
     ]
   },
   {
-    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && def.isTemperate()",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY || SPARSE_VEGETATION) && def.isTemperate()",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
@@ -125,7 +125,21 @@
     ]
   },
   {
-    "biomeSelector": "CONIFEROUS && !(SNOWY || FOREST || SWAMP)",
+    "biomeSelector": "FOREST && SPARSE_VEGETATION && !(DEAD || WASTELAND || SWAMP || SPOOKY) && def.isTemperate()",
+    "_comment": "Sparse Forest w/Crickets",
+    "acoustics": [
+      {
+        "factory": "biome.forest.sparse",
+        "conditions": "def.isMildDay()"
+      },
+      {
+        "factory": "biome.crickets",
+        "conditions": "def.isMildNight()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "CONIFEROUS && !(SNOWY || COLD || FOREST || SWAMP)",
     "_comment": "Pine Forest",
     "acoustics": [
       {
@@ -145,16 +159,6 @@
       {
         "factory": "biome.crickets.deep",
         "conditions": "def.isMildNight()"
-      }
-    ]
-  },
-  {
-    "biomeSelector": "FOREST && COLD && !(SWAMP || SNOWY || DEAD || DENSE_VEGETATION)",
-    "_comment": "Simple Forest",
-    "acoustics": [
-      {
-        "factory": "biome.forest",
-        "conditions": "def.isMildDay()"
       }
     ]
   },
@@ -367,8 +371,8 @@
     ]
   },
   {
-    "biomeSelector" : "def.isWooded() && (SNOWY || COLD)",
-    "_comment": "Silent forest",
+    "biomeSelector" : "def.isWooded() && (SNOWY || COLD) && !(FOREST && def.isTemperate() && !(DEAD || WASTELAND || SWAMP))",
+    "_comment": "Silent forest, in cold woods that no other forest loop covers",
     "acoustics": [
       {
         "factory": "biome.forest.silent",

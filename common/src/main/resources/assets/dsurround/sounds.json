@@ -257,6 +257,14 @@
 		]
 	},
 	"biome.crickets.deep": {
+		"ds_credits": [
+			{
+				"name": "Crickets chirping in the Night at the Forest 001",
+				"author": "Borgory",
+				"website": "https://freesound.org/people/Borgory",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_crickets",
@@ -283,9 +291,9 @@
 	"biome.forest": {
 		"ds_credits": [
 			{
-				"name": "001_forrest.wav",
-				"author": "joepsporck",
-				"website": "https://www.freesound.org/people/joepsporck",
+				"name": "sfx_amb_forest_spring_afternoon-01.wav",
+				"author": "bajko",
+				"website": "https://www.freesound.org/people/bajko",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -296,7 +304,31 @@
 			}
 		]
 	},
+	"biome.forest.sparse": {
+		"ds_credits": [
+			{
+				"name": "001_forrest.wav",
+				"author": "joepsporck",
+				"website": "https://www.freesound.org/people/joepsporck",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/sparse_forest",
+				"stream": true
+			}
+		]
+	},
 	"biome.forest.deep": {
+		"ds_credits": [
+			{
+				"name": "Sussex Woodland & Meadow Bird Sounds, Evening.MP3",
+				"author": "Vonora",
+				"website": "https://freesound.org/people/Vonora",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_forest",

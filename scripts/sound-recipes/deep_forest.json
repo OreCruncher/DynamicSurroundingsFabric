@@ -1,0 +1,26 @@
+{
+  "name": "deep_forest",
+  "source": {
+    "title": "Sussex Woodland & Meadow Bird Sounds, Evening.MP3",
+    "url": "https://freesound.org/people/Vonora/sounds/269559/",
+    "author": "Vonora",
+    "license": "CC0",
+    "file": "269559__vonora__sussex-woodland-meadow-bird-sounds-evening.mp3",
+    "prepare": "python scripts/sound-clean.py <file> woodland_hp.wav --highpass 400, then --source woodland_hp.wav",
+    "notes": "32 kHz mono MP3, 145 s: English woodland birds (1.5-4 kHz) toward evening, getting busier and louder as it goes; an airplane's rumble (under 300 Hz) from about 42 s, which the steep 400 Hz high-pass takes; something sharp at 129 s and a click at the end. The loop is the steadiest stretch, so its two ends meet at about the same level."
+  },
+  "settings": {
+    "rate": 24000,
+    "quality": 2,
+    "highpass": 0,
+    "target_rms": -49.5
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/deep_forest",
+      "start": 33.0,
+      "end": 111.0,
+      "loop": 3.0
+    }
+  ]
+}
