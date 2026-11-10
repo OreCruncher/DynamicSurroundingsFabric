@@ -1170,23 +1170,6 @@
 			}
 		]
 	},
-	"waterfall.0": {
-		"ds_credits": [
-			{
-				"name": "Waterfall Winspit Dorset.wav",
-				"author": "genghis attenborough",
-				"website": "https://www.freesound.org/people/genghis%20attenborough",
-				"license": "Attribution Noncommercial"
-			}
-		],
-		"sounds": [
-			{
-				"name": "dsurround:ambient/stream/waterfall0",
-				"attenuation_distance": 22,
-				"preload": true
-			}
-		]
-	},
 	"waterfall.1": {
 		"ds_credits": [
 			{

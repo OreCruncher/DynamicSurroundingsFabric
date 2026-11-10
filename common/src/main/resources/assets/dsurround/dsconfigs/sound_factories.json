@@ -3,7 +3,7 @@
     "location": "dsurround:toolbar.none.equip",
     "soundEvent": "dsurround:item.utility.equip",
     "category": "PLAYER",
-    "volume": 0.3,
+    "volume": 0.15,
     "pitch": {
       "min": 0.9,
       "max": 1.1
@@ -235,11 +235,11 @@
   },
   {
     "location": "dsurround:actor/waterspout",
-    "soundEvent": "dsurround:waterfall.0",
+    "soundEvent": "dsurround:waterfall.1",
     "volume": 2.2,
     "pitch": {
-      "min": 0.6,
-      "max": 0.8
+      "min": 0.8,
+      "max": 1.0
     }
   },
   {
@@ -360,7 +360,7 @@
   },
   {
     "location": "dsurround:waterfalls/0",
-    "soundEvent": "dsurround:waterfall.0",
+    "soundEvent": "dsurround:waterfall.1",
     "pitch": {
       "min": 0.8,
       "max": 1.2

@@ -53,10 +53,6 @@ Others:
 * S: [Distant Thunder.wav](https://www.freesound.org/people/sarson/sounds/195522/) by [sarson](https://www.freesound.org/people/sarson/) | License: Creative Commons 0
 * S: [NM-Mejor-Lado-Thunder-01.wav](https://www.freesound.org/people/aaronstar/sounds/194849/) by [aaronstar](https://www.freesound.org/people/aaronstar/) | License: Creative Commons 0
 
-*dsurround:waterfall.0*
-
-* S: [Waterfall Winspit Dorset.wav](https://www.freesound.org/people/genghis%20attenborough/sounds/28266/) by [genghis attenborough](https://www.freesound.org/people/genghis%20attenborough/) | License: [Creative Commons Attribution-NonCommercial 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 
-
 *dsurround:waterfall.1*
 
 * S: [Waterfall, Small, B.wav](https://www.freesound.org/people/InspectorJ/sounds/365921/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
@@ -75,7 +71,7 @@ Others:
 
 *dsurround:waterfall.5*
 
-* [Running-water-mountain-stream.mp3](https://orangefreesounds.com/running-water-sound-mountain-stream/) by Alexander | License Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: waterfall.4's loop slowed to 0.65x (pitch with it) and given a low-frequency boost, for the biggest falls
 
 *dsurround:biome.wind / dsurround:biome.wind.hills / dsurround:biome.wind.mountains*
 
