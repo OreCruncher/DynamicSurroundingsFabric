@@ -1,0 +1,14 @@
+{
+  "name": "jungle_madagascar",
+  "source": {
+    "title": "Forest Ambience.wav",
+    "url": "https://freesound.org/people/CHRISFOPFILMS/sounds/346225/",
+    "author": "CHRISFOPFILMS",
+    "license": "CC0",
+    "file": "346225__chrisfopfilms__forest-ambience.wav",
+    "prepare": "python scripts/sound-clean.py <file> chris_hp300.wav --highpass 300, then --source chris_hp300.wav",
+    "notes": "48 kHz stereo, 126 s, Masoala park, Madagascar: daytime rainforest, birds and insects at 3-11 kHz over a low murmur (wind or handling) and a burst of rumble at 70-75 s, all under 300 Hz, which the high-pass takes. A person talking through the first 18.7 s (bursts 20-36 dB over the forest at 300-1500 Hz) is left out: the loop starts at 20 s, as the author asked."
+  },
+  "settings": {"rate": 24000, "quality": 2, "highpass": 0, "target_rms": -30.7},
+  "clips": [{"file": "ambient/outside/jungle", "start": 20.0, "end": 121.5, "loop": 3.0}]
+}

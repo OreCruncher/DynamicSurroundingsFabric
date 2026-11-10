@@ -105,6 +105,14 @@ Others:
 
 * S: [Calm Morning Outdoor Ambience](https://www.freesound.org/people/blouhond/sounds/157947/) by [blouhond](https://www.freesound.org/people/blouhond/) | License: Attribution
 
+*dsurround:biome.jungle*
+
+* S: [Forest Ambience.wav](https://freesound.org/people/CHRISFOPFILMS/sounds/346225/) by [CHRISFOPFILMS](https://freesound.org/people/CHRISFOPFILMS/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, high-passed, level matched
+
+*dsurround:biome.jungle.sparse*
+
+* S: [Peruvian Amazon birds frogs daytime](https://freesound.org/people/nonamethefish/sounds/653743/) by [nonamethefish](https://freesound.org/people/nonamethefish/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, high-passed, level matched
+
 *dsurround:biome.forest*
 
 * S: [sfx_amb_forest_spring_afternoon-01.wav](https://freesound.org/people/bajko/sounds/385280/) by [bajko](https://freesound.org/people/bajko/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, level matched

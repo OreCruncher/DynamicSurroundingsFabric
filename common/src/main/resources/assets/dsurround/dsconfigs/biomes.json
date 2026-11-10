@@ -69,13 +69,25 @@
     ]
   },
   {
-    "biomeSelector": "JUNGLE",
-    "_comment": "Basic Jungle and Tropical",
+    "biomeSelector": "JUNGLE && !(SPARSE_VEGETATION || SWAMP)",
+    "_comment": "Basic Jungle and Tropical: dense and magical",
     "priority": 100,
     "clearSounds": true,
     "acoustics": [
       {
         "factory": "biome.jungle",
+        "conditions": "weather.isNotRaining()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "JUNGLE && (SPARSE_VEGETATION || SWAMP)",
+    "_comment": "Sparse and swampy Jungle",
+    "priority": 100,
+    "clearSounds": true,
+    "acoustics": [
+      {
+        "factory": "biome.jungle.sparse",
         "conditions": "weather.isNotRaining()"
       }
     ]

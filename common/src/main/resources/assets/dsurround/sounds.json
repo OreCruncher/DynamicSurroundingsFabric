@@ -452,11 +452,35 @@
 		]
 	},
 	"biome.jungle": {
+		"ds_credits": [
+			{
+				"name": "Forest Ambience.wav",
+				"author": "CHRISFOPFILMS",
+				"website": "https://freesound.org/people/CHRISFOPFILMS",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/jungle",
 				"volume": 0.2,
-				"pitch": 0.8,
+				"stream": true
+			}
+		]
+	},
+	"biome.jungle.sparse": {
+		"ds_credits": [
+			{
+				"name": "Peruvian Amazon birds frogs daytime",
+				"author": "nonamethefish",
+				"website": "https://freesound.org/people/nonamethefish",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/sparse_jungle",
+				"volume": 0.2,
 				"stream": true
 			}
 		]
