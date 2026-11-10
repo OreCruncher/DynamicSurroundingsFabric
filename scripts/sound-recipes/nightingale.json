@@ -1,0 +1,82 @@
+{
+  "name": "nightingale",
+  "source": {
+    "title": "nightingale song 5.wav",
+    "url": "https://freesound.org/people/reinsamba/sounds/120226/",
+    "author": "reinsamba",
+    "license": "CC BY 4.0",
+    "file": "120226__reinsamba__nightingale-song-5.wav",
+    "notes": "44.1 kHz stereo, 142 s, Cologne, May 2011: one nightingale in a hedge about 4 m away, Vivanco EM35 on a parabolic shield. 33 phrases at 2-6 kHz, 40-50 dB over a quiet background that is mostly rumble under 300 Hz, which the 1 kHz high-pass takes."
+  },
+  "settings": {
+    "highpass": 1000,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.02,
+    "fade_out": 0.2,
+    "target_rms_peak": -26.0
+  },
+  "clips": [
+    {
+      "file": "ambient/birds/nightingale1",
+      "start": 0.68,
+      "end": 4.2
+    },
+    {
+      "file": "ambient/birds/nightingale2",
+      "start": 10.17,
+      "end": 13.6
+    },
+    {
+      "file": "ambient/birds/nightingale3",
+      "start": 16.47,
+      "end": 18.56
+    },
+    {
+      "file": "ambient/birds/nightingale4",
+      "start": 20.35,
+      "end": 23.48
+    },
+    {
+      "file": "ambient/birds/nightingale5",
+      "start": 28.47,
+      "end": 31.14
+    },
+    {
+      "file": "ambient/birds/nightingale6",
+      "start": 36.71,
+      "end": 39.54
+    },
+    {
+      "file": "ambient/birds/nightingale7",
+      "start": 51.6,
+      "end": 54.62
+    },
+    {
+      "file": "ambient/birds/nightingale8",
+      "start": 63.39,
+      "end": 67.26
+    },
+    {
+      "file": "ambient/birds/nightingale9",
+      "start": 73.54,
+      "end": 76.74
+    },
+    {
+      "file": "ambient/birds/nightingale10",
+      "start": 114.0,
+      "end": 120.28,
+      "notes": "a long run of phrases"
+    },
+    {
+      "file": "ambient/birds/nightingale11",
+      "start": 123.86,
+      "end": 127.58
+    },
+    {
+      "file": "ambient/birds/nightingale12",
+      "start": 128.92,
+      "end": 132.46
+    }
+  ]
+}

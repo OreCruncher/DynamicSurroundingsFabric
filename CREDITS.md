@@ -153,6 +153,10 @@ Others:
 
 * S: [ANML_M_Ext_Crow_Calls_Single1.wav](https://www.freesound.org/people/conleec/sounds/173866/) by [conleec](https://www.freesound.org/people/conleec/) | License: Creative Commons 0
 
+*dsurround:nightingale*
+
+* S: [nightingale song 5.wav](https://freesound.org/people/reinsamba/sounds/120226/) by [reinsamba](https://freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: phrases cut, made mono, high-passed, levels matched
+
 *dsurround:loon*
 
 * S: [Loon / Diver call 3](https://freesound.org/people/nicStage/sounds/432603/) by [nicStage](https://freesound.org/people/nicStage/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: wails and a yodel cut, made mono, high-passed, levels matched

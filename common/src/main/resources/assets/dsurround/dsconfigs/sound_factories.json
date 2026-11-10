@@ -557,6 +557,14 @@
     }
   },
   {
+    "location": "dsurround:nightingale",
+    "soundEvent": "dsurround:nightingale",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
     "location": "dsurround:owl",
     "soundEvent": "dsurround:owl",
     "pitch": {
