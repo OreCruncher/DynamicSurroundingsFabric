@@ -705,6 +705,15 @@
 			}
 		]
 	},
+	"biome.underground.deep": {
+		"sounds": [
+			{
+				"name": "dsurround:ambient/underground/deep",
+				"volume": 0.3,
+				"stream": true
+			}
+		]
+	},
 	"rockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
 		"ds_credits": [
@@ -761,14 +770,6 @@
 				"name": "dsurround:ambient/underground/monster_growl1",
 				"volume": 0.3
 			}
-		]
-	},
-	"waterdrops": {
-		"subtitle": "dsurround.sound.caption.waterdrop",
-		"sounds": [
-			"dsurround:ambient/droplets/water1",
-			"dsurround:ambient/droplets/water2",
-			"dsurround:ambient/droplets/water3"
 		]
 	},
 	"waterdrips": {

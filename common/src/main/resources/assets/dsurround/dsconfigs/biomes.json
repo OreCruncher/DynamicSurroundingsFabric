@@ -410,7 +410,13 @@
     "acoustics": [
       {
         "factory": "biome.underground",
-        "conditions": "state.isInside()"
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(lib.smoothStep(-4, 4, player.getY()))"
+      },
+      {
+        "factory": "biome.underground.deep",
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(1 - lib.smoothStep(-4, 4, player.getY()))"
       },
       {
         "factory": "rockfall",
@@ -447,7 +453,13 @@
     "acoustics": [
       {
         "factory": "biome.underground",
-        "conditions": "state.isInside()"
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(lib.smoothStep(-4, 4, player.getY()))"
+      },
+      {
+        "factory": "biome.underground.deep",
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(1 - lib.smoothStep(-4, 4, player.getY()))"
       },
       {
         "factory": "rockfall",

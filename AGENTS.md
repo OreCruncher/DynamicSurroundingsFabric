@@ -74,6 +74,10 @@ is known of 26.4.
   crossfaded into its start, so it repeats without a seam) and `"target_rms"` in the settings (the whole clip's level:
   its loudest moment is only a bird close by). Longer loops are welcome (less repetition); keep them small with
   `"rate"` and `"quality"` (24000 and 2 kept a 130 s cricket loop at 555 kB). The report gives each file's size.
+- A droning ambience made from noise, the mod's own with nothing to credit (needs numpy and ffmpeg): `python
+  scripts/drone-synth.py OUT.ogg [--center HZ] [--width OCT] [--resonance DB] [--rumble DB] [--drift DB] [--pulse HZ
+  DB] [--lufs L]`: a band of noise with a hum on its center, drifting in color, made over the whole loop so it repeats
+  without a seam. Give the command in the notes beside what it made; the same arguments and seed give the same file.
 - Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
   [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P] [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float
   WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral

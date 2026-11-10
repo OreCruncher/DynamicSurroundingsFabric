@@ -33,6 +33,8 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Firefly bushes give the mod's fireflies, which wink with a halo and a light, in place of the game's. Under Fireflies in Firefly Options
 * `/dsconflicts` lists the effects a shader pack keeps off, of those switched on in the configuration
 * Script definitions: modpacks can name constants and functions in `dsconfigs/scripts.json` and use them in any script as `def.NAME` and `def.name()`, such as `def.isHalloween()`. Functions are for biome rules (traits such as `SPOOKY`) or for the rest (`diurnal.isNight()` and the like), may use one another, and are checked as they load: a mistyped name or a loop is reported with the file it is in. A later file's definition replaces ours; nothing defined in the mod can be replaced
+* Underground, a deeper drone takes over from the cave hush below y 0, the two blending over 8 blocks
+* Biome loops can follow the player: modpacks can give a loop in `biomes.json` a `volume` script (0 to 1), such as `math.sqrt(lib.smoothStep(-4, 4, player.getY()))` to bring a sound in by height. `lib.smoothStep(from, to, x)` is new for blends like it
 
 **Changes**
 * The mod's fireflies are drawn as the game's firefly, a dot that stays seen between flashes and takes the light's color as it flashes, in place of the end rod's sparkle. A resource pack's firefly texture is used

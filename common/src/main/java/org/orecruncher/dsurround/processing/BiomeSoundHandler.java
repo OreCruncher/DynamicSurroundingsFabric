@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.SyntheticBiome;
@@ -37,7 +38,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     // List of emitters that are managing the currently playing biome-related sounds
     private final ObjectArray<BiomeSoundEmitter> emitters = new ObjectArray<>(8);
     // Scratch list of the sounds from the PLAYER and VILLAGE synthetic biomes
-    private final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>(8);
+    private final ObjectArray<AcousticEntry> playerSounds = new ObjectArray<>(8);
 
     public BiomeSoundHandler(IBiomeLibrary biomeLibrary, IAudioPlayer audioPlayer, ITickCount tickCount, Scanners scanner, WindService windService, Configuration config, IModLog logger) {
         super("Biome Sounds", config, logger);
@@ -57,13 +58,17 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
         // than the others.
         final float area = this.scanner.getBiomeArea();
         for (var kvp : this.scanner.getBiomes().reference2IntEntrySet()) {
-            var acoustics = kvp.getKey().findBiomeSoundMatches();
+            var entries = kvp.getKey().findBiomeSoundMatches();
             final float volume = 0.05F + 0.95F * (kvp.getIntValue() / area);
-            for (var acoustic : acoustics) {
+            for (var entry : entries) {
+                var acoustic = entry.getAcoustic();
                 // Where the air is still, there is no wind to hear
                 if (acoustic.followsWind() && this.windService.isStill())
                     continue;
-                this.workMap.addTo(acoustic, volume);
+                // An entry's own volume (a blend by height, say) scales its share; at 0 it isn't playing
+                var own = entry.volume();
+                if (own > 0F)
+                    this.workMap.addTo(acoustic, volume * own);
             }
         }
     }
@@ -102,7 +107,7 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
 
             // The following will look at the PLAYER and VILLAGE biomes, two artificial biomes
             // that are used to configure effects.
-            final ObjectArray<ISoundFactory> playerSounds = this.playerSounds;
+            final ObjectArray<AcousticEntry> playerSounds = this.playerSounds;
             playerSounds.clear();
 
             // Defensive code in case biome information is not obtained for PLAYER or VILLAGE. This is an
@@ -117,7 +122,11 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
                 playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
             }
 
-            playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
+            playerSounds.forEach(entry -> {
+                var own = entry.volume();
+                if (own > 0F)
+                    this.workMap.put(entry.getAcoustic(), own);
+            });
 
             // This will cause extra spot sounds to play, like birds chirping, wolves growling, etc.
             handleAddOnSounds(player, this.scanner.playerLogicBiomeInfo());

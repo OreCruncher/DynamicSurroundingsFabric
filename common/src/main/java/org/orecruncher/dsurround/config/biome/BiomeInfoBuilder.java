@@ -141,7 +141,7 @@ public final class BiomeInfoBuilder implements IBiomeIdentity {
 
             switch (sr.type()) {
                 case LOOP -> {
-                    acousticEntry = new AcousticEntry(factory, sr.conditions(), evaluator);
+                    acousticEntry = new AcousticEntry(factory, sr.conditions(), sr.weight(), sr.volume(), evaluator);
                     targetCollection = this.loopSounds;
                 }
                 case MUSIC -> {

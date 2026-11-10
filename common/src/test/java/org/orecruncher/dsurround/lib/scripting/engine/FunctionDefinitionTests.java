@@ -292,6 +292,22 @@ public class FunctionDefinitionTests {
     }
 
     @TestFactory
+    @DisplayName("lib.smoothStep")
+    Stream<DynamicTest> smoothStep() {
+        return Stream.of(
+                evaluates("lib.smoothStep(-4, 4, -10)", 0.0),
+                evaluates("lib.smoothStep(-4, 4, 0)", 0.5),
+                evaluates("lib.smoothStep(-4, 4, 4)", 1.0),
+                evaluates("lib.smoothStep(-4, 4, 2)", 0.84375),
+                evaluates("lib.smoothStep(4, -4, 2)", 0.15625),
+                evaluates("lib.smoothStep(0, 0, -1)", 0.0),
+                evaluates("lib.smoothStep(0, 0, 0)", 1.0),
+                evaluates("1 - lib.smoothStep(-4, 4, 0) + lib.smoothStep(-4, 4, 0)", 1.0),
+                dynamicTest("constant arguments fold", () -> assertInstanceOf(Literal.class, this.engine.compile("lib.smoothStep(0, 1, 0.5)")))
+        );
+    }
+
+    @TestFactory
     @DisplayName("Signatures")
     Stream<DynamicTest> signatures() {
         return Stream.of(

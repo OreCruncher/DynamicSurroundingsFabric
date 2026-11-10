@@ -143,10 +143,9 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     }
 
     @Override
-    public Collection<ISoundFactory> findBiomeSoundMatches() {
+    public Collection<AcousticEntry> findBiomeSoundMatches() {
         return this.loopSounds
                 .findMatches()
-                .map(AcousticEntry::getAcoustic)
                 .collect(Collectors.toList());
     }
 
