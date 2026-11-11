@@ -154,6 +154,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, FeatureConflict.PARTICLE_WEATHER.isBlocked())
                 && PrecipitationShaders.isAvailable()
                 && OptionalHook.PRECIPITATION.status() != OptionalHook.Status.MISSING
+                // Drawn from the world effects hook: without it vanilla's stays, or there would be none at all
+                && OptionalHook.WORLD_EFFECTS.status() != OptionalHook.Status.MISSING
                 && GameUtils.isInGame() && this.dimensionInformation.particleWeather();
     }
 

@@ -430,7 +430,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableSplashRings = true;
 
         @Property
-        @Comment("Enable/disable rings spreading on the water from players and mobs bobbing, and from boats; follows the Water Ripple Style")
+        @Comment("Enable/disable rings spreading on the water from players and mobs bobbing, and from boats, with a boat's wake foam; follows the Water Ripple Style")
         public boolean enableBobbingRings = true;
 
         @Property

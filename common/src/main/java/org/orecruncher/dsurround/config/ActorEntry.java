@@ -41,8 +41,13 @@ public final class ActorEntry {
      */
     public float chance() {
         if (this.constantChance != null)
-            return Mth.clamp(this.constantChance, 0F, 1F);
-        return this.conditionEvaluator.eval(this.chance) instanceof Number number ? Mth.clamp(number.floatValue(), 0F, 1F) : 0F;
+            return share(this.constantChance);
+        return this.conditionEvaluator.eval(this.chance) instanceof Number number ? share(number.floatValue()) : 0F;
+    }
+
+    // Clamping keeps a NaN, which would pass every roll (roll >= NaN is false): one that isn't a finite number is none
+    private static float share(float chance) {
+        return Float.isFinite(chance) ? Mth.clamp(chance, 0F, 1F) : 0F;
     }
 
     public boolean matches() {

@@ -73,10 +73,17 @@ public class WaterRippleHandler {
      * flowing or doesn't ripple
      */
     public static OptionalDouble stillSurface(Level world, double x, double y, double z) {
+        return stillSurface(world, x, y, z, SURFACE_SEARCH);
+    }
+
+    /**
+     * As {@link #stillSurface(Level, double, double, double)}, looking up to {@code search} blocks up for the surface
+     */
+    public static OptionalDouble stillSurface(Level world, double x, double y, double z, int search) {
         var pos = BlockPos.containing(x, y, z).mutable();
         if (world.getFluidState(pos).isEmpty())
             pos.move(Direction.DOWN);
-        for (int i = 0; i < SURFACE_SEARCH && !world.getFluidState(pos.above()).isEmpty(); i++)
+        for (int i = 0; i < search && !world.getFluidState(pos.above()).isEmpty(); i++)
             pos.move(Direction.UP);
         var fluid = world.getFluidState(pos);
         if (!fluid.isSource() || !world.getFluidState(pos.above()).isEmpty() || !TAG_LIBRARY.is(FluidTags.WATER_RIPPLES, fluid))

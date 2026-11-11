@@ -449,7 +449,7 @@
   "dsurround.config.entityEffects.enableSplashRings": "Splash Rings",
   "dsurround.config.entityEffects.enableSplashRings.tooltip": "Enable/disable rings spreading on the water where players and mobs fall in. They follow the Water Ripple Render Style.",
   "dsurround.config.entityEffects.enableBobbingRings": "Bobbing Rings",
-  "dsurround.config.entityEffects.enableBobbingRings.tooltip": "Enable/disable rings spreading on the water from players and mobs bobbing at the surface, and from boats. They follow the Water Ripple Render Style.",
+  "dsurround.config.entityEffects.enableBobbingRings.tooltip": "Enable/disable rings spreading on the water from players and mobs bobbing at the surface, and from boats, with the foam of a boat's wake. They follow the Water Ripple Render Style.",
   "dsurround.config.entityEffects.footprintStyle": "Footprint Style",
   "dsurround.config.entityEffects.footprintStyle.tooltip": "The look of players' footprints. Mobs' depend on their feet: square, paw, hoof or bird.",
   "dsurround.config.footstepAccents": "Footstep Accent Options",

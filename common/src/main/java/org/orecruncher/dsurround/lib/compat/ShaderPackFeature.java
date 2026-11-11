@@ -29,7 +29,8 @@ public enum ShaderPackFeature {
     SOFT_PARTICLES(config -> true),
     BURNING_FLAMES(config -> config.entityEffects.enableBurningEffect),
     FOOTPRINTS(config -> config.entityEffects.enableFootprints || config.entityEffects.enableTrackedFootprints),
-    APPARITIONS(config -> config.worldActorOptions.enableApparitions && config.scaryContent.allowScaryContent);
+    APPARITIONS(config -> config.worldActorOptions.enableWorldActors && config.worldActorOptions.enableApparitions
+            && config.scaryContent.allowScaryContent);
 
     private final Predicate<Configuration> switchedOn;
 

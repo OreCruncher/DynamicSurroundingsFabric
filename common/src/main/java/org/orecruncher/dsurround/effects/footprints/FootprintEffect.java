@@ -33,7 +33,8 @@ import org.orecruncher.dsurround.tags.EntityEffectTags;
  * water, and mud from ground the rain has soaked ({@code BlockInfo.tracksMudWhenWet}). On hard ground each step then
  * leaves a print of it, fainter until it is used up; snow and mud show on soft ground too, in place of the pressed print.
  * Ground soaked by rain shows mud prints itself. What feet walk through replaces what they carry, but snow and mud stay
- * on them until used up, on anything but mud.
+ * on them until used up, on anything but mud. Water is the exception: wading washes the feet, whatever they carried,
+ * and they leave wet prints after.
  * <p>
  * No prints while sneaking, swimming, riding, sleeping or invisible, with Particles on Minimal, or with a shader pack.
  */
@@ -113,6 +114,7 @@ public class FootprintEffect extends EntityEffectBase {
             return;
         }
 
+        // Wading washes the feet: water takes the place of whatever they carried, snow and mud too (not by replaces)
         if (entity.isInWater())
             this.carried.pickUp(TrackedGround.WATER);
 
@@ -202,7 +204,8 @@ public class FootprintEffect extends EntityEffectBase {
 
     /**
      * Whether ground walked on takes the place of what feet carry: nothing sticks like snow and mud, which stay until
-     * they are used up, unless it is mud they walk through or more of the same
+     * they are used up, unless it is mud they walk through or more of the same. Not asked of water, which washes them
+     * off (see {@link #tick})
      */
     static boolean replaces(TrackedGround picked, @Nullable TrackedGround carrying) {
         return carrying == null || !carrying.showsOnSoftGround() || picked == carrying || picked == TrackedGround.MUD;

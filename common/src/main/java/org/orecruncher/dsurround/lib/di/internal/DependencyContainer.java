@@ -89,11 +89,14 @@ public final class DependencyContainer implements IServiceContainer {
      *                       supplier
      */
     private void register(Class<?> clazz, Supplier<?> supplier, @Nullable Class<?> implementation) {
-        if (implementation != null)
+        if (implementation != null) {
             this.implementations.put(clazz, implementation);
-        else
+            // Checked as it was cached (see create): created on its own now, it would be a second instance
+            this.creators.remove(implementation);
+        } else
             this.implementations.remove(clazz);
         this.resolvers.put(clazz, supplier);
+        this.creators.remove(clazz);
     }
 
     // ---- Resolution ------------------------------------------------------------------------------------------
@@ -125,9 +128,14 @@ public final class DependencyContainer implements IServiceContainer {
     public <T> T create(Class<T> clazz) {
         if (this.resolvers.containsKey(clazz))
             throw new DependencyException(String.format("'%s' is registered: resolve it rather than create a new one", clazz.getName()));
-        this.checkNotRegisteredAsAnother(clazz);
+        var creator = this.creators.get(clazz);
+        if (creator == null) {
+            // Once a class, as its creator is cached: entity effects are created this way, one as each mob comes near
+            this.checkNotRegisteredAsAnother(clazz);
+            creator = this.creators.computeIfAbsent(clazz, this::createFactory);
+        }
         // Not under the creation lock: what the instance needs is resolved, and takes the lock, as it goes
-        return (T) this.creators.computeIfAbsent(clazz, this::createFactory).get();
+        return (T) creator.get();
     }
 
     @Override

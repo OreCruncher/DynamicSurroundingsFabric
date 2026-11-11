@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -232,13 +233,19 @@ public final class Apparition implements IActor {
     }
 
     /**
-     * Finds its way to a haunt; one it can't reach is skipped for the next, and if none can be reached it stays
+     * Finds its way to a haunt; one it can't reach is skipped for the next, and if none can be reached it stays. One
+     * search a tick, as a failed one looks at thousands of blocks: after one fails, the next tick takes up with the
+     * next haunt (its goal still isn't the haunt it is with), keeping to its old way meanwhile.
      */
     private void setOff(ClientLevel level, int haunt) {
         ApparitionRoute.Footing footing = (x, y, z) -> standable(level, this.probe, x, y, z);
         var from = BlockPos.containing(this.x, this.y + 0.01D, this.z);
+        boolean searched = false;
         for (int tries = 0; tries < ApparitionPath.HAUNTS; tries++) {
             if (!this.unreachable[haunt]) {
+                if (searched)
+                    return;
+                searched = true;
                 var to = this.footingNear(level, haunt, from.getY());
                 var way = to == null ? null : ApparitionRoute.find(footing, from, to);
                 if (way != null) {
@@ -253,7 +260,7 @@ public final class Apparition implements IActor {
             haunt = this.haunt();
         }
         // Nowhere to go: it stays, and tries them all again when it is time to move on
-        java.util.Arrays.fill(this.unreachable, false);
+        Arrays.fill(this.unreachable, false);
         this.goal = haunt;
         this.route = null;
     }

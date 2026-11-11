@@ -56,8 +56,8 @@ public final class ExtendedViewFog {
     public static void apply(FogData target, FogData given, FogData ours, float renderDistance) {
         float stretched = target.environmentalEnd;
         float factor = stretch(ours.environmentalEnd, given.environmentalEnd, stretched, renderDistance);
-        // Never thinner than the other mod left it, nor than ours
-        float end = Math.max(Math.min(ours.environmentalEnd * factor, stretched), Math.min(ours.environmentalEnd, stretched));
+        // Never thinner than the other mod left it; never thicker than ours, as the factor is never under 1
+        float end = Math.min(ours.environmentalEnd * factor, stretched);
         // The start stays ours: stretched with the end, a thick fog's clear zone near the player grew to hundreds of
         // blocks and the fog over the middle distance came in twice as fast as the storm built
         target.environmentalStart = Math.min(ours.environmentalStart, end);
@@ -80,6 +80,7 @@ public final class ExtendedViewFog {
      * @param given          the game's end, as our calculators were given it
      * @param stretched      the end after the other mod
      * @param renderDistance the render distance in blocks
+     * @return the factor, 1 or more
      */
     static float stretch(float ours, float given, float stretched, float renderDistance) {
         if (!(given > 0F) || !(stretched > given) || Float.isInfinite(stretched) || !(ours > 0F))

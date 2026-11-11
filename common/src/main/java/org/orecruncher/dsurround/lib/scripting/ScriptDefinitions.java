@@ -73,8 +73,9 @@ public record ScriptDefinitions(Map<String, Definition> definitions) {
      * problem is described to {@code problems}, and what it concerns is left out. Contexts use
      * {@link ExecutionContext#define}; this is for a bare engine, as tests make.
      */
-    public void defineIn(ScriptEngine engine, Section functions, Consumer<String> problems) {
-        engine.clearDefinitions();
+    public void defineIn(ScriptEngine live, Section functions, Consumer<String> problems) {
+        // Made on a staged engine and handed over whole, so scripts compiling meanwhile never see half a set
+        var engine = live.staged();
         var available = new TreeMap<String, Definition>(String.CASE_INSENSITIVE_ORDER);
         for (var definition : this.definitions.values()) {
             if (definition.section() == Section.CONSTANT) {
@@ -140,6 +141,8 @@ public record ScriptDefinitions(Map<String, Definition> definitions) {
                 dropped.add(name);
             }
         }
+
+        live.adopt(engine);
     }
 
     // Depth first, putting each function after those it uses; state is false while a function is being visited

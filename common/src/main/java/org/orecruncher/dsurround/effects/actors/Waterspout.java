@@ -29,8 +29,9 @@ import org.orecruncher.dsurround.tags.FluidTags;
  */
 public final class Waterspout extends VortexActor {
 
-    // Broken up by land or ice in two seconds; a rush of water every two to three and a half seconds
-    private static final Traits TRAITS = new Traits(1F / 40F, 40, 30, 1D);
+    // Broken up by land or ice in two seconds; a rush of water every 1.2 to 1.8 seconds, so each starts before the last
+    // ends: its sound (waterfall.1) is 2.2 seconds long, longer at a lower pitch, and with gaps it turned on and off
+    private static final Traits TRAITS = new Traits(1F / 40F, 24, 12, 1D);
     // Puffs a tick at full strength, in the funnel and in the spray, splashes, and the chance a tick of tearing
     // something up
     private static final float FUNNEL_PUFFS = 10F;

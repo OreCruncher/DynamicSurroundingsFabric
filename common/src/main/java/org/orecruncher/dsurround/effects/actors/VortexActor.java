@@ -118,6 +118,11 @@ public abstract class VortexActor implements IActor {
         return this.breakingUp;
     }
 
+    @Override
+    public boolean isEnding() {
+        return this.breakingUp;
+    }
+
     /**
      * A column, by its block coordinates
      */

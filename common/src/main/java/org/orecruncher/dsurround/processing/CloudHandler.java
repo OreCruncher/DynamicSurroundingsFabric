@@ -13,6 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
@@ -138,8 +139,10 @@ public class CloudHandler extends AbstractClientHandler {
      * Whether the clouds are the mod's
      */
     public boolean isActive() {
+        // Drawn from the world effects hook: without it vanilla's stay, or there would be none at all
         return this.config.weatherOptions.enableDynamicClouds && !FeatureConflict.DYNAMIC_CLOUDS.isBlocked()
-                && CloudRenderer.isUsable() && GameUtils.isInGame()
+                && CloudRenderer.isUsable() && OptionalHook.WORLD_EFFECTS.status() != OptionalHook.Status.MISSING
+                && GameUtils.isInGame()
                 && GameUtils.getMC().options.cloudStatus().get() != CloudStatus.OFF && this.dimensionInformation.dynamicClouds();
     }
 

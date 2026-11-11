@@ -77,7 +77,13 @@ for ev, entries in credits.items():
     changed.append((ev, sj[ev].get("ds_credits"), entries))
     m = re.search(r'\t"' + re.escape(ev) + r'": \{.*?\n\t\}', text, re.S)
     blk = m.group(0)
+    # The old list, wherever it is in the event: before another key (its comma after it) or last (the comma before it)
     new = re.sub(r'\t\t"ds_credits": \[.*?\n\t\t\],\r?\n', "", blk, flags=re.S)
+    new = re.sub(r',\r?\n\t\t"ds_credits": \[.*?\n\t\t\](?=\r?\n\t\})', "", new, flags=re.S)
+    if '"ds_credits"' in new:
+        sys.exit(f"{ev}: its ds_credits isn't laid out as this script writes it; move it before \"sounds\" by hand")
+    if '\t\t"sounds": [' not in new:
+        sys.exit(f"{ev}: no \"sounds\" list to put ds_credits before")
     items = []
     for e in entries:
         fields = [f'\t\t\t\t"{k}": {json.dumps(v, ensure_ascii=False)}' for k, v in e.items()]
@@ -92,6 +98,13 @@ for ev, old, new in changed:
     print(f"   now: {[ (n['name'], n['author'], n['license']) for n in new]}")
 print(f"\n{len(changed)} events to update; CREDITS headings with no such event: {missing}; events credited only in sounds.json: {uncovered}")
 if "--write" in sys.argv:
-    json.loads(text)
+    # A key given twice is valid JSON (the last wins), so look for one: it would mean an old list was left in
+    def no_duplicates(pairs):
+        keys = [k for k, _ in pairs]
+        twice = sorted({k for k in keys if keys.count(k) > 1})
+        if twice:
+            sys.exit(f"not written: {twice} given twice in one object")
+        return dict(pairs)
+    json.loads(text, object_pairs_hook=no_duplicates)
     open(SJ, "w", encoding="utf-8", newline="").write(text)
     print("written")

@@ -23,6 +23,11 @@ public final class ScriptEngine implements IConfigureDefinition {
         MathFunctions.configure(this);
     }
 
+    private ScriptEngine(Environment environment) {
+        this.environment = environment;
+        this.compiler = new Compiler(environment);
+    }
+
     /**
      * Compiles the script into a syntax tree that can be used for evaluation. Expression instances should be cached
      * for performance.
@@ -48,10 +53,20 @@ public final class ScriptEngine implements IConfigureDefinition {
     }
 
     /**
-     * Drops every config definition ({@code def.} names), to define them again
+     * An engine with this one's built-in names and no config definitions ({@code def.} names), to define a new set in
+     * and compile them with; {@link #adopt} then hands them to this engine all at once. Nothing may be defined in code
+     * on this engine while one is in use.
      */
-    public void clearDefinitions() {
-        this.environment.clearDefinitions();
+    public ScriptEngine staged() {
+        return new ScriptEngine(this.environment.staged());
+    }
+
+    /**
+     * Replaces this engine's config definitions with a staged engine's, in one step
+     */
+    public void adopt(ScriptEngine staged) {
+        Preconditions.checkNotNull(staged);
+        this.environment.adopt(staged.environment);
     }
 
     /**

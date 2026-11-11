@@ -24,6 +24,14 @@ public interface IActor {
     boolean tick(ClientLevel level, float particles);
 
     /**
+     * Whether it has begun to end early, a whirl breaking up: left behind now, it is let go as one that is over is,
+     * since its seed would bring it back whole
+     */
+    default boolean isEnding() {
+        return false;
+    }
+
+    /**
      * Where it is now
      */
     double x();

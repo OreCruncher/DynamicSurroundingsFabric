@@ -57,13 +57,12 @@ public class BoatRingHandler extends AbstractClientHandler {
         if (!(player.level() instanceof ClientLevel level))
             return;
 
-        boolean foam = this.config.waterfallOptions.enableFroth;
         var area = AABB.unitCubeFromLowerCorner(player.position()).inflate(this.config.entityEffects.entityEffectRange);
         for (var boat : level.getEntitiesOfClass(AbstractBoat.class, area)) {
             double dx = boat.getX() - boat.xo, dz = boat.getZ() - boat.zo;
             double speed = Math.sqrt(dx * dx + dz * dz);
             boolean underWay = speed >= MIN_WAKE_SPEED;
-            if (foam && speed >= MIN_FOAM_SPEED) {
+            if (speed >= MIN_FOAM_SPEED) {
                 addFoam(level, boat.getX(), boat.getY(), boat.getZ(), dx / speed, dz / speed, speed, 1D);
                 addFoam(level, boat.getX(), boat.getY(), boat.getZ(), dx / speed, dz / speed, speed, -1D);
             }

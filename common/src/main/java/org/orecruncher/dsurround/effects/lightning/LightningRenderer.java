@@ -354,31 +354,78 @@ public final class LightningRenderer {
         var toDraw = List.copyOf(strikes);
         double camX = camera.pos.x, camY = camera.pos.y, camZ = camera.pos.z;
         RENDER_TIMER.count(toDraw.size());
-        collector.submitCustomGeometry(new PoseStack(), RenderTypes.lightning(), (pose, consumer) -> SHADER_PACK_FAIL_SAFE.run(() -> {
-            var matrix = pose.pose();
-            for (var strike : toDraw) {
-                float age = strike.age(nowTicks);
-                if (age < 0F || strike.isDone(age))
-                    continue;
-                float ox = (float) (strike.x() - camX);
-                float oy = (float) (strike.y() - camY);
-                float oz = (float) (strike.z() - camZ);
-                float seen = Strikes.visibility(strike.distance(), fogEnd);
-                var shape = strike.shape();
-                if (shape != null)
-                    for (var channel : shape.channels())
-                        layeredRibbon(consumer, matrix, strike, channel, ox, oy, oz, age, seen);
-                if (glow) {
-                    var cloud = strike.glow();
-                    for (int p = 0; p < cloud.count(); p++) {
-                        float alpha = Math.min(strike.glowBrightness(p, age) * seen * PACK_GLOW_LIGHT, 1F);
-                        if (alpha >= MIN_LIGHT)
-                            glowDisc(consumer, matrix, ox + cloud.x(p), oy + cloud.y(p), oz + cloud.z(p), cloud.radius(p), alpha);
-                    }
+        collector.submitCustomGeometry(new PoseStack(), RenderTypes.lightning(), (pose, consumer) -> {
+            // Worked out into a list, and only written into the batch once all of it is: the game's bolts share the
+            // batch, and a failure part way through a quad would leave it off a quad's boundary
+            var vertices = PACK_VERTICES;
+            vertices.clear();
+            if (SHADER_PACK_FAIL_SAFE.run(() -> packStrikes(vertices, toDraw, nowTicks, camX, camY, camZ, fogEnd, glow), () -> {}))
+                vertices.writeTo(consumer, pose.pose());
+        });
+        return toDraw.size();
+    }
+
+    // The strikes' ribbons and glow, for the shader pack's lightning batch
+    private static void packStrikes(PackVertices vertices, List<Strike> toDraw, double nowTicks, double camX, double camY,
+                                    double camZ, float fogEnd, boolean glow) {
+        for (var strike : toDraw) {
+            float age = strike.age(nowTicks);
+            if (age < 0F || strike.isDone(age))
+                continue;
+            float ox = (float) (strike.x() - camX);
+            float oy = (float) (strike.y() - camY);
+            float oz = (float) (strike.z() - camZ);
+            float seen = Strikes.visibility(strike.distance(), fogEnd);
+            var shape = strike.shape();
+            if (shape != null)
+                for (var channel : shape.channels())
+                    layeredRibbon(vertices, strike, channel, ox, oy, oz, age, seen);
+            if (glow) {
+                var cloud = strike.glow();
+                for (int p = 0; p < cloud.count(); p++) {
+                    float alpha = Math.min(strike.glowBrightness(p, age) * seen * PACK_GLOW_LIGHT, 1F);
+                    if (alpha >= MIN_LIGHT)
+                        glowDisc(vertices, ox + cloud.x(p), oy + cloud.y(p), oz + cloud.z(p), cloud.radius(p), alpha);
                 }
             }
-        }, () -> {}));
-        return toDraw.size();
+        }
+    }
+
+    // Written on the render thread only, as the frame's geometry is collected; kept, so it grows only once
+    private static final PackVertices PACK_VERTICES = new PackVertices();
+
+    /**
+     * Vertices worked out for the shader pack's lightning batch, held until all of a frame's are made: position and
+     * color, seven floats each
+     */
+    private static final class PackVertices {
+        private float[] data = new float[7 * 1024];
+        private int size;
+
+        void clear() {
+            this.size = 0;
+        }
+
+        void add(float x, float y, float z, float r, float g, float b, float a) {
+            if (this.size + 7 > this.data.length)
+                this.data = java.util.Arrays.copyOf(this.data, this.data.length * 2);
+            var d = this.data;
+            int i = this.size;
+            d[i] = x;
+            d[i + 1] = y;
+            d[i + 2] = z;
+            d[i + 3] = r;
+            d[i + 4] = g;
+            d[i + 5] = b;
+            d[i + 6] = a;
+            this.size = i + 7;
+        }
+
+        void writeTo(VertexConsumer consumer, Matrix4f matrix) {
+            var d = this.data;
+            for (int i = 0; i < this.size; i += 7)
+                consumer.addVertex(matrix, d[i], d[i + 1], d[i + 2]).setColor(d[i + 3], d[i + 4], d[i + 5], d[i + 6]);
+        }
     }
 
     // The layers of a channel drawn the game's way, from the outside in: how wide, against the ribbon's full width
@@ -418,7 +465,7 @@ public final class LightningRenderer {
      * dark wedges out of those behind. Written both ways round, as the ribbons are: the pipeline culls back faces, and
      * a disc is seen from above or below.
      */
-    private static void glowDisc(VertexConsumer builder, Matrix4f matrix, float cx, float cy, float cz, float r, float alpha) {
+    private static void glowDisc(PackVertices builder, float cx, float cy, float cz, float r, float alpha) {
         for (int ring = 0; ring < GLOW_RINGS; ring++) {
             float in = r * ring / GLOW_RINGS, out = r * (ring + 1) / GLOW_RINGS;
             float inAlpha = glowFade(alpha, ring), outAlpha = glowFade(alpha, ring + 1);
@@ -427,14 +474,14 @@ public final class LightningRenderer {
                 float ix1 = cx + GLOW_COS[i + 1] * in, iz1 = cz + GLOW_SIN[i + 1] * in;
                 float ox0 = cx + GLOW_COS[i] * out, oz0 = cz + GLOW_SIN[i] * out;
                 float ox1 = cx + GLOW_COS[i + 1] * out, oz1 = cz + GLOW_SIN[i + 1] * out;
-                builder.addVertex(matrix, ix0, cy, iz0).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
-                builder.addVertex(matrix, ix1, cy, iz1).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
-                builder.addVertex(matrix, ox1, cy, oz1).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
-                builder.addVertex(matrix, ox0, cy, oz0).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
-                builder.addVertex(matrix, ix1, cy, iz1).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
-                builder.addVertex(matrix, ix0, cy, iz0).setColor(GLOW_R, GLOW_G, GLOW_B, inAlpha);
-                builder.addVertex(matrix, ox0, cy, oz0).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
-                builder.addVertex(matrix, ox1, cy, oz1).setColor(GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.add(ix0, cy, iz0, GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.add(ix1, cy, iz1, GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.add(ox1, cy, oz1, GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.add(ox0, cy, oz0, GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.add(ix1, cy, iz1, GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.add(ix0, cy, iz0, GLOW_R, GLOW_G, GLOW_B, inAlpha);
+                builder.add(ox0, cy, oz0, GLOW_R, GLOW_G, GLOW_B, outAlpha);
+                builder.add(ox1, cy, oz1, GLOW_R, GLOW_G, GLOW_B, outAlpha);
             }
         }
     }
@@ -451,7 +498,7 @@ public final class LightningRenderer {
     /**
      * One channel as ribbons facing the camera, as {@link #ribbon} lays it out, one ribbon a layer
      */
-    private static void layeredRibbon(VertexConsumer builder, Matrix4f matrix, Strike strike, BoltShape.Channel channel,
+    private static void layeredRibbon(PackVertices builder, Strike strike, BoltShape.Channel channel,
                                       float ox, float oy, float oz, float age, float seen) {
         int n = channel.size();
         if (n < 2)
@@ -498,14 +545,14 @@ public final class LightningRenderer {
                 // Both ways round: the game's lightning pipeline culls back faces, and where a sharp bend twists a
                 // quad, half of it faces away whichever way it is wound (one way round, every quad was culled)
                 if (i > 0 && (prev[o + 6] > 0F || alpha > 0F)) {
-                    builder.addVertex(matrix, prev[o + 3], prev[o + 4], prev[o + 5]).setColor(r, g, bl, prev[o + 6]);
-                    builder.addVertex(matrix, prev[o], prev[o + 1], prev[o + 2]).setColor(r, g, bl, prev[o + 6]);
-                    builder.addVertex(matrix, lx, ly, lz).setColor(r, g, bl, alpha);
-                    builder.addVertex(matrix, rx, ry, rz).setColor(r, g, bl, alpha);
-                    builder.addVertex(matrix, prev[o], prev[o + 1], prev[o + 2]).setColor(r, g, bl, prev[o + 6]);
-                    builder.addVertex(matrix, prev[o + 3], prev[o + 4], prev[o + 5]).setColor(r, g, bl, prev[o + 6]);
-                    builder.addVertex(matrix, rx, ry, rz).setColor(r, g, bl, alpha);
-                    builder.addVertex(matrix, lx, ly, lz).setColor(r, g, bl, alpha);
+                    builder.add(prev[o + 3], prev[o + 4], prev[o + 5], r, g, bl, prev[o + 6]);
+                    builder.add(prev[o], prev[o + 1], prev[o + 2], r, g, bl, prev[o + 6]);
+                    builder.add(lx, ly, lz, r, g, bl, alpha);
+                    builder.add(rx, ry, rz, r, g, bl, alpha);
+                    builder.add(prev[o], prev[o + 1], prev[o + 2], r, g, bl, prev[o + 6]);
+                    builder.add(prev[o + 3], prev[o + 4], prev[o + 5], r, g, bl, prev[o + 6]);
+                    builder.add(rx, ry, rz, r, g, bl, alpha);
+                    builder.add(lx, ly, lz, r, g, bl, alpha);
                 }
                 prev[o] = lx;
                 prev[o + 1] = ly;

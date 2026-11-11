@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.processing;
 
 import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
@@ -179,6 +180,11 @@ public class WorldActorHandler extends AbstractClientHandler {
     private final Map<IActor, Long> chances = new IdentityHashMap<>();
     // The chances looked at, by key, with the slot they were in, to forget them once past
     private final Long2LongOpenHashMap seen = new Long2LongOpenHashMap();
+    // The paths of chances begun but not yet looked at (out of reach, or their kind full), by key, so each check
+    // doesn't work them out again; forgotten with their slot, as seen ones are
+    private final Long2ObjectOpenHashMap<Pending> pending = new Long2ObjectOpenHashMap<>();
+    // How many of each kind are running, kept as they start and are dropped
+    private final int[] counts = new int[ActorKind.values().length];
     @Nullable
     private ClientLevel level;
 
@@ -255,9 +261,10 @@ public class WorldActorHandler extends AbstractClientHandler {
             var chance = this.chances.remove(actor);
             // Left behind or switched off, not over: its chance is looked at again, so coming back (or switching it
             // back on) finds it part way through its life, where everyone else sees it. One that is over, or broke
-            // up early, stays looked at, or it would start again.
-            if (!over && chance != null)
+            // up early (or is breaking up), stays looked at, or it would start again, whole.
+            if (!over && !actor.isEnding() && chance != null)
                 this.seen.remove((long) chance);
+            this.counts[actor.kind().ordinal()]--;
             return true;
         });
         this.makeRoom(clientLevel);
@@ -281,6 +288,7 @@ public class WorldActorHandler extends AbstractClientHandler {
     private void lookForNew(ClientLevel level, Player player, long time) {
         long slot = ActorSpawns.slotOf(time);
         this.seen.long2LongEntrySet().removeIf(entry -> entry.getLongValue() < slot - this.lifetimeSlots);
+        this.pending.long2ObjectEntrySet().removeIf(entry -> entry.getValue().slot() < slot - this.lifetimeSlots);
 
         long worldSeed = level.getBiomeManager().biomeZoomSeed;
         int minX = ActorSpawns.cellOf(player.getX() - RANGE), maxX = ActorSpawns.cellOf(player.getX() + RANGE);
@@ -303,19 +311,30 @@ public class WorldActorHandler extends AbstractClientHandler {
         this.consider(this.types.get(plan.kind()), level, player, time, slot, plan);
     }
 
+    @SuppressWarnings("unchecked")
     private <P extends ActorPath> void consider(Type<P> type, ClientLevel level, Player player, long time, long slot, ActorSpawns.Plan plan) {
-        var path = type.path().make(plan.x(), plan.z(), plan.seed(), windHeading(plan.startTick()));
+        // As many of its kind as there may be: looked at again later
+        if (this.count(plan.kind()) >= type.most())
+            return;
+        var known = this.pending.get(plan.key());
+        P path;
+        if (known != null)
+            path = (P) known.path();
+        else {
+            path = type.path().make(plan.x(), plan.z(), plan.seed(), windHeading(plan.startTick()));
+            this.pending.put(plan.key(), new Pending(path, slot));
+        }
         int age = (int) (time - plan.startTick());
         if (age >= path.lifetime()) {
-            this.seen.put(plan.key(), slot);
+            this.markSeen(plan.key(), slot);
             return;
         }
-        // Not yet in reach, its ground not yet loaded, or as many of its kind as there may be: looked at again later
+        // Not yet in reach, or its ground not yet loaded: looked at again later
         double x = path.x(age), z = path.z(age);
-        if (!this.inRange(player, x, z, type.range(level)) || !level.hasChunkAt(BlockPos.containing(x, 0, z)) || this.count(plan.kind()) >= type.most())
+        if (!this.inRange(player, x, z, type.range(level)) || !level.hasChunkAt(BlockPos.containing(x, 0, z)))
             return;
 
-        this.seen.put(plan.key(), slot);
+        this.markSeen(plan.key(), slot);
         var biome = biomeAt(type, level, x, z);
         var entry = this.biomeLibrary.getBiomeInfo(biome).getActor(plan.kind());
         if (entry == null || plan.roll() >= entry.chance() * type.shares().get(plan.index()) || !entry.matches() || !type.placement().canStart(level, x, z))
@@ -339,6 +358,7 @@ public class WorldActorHandler extends AbstractClientHandler {
                 if (actor.kind() == kind) {
                     this.actors.remove(actor);
                     this.chances.remove(actor);
+                    this.counts[kind.ordinal()]--;
                     break;
                 }
             }
@@ -362,6 +382,7 @@ public class WorldActorHandler extends AbstractClientHandler {
         if (actor == null)
             return false;
         this.actors.add(actor);
+        this.counts[actor.kind().ordinal()]++;
         if (chance != null)
             this.chances.put(actor, chance);
         return true;
@@ -405,7 +426,7 @@ public class WorldActorHandler extends AbstractClientHandler {
      * How many there are now, of a kind
      */
     public long count(ActorKind kind) {
-        return this.actors.stream().filter(actor -> actor.kind() == kind).count();
+        return this.counts[kind.ordinal()];
     }
 
     private boolean enabled() {
@@ -439,10 +460,21 @@ public class WorldActorHandler extends AbstractClientHandler {
         }
     }
 
+    private void markSeen(long key, long slot) {
+        this.seen.put(key, slot);
+        this.pending.remove(key);
+    }
+
+    // A chance's path, worked out once, and the slot it is in
+    private record Pending(ActorPath path, long slot) {
+    }
+
     private void clear() {
         this.actors.clear();
         this.chances.clear();
         this.seen.clear();
+        this.pending.clear();
+        Arrays.fill(this.counts, 0);
         this.level = null;
     }
 

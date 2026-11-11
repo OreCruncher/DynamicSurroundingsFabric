@@ -128,6 +128,14 @@ def main():
         recipe = json.load(f)
     s = dict(DEFAULTS, **recipe.get("settings", {}))
     name = recipe["name"]
+    # The clips are written by their file names alone: two of a name in different folders would be one file
+    names = {}
+    for clip in recipe["clips"]:
+        base = os.path.basename(clip["file"])
+        if base in names:
+            sys.exit(f"{clip['file']} and {names[base]} would both be written as {base}.ogg: put them in recipes of "
+                     f"their own")
+        names[base] = clip["file"]
     out_dir = args.out or os.path.join(ROOT, "build", "sound-rework", name)
     os.makedirs(out_dir, exist_ok=True)
     survey = load_survey()

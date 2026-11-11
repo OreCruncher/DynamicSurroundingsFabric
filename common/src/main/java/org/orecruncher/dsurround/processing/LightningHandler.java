@@ -20,6 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.clouds.CloudLights;
@@ -120,7 +121,9 @@ public class LightningHandler extends AbstractClientHandler {
      * Whether the mod draws lightning
      */
     public boolean isActive() {
-        return this.config.scaryContent.lightningAllowed() && LightningRenderer.isUsable();
+        // Drawn from the world effects hook: without it vanilla's stay, or there would be none at all
+        return this.config.scaryContent.lightningAllowed() && LightningRenderer.isUsable()
+                && OptionalHook.WORLD_EFFECTS.status() != OptionalHook.Status.MISSING;
     }
 
     private static boolean hideFlashes() {

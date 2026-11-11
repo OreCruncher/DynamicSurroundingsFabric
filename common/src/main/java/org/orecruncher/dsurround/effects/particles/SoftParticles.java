@@ -32,6 +32,7 @@ import org.lwjgl.system.MemoryStack;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.DepthCopy;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.RenderFailSafe;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
@@ -147,6 +148,9 @@ public final class SoftParticles {
 
     // The copy of the scene's depth the shaders read; can't be the depth buffer being drawn to
     private static final DepthCopy DEPTH_COPY = new DepthCopy("Dynamic Surroundings scene depth");
+    // The copy's own: everything that reads it (mist, flames, point lights, ground fog, dust) would go without if it
+    // shared one effect's, and that effect failed
+    private static final RenderFailSafe DEPTH_SAFE = new RenderFailSafe("the scene's depth copy", Library.LOGGER);
     // Whether the copy holds a frame's depth: the last frame's as particles are drawn, this one's after them
     private static boolean depthCaptured;
     // What it holds doesn't change while the device lives: made once, with no MappableRingBuffer (rotating one sets a
@@ -155,6 +159,13 @@ public final class SoftParticles {
     private static GpuBuffer depthInfo;
 
     private SoftParticles() {
+    }
+
+    /**
+     * The shaders have been compiled again: the depth copy is tried again, as the shaders are
+     */
+    public static void onShadersReloaded() {
+        DEPTH_SAFE.reset();
     }
 
     /**
@@ -271,7 +282,7 @@ public final class SoftParticles {
         if (!improvedTransparency())
             captureSceneDepth(target);
         else if (hasSceneDepth())
-            SHADER.run(() -> DEPTH_COPY.copyTo(target), () -> {});
+            DEPTH_SAFE.run(() -> DEPTH_COPY.copyTo(target), () -> {});
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
         PointLights.draw(target);
         Streaks.draw(target, transforms);
@@ -295,9 +306,11 @@ public final class SoftParticles {
      */
     public static void captureSceneDepth(RenderTarget target) {
         depthCaptured = false;
-        if (!SHADER.isUsable() && !FLAME_SHADER.isUsable() && !PointLights.isActive())
+        // With Improved Transparency on, ground fog and dust need this copy too: one made after the stages has the
+        // particles' edges in it
+        if (!improvedTransparency() && !SHADER.isUsable() && !FLAME_SHADER.isUsable() && !PointLights.isActive())
             return;
-        SHADER.run(() -> {
+        DEPTH_SAFE.run(() -> {
             DEPTH_COPY.copyFrom(target);
             makeDepthInfo();
             depthCaptured = true;
@@ -318,15 +331,11 @@ public final class SoftParticles {
         if (improvedTransparency() && hasSceneDepth())
             return true;
         depthCaptured = false;
-        try {
+        DEPTH_SAFE.run(() -> {
             DEPTH_COPY.copyFrom(source);
             makeDepthInfo();
             depthCaptured = true;
-        } catch (VirtualMachineError fatal) {
-            throw fatal;
-        } catch (Throwable t) {
-            Library.LOGGER.error(t, "Unable to copy the scene's depth");
-        }
+        }, () -> depthCaptured = false);
         return depthCaptured;
     }
 

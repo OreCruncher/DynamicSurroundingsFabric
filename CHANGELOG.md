@@ -61,6 +61,15 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Pickaxes have an item class of their own, sounding as axes do for now
 * More blocks have effects: new 26.3 plants rustle and crunch underfoot, wool slabs and leaf litter soak up rain, and blocks from Biomes O' Plenty, BetterEnd, BetterNether, Ecologics, Promenade, Terrestria, Wilder Wild and Enderscape are covered
 
+**Fixes**
+* Rings from something falling into water no longer hang inside a waterfall or float on flowing water
+* Beach wave foam lies at random angles instead of all facing one way
+* Boat wake foam follows Bobbing Rings instead of the waterfall Froth setting
+* Clouds, lightning and particle weather fall back to the game's when another mod keeps the mod from drawing them, instead of disappearing
+* A modded effect that can't make its particles no longer breaks the target portrait
+* A failure in the waterfall mist shader no longer takes away what soft flames, point lights, ground fog and dust need to draw properly
+* With a shader pack, a strike that fails to draw no longer garbles the game's own lightning
+
 > ### DynamicSurroundings-26.3-5.1.0
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
