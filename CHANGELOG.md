@@ -48,6 +48,7 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * The mod's fireflies are drawn as the game's firefly, a dot that stays seen between flashes and takes the light's color as it flashes, in place of the end rod's sparkle. A resource pack's firefly texture is used
 * With a mod that draws terrain past the render distance, fog from dust storms, biomes and mornings closes in smoothly from the far horizon. A dust storm made the view jump from the horizon to about 230 blocks at a quarter of its strength
 * Sheet lightning lights the dynamic clouds through a storm's fog; with dynamic clouds on it was all but invisible
+* Fair weather clouds are no longer flat slabs from below: a cloud's thin edge is tucked up a step and the middle of a tall one hangs a step lower
 * Enhanced sounds trace through open air for about half the work
 * The lights fireflies and flame jets cast are drawn all at once, for less than half the GPU time in a field of fireflies; ground fog takes 11-15% less
 * Rain and snow: the game no longer works out its own weather for drawing while the mod's particle weather replaces it, which took up to a quarter of the render thread in a heavy storm (more with Serene Seasons). Frames in heavy rain are up to a quarter shorter
@@ -69,6 +70,7 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * A modded effect that can't make its particles no longer breaks the target portrait
 * A failure in the waterfall mist shader no longer takes away what soft flames, point lights, ground fog and dust need to draw properly
 * With a shader pack, a strike that fails to draw no longer garbles the game's own lightning
+* Once a thunderstorm's thunder ends, the rain left behind only eases off, so the clouds no longer close over and darken again part way through clearing
 
 > ### DynamicSurroundings-26.3-5.1.0
 

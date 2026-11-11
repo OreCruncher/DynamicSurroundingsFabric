@@ -10,9 +10,11 @@ import java.util.Arrays;
 
 /**
  * The clouds around the camera, as blocks: a grid of {@link #CELL} by {@link #CELL} cells, each with a column of cloud
- * in each layer, from a base to a top. The low layer's columns all start at the same base (a cloud's base is flat, where
+ * in each layer, from a base to a top. The low layer's columns start at much the same base (a cloud's base is flat, where
  * the air is cool enough for it to form) and reach up as far as noise and the {@link CloudCover} let them, in steps of
- * {@link #STEP} blocks: scattered puffs, towers, or a deck. The high layer's are thin streaks, drawn out one way.
+ * {@link #STEP} blocks: scattered puffs, towers, or a deck. Seen from below a flat base is a slab, so a cloud's thin
+ * edge is tucked up a step and the middle of a tall one hangs a step lower (see {@link #lowColumn}). The high layer's
+ * are thin streaks, drawn out one way.
  * <p>
  * Cells are in "cloud space": where they are in the world less how far the clouds have drifted. The grid is worked out
  * around the cell the camera is in, so the same cell has the same column wherever it is seen from. Heights are in blocks
@@ -75,6 +77,22 @@ public final class CloudField {
     // A share of the cells under a deck hang a step lower, ragged, once the base has lowered this far
     private static final float RAGGED_FROM = 2 * STEP;
     private static final float RAGGED_SHARE = 0.2F;
+    /**
+     * A cloud's edge, out to this far into it (0 at its edge, 1 at its middle), sits a step higher, so from below it
+     * rounds up to its rim
+     */
+    static final float TUCK_CORE = 0.2F;
+    /**
+     * And the middle of a cloud this many steps thick, from this far into it, hangs a step lower
+     */
+    static final int SAG_STEPS = 4;
+    static final float SAG_CORE = 0.85F;
+    // How a cell's base is shaped (lowShape): a ragged step under a lowered deck; or, under fair weather clouds, sagging
+    // under a tall middle or tucked up at an edge. Held, as the rest of a column is, so a cell near where one starts
+    // doesn't flicker
+    private static final int RAGGED = 1;
+    private static final int SAG = 2;
+    private static final int TUCK = 4;
 
     private static final long LOW_SEED = 0x6C6F77L;
     private static final long DETAIL_SEED = 0x7461L;
@@ -119,6 +137,8 @@ public final class CloudField {
     private int[] lowBase = new int[0];
     private int[] lowTop = new int[0];
     private int[] lowSteps = new int[0];
+    // The low column's base shape: RAGGED, SAG, TUCK, or none
+    private int[] lowShape = new int[0];
     private int[] highBase = new int[0];
     private int[] highTop = new int[0];
     // Each layer's column before its cell's last change, and the tick it changed on
@@ -148,6 +168,7 @@ public final class CloudField {
     private boolean empty = true;
     // The column just worked out for a cell, by lowColumn and highColumn, for keep
     private int nextSteps;
+    private int nextShape;
     private int nextLowBase;
     private int nextLowTop;
     private int nextHighBase;
@@ -268,13 +289,16 @@ public final class CloudField {
     }
 
     /**
-     * Works out a cell's low column (into {@link #nextSteps}, {@link #nextLowBase} and {@link #nextLowTop}): a flat base
-     * where the cover puts it, a step lower here and there under a ragged deck, and a top as high as the noise builds it
+     * Works out a cell's low column (into {@link #nextSteps}, {@link #nextShape}, {@link #nextLowBase} and
+     * {@link #nextLowTop}): a flat base where the cover puts it and a top as high as the noise builds it. Under a lowered
+     * deck the base is a step lower here and there, ragged; under fair weather clouds it is a step higher at a cloud's
+     * thin edge (a one step edge rises whole) and a step lower under the middle of a tall one
      *
      * @param hold whether the cell's column from before counts, for holding it near an edge
      */
     private void lowColumn(int index, int cx, int cz, CloudCover cover, boolean hold, double time) {
         this.nextSteps = 0;
+        this.nextShape = 0;
         this.nextLowBase = 0;
         this.nextLowTop = 0;
         if (cover.coverage() <= 0F)
@@ -294,16 +318,30 @@ public final class CloudField {
         int held = this.lowSteps[index];
         int steps = was && Math.abs(wanted - held) < 0.5F + HOLD_STEPS ? held : Math.max(1, Math.round(wanted));
         int base = -Math.round(cover.baseDrop() / STEP) * STEP;
-        int b = base;
+        int top = base + steps * STEP;
+        int wasShape = was ? this.lowShape[index] : 0;
+        int shape = 0;
         if (cover.baseDrop() >= RAGGED_FROM) {
-            boolean wasLower = was && this.lowBase[index] < this.lowTop[index] - held * STEP;
-            float lowerFrom = 1F - RAGGED_SHARE - (wasLower ? HOLD : 0F);
+            // A lowered deck: ragged here and there
+            float lowerFrom = 1F - RAGGED_SHARE - ((wasShape & RAGGED) != 0 ? HOLD : 0F);
             if (CloudNoise.value(cx * 0.8D, cz * 0.8D, time * 3D, RAGGED_SEED) > lowerFrom)
-                b -= STEP;
+                shape = RAGGED;
+        } else if (core < TUCK_CORE + ((wasShape & TUCK) != 0 ? HOLD : 0F)) {
+            shape = TUCK;
+        } else if (steps >= SAG_STEPS && core > SAG_CORE - ((wasShape & SAG) != 0 ? HOLD : 0F)) {
+            shape = SAG;
+        }
+        int b = base;
+        if (shape == TUCK) {
+            b += STEP;
+            top = Math.max(top, b + STEP);
+        } else if (shape != 0) {
+            b -= STEP;
         }
         this.nextSteps = steps;
+        this.nextShape = shape;
         this.nextLowBase = b;
-        this.nextLowTop = base + steps * STEP;
+        this.nextLowTop = top;
     }
 
     /**
@@ -357,6 +395,7 @@ public final class CloudField {
         this.lowBase[index] = b;
         this.lowTop[index] = t;
         this.lowSteps[index] = this.nextSteps;
+        this.lowShape[index] = this.nextShape;
         this.highBase[index] = hb;
         this.highTop[index] = ht;
         this.known[index] = true;
@@ -385,6 +424,7 @@ public final class CloudField {
         this.lowBase = new int[cells];
         this.lowTop = new int[cells];
         this.lowSteps = new int[cells];
+        this.lowShape = new int[cells];
         this.highBase = new int[cells];
         this.highTop = new int[cells];
         this.known = new boolean[cells];
@@ -413,6 +453,7 @@ public final class CloudField {
         this.lowBase = this.shifted(this.lowBase, dx, dz);
         this.lowTop = this.shifted(this.lowTop, dx, dz);
         this.lowSteps = this.shifted(this.lowSteps, dx, dz);
+        this.lowShape = this.shifted(this.lowShape, dx, dz);
         this.highBase = this.shifted(this.highBase, dx, dz);
         this.highTop = this.shifted(this.highTop, dx, dz);
         this.turnHash = this.shifted(this.turnHash, dx, dz);
@@ -467,6 +508,7 @@ public final class CloudField {
         Arrays.fill(this.lowBase, 0);
         Arrays.fill(this.lowTop, 0);
         Arrays.fill(this.lowSteps, 0);
+        Arrays.fill(this.lowShape, 0);
         Arrays.fill(this.highBase, 0);
         Arrays.fill(this.highTop, 0);
         Arrays.fill(this.prevLowBase, 0);

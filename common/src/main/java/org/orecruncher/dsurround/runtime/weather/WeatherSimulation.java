@@ -45,6 +45,9 @@ public final class WeatherSimulation implements IWeatherSimulation {
     private float strengthSet = Float.NaN;
     // The world's own rain level, for the diagnostics
     private float vanillaLevel;
+    // Whether this storm has thundered, and whether its thunder has since ended: from then on it only winds down
+    private boolean thundered;
+    private boolean waning;
 
     public WeatherSimulation(Configuration.WeatherOptions options) {
         this.options = options;
@@ -113,7 +116,8 @@ public final class WeatherSimulation implements IWeatherSimulation {
         var level = GameUtils.getWorld();
         if (level.isPresent()) {
             var world = level.get();
-            this.update(world.getRainLevel(1F), world.getDefaultClockTime() / SharedConstants.TICKS_PER_GAME_DAY, world.getGameTime());
+            this.update(world.getRainLevel(1F), world.getThunderLevel(1F), world.getDefaultClockTime() / SharedConstants.TICKS_PER_GAME_DAY,
+                    world.getGameTime());
         } else {
             this.reset();
         }
@@ -126,18 +130,34 @@ public final class WeatherSimulation implements IWeatherSimulation {
      * @param gameTime the world's game time, the same for every player, so every player sees the same surges
      */
     void update(float vanillaLevel, long day, long gameTime) {
+        this.update(vanillaLevel, 0F, day, gameTime);
+    }
+
+    /**
+     * As {@link #update(float, long, long)}, with the thunder: once a storm's thunder has ended, its surges only ease
+     * it, never build it again, so the rain left after a thunderstorm (vanilla's thunder usually ends first) winds down
+     * rather than closing the clouds over again part way through their clearing
+     *
+     * @param thunderLevel the world's thunder level, 0 to 1
+     */
+    void update(float vanillaLevel, float thunderLevel, long day, long gameTime) {
         if (vanillaLevel <= 0F) {
             this.reset();
             return;
         }
 
         this.vanillaLevel = vanillaLevel;
+        if (thunderLevel > 0F)
+            this.thundered = true;
+        else if (this.thundered)
+            this.waning = true;
 
         if (this.pickedMaximum == 0F)
             this.pickedMaximum = stormMaximum(day, this.options.minStormIntensity, this.options.maxStormIntensity);
         if (Float.isNaN(this.strengthSet)) {
             this.maxIntensity = this.pickedMaximum;
-            this.cap = this.pickedMaximum * surge(gameTime, this.options.stormVariation);
+            float surged = this.pickedMaximum * surge(gameTime, this.options.stormVariation);
+            this.cap = this.waning ? Math.min(this.cap, surged) : surged;
         } else {
             // A strength set by command holds steady
             this.maxIntensity = this.cap = this.strengthSet;
@@ -147,6 +167,7 @@ public final class WeatherSimulation implements IWeatherSimulation {
 
     private void reset() {
         this.maxIntensity = this.intensity = this.vanillaLevel = this.pickedMaximum = this.cap = 0F;
+        this.thundered = this.waning = false;
     }
 
     /**
@@ -198,6 +219,8 @@ public final class WeatherSimulation implements IWeatherSimulation {
             text = String.format(Locale.ROOT, "Storm: %s %.2f/%.2f", this.band(), this.intensity, this.maxIntensity);
             if (this.cap < this.maxIntensity - 0.005F)
                 text += String.format(Locale.ROOT, " (easing to %.2f)", this.cap);
+            if (this.waning && !set)
+                text += " (winding down)";
         }
         if (set)
             text += String.format(Locale.ROOT, " (set to %.2f)", this.strengthSet);

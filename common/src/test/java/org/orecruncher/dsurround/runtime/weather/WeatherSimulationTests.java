@@ -208,6 +208,53 @@ public class WeatherSimulationTests {
     }
 
     @Test
+    void onceItsThunderEndsAStormOnlyWindsDown() {
+        var options = new Configuration.WeatherOptions();
+        options.minStormIntensity = 80;
+        options.maxStormIntensity = 80;
+        options.stormVariation = 50;
+        var sim = new WeatherSimulation(options);
+        // Thundering: it surges up and down as before
+        for (long t = 0; t < 6000; t += 50) {
+            sim.update(1F, 1F, 3, t);
+            assertEquals(0.8F * WeatherSimulation.surge(t, 50), sim.intensity(), 1e-5F);
+        }
+        // The thunder ends, the rain goes on: never stronger than a tick before, and still following the surges down
+        float last = sim.intensity();
+        boolean followed = false;
+        for (long t = 6000; t < 26_000; t += 50) {
+            sim.update(1F, 0F, 3, t);
+            float now = sim.intensity();
+            assertTrue(now <= last + 1e-6F, () -> "built up again to " + now);
+            followed |= now < last;
+            last = now;
+        }
+        assertTrue(followed, "it should still ease with the surges");
+        assertTrue(sim.diagnosticText().contains("winding down"));
+
+        // The next storm surges freely again
+        sim.update(0F, 0F, 4, 26_000);
+        for (long t = 26_000; t < 40_000; t += 50) {
+            sim.update(1F, 0F, 4, t);
+            assertEquals(0.8F * WeatherSimulation.surge(t, 50), sim.intensity(), 1e-5F);
+        }
+    }
+
+    @Test
+    void rainWithoutThunderKeepsSurging() {
+        var options = new Configuration.WeatherOptions();
+        options.minStormIntensity = 80;
+        options.maxStormIntensity = 80;
+        options.stormVariation = 50;
+        var sim = new WeatherSimulation(options);
+        for (long t = 0; t < 20_000; t += 50) {
+            sim.update(1F, 0F, 3, t);
+            assertEquals(0.8F * WeatherSimulation.surge(t, 50), sim.intensity(), 1e-5F);
+        }
+        assertFalse(sim.diagnosticText().contains("winding down"));
+    }
+
+    @Test
     void aSetStrengthDoesNotSurge() {
         var options = new Configuration.WeatherOptions();
         options.stormVariation = 100;
