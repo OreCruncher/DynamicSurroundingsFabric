@@ -62,14 +62,18 @@ public final class DSurroundMusicManager extends MusicManager {
     /**
      * The game names the current track in its toast and on the pause screen by this key. Tracks it has no translation
      * for (ours and resource packs') are named by their title and author instead, when their sound metadata has them.
+     * <p>
+     * Another mod may give a key with nothing in {@link #currentMusic}: Music and Melody returns its own playlist's
+     * track here, which it plays itself (#215). Such a key is passed on as it is.
      */
     @Override
     public String getCurrentMusicTranslationKey() {
         var key = super.getCurrentMusicTranslationKey();
-        if (key == null)
-            return null;
+        var music = this.currentMusic;
+        if (key == null || music == null)
+            return key;
 
-        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
+        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(music.getIdentifier());
         var title = metaData.hasTitle() ? metaData.getTitle() : null;
         var author = metaData.getCredits().isEmpty() ? null : metaData.getCredits().getFirst().author();
         return NowPlayingName.of(key, Language.getInstance()::has, title, author);

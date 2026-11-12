@@ -71,6 +71,7 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * A failure in the waterfall mist shader no longer takes away what soft flames, point lights, ground fog and dust need to draw properly
 * With a shader pack, a strike that fails to draw no longer garbles the game's own lightning
 * Once a thunderstorm's thunder ends, the rain left behind only eases off, so the clouds no longer close over and darken again part way through clearing
+* Fixed a crash with Music and Melody while one of its tracks played and a mod (Simple Music Control) asked what was playing (#215)
 
 > ### DynamicSurroundings-26.3-5.1.0
 
