@@ -261,7 +261,7 @@ Others:
 
 *dsurround:player.jump*
 
-* S: [Soft Male Vocal, Short Pained/Exhertion Groans - Vocal Efforts](https://freesound.org/people/salemaudio/sounds/803168/) by [salemaudio](https://freesound.org/people/salemaudio/) | License: Creative Commons 0 | Modified: five grunts cut, made mono, raised three semitones (pitch and formants), levels matched
+* S: [Sharp Exhale](https://freesound.org/people/sblitzer/sounds/777239/) by [sblitzer](https://freesound.org/people/sblitzer/) | License: Creative Commons 0 | Modified: made mono, level matched
 
 *dsurround:player.heartbeat*
 

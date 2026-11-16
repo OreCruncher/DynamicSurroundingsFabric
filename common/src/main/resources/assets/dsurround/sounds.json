@@ -1255,31 +1255,15 @@
 		"subtitle": "dsurround.sound.caption.player.jump",
 		"ds_credits": [
 			{
-				"name": "Soft Male Vocal, Short Pained/Exhertion Groans - Vocal Efforts",
-				"author": "salemaudio",
-				"website": "https://freesound.org/people/salemaudio/",
+				"name": "Sharp Exhale",
+				"author": "sblitzer",
+				"website": "https://freesound.org/people/sblitzer/",
 				"license": "Creative Commons 0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/steve/jump1",
-				"volume": 0.28
-			},
-			{
-				"name": "dsurround:ambient/steve/jump2",
-				"volume": 0.28
-			},
-			{
-				"name": "dsurround:ambient/steve/jump3",
-				"volume": 0.28
-			},
-			{
-				"name": "dsurround:ambient/steve/jump4",
-				"volume": 0.28
-			},
-			{
-				"name": "dsurround:ambient/steve/jump5",
 				"volume": 0.28
 			}
 		]

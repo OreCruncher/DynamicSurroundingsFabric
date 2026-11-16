@@ -354,8 +354,8 @@
     "location": "dsurround:player_jump",
     "soundEvent": "dsurround:player.jump",
     "pitch": {
-      "min": 0.9,
-      "max": 1.1
+      "min": 1.0,
+      "max": 1.2
     }
   },
   {
