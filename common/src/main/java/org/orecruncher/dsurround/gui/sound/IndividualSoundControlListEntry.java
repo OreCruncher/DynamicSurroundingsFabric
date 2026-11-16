@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 import org.orecruncher.dsurround.config.IndividualSoundConfigEntry;
+import org.orecruncher.dsurround.config.SoundConfigDefaults;
 import org.orecruncher.dsurround.config.SoundAction;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.lib.GameUtils;
@@ -37,7 +38,8 @@ import java.util.*;
 
 /**
  * One row of the individual sound configuration list: the sound's id, its action (default, cull or block), an
- * optional play button, and its volume.
+ * optional play button, its volume, and a button putting the action and volume back as they were when the screen
+ * opened, or with Ctrl held, to the mod's defaults.
  */
 public class IndividualSoundControlListEntry extends ContainerObjectSelectionList.Entry<IndividualSoundControlListEntry> implements AutoCloseable {
 
@@ -63,6 +65,8 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private static final Component SOUND_PLAY = Component.translatable("dsurround.text.soundconfig.play").withStyle(Style.EMPTY.withColor(ColorPalette.ELECTRIC_GREEN));
     private static final Component SOUND_STOP = Component.translatable("dsurround.text.soundconfig.stop").withStyle(Style.EMPTY.withColor(ColorPalette.RED).withBold(true));
 
+    private static final String RESET_HELP_KEY = "dsurround.text.soundconfig.reset.help";
+
     private static final int CONTROL_SPACING = 3;
     // Extra space between the label and the first control, on top of CONTROL_SPACING
     private static final int LABEL_GAP = 2 * CONTROL_SPACING;
@@ -85,9 +89,15 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     private final CycleButton<SoundAction> actionButton;
     private final @Nullable CycleButton<Boolean> playButton;
     private final VolumeSliderControl volume;
+    private final ResetButton resetButton;
 
-    // label | action | play | volume. Controls keep their natural height (as in vanilla lists) and sit at the top of
-    // the row; the label is centered against them. Only the label's width changes.
+    // What the row held when the screen opened, and what the mod ships for it, for the reset button
+    private final SoundAction initialAction;
+    private final int initialVolume;
+    private final SoundConfigDefaults.Policy defaults;
+
+    // label | action | play | volume | reset. Controls keep their natural height (as in vanilla lists) and sit at the
+    // top of the row; the label is centered against them. Only the label's width changes.
     private final LinearLayout row = LinearLayout.horizontal().spacing(CONTROL_SPACING);
     private final int controlsWidth;
 
@@ -99,6 +109,9 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
     public IndividualSoundControlListEntry(final IndividualSoundConfigEntry data, final boolean enablePlay) {
         this.config = data;
+        this.initialAction = data.action;
+        this.initialVolume = data.volumeScale;
+        this.defaults = SoundConfigDefaults.forSound(data.soundEventId);
 
         var font = GameUtils.getTextRenderer();
         this.label = new TextWidget(0, 0, MIN_LABEL_WIDTH, font.lineHeight, Component.literal(data.soundEventId.toString()), font);
@@ -120,12 +133,18 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
 
         this.volume = new VolumeSliderControl(this.config);
 
+        this.resetButton = new ResetButton(
+                () -> this.apply(this.initialAction, this.initialVolume),
+                () -> this.apply(this.defaults.action(), this.defaults.volumeScale()));
+        this.updateResetButton();
+
         this.row.defaultCellSetting().alignVerticallyMiddle();
         this.row.addChild(this.label, s -> s.paddingRight(LABEL_GAP));
         this.row.addChild(this.actionButton);
         if (this.playButton != null)
             this.row.addChild(this.playButton);
         this.row.addChild(this.volume);
+        this.row.addChild(this.resetButton);
         this.row.visitWidgets(this.children::add);
 
         this.row.arrangeElements();
@@ -164,6 +183,7 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
     public void extractContent(final @NonNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
         // Moving the layout moves its widgets; they were arranged when the width was set
         this.row.setPosition(this.getContentX(), this.getContentY());
+        this.updateResetButton();
         for (final AbstractWidget w : this.children)
             w.extractRenderState(graphics, mouseX, mouseY, partialTick);
     }
@@ -173,6 +193,30 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
      */
     public IndividualSoundConfigEntry getData() {
         return this.config;
+    }
+
+    // ---- Reset -----------------------------------------------------------------------------------------------
+
+    private boolean differsFrom(SoundAction action, int volume) {
+        return this.config.action != action || this.config.volumeScale != volume;
+    }
+
+    // Shows the reset to the mod's defaults while Ctrl is held, and is grayed out while there is nothing to put back,
+    // as vanilla's key binding Reset is
+    private void updateResetButton() {
+        boolean toDefault = GameUtils.getMC().hasControlDown();
+        this.resetButton.setToDefault(toDefault);
+        this.resetButton.active = toDefault
+                ? this.differsFrom(this.defaults.action(), this.defaults.volumeScale())
+                : this.differsFrom(this.initialAction, this.initialVolume);
+    }
+
+    private void apply(SoundAction action, int volume) {
+        // Through the controls, so they show it. The slider writes the entry; the cycle button's setValue doesn't
+        this.actionButton.setValue(action);
+        this.config.action = action;
+        this.volume.setValue(volume);
+        this.updateResetButton();
     }
 
     // ---- Playing the sound -----------------------------------------------------------------------------------
@@ -228,6 +272,8 @@ public class IndividualSoundControlListEntry extends ContainerObjectSelectionLis
             helpKey = this.actionButton.getValue().translationKey() + ".help";
         } else if (this.playButton != null && this.playButton.isMouseOver(mouseX, mouseY)) {
             helpKey = PLAY_HELP_KEY;
+        } else if (this.resetButton.isWithin(mouseX, mouseY)) {
+            helpKey = RESET_HELP_KEY;
         }
 
         if (helpKey != null) {

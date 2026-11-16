@@ -41,6 +41,15 @@ public abstract class SliderControl extends AbstractSliderButton {
         return SliderControl.getValue(this.value, this.min, this.max, this.step);
     }
 
+    /**
+     * Moves the slider to the given value (snapped to the step and clamped), applying it as dragging there would.
+     */
+    public void setValue(double value) {
+        this.value = getRatio(value, this.min, this.max, this.step);
+        this.applyValue();
+        this.updateMessage();
+    }
+
     @Override
     protected abstract void updateMessage();
 

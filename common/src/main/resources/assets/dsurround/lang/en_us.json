@@ -627,6 +627,8 @@
   "dsurround.text.soundconfig.default.help": "The sound will play normally without being blocked or culled.",
   "dsurround.text.soundconfig.play.help": "Play the sound with the volume scaled by the volume scaling factor. Does not apply sound category volume modifiers.",
   "dsurround.text.soundconfig.volume.help": "Volume scaling factor applied when calculating the output volume of a sound. Increase to make quiet sounds louder; reduce to make loud sounds quieter. 100% is normal volume.",
+  "dsurround.text.soundconfig.reset.help": "Put this sound's action and volume back to what they were when this screen was opened. Hold Ctrl to put them back to the mod's defaults instead.",
+  "dsurround.text.soundconfig.reset_default": "Reset to Default",
   "dsurround.text.config.soundconfiguration": "Configure Sounds",
   "dsurround.text.config.soundconfiguration.tooltip": "Configure individual sounds within the modpack",
   "dsurround.text.config.credits": "Attributions",
