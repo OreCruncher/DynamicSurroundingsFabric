@@ -2,6 +2,7 @@
   "downloadLocation": "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings/files",
   "releases": {
     "26.3": {
+      "5.2.0": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-263-520",
       "5.1.0": "https://github.com/OreCruncher/DynamicSurroundingsFabric/blob/main/CHANGELOG.md#dynamicsurroundings-263-510"
     },
     "1.21.11": {
@@ -48,7 +49,7 @@
     }
   },
   "recommend": {
-    "26.3": "5.1.0",
+    "26.3": "5.2.0",
     "1.21.11": "5.0.0",
     "1.21.1": "0.4.9",
     "1.20.4": "0.3.3",
