@@ -2,7 +2,7 @@
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
 
-World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that move through the world on their own, the same for every player in it.
+This release brings world actors, such as dust devils, waterspouts, wisps and apparitions, that move through the world on their own and look the same to every player in it. It also brings a reworked set of sounds, every one of them now cleared for commercial use.
 
 **All Loaders**
 * JAVA 25+  
@@ -22,20 +22,27 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Traced the sources of the mod's sounds, and cut, cleaned and leveled the replacements chosen by ear
 
 **What's New**
-* World actors: things that move through the world on their own. Every player in a world sees the same ones in the same places, as each one's path comes from the world's seed
-  * Dust devils cross deserts, badlands and savannas on clear days: dust whirling up a swaying funnel in the color of the ground, lifting sand and dry plants. Water or a wall breaks one up
-  * Waterspouts reach from the sea to the clouds over oceans that aren't cold, more often in a storm, with spray at the foot and seagrass and kelp torn up from shallow water. Coming ashore or onto ice breaks one up
+* World actors are things that move through the world on their own. Every player in a world sees the same ones in the same places, because each one's path comes from the world's seed
+  * Dust devils cross deserts, badlands and savannas on clear days. Each is a swaying funnel of dust in the color of the ground that lifts sand and dry plants, and water or a wall breaks it up
+  * Waterspouts reach from the sea to the clouds over oceans that aren't cold, more often in a storm. They throw up spray at their foot and tear seagrass and kelp from shallow water, and they break up when they come ashore or reach ice
   * Snowspouts whirl powder snow over snowy plains and frozen lakes on clear days
-  * Firespouts whirl tongues of flame up from the Nether's lava lakes, with smoke, sparks and a roar of fire, lighting what is around them
-  * Wisps: pale lights drifting low over marshes and swamps at night, going out as you come near and showing again farther off. Turquoise soul-fire wisps haunt soul sand valleys
-  * Apparitions: a pale, see-through figure in a villager's shape, fading away below the waist, dressed as a villager of its biome and of any profession (a farmer's hat, a librarian's), that glides between its haunts in dark forests and pale gardens at night, now and then in a swamp, and in the Nether's soul sand valleys, finding its way around trees and walls. It turns its head to watch you, and fades away as you come near, to show again farther off. Sometimes two or three together, and three times as often in the week either side of Halloween. Under Scary Content, and set by the RPG preset rather than Atmosphere
-  * On by default: World Actor Options, a switch for each kind, also set by the Atmosphere and Defaults presets; the Vanilla+ preset turns them off. `/dsactor` summons one ahead of you
+  * Firespouts whirl tongues of flame up from the Nether's lava lakes, with smoke, sparks and a roar of fire, and light up what is around them
+  * Wisps are pale lights that drift low over marshes and swamps at night. They go out as you come near and show again farther off. Turquoise soul-fire wisps haunt soul sand valleys
+  * Apparitions are pale, see-through figures in a villager's shape that fade away below the waist. Each is dressed as a villager of its biome, in any profession (a farmer's hat, a librarian's)
+    * They glide between their haunts in dark forests and pale gardens at night, now and then in a swamp, and in the Nether's soul sand valleys, finding their way around trees and walls
+    * One turns its head to watch you and fades away as you come near, to show again farther off
+    * They sometimes come in twos or threes, and three times as often in the week either side of Halloween
+    * They're under Scary Content, and set by the RPG preset rather than Atmosphere
+  * World actors are on by default, with a switch for each kind in World Actor Options. The Atmosphere and Defaults presets also set them, and the Vanilla+ preset turns them off. `/dsactor` summons one ahead of you
   * Modpacks can give them to biomes with `actors` in `biomes.json`, and to dimensions with `worldActors` in `dimensions.json`
-* Firefly bushes give the mod's fireflies, which wink with a halo and a light, in place of the game's. Under Fireflies in Firefly Options
-* Each sound in the individual sound configuration has a reset button that puts its action and volume back to what they were when the screen was opened, or with Ctrl held, to the mod's defaults (such as culled farm animals and the game's water sound blocked for the waterfalls)
-* `/dsconflicts` lists the effects a shader pack keeps off, of those switched on in the configuration
-* Script definitions: modpacks can name constants and functions in `dsconfigs/scripts.json` and use them in any script as `def.NAME` and `def.name()`, such as `def.isHalloween()`. Functions are for biome rules (traits such as `SPOOKY`) or for the rest (`diurnal.isNight()` and the like), may use one another, and are checked as they load: a mistyped name or a loop is reported with the file it is in. A later file's definition replaces ours; nothing defined in the mod can be replaced
-* Biome loops can follow the player: modpacks can give a loop in `biomes.json` a `volume` script (0 to 1), such as `math.sqrt(lib.smoothStep(-4, 4, player.getY()))` to bring a sound in by height. `lib.smoothStep(from, to, x)` is new for blends like it
+* Firefly bushes give off the mod's fireflies in place of the game's, winking with a halo and a light. They're under Fireflies in Firefly Options
+* Each sound in the individual sound configuration has a reset button. It puts the sound's action and volume back to what they were when the screen was opened. With Ctrl held, it puts them back to the mod's defaults instead, such as culled farm animals and the game's water sound blocked for the waterfalls
+* `/dsconflicts` lists the effects a shader pack keeps off, among those switched on in the configuration
+* Modpacks can name constants and functions in `dsconfigs/scripts.json` and use them in any script as `def.NAME` and `def.name()`, such as `def.isHalloween()`
+  * A function is either for biome rules (traits such as `SPOOKY`) or for everything else (`diurnal.isNight()` and the like), and functions may use one another
+  * Definitions are checked as they load, and a mistyped name or a loop is reported with the file it's in
+  * A later file's definition replaces ours, but nothing defined in the mod's code can be replaced
+* Modpacks can give a biome loop in `biomes.json` a `volume` script (0 to 1) so the loop follows the player, such as `math.sqrt(lib.smoothStep(-4, 4, player.getY()))` to bring a sound in by height. The new `lib.smoothStep(from, to, x)` is for blends like this
 
 **Sounds**
 * Replaced: calm rain, heartbeat, wolf howls, whale song (humpback), loon, seagulls, owl, nightingale, eagle, player jump, the hotbar's equip click, electric arc, dust storm, the forest, deep forest and jungle loops, deep forest crickets, the cave drone underground, the biggest waterfalls, and the waterspout
@@ -43,27 +50,28 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * Added: a medium rain between the calm rain and the game's downpour, right whale and minke whale calls, a seagull flock, more red-shouldered hawk calls, loops for sparse forests and for sparse and swampy jungles, and a deeper drone below y 0 that blends with the cave drone
 * Removed: the red-tailed hawk, and sounds nothing played (insect crawl, Nether and End ambience, water drops)
 * Wolves, whales, loons, seagulls, owls, nightingales and the hotbar click vary in pitch as they play
-* Every sound is credited in `CREDITS.md`, and all allow commercial use
+* Every sound is credited in `CREDITS.md`, and every one allows commercial use
 
 **Changes**
-* The mod's fireflies are drawn as the game's firefly, a dot that stays seen between flashes and takes the light's color as it flashes, in place of the end rod's sparkle. A resource pack's firefly texture is used
-* With a mod that draws terrain past the render distance, fog from dust storms, biomes and mornings closes in smoothly from the far horizon. A dust storm made the view jump from the horizon to about 230 blocks at a quarter of its strength
-* Sheet lightning lights the dynamic clouds through a storm's fog; with dynamic clouds on it was all but invisible
-* Fair weather clouds are no longer flat slabs from below: a cloud's thin edge is tucked up a step and the middle of a tall one hangs a step lower
-* Enhanced sounds trace through open air for about half the work
-* The lights fireflies and flame jets cast are drawn all at once, for less than half the GPU time in a field of fireflies; ground fog takes 11-15% less
-* Rain and snow: the game no longer works out its own weather for drawing while the mod's particle weather replaces it, which took up to a quarter of the render thread in a heavy storm (more with Serene Seasons). Frames in heavy rain are up to a quarter shorter
-* Dynamic clouds take a fifth to a third less of each tick: far clouds, past about the render distance, change shape less often, and the biome under a cloud is read more cheaply
+* The mod's fireflies are drawn as the game's firefly in place of the end rod's sparkle. The dot stays visible between flashes and takes on the light's color as it flashes. A resource pack's firefly texture is used
+* Fair weather clouds are no longer flat slabs from below. A cloud's thin edge is tucked up a step, and the middle of a tall one hangs a step lower
 * Ground fog lies under huge mushrooms and Biomes O' Plenty's giant flowers, as it does under trees, rather than on top of them with streaks of mist hanging from their edges. Modpacks can add other mods' canopies to the `dsurround:effects/fog_canopy` block tag
-* On NeoForge, the mod reads other mods' files through NeoForge rather than opening each mod's jar and keeping it open, which took 36 MB of memory in a pack of 120 mods
-* `/dsmm whatsplaying` names the game's music tracks as the game's "now playing" message does, such as "C418 - Sweden", in your language
-* A volume or pitch in a sound configuration that isn't a number the mod can use, such as `-1e400`, is reported as an error instead of giving the sound a broken pitch
 * Beach waves and mud footprints follow the storm strength `/dsweather` holds
-* Modded tools and weapons get their equip and swing sounds without being tagged: an item no tag names is known by what it does (drawn like a bow, raised like a shield, what its tool mines, whether it is a weapon). On NeoForge, modded fishing rods, maces and spears tagged the convention way are now found
-* Pickaxes have an item class of their own, sounding as axes do for now
-* More blocks have effects: new 26.3 plants rustle and crunch underfoot, wool slabs and leaf litter soak up rain, and blocks from Biomes O' Plenty, BetterEnd, BetterNether, Ecologics, Promenade, Terrestria, Wilder Wild and Enderscape are covered
+* `/dsmm whatsplaying` names the game's music tracks the way the game's "now playing" message does, such as "C418 - Sweden", in your language
+* Modded tools and weapons get their equip and swing sounds without being tagged. An item that no tag names is known by what it does, such as being drawn like a bow or raised like a shield, what its tool mines, or whether it's a weapon. On NeoForge, modded fishing rods, maces and spears tagged the convention way are now found
+* Pickaxes have an item class of their own, which sounds like the axes' for now
+* More blocks have effects. New 26.3 plants rustle and crunch underfoot, wool slabs and leaf litter soak up rain, and blocks from Biomes O' Plenty, BetterEnd, BetterNether, Ecologics, Promenade, Terrestria, Wilder Wild and Enderscape are covered
+* Frames in heavy rain are up to a quarter shorter. While the mod's particle weather replaces the game's rain and snow, the game no longer works out its own weather for drawing, which took up to a quarter of the render thread in a heavy storm (more with Serene Seasons)
+* The lights that fireflies and flame jets cast are drawn all at once, which takes less than half the GPU time in a field of fireflies. Ground fog takes 11-15% less
+* Dynamic clouds take a fifth to a third less of each tick. Far clouds, past about the render distance, change shape less often, and the biome under a cloud is read more cheaply
+* Enhanced sounds take about half the work to trace through open air
+* On NeoForge, the mod reads other mods' files through NeoForge rather than opening each mod's jar and keeping it open, which took 36 MB of memory in a pack of 120 mods
 
 **Fixes**
+* With a mod that draws terrain past the render distance, fog from dust storms, biomes and mornings now closes in smoothly from the far horizon. Before, a dust storm at a quarter of its strength made the view jump from the horizon to about 230 blocks
+* With dynamic clouds on, sheet lightning was all but invisible through a storm's fog. It now lights the clouds through the fog
+* Once a thunderstorm's thunder ends, the rain left behind only eases off, so the clouds no longer close over and darken again part way through clearing
+* A volume or pitch in a sound configuration that the mod can't use, such as `-1e400`, is reported as an error instead of giving the sound a broken pitch
 * Rings from something falling into water no longer hang inside a waterfall or float on flowing water
 * Beach wave foam lies at random angles instead of all facing one way
 * Boat wake foam follows Bobbing Rings instead of the waterfall Froth setting
@@ -71,7 +79,6 @@ World actors: dust devils, waterspouts, snowspouts, firespouts and wisps that mo
 * A modded effect that can't make its particles no longer breaks the target portrait
 * A failure in the waterfall mist shader no longer takes away what soft flames, point lights, ground fog and dust need to draw properly
 * With a shader pack, a strike that fails to draw no longer garbles the game's own lightning
-* Once a thunderstorm's thunder ends, the rain left behind only eases off, so the clouds no longer close over and darken again part way through clearing
 * Fixed a crash with Music and Melody while one of its tracks played and a mod (Simple Music Control) asked what was playing (#215)
 
 > ### DynamicSurroundings-26.3-5.1.0
