@@ -37,11 +37,15 @@ public class MixinGameRenderer {
     }
 
     /**
-     * Starts building the frame's rain and snow on another thread as the level starts to be drawn, the camera set for
-     * the frame (by update and extract, before render), so it is ready by the weather's pass (see DropMeshes).
-     * Optional: without it they are built in that pass, as they were.
+     * Starts building the frame's rain and snow on another thread as soon as the camera is set for the frame, before
+     * the level is extracted (the sections in view found, the entities' states taken), so it is ready by the weather's
+     * pass (see DropMeshes). Started at the head of renderLevel, the build was given less time than it took, and the
+     * render thread waited for it. The client's ticks are over for the frame by then. Optional: without it they are
+     * built in that pass, as they were.
      */
-    @Inject(method = "renderLevel()V", at = @At("HEAD"), require = 0)
+    @Inject(method = "extract(Lnet/minecraft/client/DeltaTracker;Z)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/extract/LevelExtractor;extract(Lnet/minecraft/client/DeltaTracker;Lnet/minecraft/client/Camera;F)V"),
+            require = 0)
     private void dsurround$beginLevel(CallbackInfo ci) {
         var camera = ((GameRenderer) (Object) this).mainCamera();
         MixinHelpers.PRECIPITATION_AHEAD_GUARD.run(() -> MixinHelpers.precipitation().beginFrame(camera, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)));

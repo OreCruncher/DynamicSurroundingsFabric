@@ -7,10 +7,16 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import org.joml.Vector4f;
+import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.QuadWriter;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -90,13 +96,19 @@ final class PrecipitationRenderer {
     /**
      * Where the camera is and which way it faces, for building the drops: a copy, as the camera's own vectors change
      * with it, so a frame's drops can be built away from the render thread
+     *
+     * @param sides the edges of the view, to leave out what is past them; null to leave out only what is behind
      */
-    record View(Vec3 position, Vector3f left, Vector3f up, Vector3f look) {
+    record View(Vec3 position, Vector3f left, Vector3f up, Vector3f look, @Nullable Sides sides) {
 
         // The camera's directions before it is turned, as Camera has them
         private static final Vector3fc FORWARDS = new Vector3f(0F, 0F, -1F);
         private static final Vector3fc UP = new Vector3f(0F, 1F, 0F);
         private static final Vector3fc LEFT = new Vector3f(-1F, 0F, 0F);
+
+        View(Vec3 position, Vector3f left, Vector3f up, Vector3f look) {
+            this(position, left, up, look, null);
+        }
 
         /**
          * The directions are worked out from the camera's rotation as Camera.setRotation does, to the same values, not
@@ -105,9 +117,96 @@ final class PrecipitationRenderer {
          * matched, and those built in the weather's pass were culled with the wrong look
          */
         static View of(Camera camera) {
+            return of(camera, null);
+        }
+
+        /**
+         * As {@link #of(Camera)}, with the edges of the view the level is drawn with
+         *
+         * @param projection the level's projection (see {@link LevelProjection}); null to leave out only what is behind
+         */
+        static View of(Camera camera, @Nullable Matrix4fc projection) {
             var rotation = camera.rotation();
+            var sides = projection == null ? null : Sides.of(projection, camera.getViewRotationMatrix(new Matrix4f()));
             return new View(camera.position(), LEFT.rotate(rotation, new Vector3f()), UP.rotate(rotation, new Vector3f()),
-                    FORWARDS.rotate(rotation, new Vector3f()));
+                    FORWARDS.rotate(rotation, new Vector3f()), sides);
+        }
+
+        /**
+         * Whether anything of a drop, relative to the camera, can be in view: it reaches no further than
+         * {@code margin} from where it is
+         */
+        boolean sees(float x, float y, float z, float margin) {
+            return !isBehind(x, y, z, this.look, margin) && (this.sides == null || this.sides.contain(x, y, z, margin));
+        }
+    }
+
+    /**
+     * The left, right, bottom and top edges of the view, as planes through the camera facing in, relative to it: from
+     * the projection the level is drawn with, so view bobbing, the tilt of being hurt and the nausea warp are in them
+     *
+     * @param planes each plane's normal and distance, four floats a plane
+     */
+    record Sides(float[] planes) {
+
+        /**
+         * How much wider than the projection the view is taken to be, as a share of a drop's distance (about 3
+         * degrees): drops built ahead are built with the last frame's projection, as this frame's isn't made yet, and
+         * bobbing and the tilt of being hurt change it from frame to frame
+         */
+        static final float SLACK = 0.05F;
+
+        private static final int[] EDGES = {Matrix4fc.PLANE_NX, Matrix4fc.PLANE_PX, Matrix4fc.PLANE_NY, Matrix4fc.PLANE_PY};
+
+        /**
+         * The sides of the view drawn with a projection and the camera's turn
+         *
+         * @param viewRotation the camera's turn (see Camera.getViewRotationMatrix)
+         */
+        @Nullable
+        static Sides of(Matrix4fc projection, Matrix4fc viewRotation) {
+            var combined = new Matrix4f(projection).mul(viewRotation);
+            var planes = new float[EDGES.length * 4];
+            var plane = new Vector4f();
+            for (int i = 0; i < EDGES.length; i++) {
+                combined.frustumPlane(EDGES[i], plane);
+                if (!plane.isFinite())
+                    return null;
+                planes[i * 4] = plane.x;
+                planes[i * 4 + 1] = plane.y;
+                planes[i * 4 + 2] = plane.z;
+                planes[i * 4 + 3] = plane.w;
+            }
+            return new Sides(planes);
+        }
+
+        /**
+         * Whether something reaching no further than {@code margin} from a point relative to the camera is inside all
+         * four sides
+         */
+        boolean contain(float x, float y, float z, float margin) {
+            float reach = -(margin + SLACK * (Math.abs(x) + Math.abs(y) + Math.abs(z)));
+            var p = this.planes;
+            for (int i = 0; i < p.length; i += 4) {
+                if (p[i] * x + p[i + 1] * y + p[i + 2] * z + p[i + 3] < reach)
+                    return false;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof Sides sides && Arrays.equals(this.planes, sides.planes);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(this.planes);
+        }
+
+        @Override
+        public String toString() {
+            return "Sides" + Arrays.toString(this.planes);
         }
     }
 
@@ -148,7 +247,6 @@ final class PrecipitationRenderer {
         var cam = view.position();
         Vector3fc left = view.left();
         Vector3fc up = view.up();
-        Vector3fc look = view.look();
         float radius = field.radius();
         float margin = behindMargin(scales);
         // How much further each snowflake and puff has turned since its last tick: the same for all of a kind, so
@@ -161,59 +259,66 @@ final class PrecipitationRenderer {
         // A streak's tail is clear
         int rainTail = QuadWriter.color(rainRed, rainGreen, rainBlue, 0F);
 
-        for (int i = 0; i < d.count; i++) {
-            if ((d.kind[i] == PrecipitationField.DUST) != dustOnly)
+        // Read packed: every value of a drop side by side (see PackedDrops)
+        var packed = field.packed(cam.x, cam.y, cam.z);
+        float[] r = packed.data;
+        float offsetX = (float) (packed.anchorX - cam.x);
+        float offsetY = (float) (packed.anchorY - cam.y);
+        float offsetZ = (float) (packed.anchorZ - cam.z);
+        int first = dustOnly ? packed.solid : 0;
+        int end = (dustOnly ? packed.solid + packed.dust : packed.solid) * PackedDrops.STRIDE;
+
+        for (int at = first * PackedDrops.STRIDE; at < end; at += PackedDrops.STRIDE) {
+            float x = r[at + PackedDrops.PREV_X] + partialTick * r[at + PackedDrops.MOVE_X] + offsetX;
+            float y = r[at + PackedDrops.PREV_Y] + partialTick * r[at + PackedDrops.MOVE_Y] + offsetY;
+            float z = r[at + PackedDrops.PREV_Z] + partialTick * r[at + PackedDrops.MOVE_Z] + offsetZ;
+            if (!view.sees(x, y, z, margin))
                 continue;
-            float x = (float) (Mth.lerp(partialTick, d.prevX[i], d.x[i]) - cam.x);
-            float y = (float) (Mth.lerp(partialTick, d.prevY[i], d.y[i]) - cam.y);
-            float z = (float) (Mth.lerp(partialTick, d.prevZ[i], d.z[i]) - cam.z);
-            if (isBehind(x, y, z, look, margin))
-                continue;
+            byte kind = (byte) r[at + PackedDrops.KIND];
             float distance = Mth.sqrt(x * x + z * z);
-            float fade = field.fade(i, partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
+            float fade = PrecipitationField.fade(kind, r[at + PackedDrops.AGE], r[at + PackedDrops.LIFETIME],
+                    r[at + PackedDrops.COVERED], partialTick) * Mth.clamp((radius - distance) / EDGE_FADE, 0F, 1F);
             if (!dustOnly)
-                fade *= thinned(d.thinning[i], distance, radius);
+                fade *= thinned(r[at + PackedDrops.THINNING], distance, radius);
             else
                 fade *= dustNearFade(x, y, z);
             if (fade <= 0F)
                 continue;
-            int light = d.light[i];
+            int light = Float.floatToRawIntBits(r[at + PackedDrops.LIGHT]);
+            float size = r[at + PackedDrops.SIZE];
 
-            if (d.kind[i] == PrecipitationField.DUST) {
-                var sprite = dust[field.variant(i, dust.length)];
-                float size = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * field.dustSize(i);
-                float cos = d.spinCos[i] * dustCos - d.spinSin[i] * dustSin;
-                float sin = d.spinSin[i] * dustCos + d.spinCos[i] * dustSin;
-                int c = d.color[i];
-                float r = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
-                float g = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
-                float b = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
-                billboard(quads, x, y, z, left, up, cos, sin, size, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
-                        QuadWriter.color(r, g, b, DUST_ALPHA * fade), light);
-            } else if (d.kind[i] == PrecipitationField.SNOW) {
+            if (kind == PrecipitationField.DUST) {
+                var sprite = dust[PackedDrops.variant(r[at + PackedDrops.PICK], dust.length)];
+                float half = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * size;
+                float spinCos = r[at + PackedDrops.A], spinSin = r[at + PackedDrops.B];
+                float cos = spinCos * dustCos - spinSin * dustSin;
+                float sin = spinSin * dustCos + spinCos * dustSin;
+                int c = Float.floatToRawIntBits(r[at + PackedDrops.C]);
+                float red = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
+                float green = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
+                float blue = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);
+                billboard(quads, x, y, z, left, up, cos, sin, half, sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1(),
+                        QuadWriter.color(red, green, blue, DUST_ALPHA * fade), light);
+            } else if (kind == PrecipitationField.SNOW) {
                 float a = SNOW_ALPHA * fade;
-                float cos = d.spinCos[i] * snowCos - d.spinSin[i] * snowSin;
-                float sin = d.spinSin[i] * snowCos + d.spinCos[i] * snowSin;
-                float size = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * field.snowSize(i)) * scales.snow();
+                float spinCos = r[at + PackedDrops.A], spinSin = r[at + PackedDrops.B];
+                float cos = spinCos * snowCos - spinSin * snowSin;
+                float sin = spinSin * snowCos + spinCos * snowSin;
+                float half = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * size) * scales.snow();
                 if (snowflakes.isEmpty()) {
-                    billboard(quads, x, y, z, left, up, cos, sin, size, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, QuadWriter.color(1F, 1F, 1F, a), light);
+                    billboard(quads, x, y, z, left, up, cos, sin, half, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, NO_TEXTURE, QuadWriter.color(1F, 1F, 1F, a), light);
                 } else {
                     // A flake of a pixel is drawn smaller than one of three, in proportion
-                    var flake = snowflakes.get(field.variant(i, snowflakes.size()));
-                    size *= flake.size() / (float) largest;
-                    billboard(quads, x, y, z, left, up, cos, sin, size, flake.u0(), flake.v0(), flake.u1(), flake.v1(), QuadWriter.color(1F, 1F, 1F, a), light);
+                    var flake = snowflakes.get(PackedDrops.variant(r[at + PackedDrops.PICK], snowflakes.size()));
+                    half *= flake.size() / (float) largest;
+                    billboard(quads, x, y, z, left, up, cos, sin, half, flake.u0(), flake.v0(), flake.u1(), flake.v1(), QuadWriter.color(1F, 1F, 1F, a), light);
                 }
             } else {
-                float dropSize = field.rainSize(i);
-                float length = rainLength(dropSize, scales.rain());
-                float halfWidth = rainHalfWidth(dropSize, scales.rain());
+                float length = rainLength(size, scales.rain());
+                float halfWidth = rainHalfWidth(size, scales.rain());
                 // Along the way the drop is moving, its tail trailing up and upwind, turned about its own length to
                 // face the camera
-                float vx = d.windX[i], vy = -d.speed[i], vz = d.windZ[i];
-                float inverse = Mth.invSqrt(vx * vx + vy * vy + vz * vz);
-                vx *= inverse;
-                vy *= inverse;
-                vz *= inverse;
+                float vx = r[at + PackedDrops.A], vy = r[at + PackedDrops.B], vz = r[at + PackedDrops.C];
                 // Across the streak: square to both its length and the line to the camera
                 float sx = vy * z - vz * y, sy = vz * x - vx * z, sz = vx * y - vy * x;
                 float across = sx * sx + sy * sy + sz * sz;
@@ -229,7 +334,7 @@ final class PrecipitationRenderer {
                     sz = left.z() * halfWidth;
                 }
                 float tx = x - vx * length, ty = y - vy * length, tz = z - vz * length;
-                float a = (RAIN_MIN_ALPHA + RAIN_ALPHA_RANGE * dropSize) * fade;
+                float a = (RAIN_MIN_ALPHA + RAIN_ALPHA_RANGE * size) * fade;
                 int head = QuadWriter.color(rainRed, rainGreen, rainBlue, a);
                 quads.vertex(x - sx, y - sy, z - sz, NO_TEXTURE, NO_TEXTURE, head, light);
                 quads.vertex(tx - sx, ty - sy, tz - sz, NO_TEXTURE, NO_TEXTURE, rainTail, light);
@@ -332,9 +437,12 @@ final class PrecipitationRenderer {
      * @param largest    the largest of them, in pixels: the others are drawn in proportion
      * @param scale      how big snowflakes are drawn
      */
-    static void build(SnowFlecks flecks, QuadWriter quads, Vec3 cam, float partialTick, List<Snowflakes.Flake> snowflakes,
+    static void build(SnowFlecks flecks, QuadWriter quads, View view, float partialTick, List<Snowflakes.Flake> snowflakes,
                       int largest, float scale) {
         quads.begin(flecks.count);
+        var cam = view.position();
+        // As far as the largest fleck's corners reach
+        float reach = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE) * scale * Mth.SQRT_OF_TWO;
         for (int i = 0; i < flecks.count; i++) {
             float remaining = flecks.remaining(i, partialTick);
             if (remaining <= 0F)
@@ -342,6 +450,8 @@ final class PrecipitationRenderer {
             float x = (float) (flecks.x[i] - cam.x);
             float y = (float) (flecks.y[i] - cam.y);
             float z = (float) (flecks.z[i] - cam.z);
+            if (!view.sees(x, y, z, reach))
+                continue;
             float half = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * flecks.size[i]) * scale * SnowFlecks.sizeFor(remaining);
             float u0 = NO_TEXTURE, v0 = NO_TEXTURE, u1 = NO_TEXTURE, v1 = NO_TEXTURE;
             if (!snowflakes.isEmpty()) {
@@ -373,9 +483,10 @@ final class PrecipitationRenderer {
      * color: a bead, and above it the wet trail it has left, fading toward its top. Any thread, while nothing changes
      * the streaks.
      */
-    static void build(WindowStreaks streaks, QuadWriter quads, Vec3 cam, float partialTick, RainColor rainColor) {
+    static void build(WindowStreaks streaks, QuadWriter quads, View view, float partialTick, RainColor rainColor) {
         // A bead and a trail each
         quads.begin(streaks.count * 2);
+        var cam = view.position();
         for (int i = 0; i < streaks.count; i++) {
             float fade = streaks.fade(i, partialTick);
             if (fade <= 0F)
@@ -384,10 +495,13 @@ final class PrecipitationRenderer {
             float y = (float) (Mth.lerp(partialTick, streaks.prevY[i], streaks.y[i]) - cam.y);
             float z = (float) (streaks.z[i] - cam.z);
             float trailTop = (float) (Mth.lerp(partialTick, streaks.prevTrailTop[i], streaks.trailTop[i]) - cam.y);
-            byte face = streaks.face[i];
-            int light = streaks.light[i];
             float size = streaks.size[i];
             float half = STREAK_BEAD_MIN_HALF_SIZE + STREAK_BEAD_HALF_SIZE_RANGE * size;
+            // The bead's corners, and the trail above it
+            if (!view.sees(x, y, z, half * Mth.SQRT_OF_TWO + Math.max(0F, trailTop - y)))
+                continue;
+            byte face = streaks.face[i];
+            int light = streaks.light[i];
             float a = STREAK_BEAD_ALPHA * fade;
             int bead = QuadWriter.color(rainColor.red(), rainColor.green(), rainColor.blue(), a);
 
@@ -430,8 +544,9 @@ final class PrecipitationRenderer {
      * to be drawn with {@link PrecipitationShaders#DAMP_SPOTS} and the particle atlas bound. Any thread, while nothing
      * changes the spots. The blend darkens the ground by the spot's alpha, so its color doesn't matter.
      */
-    static void build(DampSpots spots, QuadWriter quads, Vec3 cam, float partialTick, TextureAtlasSprite sprite) {
+    static void build(DampSpots spots, QuadWriter quads, View view, float partialTick, TextureAtlasSprite sprite) {
         quads.begin(spots.count);
+        var cam = view.position();
         float u0 = sprite.getU0(), u1 = sprite.getU1(), v0 = sprite.getV0(), v1 = sprite.getV1();
 
         for (int i = 0; i < spots.count; i++) {
@@ -443,6 +558,8 @@ final class PrecipitationRenderer {
             float z = (float) (spots.z[i] - cam.z);
             // The corners, each a quarter turn from the last
             float cx = spots.cornerX[i], cz = spots.cornerZ[i];
+            if (!view.sees(x, y, z, Mth.sqrt(cx * cx + cz * cz)))
+                continue;
             int color = QuadWriter.color(1F, 1F, 1F, a);
             quads.vertex(x + cx, y, z + cz, u0, v0, color);
             quads.vertex(x - cz, y, z + cx, u0, v1, color);

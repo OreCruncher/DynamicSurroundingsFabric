@@ -500,9 +500,10 @@ is known of 26.4.
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
     at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads (`DropMeshes.Kind`: drops, dust, snow flecks, window streaks, damp spots) are
     written into `QuadWriter`s on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
-    at High's range) as the level starts to be drawn (`DropMeshes`, from
-    `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
-    and partial tick; the `IWorldRender` handler uploads and draws them, or writes them on the
+    at High's range) as soon as the frame's camera is set (`DropMeshes`, from `MixinGameRenderer` in
+    `GameRenderer.extract`, before `LevelExtractor.extract`, `OptionalHook.PRECIPITATION_AHEAD`; started at the head of
+    `renderLevel`, the render thread waited for it), for that camera and partial tick, read from the drops packed once a
+    tick (`PackedDrops`) and only those inside the view's edges (`PrecipitationRenderer.Sides`); the `IWorldRender` handler uploads and draws them, or writes them on the
     render thread when the camera differs (a mod drawing the level again) or the build isn't done after
     `DropMeshes.WAIT_NANOS` (2 ms; a starved thread made frames wait 10-30 ms; timed as "- Waiting for Quads"). The tick discards a build before the drops,
     or what they left, change. The step may read only

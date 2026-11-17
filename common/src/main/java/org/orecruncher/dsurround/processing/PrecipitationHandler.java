@@ -23,6 +23,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
+import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.MeshDraw;
 import org.orecruncher.dsurround.effects.particles.DSurroundParticleSprites;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
@@ -120,7 +121,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
-    // The frame's weather quads, built as the level starts to be drawn, on a thread of their own: on the step's, a frame
+    // The frame's weather quads, built as soon as the frame's camera is set, on a thread of their own: on the step's, a frame
     // that began while a tick's step still ran (at High's range, a step outlasted the terrain about one frame in ten)
     // waited for the step, then the build, before the weather could be drawn
     private final Executor builder = Executors.newSingleThreadExecutor(Worker.threadFactory("PrecipitationQuads"));
@@ -136,7 +137,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         this.columns = new LevelColumns(seasonalInformation, biomeLibrary, tagLibrary, config.weatherOptions);
         this.landings = new Landings(tagLibrary, soundLibrary, config.weatherOptions);
         this.snowflakes = new Snowflakes(logger);
-        this.meshes = new DropMeshes(logger);
+        this.meshes = new DropMeshes(logger, LevelProjection::get);
 
         // A resource pack may bring other snow
         // A tag sync (each server join) can't change the snow texture
@@ -277,8 +278,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
 
     /**
-     * Starts building the frame's weather quads on their own thread, as the level starts to be drawn: the camera is
-     * set for the frame by then, and the terrain is drawn while they are built (see {@link DropMeshes})
+     * Starts building the frame's weather quads on their own thread, as soon as the camera is set for the frame: the
+     * level is extracted and drawn while they are built (see {@link DropMeshes})
      */
     public void beginFrame(Camera camera, float partialTick) {
         var sources = this.sources();

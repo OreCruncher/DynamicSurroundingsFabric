@@ -6,6 +6,7 @@ package org.orecruncher.dsurround.effects.precipitation;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -19,10 +20,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 /**
- * The weather's quads, built ahead on another thread: as the level starts to be drawn ({@link #begin}), once the camera
- * is set for the frame, so they are written while the render thread draws the terrain, and the weather's pass only
+ * The weather's quads, built ahead on another thread: as soon as the camera is set for the frame ({@link #begin}), so
+ * they are written while the render thread extracts and draws the level, and the weather's pass only
  * uploads and draws them ({@link #draw}). Writing them, every drop facing the camera and placed between its ticks, was
  * the largest part of the weather's time on the render thread.
  * <p>
@@ -157,7 +159,8 @@ public final class DropMeshes implements AutoCloseable {
 
         /**
          * What differs in {@code now} from what these were built for, the first difference found; null if they are for
-         * it
+         * it. The sides of the view aren't compared: built ahead, they are the last frame's, which
+         * {@link PrecipitationRenderer.Sides#SLACK} allows for.
          */
         @Nullable
         Mismatch mismatch(Request now) {
@@ -197,6 +200,9 @@ public final class DropMeshes implements AutoCloseable {
     private static final Kind[] KINDS = Kind.values();
 
     private final IModLog logger;
+    // The projection the level is drawn with, for leaving out what is outside the view; null to leave out only what is
+    // behind the camera. Asked as the build starts, before this frame's is made, so it is the last frame's.
+    private final Supplier<@Nullable Matrix4fc> projection;
     // What has been logged, once each, for a session
     private final EnumSet<Behind> reported = EnumSet.noneOf(Behind.class);
     // Each kind, built ahead
@@ -213,7 +219,16 @@ public final class DropMeshes implements AutoCloseable {
     private int drawnBehind;
 
     public DropMeshes(IModLog logger) {
+        this(logger, () -> null);
+    }
+
+    /**
+     * @param projection the projection the level is drawn with (see LevelProjection), asked on the render thread as
+     *                   a frame's quads are begun or written; what returns null leaves out only what is behind the camera
+     */
+    public DropMeshes(IModLog logger, Supplier<@Nullable Matrix4fc> projection) {
         this.logger = logger;
+        this.projection = projection;
         for (var kind : KINDS)
             this.ahead[kind.ordinal()] = new QuadWriter(kind.format);
         for (var format : QuadWriter.Format.values())
@@ -228,7 +243,7 @@ public final class DropMeshes implements AutoCloseable {
         this.discard();
         if (sources.isEmpty())
             return;
-        var request = new Request(sources, PrecipitationRenderer.View.of(camera), partialTick, style);
+        var request = new Request(sources, PrecipitationRenderer.View.of(camera, this.projection.get()), partialTick, style);
         this.request = request;
         this.pending = CompletableFuture.runAsync(() -> this.build(request), executor);
     }
@@ -246,15 +261,15 @@ public final class DropMeshes implements AutoCloseable {
     static void build(Kind kind, QuadWriter quads, Request request) {
         var sources = request.sources();
         var style = request.style();
-        var cam = request.view().position();
+        var view = request.view();
         float partialTick = request.partialTick();
         switch (kind) {
-            case DROPS, DUST -> PrecipitationRenderer.build(sources.field(), quads, request.view(), partialTick,
+            case DROPS, DUST -> PrecipitationRenderer.build(sources.field(), quads, view, partialTick,
                     kind == Kind.DUST, style.snowflakes(), style.largest(), style.dust(), style.scales(), style.rainColor());
-            case FLECKS -> PrecipitationRenderer.build(sources.flecks(), quads, cam, partialTick, style.snowflakes(),
+            case FLECKS -> PrecipitationRenderer.build(sources.flecks(), quads, view, partialTick, style.snowflakes(),
                     style.largest(), style.scales().snow());
-            case STREAKS -> PrecipitationRenderer.build(sources.streaks(), quads, cam, partialTick, style.rainColor());
-            case SPOTS -> PrecipitationRenderer.build(sources.spots(), quads, cam, partialTick, style.spot());
+            case STREAKS -> PrecipitationRenderer.build(sources.streaks(), quads, view, partialTick, style.rainColor());
+            case SPOTS -> PrecipitationRenderer.build(sources.spots(), quads, view, partialTick, style.spot());
         }
     }
 
@@ -268,7 +283,7 @@ public final class DropMeshes implements AutoCloseable {
     public int draw(Kind kind, Sources sources, Camera camera, float partialTick, Style style, Drawer drawer) {
         if (!sources.hasAny(kind))
             return 0;
-        var now = new Request(sources, PrecipitationRenderer.View.of(camera), partialTick, style);
+        var now = new Request(sources, PrecipitationRenderer.View.of(camera, this.projection.get()), partialTick, style);
         var mismatch = this.mismatch(kind, now);
         if (mismatch != null) {
             this.drawnBehind++;

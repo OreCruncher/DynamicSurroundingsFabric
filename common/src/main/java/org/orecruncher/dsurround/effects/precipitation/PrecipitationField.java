@@ -229,6 +229,16 @@ public final class PrecipitationField {
         return this.drops;
     }
 
+    /**
+     * The drops drawn, packed for building their quads (see {@link PackedDrops}): packed now if they changed since,
+     * around a camera at {@code camera}. Any thread, while the drops drawn don't change.
+     */
+    PackedDrops packed(double cameraX, double cameraY, double cameraZ) {
+        var d = this.drops;
+        d.packed.packIfStale(d, cameraX, cameraY, cameraZ);
+        return d.packed;
+    }
+
     public int count() {
         return this.drops.count;
     }
@@ -244,6 +254,8 @@ public final class PrecipitationField {
         this.abandon();
         this.drops.clear();
         this.next.clear();
+        this.drops.packed.invalidate();
+        this.next.packed.invalidate();
         this.landings = 0;
         this.columns.invalidate();
     }
@@ -427,6 +439,7 @@ public final class PrecipitationField {
         this.questions = 0;
         this.next = this.drops;
         this.drops = to;
+        to.packed.invalidate();
         return true;
     }
 
@@ -771,7 +784,7 @@ public final class PrecipitationField {
         return rainSize(this.drops, i);
     }
 
-    private static float rainSize(Drops d, int i) {
+    static float rainSize(Drops d, int i) {
         return Mth.clamp((d.speed[i] - RAIN_SPEED_MIN) / RAIN_SPEED_RANGE, 0F, 1F);
     }
 
@@ -852,7 +865,7 @@ public final class PrecipitationField {
         return snowSize(this.drops, i);
     }
 
-    private static float snowSize(Drops d, int i) {
+    static float snowSize(Drops d, int i) {
         var fraction = Mth.clamp((d.speed[i] - SNOW_SPEED_MIN) / SNOW_SPEED_RANGE, 0F, 1F);
         return fraction * fraction;
     }
@@ -862,7 +875,11 @@ public final class PrecipitationField {
      * are carried a little further by the wind.
      */
     float dustSize(int i) {
-        return Mth.clamp((this.drops.drift[i] - MIN_DRIFT) / DRIFT_RANGE, 0F, 1F);
+        return dustSize(this.drops, i);
+    }
+
+    static float dustSize(Drops d, int i) {
+        return Mth.clamp((d.drift[i] - MIN_DRIFT) / DRIFT_RANGE, 0F, 1F);
     }
 
     /**
@@ -870,8 +887,14 @@ public final class PrecipitationField {
      * snowflake keeps its look for its whole fall even as drops are moved about in the arrays
      */
     int variant(int i, int variants) {
-        var picked = (int) ((this.drops.drift[i] - MIN_DRIFT) / DRIFT_RANGE * variants);
-        return Mth.clamp(picked, 0, variants - 1);
+        return PackedDrops.variant(pick(this.drops, i), variants);
+    }
+
+    /**
+     * What picks a drop's look, 0 to 1 (see {@link #variant})
+     */
+    static float pick(Drops d, int i) {
+        return (d.drift[i] - MIN_DRIFT) / DRIFT_RANGE;
     }
 
     /**
@@ -879,15 +902,22 @@ public final class PrecipitationField {
      */
     float fade(int i, float partialTick) {
         var d = this.drops;
-        var age = d.age[i] + partialTick;
-        float fade = switch (d.kind[i]) {
+        return fade(d.kind[i], d.age[i], d.lifetime[i], d.covered[i], partialTick);
+    }
+
+    /**
+     * How faded in a drop of a kind is, 0 to 1, from its age, lifetime and ticks under cover (see {@link #fade(int, float)})
+     */
+    static float fade(byte kind, float ticksOld, float lifetime, float covered, float partialTick) {
+        var age = ticksOld + partialTick;
+        float fade = switch (kind) {
             case SNOW -> Math.min(1F, age / SNOW_FADE_IN);
-            case DUST -> Mth.clamp(Math.min(age, d.lifetime[i] - age) / DUST_FADE, 0F, 1F);
+            case DUST -> Mth.clamp(Math.min(age, lifetime - age) / DUST_FADE, 0F, 1F);
             default -> Math.min(1F, age / RAIN_FADE_IN);
         };
         // Under cover it fades out as it drifts in
-        if (d.covered[i] > 0)
-            fade *= coverFade(d.covered[i] - 1 + partialTick, coverTicks(d.kind[i]));
+        if (covered > 0F)
+            fade *= coverFade(covered - 1 + partialTick, coverTicks(kind));
         return fade;
     }
 
@@ -930,6 +960,8 @@ public final class PrecipitationField {
         final int[] lifetime;
         int count;
         int dustCount;
+        // These drops packed for building their quads, once they are the ones drawn
+        final PackedDrops packed = new PackedDrops();
 
         Drops(int capacity) {
             this.x = new double[capacity];

@@ -168,19 +168,20 @@ public class DropMeshesTests {
     }
 
     @Test
-    void snowFlecksAreBuiltAroundTheCamera() {
+    void snowFlecksAreBuiltAroundTheCameraButNotBehindIt() {
         var sources = sources(new PrecipitationField(10));
         var random = Randomizer.create(7);
+        // Behind the camera, which looks north
         sources.flecks().add(2.5, GROUND, 3.5, 0.5F, 0.5F, 0xF000F0, random);
         sources.flecks().add(-1.5, GROUND, -4.5, 0.5F, 0.5F, 0xF000F0, random);
         try (var quads = new QuadWriter(DropMeshes.Kind.FLECKS.format)) {
             DropMeshes.build(DropMeshes.Kind.FLECKS, quads, new DropMeshes.Request(sources, VIEW, 0.5F, STYLE));
-            assertEquals(8, quads.vertexCount(), "flecks to draw");
-            // The first corner lies on the ground, below the camera, near the first fleck
+            assertEquals(4, quads.vertexCount(), "the fleck ahead to draw");
+            // The first corner lies on the ground, below the camera, near the fleck ahead
             var vertices = quads.vertices();
-            assertEquals(2F, vertices.getFloat(0), 0.2F);
+            assertEquals(-2F, vertices.getFloat(0), 0.2F);
             assertEquals((float) (GROUND - CAMERA_Y), vertices.getFloat(4), 0.02F);
-            assertEquals(3F, vertices.getFloat(8), 0.2F);
+            assertEquals(-5F, vertices.getFloat(8), 0.2F);
         }
     }
 

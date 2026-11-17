@@ -548,6 +548,59 @@ and 0.168 at High; here 0.475 and 1.068, and at High the wait is over half of th
 has grown far less (Precipitation Handler at High, 0.246 ms a tick on Fabric 1.21.11, 0.297 here). The cause isn't
 confirmed; the first thing to check is where in the frame the quads are now collected.
 
+**The wait looked into (2026-11-17, 5.3.0, NeoForge, OpenGL; Medium and High, density 100, two repeats, run one after
+the other):** the wait is the build itself. The quads' thread builds the quads as `renderLevel` begins, and the render
+thread now reaches the weather in less time than the build takes. At snow High the build takes about 0.87 ms of the
+thread a frame, where a test building the same field alone takes 0.4-0.5 ms (16,667 drops, about 25 ns a drop). The
+thread's samples gather at the first line that uses the drops' arrays, so in game the build waits on memory: about
+1 MB of drops read and 0.4 MB of vertices written a frame, with the render and server threads using the same caches.
+
+Leaving out drops past the edges of the view, not only behind it (`PrecipitationRenderer.Sides`, from the level's
+projection), cuts the quads written by 42% (snow High 6,512 to 3,773 in the test) and the render thread's upload and
+draw of them ("- Drops" CPU, snow High 0.242 to 0.103 ms, rain High 0.180 to 0.092). The build a frame stayed about
+the same (thread samples a frame 3.99 before, 3.84 after), so the wait grew as the render thread got faster: snow High
+0.456 to 0.603 ms, rain High 0.585 to 0.740. Frames went from 514 to 698 fps at snow High, but timers for code that
+didn't change fell by up to a quarter in the second run (clouds GPU 0.135 to 0.098), so frames and GPU times are within
+this session's drift. Results: `neoforge/run-bench/bench-results/precip-mh-20261117-113932` (before) and
+`-115053` (after), with a scenario of Medium and High only.
+
+**Packed drops and an earlier start (same day, same scenario, each pair run one after the other):**
+
+- The drops packed once a tick into one array of records (`PackedDrops`, about 1% of the quads' thread to pack), in
+  place of reading a dozen arrays every frame: the drops' build 14-16% cheaper (quads' thread samples a frame, rain
+  High 3.62 to 3.05; snow High's drops part 3.12 to 2.69). Wait, rain High 0.673 to 0.559 ms, Medium 0.209 to 0.174;
+  snow High unchanged (0.471 to 0.488: its snow flecks, not packed, varied from run to run). fps rain High 782 to 847.
+  Results `precip-mh-20261117-121843` (culling only) and `-122948` (packed).
+- The build started as soon as the frame's camera is set, in `GameRenderer.extract` before `LevelExtractor.extract`,
+  instead of at the head of `renderLevel`: little gained, as extracting this scene is short beside a build of about
+  0.8 ms. Wait, snow High 0.497 to 0.449, Medium 0.095 to 0.023, rain High 0.551 to 0.560, Medium 0.159 to 0.144
+  (`-125612` at `renderLevel`, `-130814` early). A first early run (`-124457`) read far less (snow High 0.157), but
+  every GPU timer in it was slower, unchanged effects too (frost 0.074 to 0.090): a slower GPU held the render thread
+  before the weather pass, giving the build more time. Kept, as it costs nothing.
+
+So the build is still about 0.8 ms of one thread at High, against about 0.5 ms of the render thread before the
+weather.
+
+**Each kind's build, timed on the quads' thread (same day, rain High and snow High, ms a frame; timed with
+`System.nanoTime` around each kind, logged every 10 s, then taken out):**
+
+| Kind | rain High | snow High |
+|---|---|---|
+| drops (packed) | 0.27-0.31 warm-up, 0.46-0.49 recording | 0.22-0.39 warm-up, 0.58-0.62 recording |
+| snow flecks | - | 0.11-0.15 |
+| damp spots | 0.11-0.12 warm-up, 0.14-0.15 recording | - |
+| window streaks | 0.08-0.09 warm-up, 0.10-0.13 recording | - |
+
+- **A `/dsprofile` recording slows the build**: the drops' build is 50-60% longer once recording starts (JFR's
+  sampling and events), so "- Waiting for Quads" in a recording reads higher than the game has without one.
+- **The surfaces are a third of the build** in a scene like the bench's stage, where nearly every fleck, spot and
+  streak lies ahead (rain High 40%, snow High 28%). Packing them as the drops are (tried, and taken out again)
+  made no difference beyond the run's noise (spots 0.150 to 0.145, streaks 0.132 to 0.104, flecks 0.140 to 0.158).
+  Their cost is the vertices they write: in game they write about three times the quads per item that a test with the
+  same counts did (most of its items faded or out of view), and a quad costs about twice what it does alone, as the
+  drops' do. Another thread reading each frame's vertices, as the upload does, didn't slow a build in a test. What's left to try: splitting the build across two threads (the packed drops halve into two ranges; the snow
+flecks, streaks and spots build beside the drops), or building the quads on the GPU from data uploaded once a tick.
+
 ### The rest
 
 | Run | OpenGL frame GPU ms | Vulkan frame GPU ms | Timer or handler, OpenGL / Vulkan |
