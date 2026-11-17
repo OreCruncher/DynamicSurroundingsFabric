@@ -52,7 +52,8 @@ don't link.
   `MixinSkyRenderer`, `MixinWeatherEffectRenderer`, Fabric's `MixinHud`.
 - **Game data.** `ice_caves` is a new biome.
 - **Not confirmed:** Vulkan as the default from snapshot 1 is from the web, not from the jar. Comparing vanilla's shader
-  includes failed (the extraction came back empty), so they are unchecked.
+  includes failed (the extraction came back empty), so they are unchecked. (Settled at snapshot 10, below.)
+
 - **Dependencies** on that date: Fabric API had 26.4 builds (0.165.4+26.4); none found for NeoForge or Architectury.
 - **Vulkan buffer writes (check on 26.4).** 26.3's `VulkanCommandEncoder.writeToBuffer` stages the data, copies it
   with `vkCmdCopyBuffer`, then records a memory barrier `ALL_COMMANDS → ALL_COMMANDS` for every read and write, which
@@ -61,6 +62,43 @@ don't link.
   precipitation at rain High). On 26.4, run `precipitation.json` with `-PgraphicsBackend=vulkan` first: if the barrier
   is still that broad (and more so if Vulkan is the default), do every mesh's upload before any drawing (one drain, not
   one an upload), or fewer bytes a drop. Instanced drops would help either backend, mostly the CPU's "Waiting for Quads".
+
+
+### Snapshot 10 (checked 2026-11-17)
+
+Snapshots 8 (2026-11-10), 9 and 10 (both 2026-11-17) since; still no pre-release or release date. `version-compat.py`
+against snapshot 10's `client.jar` (from Mojang's version manifest, SHA-1 checked): 45 of the mod's 999 classes don't
+link. Everything above still holds; new since snapshot 7:
+
+- **Vulkan is the default** (from the jar): `PreferredGraphicsApi.getBackendsToTry` tries Vulkan then OpenGL for
+  `DEFAULT` and `VULKAN`, OpenGL first only for `OPENGL` (26.3: OpenGL first for `DEFAULT`), and Vulkan's option is no
+  longer labeled experimental (`options.graphicsApi.vulkanNonExperimental`). So most players will be on Vulkan: the
+  Vulkan buffer-write item above comes first, and every Vulkan rule in `AGENTS.md` matters for everyone. Open Vulkan
+  bugs: resizing the window crashes (MC-312444), windowed mode distorts (MC-312375).
+- **Improved Fog** (snapshot 9), a setting apart from Improved Transparency, on by default (off on Fast): with it on and
+  Improved Transparency off, the sky blends into the render distance fog; with Improved Transparency on, the sky and
+  clouds both do. `FogRenderer.setupFog`, `LevelRenderer.addMainPass` and `executeOit` each gain a `boolean` for it,
+  and `core/terrain.fsh` changed. `MixinFogRenderer` and `MixinLevelRenderer`'s hook before the transparency stages no
+  longer match; the aurora (drawn after the sky), the dynamic clouds (which would need to blend as vanilla's do) and
+  `FogHandler`/`ExtendedViewFog` need a look with it on and off.
+- **Order-independent transparency** (snapshot 8): its shaders use subpasses (`oit_composite.fsh`,
+  `oit_depth_bounds_cull.fsh`, `include/oit_depth_sample.glsl`, `include/oit_sample.glsl` changed;
+  `blit_depth_bounds.fsh` new). Besides `SoftParticles`, check the depth copy before the stages
+  (`SoftParticles.captureBeforeTransparency`), which everything reading the copy relies on.
+- **Terrain and depth** (snapshot 8): terrain vertices are read from a texel buffer; the boat water mask draws to a
+  target of its own, sampled by `terrain.fsh`, not into the terrain's depth (`blit_depth.fsh` removed). Check what
+  reads depth near water, and the parked "boats on the pool floor" oddity.
+- **Commands:** `SharedSuggestionProvider` is gone, for `SuggestionBox`/`SuggestionContext` (`ConfigCommand` calls
+  `SharedSuggestionProvider.suggest`).
+- **GUI:** `CycleButton$OnValueChange` moved to `AbstractCycleButton$OnValueChange`, a new base of `CycleButton`
+  (`IndividualSoundControlListEntry`).
+- **Sounds:** `block.ice.ambient` moves to Ambient/Environment; new tags `#triggers_ambient_ice_block_sounds` and
+  `#triggers_ambient_ice_crystal_sounds`; fire breaks with the extinguish sound; dispensers launch with
+  `block.dispenser.launch`, and their fire charge and firework sounds move to Blocks; new `entity.frostbite.throw`.
+- **Particles:** `bubble_column_up` takes `pop_chance` (a pop and its sound at the end), `current_down` takes `radius`.
+- **Formats:** resource pack 104, data pack 128; Java 25 still.
+- `MixinGameRenderer`'s start of the weather's build in `GameRenderer.extract` (5.3.0) still links.
+- Dependencies (NeoForge, Architectury, Fabric API for snapshot 10) weren't looked at this time.
 
 Plan: ship on 26.3, wait for NeoForge and Architectury, run `version-compat.py` again on the release, and start with
 the frame's order.
