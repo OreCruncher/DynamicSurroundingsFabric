@@ -572,7 +572,7 @@ is known of 26.4.
 
 ## Branches
 - `main`: the 26.x line, on 26.3 (NeoForge 26.3.0.101, Architectury 22.0.5, Cloth Config 26.3.159; NeoForge's
-  client launch class is `net.neoforged.fml.startup.Client`). 5.1.0 is released (tag `26.3-5.1.0`); it has the
+  client launch class is `net.neoforged.fml.startup.Client`). 5.2.0 is the latest release (tag `26.3-5.2.0`); the 26.x line has the
   realistic aurora, which 1.21.11 doesn't (see Versions). Never rebase it.
   - It came from `OreCruncher/26.2`, the 26.2 port, started from 0.4.5 and carrying 0.4.6 through 0.4.9, moved to 26.3
     and merged into `main` for 5.1.0. Up to then `main` was the 1.21.1 line, which is why its history holds 0.4.9's
