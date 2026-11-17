@@ -10,6 +10,7 @@ sound and visual effects.
 * Biome sounds - Various atmospheric sounds that play based on biomes in the area
     * Seamless blending of sounds as the player moves throughout the world
     * Handles Minecraft biomes as well as many modded ones
+    * Reworked sounds, every one of them cleared for commercial use, with new whales, seagulls, rain and forest and jungle loops (26.3-5.2.0+)
 * Client side wind simulation (1.21.1-0.4.7+)
     * Varying direction and speed over time
     * Influences the drift of particles of the mod, such as steam and fire jets
@@ -36,11 +37,18 @@ sound and visual effects.
     * Rings spreading on the water where waterfalls land, and ripples where their spray falls back (26.3-5.1.0+)
 * Rings and wakes on the water from players, mobs and boats, and foam behind a boat under way (26.3-5.1.0+)
 * Beach waves: foam rolling in on the shores of oceans and large lakes, bigger in a storm (experimental) (26.3-5.1.0+)
+* World actors that move through the world on their own, the same for every player in a world (26.3-5.2.0+)
+    * Dust devils cross deserts, badlands and savannas, and waterspouts reach from the sea to the clouds
+    * Snowspouts whirl over snowy plains, and firespouts rise from the Nether's lava lakes
+    * Wisps drift over marshes and swamps at night, and soul-fire wisps haunt soul sand valleys
+    * Apparitions, pale figures in a villager's shape, glide through dark forests at night (in the Scary Content options)
+    * Modpacks can give them to their own biomes and dimensions
 * Aurora display in the northern sky when standing in a cold/icy/taiga biome (1.21.1-0.4.6+)
     * Realistic aurora, modeled on real ones: arcs of light high in the sky that change through the night, with a storm overhead now and then (26.3-5.1.0+)
 * Firefly particle effect around flowers (1.21.1-0.4.6+)
     * Particles blink like real fireflies
     * A faint glow lights up a small area around the particle
+    * Firefly bushes give off the mod's fireflies in place of Minecraft's (26.3-5.2.0+)
 * Hot block effects such as flame jets over lava, and steam where water hits a hot block
     * Hot blocks are things Lava, Magma, campfires, and a cauldron containing lava
 * Skeleton skulls placed in the world burn with little flames in their eyes, blue soul fire for wither skeleton skulls (1.21.1-0.4.8+)
@@ -57,9 +65,11 @@ sound and visual effects.
     * Simple Voice Chat support (experimental) (1.21.1-0.4.7+) - nearby players' voices get the same reverb and occlusion
 * Individual Sound Control - Set a key bind and activate in-game
     * Use this feature to block, cull, and control the volume at which sounds play
+    * Each sound's reset button puts it back as it was when the screen opened, or to the mod's defaults with Ctrl held (26.3-5.2.0+)
 * Replace Minecraft's thunder sound with improved versions.
 * Remap of block step sounds to "improved" versions (basically a lighter weight Presence Footsteps)
     * Other players and humanoid mobs will also have these step sound remaps!
+* Script definitions let modpacks name constants and functions once in `scripts.json` and use them in any of the mod's scripts (26.3-5.2.0+)
 * Various "DS" client side commands for dumping configuration information. Useful for authors wanting to see how things are configured at runtime.
 * Compatibility with Serene Seasons - variations in seasons and temperatures can influence effects.
 * Compass and clock display when holding a compass or clock
@@ -95,7 +105,8 @@ Starting with 1.21.1-0.4.6, AI is being used to help with:
 * GUIs: making the mod's screens consistent with how Minecraft's own screens work
 * Mod compatibility: analyzing how the mod interacts with other mods and making improvements
 * Visual effects: rework existing features, assist with shaders, etc.
-* New features: building effects such as the burning mob flames, death mist, footprints, and branching lightning, and porting damage pop-offs from older versions (1.21.1-0.4.8)
+* New features: building effects such as the burning mob flames, death mist, footprints, and branching lightning, and porting damage pop-offs from older versions (1.21.1-0.4.8), and the world actors (26.3-5.2.0)
+* Sounds: tracing where the mod's sounds came from, and cutting, cleaning and leveling the replacements chosen by ear (26.3-5.2.0)
 * Planning ahead: working out the migration path and facilitating migration to subsequent Minecraft versions so it is easier and less error-prone
 
 ### Videos
