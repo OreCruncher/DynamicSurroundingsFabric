@@ -30,6 +30,7 @@
     "core.MixinMusic",
     "core.MixinFogRenderer",
     "core.MixinLevel",
+    "core.MixinLevelExtractor",
     "core.MixinLevelRenderer",
     "core.MixinLightningBoltRenderer",
     "core.MixinLivingEntity",

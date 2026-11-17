@@ -10,12 +10,10 @@ import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
-@Cacheable
 public final class ClientProfilerPlugin implements IDiagnosticPlugin {
 
     private final TimerEMA clientTick = new TimerEMA("Client Tick");

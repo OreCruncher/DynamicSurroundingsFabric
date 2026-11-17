@@ -10,8 +10,8 @@ package org.orecruncher.dsurround.effects.groundfog;
 public interface IGroundFogSource {
 
     /**
-     * The height of the first air above the ground at a column, under any trees (mist lies under them, not on their
-     * leaves); on water, its surface
+     * The height of the first air above the ground at a column, under any canopy (mist lies under trees, huge
+     * mushrooms and giant flowers, not on them); on water, its surface
      */
     int groundHeight(int x, int z);
 

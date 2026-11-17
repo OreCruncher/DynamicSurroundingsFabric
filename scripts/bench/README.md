@@ -65,6 +65,8 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
   of 6 to 10 catches a strike in the shot.
 - **Boats**: a scene's `"boatSpeed"` keeps the boats near the player going around them, in blocks a tick, from the
   warm-up on, on the built-in server, as no one is there to row them (`boats.json`).
+- **Offset**: a scene's `"offset": [x, z]` has the player arrive that many blocks east and south of its place, on the
+  ground there (see "Raised stages").
 - **Flying**: a scene's `"flySpeed"` flies the player east in blocks a tick at height 230, from the warm-up on, for what moving through
   terrain costs. Fresh terrain the first time; give a scenario a `"world"` of its own for that, as `-Pgc=zgc` comparisons do.
 - **Sounds**: a scene's `"sounds"` play around where the player's eyes are as the warm-up starts (after the commands
@@ -93,6 +95,22 @@ What a scene needs that a biome doesn't have can often be built by its commands 
 mobs, a lava pool, water sources up in the air: see `performance-rest.json`), which needs no setting up in a new world.
 Otherwise stand there in the bench world and run `/dsbench mark <name>`, which remembers the position and where you
 look; a marked scene is used as it is, even when the scene has a biome. `/dsbench list` lists the world's scenes.
+
+### Raised stages
+
+Scenes of the same biome share its place, and what a scene builds stays in the world. A stage built up in the air (a
+lava lake, a sand platform, a pool) over that place roofs every scene on the ground there: the precipitation scenes
+drew no rain or snow under the firespouts' lake and the snowspouts' platform, and the ground scenes' light was the
+roof's shade.
+So a raised stage stands to one side: the scene's `"offset": [x, z]` has the player arrive that many blocks east and
+south of the place, on the ground there, which the runner loads before the commands run; the commands' `tp` then only
+goes up (`"tp @s ~ 201 ~"`). Not a sideways `tp` in the commands: they run in the same tick, so the stage's `fill`s land
+where nothing is loaded yet, and fail ("That position is not loaded"), the player falling to the ground. More than the
+stage's half-width plus the ground scenes' own, and the other way from any other raised stage over the same biome. The
+scene's remembered place doesn't move. Taken so far: `[160, 0]` for dust devils (desert), snowspouts (snowy plains),
+boats and beach waves (flower forest; they rebuild each other's), wisps (plains and savanna); `[-160, 0]` for firespouts
+(desert and plains). The sound scenes' small boxes at y 245 stay over their savanna place. If a world was used before
+this, delete it (`<platform>/run-bench/saves/bench`): it is made again from the seed, with the same places.
 
 ## Modpacks
 

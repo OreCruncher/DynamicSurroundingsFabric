@@ -27,7 +27,8 @@ public record BiomeConfigRule(
         Optional<FogDensity> groundFog,
         Optional<Script> additionalSoundChance,
         Optional<Script> moodSoundChance,
-        List<AcousticConfig> acoustics) {
+        List<AcousticConfig> acoustics,
+        List<ActorConfig> actors) {
 
         public static final Codec<BiomeConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                         Script.CODEC.fieldOf("biomeSelector").forGetter(BiomeConfigRule::biomeSelector),
@@ -42,6 +43,7 @@ public record BiomeConfigRule(
                         FogDensity.CODEC.optionalFieldOf("groundFog").forGetter(BiomeConfigRule::groundFog),
                         Script.CODEC.optionalFieldOf("additionalSoundChance").forGetter(BiomeConfigRule::additionalSoundChance),
                         Script.CODEC.optionalFieldOf("moodSoundChance").forGetter(BiomeConfigRule::moodSoundChance),
-                        Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(BiomeConfigRule::acoustics))
+                        Codec.list(AcousticConfig.CODEC).optionalFieldOf("acoustics", ImmutableList.of()).forGetter(BiomeConfigRule::acoustics),
+                        Codec.list(ActorConfig.CODEC).optionalFieldOf("actors", ImmutableList.of()).forGetter(BiomeConfigRule::actors))
                 .apply(instance, BiomeConfigRule::new));
 }

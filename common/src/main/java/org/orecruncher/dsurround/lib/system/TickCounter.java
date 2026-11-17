@@ -4,13 +4,11 @@
 package org.orecruncher.dsurround.lib.system;
 
 import org.orecruncher.dsurround.eventing.IClientTickStart;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 
 /**
  * Monotonically increasing tick count based on client ticks.
  */
-@Cacheable
 public final class TickCounter implements ITickCount {
 
     private long tickCount = 0;

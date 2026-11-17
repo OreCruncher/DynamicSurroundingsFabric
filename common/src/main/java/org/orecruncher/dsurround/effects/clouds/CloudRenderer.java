@@ -73,14 +73,14 @@ public final class CloudRenderer {
      * The settled part's color, where it is nearest
      */
     public static final ModShader SETTLED = new ModShader(
-            pipeline("pipeline/clouds").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            pipeline("pipeline/clouds").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
                     .withDepthStencilState(WRITE_DEPTH).build(),
             "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
     /**
      * The changing part, over the settled part, fading
      */
     public static final ModShader CHANGING = new ModShader(
-            pipeline("pipeline/clouds_changing").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            pipeline("pipeline/clouds_changing").withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA))
                     .withDepthStencilState(TEST_DEPTH).build(),
             "clouds", "vanilla's clouds will be drawn", Library.LOGGER);
 

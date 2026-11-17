@@ -1,0 +1,132 @@
+{
+  "values": [
+    {
+      "id": "betterend:hydralux_petal_block_amber",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_beige",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_black",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_blue",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_brown",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_cream",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_cyan",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_dark_green",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_forest_green",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_gray",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_green",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_hot_pink",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_indigo",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_light_blue",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_light_gray",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_lime",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_magenta",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_maroon",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_navy",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_olive",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_orange",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_pale_green",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_pale_pink",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_pale_yellow",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_pink",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_purple",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_red",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_sky_blue",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_slate_gray",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_violet",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_white",
+      "required": false
+    },
+    {
+      "id": "betterend:hydralux_petal_block_yellow",
+      "required": false
+    }
+  ]
+}

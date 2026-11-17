@@ -76,6 +76,16 @@ public class SoundConfigTests {
     }
 
     @Test
+    void valuesThatAreNotNumbersAreErrors() {
+        // Regression, found by LibraryRulesFuzzTests: {"min": -1e400, "max": 1.1} decoded, -1e400 being read as minus
+        // infinity, and sampled as a NaN pitch; NaN itself decoded as a fixed value
+        for (var text : new String[]{"NaN", "Infinity", "-1e400", "{\"min\": -1e400, \"max\": 1.1}", "{\"min\": 0.5, \"max\": NaN}"}) {
+            var result = SoundCodecHelpers.SOUND_PROPERTY_RANGE.parse(JsonOps.INSTANCE, json(text));
+            assertTrue(result.isError(), text + ": " + result);
+        }
+    }
+
+    @Test
     void rangesCanBeWrittenAndReadBack() {
         // Regression: writing threw "Not gonna happen"
         var fixed = SoundCodecHelpers.SOUND_PROPERTY_RANGE.encodeStart(JsonOps.INSTANCE, range("0.5")).getOrThrow();

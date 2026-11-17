@@ -5,31 +5,37 @@
 			{
 				"name": "Thunder 1",
 				"author": "Yoyodaman234",
-				"website": "https://www.freesound.org/people/Yoyodaman234",
+				"website": "https://freesound.org/people/Yoyodaman234/",
 				"license": "Creative Commons 0"
 			},
 			{
 				"name": "Donner1.wav",
 				"author": "swuing",
-				"website": "https://www.freesound.org/people/swuing",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/swuing/",
+				"license": "Creative Commons Attribution 4.0"
 			},
 			{
-				"name": "Thunder - 1 / Thunder - 2",
+				"name": "Thunder - 1",
 				"author": "bone666138",
-				"website": "https://www.freesound.org/people/bone666138",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/bone666138/",
+				"license": "Creative Commons Attribution 4.0"
+			},
+			{
+				"name": "Thunder - 2",
+				"author": "bone666138",
+				"website": "https://freesound.org/people/bone666138/",
+				"license": "Creative Commons Attribution 4.0"
 			},
 			{
 				"name": "Distant Thunder.wav",
 				"author": "sarson",
-				"website": "https://www.freesound.org/people/sarson",
+				"website": "https://freesound.org/people/sarson/",
 				"license": "Creative Commons 0"
 			},
 			{
 				"name": "NM-Mejor-Lado-Thunder-01.wav",
 				"author": "aaronstar",
-				"website": "https://www.freesound.org/people/aaronstar",
+				"website": "https://freesound.org/people/aaronstar/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -62,6 +68,13 @@
 	},
 	"ice": {
 		"subtitle": "dsurround.sound.caption.ice",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/ice/crack1",
@@ -79,6 +92,13 @@
 	},
 	"lilypad.frog": {
 		"subtitle": "dsurround.sound.caption.frog",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/frog/croak1",
@@ -100,7 +120,7 @@
 			{
 				"name": "Night Crickets & Bullfrogs.wav",
 				"author": "sunsinger",
-				"website": "https://freesound.org/people/sunsinger",
+				"website": "https://freesound.org/people/sunsinger/",
 				"license": "Creative Commons Attribution 3.0"
 			}
 		],
@@ -125,7 +145,7 @@
 			{
 				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 				"author": "felix.blume",
-				"website": "https://www.freesound.org/people/felix.blume",
+				"website": "https://freesound.org/people/felix.blume/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -142,7 +162,7 @@
 			{
 				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 				"author": "felix.blume",
-				"website": "https://www.freesound.org/people/felix.blume",
+				"website": "https://freesound.org/people/felix.blume/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -162,7 +182,7 @@
 			{
 				"name": "Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).",
 				"author": "felix.blume",
-				"website": "https://www.freesound.org/people/felix.blume",
+				"website": "https://freesound.org/people/felix.blume/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -179,8 +199,8 @@
 		"ds_credits": [
 			{
 				"name": "desertwind1FINAL.wav",
-				"author": "nageor",
-				"website": "https://www.freesound.org/people/nageor",
+				"author": "slugzilla",
+				"website": "https://freesound.org/people/slugzilla/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -197,7 +217,7 @@
 			{
 				"name": "Howling Wind Ambience",
 				"author": "DBlover",
-				"website": "https://www.freesound.org/people/DBlover",
+				"website": "https://freesound.org/people/DBlover/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -213,8 +233,8 @@
 			{
 				"name": "MerlothPark_morning_ambiance.wav",
 				"author": "reinsamba",
-				"website": "https://www.freesound.org/people/reinsamba",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/reinsamba/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -229,8 +249,8 @@
 			{
 				"name": "MerlothPark_crickets2.WAV",
 				"author": "reinsamba",
-				"website": "https://www.freesound.org/people/reinsamba",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/reinsamba/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -245,7 +265,7 @@
 			{
 				"name": "Soft, Chilled Crickets Field Recording",
 				"author": "rayjensen",
-				"website": "https://www.freesound.org/people/rayjensen",
+				"website": "https://freesound.org/people/rayjensen/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -257,6 +277,14 @@
 		]
 	},
 	"biome.crickets.deep": {
+		"ds_credits": [
+			{
+				"name": "Crickets chirping in the Night at the Forest 001",
+				"author": "Borgory",
+				"website": "https://freesound.org/people/Borgory/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_crickets",
@@ -269,8 +297,8 @@
 			{
 				"name": "Calm Morning Outdoor Ambience",
 				"author": "blouhond",
-				"website": "https://www.freesound.org/people/blouhond",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/blouhond/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -283,9 +311,9 @@
 	"biome.forest": {
 		"ds_credits": [
 			{
-				"name": "001_forrest.wav",
-				"author": "joepsporck",
-				"website": "https://www.freesound.org/people/joepsporck",
+				"name": "sfx_amb_forest_spring_afternoon-01.wav",
+				"author": "bajko",
+				"website": "https://freesound.org/people/bajko/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -296,7 +324,31 @@
 			}
 		]
 	},
+	"biome.forest.sparse": {
+		"ds_credits": [
+			{
+				"name": "001_forrest.wav",
+				"author": "joepsporck",
+				"website": "https://freesound.org/people/joepsporck/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/sparse_forest",
+				"stream": true
+			}
+		]
+	},
 	"biome.forest.deep": {
+		"ds_credits": [
+			{
+				"name": "Sussex Woodland & Meadow Bird Sounds, Evening.MP3",
+				"author": "Vonora",
+				"website": "https://freesound.org/people/Vonora/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/deep_forest",
@@ -309,7 +361,7 @@
 			{
 				"name": "Nord_Odal_Nyhus_04_juni_2011_open_forest_birds_insects_wind_through_large_pines.wav",
 				"author": "nfsgit",
-				"website": "https://www.freesound.org/people/nfsgit",
+				"website": "https://freesound.org/people/nfsgit/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -325,7 +377,7 @@
 			{
 				"name": "Silent forest",
 				"author": "ZHRØ",
-				"website": "https://freesound.org/people/ZHR%C3%98",
+				"website": "https://freesound.org/people/ZHR%C3%98/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -341,7 +393,7 @@
 			{
 				"name": "Fiji Beach (Stereo)128kbps.mp3",
 				"author": "c97059890",
-				"website": "https://www.freesound.org/people/c97059890",
+				"website": "https://freesound.org/people/c97059890/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -357,8 +409,8 @@
 			{
 				"name": "ocean waves surround me.wav",
 				"author": "bohitomi",
-				"website": "https://www.freesound.org/people/bohitomi",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/bohitomi/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -374,8 +426,8 @@
 			{
 				"name": "ocean waves surround me.wav",
 				"author": "bohitomi",
-				"website": "https://www.freesound.org/people/bohitomi",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/bohitomi/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -392,8 +444,8 @@
 			{
 				"name": "underwater ambience.wav",
 				"author": "AlienXXX",
-				"website": "https://freesound.org/people/AlienXXX",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/AlienXXX/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -408,8 +460,8 @@
 			{
 				"name": "rbh Mpls Bog birds.wav",
 				"author": "RHumphries",
-				"website": "https://freesound.org/people/RHumphries",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/RHumphries/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -420,17 +472,48 @@
 		]
 	},
 	"biome.jungle": {
+		"ds_credits": [
+			{
+				"name": "Forest Ambience.wav",
+				"author": "CHRISFOPFILMS",
+				"website": "https://freesound.org/people/CHRISFOPFILMS/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/outside/jungle",
 				"volume": 0.2,
-				"pitch": 0.8,
+				"stream": true
+			}
+		]
+	},
+	"biome.jungle.sparse": {
+		"ds_credits": [
+			{
+				"name": "Peruvian Amazon birds frogs daytime",
+				"author": "nonamethefish",
+				"website": "https://freesound.org/people/nonamethefish/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/outside/sparse_jungle",
+				"volume": 0.2,
 				"stream": true
 			}
 		]
 	},
 	"soulsand.laughter": {
 		"subtitle": "dsurround.sound.caption.soulsand",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/soulsand/soulsand1",
@@ -446,17 +529,16 @@
 			}
 		]
 	},
-	"dimension.theend": {
-		"sounds": [
-			{
-				"name": "dsurround:ambient/end/end",
-				"volume": 0.2,
-				"stream": true
-			}
-		]
-	},
 	"bird": {
 		"subtitle": "dsurround.sound.caption.bird",
+		"ds_credits": [
+			{
+				"name": "Happy birds",
+				"author": "sphion",
+				"website": "https://freesound.org/people/sphion/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/birds/bird1",
 			"dsurround:ambient/birds/bird2",
@@ -472,6 +554,14 @@
 	},
 	"woodpecker": {
 		"subtitle": "dsurround.sound.caption.woodpecker",
+		"ds_credits": [
+			{
+				"name": "FX WOODPECKER.wav",
+				"author": "DjangoAltona",
+				"website": "https://freesound.org/people/DjangoAltona/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/birds/woodpecker1",
 			"dsurround:ambient/birds/woodpecker2",
@@ -482,19 +572,41 @@
 	},
 	"raptor": {
 		"subtitle": "dsurround.sound.caption.raptor",
-		"sounds": [
+		"ds_credits": [
 			{
-				"name": "dsurround:ambient/birds/bald_eagle_chirp",
-				"weight": 2
+				"name": "HawkMP3VersionWinterJan22nd2017.mp3",
+				"author": "kvgarlic",
+				"website": "https://freesound.org/people/kvgarlic/",
+				"license": "Creative Commons 0"
 			},
 			{
-				"name": "dsurround:ambient/birds/red_tailed_hawk",
-				"weight": 1
-			},
-			{
-				"name": "dsurround:ambient/birds/red_shouldered_hawk",
-				"weight": 2
+				"name": "Bird - Red-shouldered hawk",
+				"author": "Vrymaa",
+				"website": "https://freesound.org/people/Vrymaa/",
+				"license": "Creative Commons 0"
 			}
+		],
+		"sounds": [
+			"dsurround:ambient/birds/red_shouldered_hawk",
+			"dsurround:ambient/birds/red_shouldered_hawk2",
+			"dsurround:ambient/birds/red_shouldered_hawk3"
+		]
+	},
+	"eagle": {
+		"subtitle": "dsurround.sound.caption.eagle",
+		"ds_credits": [
+			{
+				"name": "Bald Eagle Calls / Chirps",
+				"author": "Kinoton",
+				"website": "https://freesound.org/people/Kinoton/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/birds/bald_eagle1",
+			"dsurround:ambient/birds/bald_eagle2",
+			"dsurround:ambient/birds/bald_eagle3",
+			"dsurround:ambient/birds/bald_eagle4"
 		]
 	},
 	"crow": {
@@ -503,7 +615,7 @@
 			{
 				"name": "ANML_M_Ext_Crow_Calls_Single1.wav",
 				"author": "conleec",
-				"website": "https://www.freesound.org/people/conleec",
+				"website": "https://freesound.org/people/conleec/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -522,6 +634,14 @@
 	},
 	"owl": {
 		"subtitle": "dsurround.sound.caption.owl",
+		"ds_credits": [
+			{
+				"name": "Great Horned Owl Duet at Canaveral Seashore",
+				"author": "felix.blume",
+				"website": "https://freesound.org/people/felix.blume/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/owl/owl1",
@@ -534,22 +654,82 @@
 			{
 				"name": "dsurround:ambient/owl/owl3",
 				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl5",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl6",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl7",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl8",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl9",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl10",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/owl/owl11",
+				"volume": 0.3
 			}
 		]
 	},
 	"loon": {
 		"subtitle": "dsurround.sound.caption.loon",
+		"ds_credits": [
+			{
+				"name": "Loon / Diver call 3",
+				"author": "nicStage",
+				"website": "https://freesound.org/people/nicStage/",
+				"license": "Creative Commons Attribution 4.0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/birds/loon1"
 			},
 			{
 				"name": "dsurround:ambient/birds/loon2"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon3"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon4"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon5"
+			},
+			{
+				"name": "dsurround:ambient/birds/loon6"
 			}
 		]
 	},
 	"nightingale": {
 		"subtitle": "dsurround.sound.caption.nightingale",
+		"ds_credits": [
+			{
+				"name": "nightingale song 5.wav",
+				"author": "reinsamba",
+				"website": "https://freesound.org/people/reinsamba/",
+				"license": "Creative Commons Attribution 4.0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/birds/nightingale1"
@@ -562,6 +742,30 @@
 			},
 			{
 				"name": "dsurround:ambient/birds/nightingale4"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale5"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale6"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale7"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale8"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale9"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale10"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale11"
+			},
+			{
+				"name": "dsurround:ambient/birds/nightingale12"
 			}
 		]
 	},
@@ -571,7 +775,7 @@
 			{
 				"name": "turtledove sounds",
 				"author": "csengeri",
-				"website": "https://www.freesound.org/people/csengeri",
+				"website": "https://freesound.org/people/csengeri/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -590,19 +794,34 @@
 			}
 		]
 	},
+	"biome.underground.deep": {
+		"sounds": [
+			{
+				"name": "dsurround:ambient/underground/deep",
+				"volume": 0.3,
+				"stream": true
+			}
+		]
+	},
 	"rockfall": {
 		"subtitle": "dsurround.sound.caption.rockfall",
 		"ds_credits": [
 			{
+				"name": "Rockfall in mine.wav",
+				"author": "Benboncan",
+				"website": "https://freesound.org/people/Benboncan/",
+				"license": "Creative Commons Attribution 4.0"
+			},
+			{
 				"name": "Rocks falling over rocks, over a steep hill, like a cliff.flac",
 				"author": "gfrog",
-				"website": "https://www.freesound.org/people/gfrog",
+				"website": "https://freesound.org/people/gfrog/",
 				"license": "Creative Commons 0"
 			},
 			{
 				"name": "Rocks.wav",
 				"author": "adamgryu",
-				"website": "https://www.freesound.org/people/adamgryu",
+				"website": "https://freesound.org/people/adamgryu/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -618,13 +837,19 @@
 			{
 				"name": "Rockfall in mine.wav",
 				"author": "Benboncan",
-				"website": "https://www.freesound.org/people/Benboncan",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/Benboncan/",
+				"license": "Creative Commons Attribution 4.0"
+			},
+			{
+				"name": "Rocks falling over rocks, over a steep hill, like a cliff.flac",
+				"author": "gfrog",
+				"website": "https://freesound.org/people/gfrog/",
+				"license": "Creative Commons 0"
 			},
 			{
 				"name": "Rocks.wav",
 				"author": "adamgryu",
-				"website": "https://www.freesound.org/people/adamgryu",
+				"website": "https://freesound.org/people/adamgryu/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -641,19 +866,18 @@
 	},
 	"monstergrowl": {
 		"subtitle": "dsurround.sound.caption.monstergrowl",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/underground/monster_growl1",
 				"volume": 0.3
 			}
-		]
-	},
-	"waterdrops": {
-		"subtitle": "dsurround.sound.caption.waterdrop",
-		"sounds": [
-			"dsurround:ambient/droplets/water1",
-			"dsurround:ambient/droplets/water2",
-			"dsurround:ambient/droplets/water3"
 		]
 	},
 	"waterdrips": {
@@ -662,8 +886,8 @@
 			{
 				"name": "Dripping, Very Fast, A.wav",
 				"author": "InspectorJ",
-				"website": "https://www.freesound.org/people/InspectorJ",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/InspectorJ/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -675,6 +899,20 @@
 	},
 	"seagulls": {
 		"subtitle": "dsurround.sound.caption.seagulls",
+		"ds_credits": [
+			{
+				"name": "Herring Gull 1.wav",
+				"author": "Canardo55",
+				"website": "https://freesound.org/people/Canardo55/",
+				"license": "Creative Commons 0"
+			},
+			{
+				"name": "Seagull trill and whine",
+				"author": "nigelcoop",
+				"website": "https://freesound.org/people/nigelcoop/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/seagulls/seagulls1",
@@ -682,6 +920,75 @@
 			},
 			{
 				"name": "dsurround:ambient/seagulls/seagulls2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls5",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls6",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls7",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls8",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/seagulls9",
+				"volume": 0.3
+			}
+		]
+	},
+	"seagulls.flock": {
+		"subtitle": "dsurround.sound.caption.seagulls",
+		"ds_credits": [
+			{
+				"name": "Seagulls / gaviotas clean wildtrack",
+				"author": "Soojay",
+				"website": "https://freesound.org/people/Soojay/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/seagulls/flock1",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock5",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock6",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/seagulls/flock7",
 				"volume": 0.3
 			}
 		]
@@ -692,7 +999,7 @@
 			{
 				"name": "coyote barks and howls",
 				"author": "dkaufman",
-				"website": "https://www.freesound.org/people/dkaufman",
+				"website": "https://freesound.org/people/dkaufman/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -707,6 +1014,14 @@
 	},
 	"wolf": {
 		"subtitle": "dsurround.sound.caption.howling",
+		"ds_credits": [
+			{
+				"name": "Cooper Creek 20160313_014852 solitary wolf howl very clear.wav",
+				"author": "betchkal",
+				"website": "https://freesound.org/people/betchkal/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/wolf/wolf1",
@@ -729,10 +1044,10 @@
 	"biome.ocean.deep.under": {
 		"ds_credits": [
 			{
-				"name": "ocean waves surround me.wav",
-				"author": "bohitomi",
-				"website": "https://www.freesound.org/people/bohitomi",
-				"license": "Attribution"
+				"name": "underwater ambience.wav",
+				"author": "AlienXXX",
+				"website": "https://freesound.org/people/AlienXXX/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -747,8 +1062,8 @@
 			{
 				"name": "underwater ambience.wav",
 				"author": "AlienXXX",
-				"website": "https://www.freesound.org/people/AlienXXX",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/AlienXXX/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -763,8 +1078,8 @@
 			{
 				"name": "underwater ambience.wav",
 				"author": "AlienXXX",
-				"website": "https://www.freesound.org/people/AlienXXX",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/AlienXXX/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -779,7 +1094,7 @@
 			{
 				"name": "UnderwaterDrowning01.wav",
 				"author": "Abolla",
-				"website": "https://www.freesound.org/people/Abolla",
+				"website": "https://freesound.org/people/Abolla/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -791,6 +1106,14 @@
 		]
 	},
 	"whale": {
+		"ds_credits": [
+			{
+				"name": "Sounds in the Ocean",
+				"author": "NOAA Fisheries",
+				"website": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+				"license": "Public domain (U.S. government work)"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/whale/whale1",
@@ -811,17 +1134,97 @@
 			{
 				"name": "dsurround:ambient/whale/whale5",
 				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/whale6",
+				"volume": 0.3
+			}
+		]
+	},
+	"whale.right": {
+		"ds_credits": [
+			{
+				"name": "Sounds in the Ocean",
+				"author": "NOAA Fisheries",
+				"website": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+				"license": "Public domain (U.S. government work)"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/whale/right1",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right4",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/right5",
+				"volume": 0.3
+			}
+		]
+	},
+	"whale.minke": {
+		"ds_credits": [
+			{
+				"name": "Sounds in the Ocean",
+				"author": "NOAA Fisheries",
+				"website": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+				"license": "Public domain (U.S. government work)"
+			}
+		],
+		"sounds": [
+			{
+				"name": "dsurround:ambient/whale/minke1",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/minke2",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/minke3",
+				"volume": 0.3
+			},
+			{
+				"name": "dsurround:ambient/whale/minke4",
+				"volume": 0.3
 			}
 		]
 	},
 	"player.heartbeat": {
 		"subtitle": "dsurround.sound.caption.heartbeat",
+		"ds_credits": [
+			{
+				"name": "Heartbeat",
+				"author": "acertingart",
+				"website": "https://freesound.org/people/acertingart/",
+				"license": "Creative Commons Attribution 4.0"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/steve/heartbeat"
 		]
 	},
 	"player.tummy": {
 		"subtitle": "dsurround.sound.caption.tummy",
+		"ds_credits": [
+			{
+				"name": "Stomach Growling",
+				"author": "XxBirdoxX",
+				"website": "https://soundbible.com/1300-Stomach-Growling.html",
+				"license": "Sampling Plus 1.0"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/steve/tummy1",
 			"dsurround:ambient/steve/tummy2",
@@ -830,6 +1233,13 @@
 	},
 	"netherbrick.breathing": {
 		"subtitle": "dsurround.sound.caption.breathing",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/miscblocks/breathing1",
@@ -843,15 +1253,31 @@
 	},
 	"player.jump": {
 		"subtitle": "dsurround.sound.caption.player.jump",
+		"ds_credits": [
+			{
+				"name": "Sharp Exhale",
+				"author": "sblitzer",
+				"website": "https://freesound.org/people/sblitzer/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			{
-				"name": "dsurround:ambient/steve/jump",
-				"volume": 0.8
+				"name": "dsurround:ambient/steve/jump1",
+				"volume": 0.28
 			}
 		]
 	},
 	"bees": {
 		"subtitle": "dsurround.sound.caption.bees",
+		"ds_credits": [
+			{
+				"name": "Bee",
+				"author": "Bee",
+				"website": "https://www.nps.gov/subjects/sound/sounds-bee.htm",
+				"license": "Public domain (U.S. government work)"
+			}
+		],
 		"sounds": [
 			{
 				"name": "dsurround:ambient/insects/bee1",
@@ -859,16 +1285,15 @@
 			}
 		]
 	},
-	"insectcrawl": {
-		"subtitle": "dsurround.sound.caption.insects",
-		"sounds": [
-			"dsurround:ambient/insects/crawl1",
-			"dsurround:ambient/insects/crawl2",
-			"dsurround:ambient/insects/crawl3"
-		]
-	},
 	"newsprint": {
 		"subtitle": "dsurround.sound.caption.pageflip",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/book/newsprint1",
 			"dsurround:ambient/book/newsprint2"
@@ -876,6 +1301,13 @@
 	},
 	"pageflip": {
 		"subtitle": "dsurround.sound.caption.pageflip",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/book/pageflip1",
 			"dsurround:ambient/book/pageflip2",
@@ -884,6 +1316,13 @@
 	},
 	"pageflipheavy": {
 		"subtitle": "dsurround.sound.caption.pageflip",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/book/pageflipheavy1",
 			"dsurround:ambient/book/pageflipheavy2",
@@ -892,6 +1331,14 @@
 	},
 	"electricarc": {
 		"subtitle": "dsurround.sound.caption.electricarc",
+		"ds_credits": [
+			{
+				"name": "Welding_Electric Sparks.wav",
+				"author": "weaveofkev",
+				"website": "https://freesound.org/people/weaveofkev/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/electricity/electricarc1",
 			"dsurround:ambient/electricity/electricarc2",
@@ -937,30 +1384,13 @@
 			}
 		]
 	},
-	"waterfall.0": {
-		"ds_credits": [
-			{
-				"name": "Waterfall Winspit Dorset.wav",
-				"author": "genghis attenborough",
-				"website": "https://www.freesound.org/people/genghis%20attenborough",
-				"license": "Attribution Noncommercial"
-			}
-		],
-		"sounds": [
-			{
-				"name": "dsurround:ambient/stream/waterfall0",
-				"attenuation_distance": 22,
-				"preload": true
-			}
-		]
-	},
 	"waterfall.1": {
 		"ds_credits": [
 			{
 				"name": "Waterfall, Small, B.wav",
 				"author": "InspectorJ",
-				"website": "https://www.freesound.org/people/InspectorJ",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/InspectorJ/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -976,7 +1406,7 @@
 			{
 				"name": "Waterfall",
 				"author": "Orpheuz",
-				"website": "https://www.freesound.org/people/Orpheuz",
+				"website": "https://freesound.org/people/Orpheuz/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -993,7 +1423,7 @@
 			{
 				"name": "Small Waterfall at the Mill",
 				"author": "willstepp",
-				"website": "https://www.freesound.org/people/willstepp",
+				"website": "https://freesound.org/people/willstepp/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -1010,8 +1440,8 @@
 			{
 				"name": "Waterfall, Large, A.wav",
 				"author": "InspectorJ",
-				"website": "https://www.freesound.org/people/InspectorJ",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/InspectorJ/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -1025,10 +1455,10 @@
 	"waterfall.5": {
 		"ds_credits": [
 			{
-				"name": "Running-water-mountain-stream.mp3",
-				"author": "Alexander",
-				"website": "https://orangefreesounds.com/running-water-sound-mountain-stream",
-				"license": "Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)"
+				"name": "Waterfall, Large, A.wav",
+				"author": "InspectorJ",
+				"website": "https://freesound.org/people/InspectorJ/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -1045,7 +1475,7 @@
 			{
 				"name": "Village ambience rooster and light birds with wind .wav",
 				"author": "Ramston",
-				"website": "https://www.freesound.org/people/Ramston",
+				"website": "https://freesound.org/people/Ramston/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -1061,8 +1491,8 @@
 			{
 				"name": "Anvil",
 				"author": "MrAuralization",
-				"website": "https://www.freesound.org/people/MrAuralization",
-				"license": "Attribution"
+				"website": "https://freesound.org/people/MrAuralization/",
+				"license": "Creative Commons Attribution 4.0"
 			}
 		],
 		"sounds": [
@@ -1082,7 +1512,7 @@
 			{
 				"name": "Dogs Barking",
 				"author": "darranambler",
-				"website": "https://www.freesound.org/people/darranambler",
+				"website": "https://freesound.org/people/darranambler/",
 				"license": "Creative Commons 0"
 			}
 		],
@@ -1095,30 +1525,28 @@
 			"dsurround:ambient/village/dogbark6"
 		]
 	},
-	"dimension.nether": {
+	"item.bow.equip": {
 		"ds_credits": [
 			{
-				"name": "Creepy Dungeon Ambience",
-				"author": "DrMinky",
-				"website": "https://www.freesound.org/people/DrMinky",
-				"license": "Attribution"
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
 			}
 		],
-		"sounds": [
-			{
-				"name": "dsurround:ambient/dimension/nether",
-				"volume": 0.3,
-				"stream": true
-			}
-		]
-	},
-	"item.bow.equip": {
 		"sounds": [
 			"dsurround:items/bow_draw"
 		]
 	},
 	"item.bow.pull": {
 		"subtitle": "dsurround.sound.caption.bow.pull",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			"dsurround:items/bow_pull1",
 			"dsurround:items/bow_pull2",
@@ -1129,6 +1557,13 @@
 	},
 	"item.bow.loose": {
 		"subtitle": "subtitles.entity.arrow.shoot",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			"dsurround:items/bow_loose1",
 			"dsurround:items/bow_loose2",
@@ -1138,6 +1573,13 @@
 	},
 	"item.bow.loose.skeleton": {
 		"subtitle": "subtitles.entity.skeleton.shoot",
+		"ds_credits": [
+			{
+				"name": "Public domain recording",
+				"author": "Source not recorded",
+				"license": "Public domain"
+			}
+		],
 		"sounds": [
 			"dsurround:items/bow_loose1",
 			"dsurround:items/bow_loose2",
@@ -1146,11 +1588,27 @@
 		]
 	},
 	"item.blunt.equip": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/blunt_draw"
 		]
 	},
 	"item.blunt.swing": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/blunt_swing1",
 			"dsurround:items/blunt_swing2",
@@ -1160,11 +1618,27 @@
 		]
 	},
 	"item.sword.equip": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/sword_draw"
 		]
 	},
 	"item.sword.swing": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/sword_swing1",
 			"dsurround:items/sword_swing2",
@@ -1178,11 +1652,27 @@
 		]
 	},
 	"item.tool.equip": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/tool_draw"
 		]
 	},
 	"item.tool.swing": {
+		"ds_credits": [
+			{
+				"name": "Swing Whoosh.wav",
+				"author": "yutface",
+				"website": "https://freesound.org/people/yutface/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			"dsurround:items/swoosh1",
 			"dsurround:items/swoosh2",
@@ -1194,21 +1684,53 @@
 		]
 	},
 	"item.utility.equip": {
+		"ds_credits": [
+			{
+				"name": "Zippo click sound",
+				"author": "dawith (submitted by qubodup)",
+				"website": "https://opengameart.org/content/zippo-click-sound",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
-			"dsurround:items/utility_draw"
+			"dsurround:items/utility_zippo"
 		]
 	},
 	"item.shield.equip": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/tool_draw"
 		]
 	},
 	"item.shield.use": {
+		"ds_credits": [
+			{
+				"name": "Presence Footsteps",
+				"author": "Hurricaaane (Ha3)",
+				"website": "https://github.com/Hurricaaane/Presence-Footsteps",
+				"license": "WTFPL v2"
+			}
+		],
 		"sounds": [
 			"dsurround:items/tool_draw"
 		]
 	},
 	"item.potion.equip": {
+		"ds_credits": [
+			{
+				"name": "Water + glass bottle, sloshing 2",
+				"author": "giddster",
+				"website": "https://freesound.org/people/giddster/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			"dsurround:items/potion_slosh1",
 			"dsurround:items/potion_slosh2",
@@ -1678,6 +2200,14 @@
 		]
 	},
 	"weather.rain": {
+		"ds_credits": [
+			{
+				"name": "even more rain.wav",
+				"author": "mlaramie",
+				"website": "https://freesound.org/people/mlaramie/",
+				"license": "Creative Commons 0"
+			}
+		],
 		"sounds": [
 			"dsurround:ambient/weather/rain_calm1",
 			"dsurround:ambient/weather/rain_calm2",
@@ -1685,9 +2215,38 @@
 			"dsurround:ambient/weather/rain_calm4"
 		]
 	},
-	"weather.dust": {
+	"weather.rain.medium": {
+		"ds_credits": [
+			{
+				"name": "Medium rain",
+				"author": "Ryding",
+				"website": "https://freesound.org/people/Ryding/",
+				"license": "Creative Commons Attribution 4.0"
+			}
+		],
 		"sounds": [
-			"dsurround:ambient/weather/dust"
+			"dsurround:ambient/weather/rain_medium1",
+			"dsurround:ambient/weather/rain_medium2",
+			"dsurround:ambient/weather/rain_medium3",
+			"dsurround:ambient/weather/rain_medium4"
+		]
+	},
+	"weather.dust": {
+		"ds_credits": [
+			{
+				"name": "Desert sand - Dune atmosphere",
+				"author": "Vrymaa",
+				"website": "https://freesound.org/people/Vrymaa/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/weather/dust1",
+			"dsurround:ambient/weather/dust2",
+			"dsurround:ambient/weather/dust3",
+			"dsurround:ambient/weather/dust4",
+			"dsurround:ambient/weather/dust5",
+			"dsurround:ambient/weather/dust6"
 		]
 	}
 }

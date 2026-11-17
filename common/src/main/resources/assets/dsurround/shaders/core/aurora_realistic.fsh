@@ -86,13 +86,7 @@ const float FIELD_MEAN = 0.12;
 const float FIELD_GLOW = 0.15;
 const float TWO_PI = 6.2831853;
 
-// Smooth value noise, 0 to 1, a cell to a texel of the noise texture (see NoiseTexture)
-float noise(vec2 p) {
-    vec2 cell = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
-}
+#include <dsurround:noise.glsl>
 
 // How far along a line of sight, going up at the sine mu from the ground, it reaches the height h
 float shell_distance(float mu, float h) {

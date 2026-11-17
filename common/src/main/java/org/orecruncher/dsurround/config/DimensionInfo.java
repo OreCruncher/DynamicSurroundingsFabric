@@ -64,6 +64,8 @@ public class DimensionInfo {
     protected boolean groundFog = true;
     // Whether the mod's clouds are drawn here, in place of the dimension's own
     protected boolean dynamicClouds = true;
+    // Whether world actors (dust devils and the like) appear here, in the biomes given them
+    protected boolean worldActors = true;
 
     // The dimension's own cloud height, used unless a rule sets one
     private final int defaultCloudHeight;
@@ -96,6 +98,7 @@ public class DimensionInfo {
         // weather as vanilla does gets particle weather in its place
         this.simulateWind = world.dimensionType().hasSkyLight();
         this.groundFog = world.dimensionType().hasSkyLight();
+        this.worldActors = world.dimensionType().hasSkyLight();
         this.particleWeather = !drawsOwnWeather.test(world);
         // And one with vanilla's clouds gets the mod's in their place
         this.dynamicClouds = this.defaultCloudHeight != NO_CLOUDS && !drawsOwnClouds.test(world);
@@ -131,6 +134,7 @@ public class DimensionInfo {
             config.simulateWind().ifPresent(v -> this.simulateWind = v);
             config.groundFog().ifPresent(v -> this.groundFog = v);
             config.dynamicClouds().ifPresent(v -> this.dynamicClouds = v);
+            config.worldActors().ifPresent(v -> this.worldActors = v);
         }
     }
 
@@ -198,6 +202,10 @@ public class DimensionInfo {
 
     public boolean dynamicClouds() {
         return this.dynamicClouds;
+    }
+
+    public boolean worldActors() {
+        return this.worldActors;
     }
 
 }

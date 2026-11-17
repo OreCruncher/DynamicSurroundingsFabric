@@ -13,6 +13,7 @@ public final class Commands {
         if (dispatcher == null)
             return;
 
+        new ActorCommand().register(dispatcher, registryAccess);
         new AuroraCommand().register(dispatcher, registryAccess);
         new BiomeCommand().register(dispatcher, registryAccess);
         new ConfigCommand().register(dispatcher, registryAccess);

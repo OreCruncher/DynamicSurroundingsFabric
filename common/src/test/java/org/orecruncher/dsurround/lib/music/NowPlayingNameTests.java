@@ -46,6 +46,21 @@ public class NowPlayingNameTests {
     }
 
     @Test
+    void theGamesTracksAreTranslatedByTheirKey() {
+        // For /dsmm whatsplaying: the game's key, as it looks it up
+        assertEquals("music.game.sweden", NowPlayingName.translatedKey("music/game/sweden", TRANSLATED::contains));
+        assertNull(NowPlayingName.translatedKey("dsurround_seasons.music/spring1", TRANSLATED::contains));
+        assertNull(NowPlayingName.translatedKey(null, TRANSLATED::contains));
+    }
+
+    @Test
+    void theGamesOwnLanguageNamesItsTracks() {
+        // The keys the game's lang files have, and so what /dsmm whatsplaying shows for its music
+        var key = NowPlayingName.translatedKey("music/game/a_familiar_room", net.minecraft.locale.Language.getInstance()::has);
+        assertEquals("Aaron Cherof - A Familiar Room", Component.translatable(key).getString());
+    }
+
+    @Test
     void namesSurviveBeingReadAsAKey() {
         // Read as a format, "%%" shows as "%"; and the game would turn "/" into "."
         var name = NowPlayingName.of("x.music/a", TRANSLATED::contains, Component.literal("100% AC/DC"), null);

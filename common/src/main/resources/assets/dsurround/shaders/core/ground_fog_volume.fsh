@@ -54,7 +54,8 @@ const vec3 MIST_COLOR = vec3(0.92, 0.93, 0.95);
 const float UNDER_GROUND = 1.1;
 // Where things are east-west and north-south is wrapped at this many blocks (GroundFogVolume.NOISE_WRAP)
 const float WRAP = 4620.0;
-// The noise texture's size, which it repeats at (GroundFogVolume.NOISE_SIZE)
+// The noise texture's size, which it repeats at (GroundFogVolume.NOISE_SIZE): where things are is wrapped at a
+// whole number of these cells for each noise (WRAP), so a wrap lands on the same noise
 const float NOISE_SIZE = 60.0;
 // How far, in blocks, the swirling pushes the wisps about
 const float SWIRL = 3.0;
@@ -89,16 +90,7 @@ float fog_fade(float distance) {
     return 1.0 - smoothstep(0.0, 1.0, fog);
 }
 
-// Smooth value noise, 0 to 1, a cell to a texel of the noise texture, repeating every NOISE_SIZE cells: where things
-// are is wrapped at a whole number of those for each noise (GroundFogVolume.NOISE_WRAP), so a wrap lands on the same
-// noise. The texture is read between texels in a straight line; moving the point within its cell along an S-curve
-// first rounds that off, as working out the four corners did, in one read
-float noise(vec2 p) {
-    vec2 cell = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
-}
+#include <dsurround:noise.glsl>
 
 // A column's light, from the lightmap
 vec3 columnLight(ivec2 cell) {
@@ -163,8 +155,8 @@ float mist(vec3 p, float fromCamera, float stepLength) {
         return m * 0.5;
     }
     // The wisps are pushed about by a slowly changing field, so they curl and eddy rather than only sliding along
-    vec2 swirl = vec2(noise(at / 7.0 + vec2(Drift.z * 0.04, 0.0)),
-                      noise(at / 7.0 + vec2(19.0, -Drift.z * 0.04))) - 0.5;
+    // Both of its directions from one read: two independent noises at the same point (noise2)
+    vec2 swirl = noise2(at / 7.0 + vec2(Drift.z * 0.04, 0.0)) - 0.5;
     // Never clearing entirely between them, and scaled so the mist is as thick on average as without the floor. Half,
     // their average, where the steps are too long for them, and further off
     float wisp = 0.5;
@@ -283,6 +275,7 @@ void main() {
         length_ = length(viewed.xyz / viewed.w);
     }
     fragColor = mist_along(dir, length_);
-    // After fragColor: written the other way around, fragColor is lost on Vulkan (seen on AMD, driver 26.10.1)
-    sceneDistance = distance_at(DepthSampler, pixel);
+    // After fragColor: written the other way around, fragColor is lost on Vulkan (seen on AMD, driver 26.10.1). From
+    // the depth already read: pixel is within the screen
+    sceneDistance = distance_from_depth(depth, pixel);
 }

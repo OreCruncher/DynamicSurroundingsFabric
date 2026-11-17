@@ -9,12 +9,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.gui.overlay.lightlevel.LightLevelOverlay;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 
 import java.util.List;
 
-@Cacheable
 public final class OverlayManager {
 
     private final List<AbstractOverlay> overlays;

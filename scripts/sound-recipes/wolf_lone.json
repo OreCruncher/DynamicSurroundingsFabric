@@ -1,0 +1,25 @@
+{
+  "name": "wolf_lone",
+  "source": {
+    "title": "Cooper Creek 20160313_014852 solitary wolf howl very clear.wav",
+    "url": "https://freesound.org/people/betchkal/sounds/500646/",
+    "author": "betchkal",
+    "license": "CC0",
+    "file": "500646__betchkal__cooper-creek-20160313_014852-solitary-wolf-howl-very-clear.wav",
+    "prepare": "python scripts/sound-clean.py <file> lone_dry_x1.4.wav --highpass 120 --dereverb 1.7 -15 --tempo 1.4, then --source lone_dry_x1.4.wav",
+    "notes": "44.1 kHz mono, 55 s, Alaska: four howls of about 8 s with a valley's reverb (T60 about 1.7 s, measured from the howls' tails). The late reverb is taken out (tails now gone within about 0.2 s, a little room kept) and the howls sped up 1.4x, pitch kept, to about 6 s; the wolf factory varies the pitch as they play (0.85-1.15). Chosen over Borgory's wolf pack (651193, CC0), which didn't suit even cleaned."
+  },
+  "settings": {
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.05,
+    "fade_out": 0.4,
+    "target_rms_peak": -8.0
+  },
+  "clips": [
+    {"file": "ambient/wolf/wolf1", "start": 1.40, "end": 7.70},
+    {"file": "ambient/wolf/wolf2", "start": 8.20, "end": 14.00},
+    {"file": "ambient/wolf/wolf3", "start": 20.90, "end": 26.90},
+    {"file": "ambient/wolf/wolf4", "start": 29.05, "end": 34.70}
+  ]
+}

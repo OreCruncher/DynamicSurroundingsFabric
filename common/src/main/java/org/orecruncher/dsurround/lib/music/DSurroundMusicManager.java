@@ -62,14 +62,18 @@ public final class DSurroundMusicManager extends MusicManager {
     /**
      * The game names the current track in its toast and on the pause screen by this key. Tracks it has no translation
      * for (ours and resource packs') are named by their title and author instead, when their sound metadata has them.
+     * <p>
+     * Another mod may give a key with nothing in {@link #currentMusic}: Music and Melody returns its own playlist's
+     * track here, which it plays itself (#215). Such a key is passed on as it is.
      */
     @Override
     public String getCurrentMusicTranslationKey() {
         var key = super.getCurrentMusicTranslationKey();
-        if (key == null)
-            return null;
+        var music = this.currentMusic;
+        if (key == null || music == null)
+            return key;
 
-        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
+        var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(music.getIdentifier());
         var title = metaData.hasTitle() ? metaData.getTitle() : null;
         var author = metaData.getCredits().isEmpty() ? null : metaData.getCredits().getFirst().author();
         return NowPlayingName.of(key, Language.getInstance()::has, title, author);
@@ -124,13 +128,19 @@ public final class DSurroundMusicManager extends MusicManager {
 
         // Lookup meta information; getSoundMetadata never returns null
         var metaData = MixinHelpers.SOUND_LIBRARY.getSoundMetadata(this.currentMusic.getIdentifier());
-        if (!metaData.hasTitle() || metaData.getCredits().isEmpty()) {
-            return Component.literal(this.currentMusic.getIdentifier().toString());
+        if (metaData.hasTitle() && !metaData.getCredits().isEmpty()) {
+            var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+            var author = metaData.getCredits().getFirst().author().copy().withColor(ColorPalette.WHEAT.getValue());
+            return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
         }
 
-        var title = metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
-        var author = metaData.getCredits().getFirst().author().copy().withColor(ColorPalette.WHEAT.getValue());
-        return Component.translatable("dsurround.text.musicmanager.playing", title, author, Component.translationArg(this.currentMusic.getIdentifier()));
+        // The name the game gives its own tracks in its "now playing" toast, translated; else the title, if there is one
+        var translated = NowPlayingName.translatedKey(super.getCurrentMusicTranslationKey(), Language.getInstance()::has);
+        if (translated != null)
+            return Component.translatable(translated).withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+        if (metaData.hasTitle())
+            return metaData.getTitle().copy().withColor(ColorPalette.PUMPKIN_ORANGE.getValue());
+        return Component.literal(this.currentMusic.getIdentifier().toString());
     }
 
     public String getDiagnosticText() {

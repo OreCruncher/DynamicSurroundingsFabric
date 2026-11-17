@@ -31,7 +31,6 @@ public class DependencyContainerTests {
     void setUp() {
         this.container = new DependencyContainer("test");
         Simple.CREATED.set(0);
-        CachedThing.CREATED.set(0);
         ServiceImpl.CREATED.set(0);
         SlowCached.CREATED.set(0);
         LazyDependency.CREATED.set(0);
@@ -43,15 +42,6 @@ public class DependencyContainerTests {
         public static final AtomicInteger CREATED = new AtomicInteger();
 
         public Simple() {
-            CREATED.incrementAndGet();
-        }
-    }
-
-    @Cacheable
-    public static class CachedThing {
-        public static final AtomicInteger CREATED = new AtomicInteger();
-
-        public CachedThing() {
             CREATED.incrementAndGet();
         }
     }
@@ -160,7 +150,6 @@ public class DependencyContainerTests {
         }
     }
 
-    @Cacheable
     public static class SlowCached {
         public static final AtomicInteger CREATED = new AtomicInteger();
 
@@ -186,6 +175,11 @@ public class DependencyContainerTests {
 
     public static class NeedsLazyDependency {
         public NeedsLazyDependency(SlowUnregistered first, LazyDependency second) {
+        }
+    }
+
+    public static class NeedsServiceImpl {
+        public NeedsServiceImpl(ServiceImpl service) {
         }
     }
 
@@ -281,15 +275,77 @@ public class DependencyContainerTests {
     // ---- Resolving unregistered classes ----------------------------------------------------------------------
 
     @Test
-    void unregisteredClassIsCreatedEachTime() {
-        assertNotSame(this.container.resolve(Simple.class), this.container.resolve(Simple.class));
-        assertEquals(2, Simple.CREATED.get());
+    void unregisteredClassIsCreatedOnceAndShared() {
+        // Regression: a new one was made each time, so two classes needing an unregistered class each got their own
+        assertSame(this.container.resolve(Simple.class), this.container.resolve(Simple.class));
+        assertSame(this.container.resolve(Simple.class), this.container.resolve(NeedsSimple.class).simple);
+        assertEquals(1, Simple.CREATED.get());
     }
 
     @Test
-    void unregisteredCacheableClassIsCreatedOnce() {
-        assertSame(this.container.resolve(CachedThing.class), this.container.resolve(CachedThing.class));
-        assertEquals(1, CachedThing.CREATED.get());
+    void implementationRegisteredAsAnotherTypeCannotBeResolvedOnItsOwn() {
+        // Regression: Footprints and ShoreWaveHandler asked for WeatherSimulation, registered as IWeatherSimulation,
+        // and each got a second one that /dsweather couldn't reach
+        this.container.registerSingleton(Service.class, ServiceImpl.class);
+
+        var e = assertThrows(DependencyException.class, () -> this.container.resolve(ServiceImpl.class));
+
+        assertTrue(e.getMessage().contains("registered as '" + Service.class.getName() + "'"), e.getMessage());
+        assertEquals(0, ServiceImpl.CREATED.get());
+    }
+
+    @Test
+    void implementationAsAConstructorParameterIsAnError() {
+        this.container.registerSingleton(Service.class, ServiceImpl.class);
+
+        var e = assertThrows(DependencyException.class, () -> this.container.resolve(NeedsServiceImpl.class));
+
+        assertTrue(e.getMessage().contains("registered as '" + Service.class.getName() + "'"), e.getMessage());
+    }
+
+    @Test
+    void implementationRegisteredAsItselfToo() {
+        // Registered under both: each registration is its own singleton, as asked
+        this.container
+                .registerSingleton(Service.class, ServiceImpl.class)
+                .registerSingleton(ServiceImpl.class);
+
+        assertNotNull(this.container.resolve(ServiceImpl.class));
+    }
+
+    // ---- create() --------------------------------------------------------------------------------------------
+
+    @Test
+    void createMakesANewInstanceEachTime() {
+        this.container.registerSingleton(Simple.class);
+
+        var first = this.container.create(NeedsSimple.class);
+        var second = this.container.create(NeedsSimple.class);
+
+        assertNotSame(first, second);
+        assertSame(first.simple, second.simple, "its dependencies are still resolved");
+        assertNotSame(first, this.container.resolve(NeedsSimple.class), "nothing is registered by create");
+    }
+
+    @Test
+    void createRefusesARegisteredType() {
+        this.container.registerSingleton(Simple.class);
+
+        assertThrows(DependencyException.class, () -> this.container.create(Simple.class));
+    }
+
+    @Test
+    void createRefusesAnImplementationRegisteredAsAnotherType() {
+        this.container.registerSingleton(Service.class, ServiceImpl.class);
+
+        assertThrows(DependencyException.class, () -> this.container.create(ServiceImpl.class));
+    }
+
+    @Test
+    void createReportsACycle() {
+        var e = assertThrows(DependencyException.class, () -> this.container.create(CycleA.class));
+
+        assertTrue(e.getMessage().contains("Circular dependency"), e.getMessage());
     }
 
     @Test
@@ -408,7 +464,7 @@ public class DependencyContainerTests {
     // ---- Threads ---------------------------------------------------------------------------------------------
 
     @Test
-    void concurrentFirstResolveOfCacheableCreatesOneInstance() throws Exception {
+    void concurrentFirstResolveCreatesOneInstance() throws Exception {
         // Regression: find, create and register were separate steps, so racing threads could each create one
         int threads = 8;
         var pool = Executors.newFixedThreadPool(threads);
@@ -678,6 +734,18 @@ public class DependencyContainerTests {
         // Nothing registered: the class will be resolved without a registration
         assertEquals(List.of(), this.container.validate());
         assertEquals(List.of("Circular dependency: CycleA -> CycleB -> CycleC -> CycleA"), this.container.validate(CycleA.class));
+    }
+
+    @Test
+    void validateReportsAnImplementationAskedForOnItsOwn() {
+        this.container
+                .registerSingleton(Service.class, ServiceImpl.class)
+                .registerSingleton(NeedsServiceImpl.class);
+
+        var problems = this.container.validate();
+
+        assertEquals(1, problems.size(), problems.toString());
+        assertTrue(problems.getFirst().contains("registered as '" + Service.class.getName() + "'"), problems.toString());
     }
 
     @Test

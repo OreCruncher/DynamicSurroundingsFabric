@@ -1,0 +1,14 @@
+{
+  "name": "jungle_peru",
+  "source": {
+    "title": "Peruvian Amazon birds frogs daytime",
+    "url": "https://freesound.org/people/nonamethefish/sounds/653743/",
+    "author": "nonamethefish",
+    "license": "CC0",
+    "file": "653743__nonamethefish__peruvian-amazon-birds-frogs-daytime.wav",
+    "prepare": "python scripts/sound-clean.py <file> peru_hp300.wav --highpass 300, then --source peru_hp300.wav",
+    "notes": "48 kHz stereo, 58 s, upland forest in the Peruvian Amazon in the afternoon: rain frogs ticking at 2.5-5.5 kHz, a tinamou, birds and insects, steady throughout and already clean below 300 Hz (the high-pass only tidies it)."
+  },
+  "settings": {"rate": 24000, "quality": 2, "highpass": 0, "target_rms": -30.7},
+  "clips": [{"file": "ambient/outside/sparse_jungle", "start": 0.5, "end": 54.5, "loop": 3.0}]
+}

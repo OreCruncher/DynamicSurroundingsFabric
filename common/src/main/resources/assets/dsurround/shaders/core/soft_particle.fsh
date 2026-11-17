@@ -36,12 +36,7 @@ layout(location = 3) in vec4 vertexColor;
 layout(location = 0) out vec4 fragColor;
 #endif
 
-// A depth buffer value as a distance from the camera in blocks, along the view direction. Inverts the perspective
-// projection: for a view space z, ndc = (m22 * z + m32) / -z. Holds whichever way round the depth range runs.
-float view_distance(float depth) {
-    float ndc = DepthZeroToOne > 0.5 ? depth : depth * 2.0 - 1.0;
-    return ProjMat[3][2] / (ndc + ProjMat[2][2]);
-}
+#include <dsurround:view_distance.glsl>
 
 void main() {
     vec4 texel = texture(Sampler0, texCoord0);

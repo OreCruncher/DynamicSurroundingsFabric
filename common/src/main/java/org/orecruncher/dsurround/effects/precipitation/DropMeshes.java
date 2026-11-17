@@ -3,19 +3,13 @@
 
 package org.orecruncher.dsurround.effects.precipitation;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
-import com.mojang.renderpearl.api.vertex.VertexFormat;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -34,8 +28,8 @@ import java.util.concurrent.TimeoutException;
  * <p>
  * Built for the camera and partial tick as the level began; if the weather is drawn for another (a mod drawing the level
  * again from elsewhere: a portal, a mirror), or drawn twice, or their build isn't done after a short wait
- * ({@link #await}), they are written there and then, on the render thread, as before. Each {@link Kind} is written into memory of its own and used at most once: the falling drops and the dust
- * straight into {@link ParticleQuads}, there being thousands, the rest through a BufferBuilder.
+ * ({@link #await}), they are written there and then, on the render thread, as before. Each {@link Kind} is written
+ * into a {@link QuadWriter} of its own and used at most once.
  * <p>
  * The build reads the drops, and what they left where they landed, which only the client tick changes, when it
  * finishes the drops' step and lands them; the tick waits for a build under way, and drops it, first
@@ -43,8 +37,6 @@ import java.util.concurrent.TimeoutException;
  */
 public final class DropMeshes implements AutoCloseable {
 
-    // Room to start with, in bytes, for each kind written through a BufferBuilder, before the buffer grows
-    private static final int INITIAL_BYTES = 64 * 1024;
     // How long the weather's pass waits for a build under way ({@link #await}): about what building every kind on the
     // render thread takes, so waiting longer doesn't pay. With the machine busy (90% of the CPU and more, the game
     // catching up), the build's thread wasn't run for 10 to 30 ms while the render thread waited.
@@ -54,23 +46,18 @@ public final class DropMeshes implements AutoCloseable {
      * What is drawn, each in a pass of its own
      */
     public enum Kind {
-        DROPS("the rain and snow", DefaultVertexFormat.PARTICLE),
-        DUST("the dust", DefaultVertexFormat.PARTICLE),
-        FLECKS("the snow flecks", DefaultVertexFormat.PARTICLE),
-        STREAKS("the window streaks", DefaultVertexFormat.PARTICLE),
-        SPOTS("the damp spots", DefaultVertexFormat.POSITION_TEX_COLOR);
+        DROPS("the rain and snow", QuadWriter.Format.PARTICLE),
+        DUST("the dust", QuadWriter.Format.PARTICLE),
+        FLECKS("the snow flecks", QuadWriter.Format.PARTICLE),
+        STREAKS("the window streaks", QuadWriter.Format.PARTICLE),
+        SPOTS("the damp spots", QuadWriter.Format.POSITION_TEX_COLOR);
 
         final String description;
-        final VertexFormat format;
+        final QuadWriter.Format format;
 
-        Kind(String description, VertexFormat format) {
+        Kind(String description, QuadWriter.Format format) {
             this.description = description;
             this.format = format;
-        }
-
-        // Written straight into ParticleQuads, rather than through a BufferBuilder
-        boolean isDirect() {
-            return this == DROPS || this == DUST;
         }
     }
 
@@ -133,10 +120,7 @@ public final class DropMeshes implements AutoCloseable {
      */
     @FunctionalInterface
     public interface Drawer {
-        /**
-         * @param vertexCount how many corners there are: four a quad
-         */
-        void draw(ByteBuffer vertices, int vertexCount);
+        void draw(QuadWriter quads);
     }
 
     /**
@@ -215,30 +199,25 @@ public final class DropMeshes implements AutoCloseable {
     private final IModLog logger;
     // What has been logged, once each, for a session
     private final EnumSet<Behind> reported = EnumSet.noneOf(Behind.class);
-    // The drops and the dust, built ahead
-    private final ParticleQuads drops = new ParticleQuads();
-    private final ParticleQuads dust = new ParticleQuads();
-    // The kinds written through a BufferBuilder: where each is written, and what was, once the build is joined; null
-    // once drawn, or if there were none
-    private final ByteBufferBuilder[] bytes = new ByteBufferBuilder[KINDS.length];
-    private final MeshData[] meshes = new MeshData[KINDS.length];
-    // Written on the render thread when what was built ahead can't be used
-    private final ParticleQuads now = new ParticleQuads();
-    private final ByteBufferBuilder nowBytes = new ByteBufferBuilder(INITIAL_BYTES);
+    // Each kind, built ahead
+    private final QuadWriter[] ahead = new QuadWriter[KINDS.length];
+    // Written on the render thread when what was built ahead can't be used, one for each format: drawn as soon as written
+    private final QuadWriter[] now = new QuadWriter[QuadWriter.Format.values().length];
     private final boolean[] taken = new boolean[KINDS.length];
     @Nullable
     private Request request;
     @Nullable
     private CompletableFuture<Void> pending;
     // Kinds drawn from what was built ahead, and built on the render thread instead, since the diagnostics last asked
-    private int ahead;
-    private int behind;
+    private int drawnAhead;
+    private int drawnBehind;
 
     public DropMeshes(IModLog logger) {
         this.logger = logger;
         for (var kind : KINDS)
-            if (!kind.isDirect())
-                this.bytes[kind.ordinal()] = new ByteBufferBuilder(INITIAL_BYTES);
+            this.ahead[kind.ordinal()] = new QuadWriter(kind.format);
+        for (var format : QuadWriter.Format.values())
+            this.now[format.ordinal()] = new QuadWriter(format);
     }
 
     /**
@@ -256,43 +235,27 @@ public final class DropMeshes implements AutoCloseable {
 
     // On the executor's thread
     private void build(Request request) {
-        build(Kind.DROPS, this.drops, request);
-        build(Kind.DUST, this.dust, request);
         for (var kind : KINDS)
-            if (!kind.isDirect() && request.sources().hasAny(kind))
-                this.meshes[kind.ordinal()] = build(kind, this.bytes[kind.ordinal()], request);
+            build(kind, this.ahead[kind.ordinal()], request);
     }
 
     /**
-     * Writes the drops or the dust for a request, as {@link PrecipitationRenderer#build} does
+     * Writes the quads of a kind for a request into {@code quads}, which must be of the kind's format, as
+     * {@link PrecipitationRenderer#build} does
      */
-    static void build(Kind kind, ParticleQuads quads, Request request) {
-        var style = request.style();
-        PrecipitationRenderer.build(request.sources().field(), quads, request.view(), request.partialTick(),
-                kind == Kind.DUST, style.snowflakes(), style.largest(), style.dust(), style.scales(), style.rainColor());
-    }
-
-    /**
-     * Writes the quads of a kind other than the drops and the dust for a request, as {@link PrecipitationRenderer#build}
-     * does
-     *
-     * @return what was written; null if nothing was
-     */
-    @Nullable
-    static MeshData build(Kind kind, ByteBufferBuilder bytes, Request request) {
+    static void build(Kind kind, QuadWriter quads, Request request) {
         var sources = request.sources();
         var style = request.style();
         var cam = request.view().position();
         float partialTick = request.partialTick();
-        var builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, kind.format);
         switch (kind) {
-            case FLECKS -> PrecipitationRenderer.build(sources.flecks(), builder, cam, partialTick, style.snowflakes(),
+            case DROPS, DUST -> PrecipitationRenderer.build(sources.field(), quads, request.view(), partialTick,
+                    kind == Kind.DUST, style.snowflakes(), style.largest(), style.dust(), style.scales(), style.rainColor());
+            case FLECKS -> PrecipitationRenderer.build(sources.flecks(), quads, cam, partialTick, style.snowflakes(),
                     style.largest(), style.scales().snow());
-            case STREAKS -> PrecipitationRenderer.build(sources.streaks(), builder, cam, partialTick, style.rainColor());
-            case SPOTS -> PrecipitationRenderer.build(sources.spots(), builder, cam, partialTick, style.spot());
-            default -> throw new IllegalArgumentException(kind + " is written straight into ParticleQuads");
+            case STREAKS -> PrecipitationRenderer.build(sources.streaks(), quads, cam, partialTick, style.rainColor());
+            case SPOTS -> PrecipitationRenderer.build(sources.spots(), quads, cam, partialTick, style.spot());
         }
-        return builder.build();
     }
 
     /**
@@ -308,26 +271,20 @@ public final class DropMeshes implements AutoCloseable {
         var now = new Request(sources, PrecipitationRenderer.View.of(camera), partialTick, style);
         var mismatch = this.mismatch(kind, now);
         if (mismatch != null) {
-            this.behind++;
+            this.drawnBehind++;
             this.report(mismatch);
             // What the build makes of it later isn't drawn
             if (mismatch.kind() == Behind.LATE)
                 this.taken[kind.ordinal()] = true;
-            if (kind.isDirect()) {
-                build(kind, this.now, now);
-                return draw(this.now, drawer);
-            }
-            return draw(build(kind, this.nowBytes, now), drawer);
+            var quads = this.now[kind.format.ordinal()];
+            build(kind, quads, now);
+            return draw(quads, drawer);
         }
 
         this.join();
-        this.ahead++;
+        this.drawnAhead++;
         this.taken[kind.ordinal()] = true;
-        if (kind.isDirect())
-            return draw(kind == Kind.DUST ? this.dust : this.drops, drawer);
-        var mesh = this.meshes[kind.ordinal()];
-        this.meshes[kind.ordinal()] = null;
-        return draw(mesh, drawer);
+        return draw(this.ahead[kind.ordinal()], drawer);
     }
 
     /**
@@ -367,21 +324,10 @@ public final class DropMeshes implements AutoCloseable {
         }
     }
 
-    private static int draw(ParticleQuads quads, Drawer drawer) {
-        int count = quads.vertexCount();
-        if (count > 0)
-            drawer.draw(quads.vertices(), count);
-        return count / 4;
-    }
-
-    private static int draw(@Nullable MeshData mesh, Drawer drawer) {
-        if (mesh == null)
-            return 0;
-        try (mesh) {
-            int count = mesh.drawState().vertexCount();
-            drawer.draw(mesh.vertexBuffer(), count);
-            return count / 4;
-        }
+    private static int draw(QuadWriter quads, Drawer drawer) {
+        if (quads.vertexCount() > 0)
+            drawer.draw(quads);
+        return quads.quadCount();
     }
 
     /**
@@ -427,13 +373,8 @@ public final class DropMeshes implements AutoCloseable {
                 // Dropped anyway
             }
         }
-        for (int i = 0; i < KINDS.length; i++) {
-            if (this.meshes[i] != null) {
-                this.meshes[i].close();
-                this.meshes[i] = null;
-            }
+        for (int i = 0; i < KINDS.length; i++)
             this.taken[i] = false;
-        }
         this.request = null;
     }
 
@@ -441,22 +382,19 @@ public final class DropMeshes implements AutoCloseable {
      * The share of the kinds drawn that were built ahead since the last time asked, 0 to 1; NaN if none were drawn
      */
     public float aheadShare() {
-        int total = this.ahead + this.behind;
-        float share = total == 0 ? Float.NaN : this.ahead / (float) total;
-        this.ahead = 0;
-        this.behind = 0;
+        int total = this.drawnAhead + this.drawnBehind;
+        float share = total == 0 ? Float.NaN : this.drawnAhead / (float) total;
+        this.drawnAhead = 0;
+        this.drawnBehind = 0;
         return share;
     }
 
     @Override
     public void close() {
         this.discard();
-        this.drops.close();
-        this.dust.close();
-        this.now.close();
-        for (var bytes : this.bytes)
-            if (bytes != null)
-                bytes.close();
-        this.nowBytes.close();
+        for (var quads : this.ahead)
+            quads.close();
+        for (var quads : this.now)
+            quads.close();
     }
 }

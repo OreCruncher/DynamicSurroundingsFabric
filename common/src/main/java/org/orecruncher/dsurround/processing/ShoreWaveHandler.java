@@ -19,6 +19,8 @@ import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.tags.FluidTags;
 
+import java.util.Arrays;
+
 /**
  * Waves lapping on beaches: still water at the edge of land, with open water behind it, so ponds and rivers have none;
  * a wave is a line of {@link ShoreFoam} along the shore, up onto the land and back. They come regularly, one a pulse for
@@ -42,6 +44,7 @@ public class ShoreWaveHandler extends AbstractClientHandler {
     private static final float SHORT_RIPPLE_Z = Mth.TWO_PI / 13F;
     // How far from the player, in blocks
     static final int RANGE = 32;
+    private static final int SIDE = RANGE * 2 + 1;
     // How far out the water has to reach, in blocks, looked at every few
     static final int OPEN_WATER = 14;
     private static final int OPEN_WATER_STEP = 3;
@@ -64,11 +67,17 @@ public class ShoreWaveHandler extends AbstractClientHandler {
     private final IWeatherSimulation weather;
     private final ITagLibrary tags;
     private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
+    // Each column's pulse delay, by slot, with the column it is for (see delay)
+    private final int[] delays = new int[SIDE * SIDE];
+    private final int[] delayX = new int[SIDE * SIDE];
+    private final int[] delayZ = new int[SIDE * SIDE];
 
     public ShoreWaveHandler(IWeatherSimulation weather, ITagLibrary tags, Configuration config, IModLog logger) {
         super("Shore Waves", config, logger);
         this.weather = weather;
         this.tags = tags;
+        // No column is at MIN_VALUE, so every slot is worked out the first time it is asked for
+        Arrays.fill(this.delayX, Integer.MIN_VALUE);
     }
 
     @Override
@@ -88,9 +97,23 @@ public class ShoreWaveHandler extends AbstractClientHandler {
             if (!every && (x & 1) != 0)
                 continue;
             for (int z = player.getBlockZ() - RANGE; z <= player.getBlockZ() + RANGE; z++)
-                if (pulseHere(tick, x, z, period))
+                if (pulses(tick, this.delay(x, z), period))
                     this.tryWave(level, x, z, storm);
         }
+    }
+
+    /**
+     * A column's {@link #pulseDelay}, kept: it never changes, and every column in range is asked every tick. Slots
+     * wrap with the columns, so as the player moves only those coming into range are worked out.
+     */
+    private int delay(int x, int z) {
+        int i = Math.floorMod(x, SIDE) * SIDE + Math.floorMod(z, SIDE);
+        if (this.delayX[i] != x || this.delayZ[i] != z) {
+            this.delayX[i] = x;
+            this.delayZ[i] = z;
+            this.delays[i] = pulseDelay(x, z);
+        }
+        return this.delays[i];
     }
 
     private void tryWave(ClientLevel level, int x, int z, float storm) {
@@ -148,7 +171,11 @@ public class ShoreWaveHandler extends AbstractClientHandler {
      * @param period the ticks between pulses
      */
     static boolean pulseHere(long tick, int x, int z, int period) {
-        return Math.floorMod(tick + pulseDelay(x, z), period) == 0;
+        return pulses(tick, pulseDelay(x, z), period);
+    }
+
+    private static boolean pulses(long tick, int delay, int period) {
+        return Math.floorMod(tick + delay, period) == 0;
     }
 
     /**

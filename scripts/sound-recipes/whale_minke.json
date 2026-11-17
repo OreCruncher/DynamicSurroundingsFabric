@@ -1,0 +1,45 @@
+{
+  "name": "whale_minke",
+  "source": {
+    "title": "Minke whale pulse trains",
+    "url": "https://www.fisheries.noaa.gov/national/science-data/sounds-ocean",
+    "author": "NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch",
+    "license": "Public domain (U.S. government work)",
+    "file": "Baac-pulsetrains-NOAA-PAGroup-25-minke-clip.mp3",
+    "notes": "8 kHz mono MP3, 39 s: one pulse train at 78-188 Hz, 26 dB over the background, building from soft short pulses (2-8 s) to a steady fast run, the pulses lengthening to its end at 37 s. Four stretches following it. Played rarely (weight 3 in biomes.json, to the other whales' 10)."
+  },
+  "settings": {
+    "highpass": 60,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.3,
+    "fade_out": 0.6,
+    "target_rms_peak": -9.0
+  },
+  "clips": [
+    {
+      "file": "ambient/whale/minke1",
+      "start": 3.0,
+      "end": 9.0,
+      "notes": "building up"
+    },
+    {
+      "file": "ambient/whale/minke2",
+      "start": 12.0,
+      "end": 17.0,
+      "notes": "steady and fast"
+    },
+    {
+      "file": "ambient/whale/minke3",
+      "start": 23.0,
+      "end": 28.0,
+      "notes": "longer pulses"
+    },
+    {
+      "file": "ambient/whale/minke4",
+      "start": 32.0,
+      "end": 37.6,
+      "notes": "the end"
+    }
+  ]
+}

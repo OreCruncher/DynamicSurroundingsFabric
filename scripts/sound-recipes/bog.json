@@ -1,0 +1,26 @@
+{
+  "name": "bog",
+  "source": {
+    "title": "rbh Mpls Bog birds.wav",
+    "url": "https://freesound.org/people/RHumphries/sounds/1050/",
+    "author": "RHumphries",
+    "license": "CC BY 4.0",
+    "file": "1050__rhumphries__rbh-mpls-bog-birds.wav",
+    "prepare": "python scripts/sound-clean.py <file> bog_matched.wav --match <the mod's old ambient/outside/bog.ogg> 0.54, then --source bog_matched.wav",
+    "notes": "48 kHz 24-bit stereo, 180 s. The old loop was 49 s of it from 0.5 s at 48 kHz (629 kB), its tone reshaped: matched again with --match, the loop 87 s at 32 kHz for about the same size. Ends at 88 s so the crossfade lies in a calm stretch (a loud bird call at 92.8-95.5 s)."
+  },
+  "settings": {
+    "rate": 32000,
+    "quality": 4,
+    "highpass": 20,
+    "target_rms": -44.9
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/bog",
+      "start": 1.0,
+      "end": 88.0,
+      "loop": 3.0
+    }
+  ]
+}

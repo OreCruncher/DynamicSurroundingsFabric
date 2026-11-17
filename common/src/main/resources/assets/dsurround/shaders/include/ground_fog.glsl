@@ -46,14 +46,18 @@ float depth_to_ndc(float depth) {
 }
 
 // How far along the view the line of sight through a screen pixel goes, in blocks, from the scene's depth there: enough
-// to tell whether two pixels looked about as far
-float distance_at(sampler2D depthSampler, ivec2 pixel) {
-    pixel = clamp(pixel, ivec2(0), ivec2(FullSize) - 1);
-    float depth = texelFetch(depthSampler, pixel, 0).r;
+// to tell whether two pixels looked about as far. For a pixel within the screen whose depth has been read already
+float distance_from_depth(float depth, ivec2 pixel) {
     if (depth <= 0.0) {
         return FAR_AWAY;
     }
     vec2 uv = (vec2(pixel) + 0.5) / FullSize;
     vec4 screen = vec4(uv * 2.0 - 1.0, depth_to_ndc(depth), 1.0);
     return min(-dot(DepthRowZ, screen) / dot(DepthRowW, screen), FAR_AWAY);
+}
+
+// The same for any pixel, reading its depth
+float distance_at(sampler2D depthSampler, ivec2 pixel) {
+    pixel = clamp(pixel, ivec2(0), ivec2(FullSize) - 1);
+    return distance_from_depth(texelFetch(depthSampler, pixel, 0).r, pixel);
 }

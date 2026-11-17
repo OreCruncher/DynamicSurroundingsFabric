@@ -47,10 +47,60 @@ is known of 26.4.
   or a script's shebang). `python scripts/license-headers.py` adds missing ones and brings the copyright line in step
   with `LICENSE` (change the years there, then run it); `--check` only reports. Files with another holder's notice are
   skipped. New files: add the header (the IDE's event template has it).
+- Block effects by block: `python scripts/block-effect-survey.py` lists each block new since 1.21.1 (`--all` every
+  block, `--mod <jar>` a mod's, `--untagged` only those with none) with the effect tags and `blocks.json` rules it gets
+  and the vanilla/`c:` tags that say what it is, for judging what is missing; first it lists our entries naming a block
+  or tag the jars don't have (a rename drops a block from an effect silently). Run it on every Minecraft upgrade.
+  For mods: `python scripts/biome-mod-survey.py [--version 26.3] [--min-downloads N] [--slug s ...] [--list]` finds
+  Modrinth's biome mods for the version past a download count (a million by default; less libraries and datapacks),
+  fetches each (SHA-1 checked, read only as a zip) into `build/biome-mods/<version>/`, drops those with no blocks and
+  writes each survey beside it. Judge them, then add entries to `assets/<mod id>/dsconfigs/tags/block/effects/`, each
+  `"required": false`; prefer the mod's own tags (`#promenade:leaf_piles`, BetterX's `#wover:vegetation/vines`).
+- Rewriting biome selectors (moving a fragment into `scripts.json`, say): `python scripts/biome-selector-diff.py
+  [--since REV] [--dump biomes.txt]` checks each rule matches the same biomes as at REV (HEAD by default), def.
+  functions expanded: proved over every combination of its traits and terms, and checked on each biome of a
+  `/dsdump biomes` file (the newest found). Rules pair by position. Exits 1 on any difference.
 - Minecraft version popularity: `python scripts/modrinth-version-stats.py [slug ...]` prints Modrinth's download
   share by game version and loader, for refreshing `VERSION_STATS.md` (its "How to refresh" says how).
 - Sound loudness survey (needs ffmpeg): `python scripts/sound-survey.py [--csv out.csv]` — level per OGG, events
   whose variants differ, stereo files, clipping, leading silence, files `sounds.json` doesn't use.
+- Cutting a sound's clips from a source recording (needs ffmpeg with libvorbis): `python scripts/sound-cut.py
+  scripts/sound-recipes/<name>.json --source <file> [--install]`. The recipe names the source (link, author, license)
+  and each clip's start and end; clips are cut in float, made mono, faded, brought to the recipe's level (the loudest
+  50 ms window, as the survey measures it) under a -1 dBTP ceiling, and encoded once, into `build/sound-rework/<name>/`
+  with a report against the files they replace; `--install` copies them over. Sources stay outside the repository.
+  A click far over a clip's level only reaches the level by limiting (it says so, and dulls the snap): pick calmer
+  stretches instead. A biome's looping ambience is a clip with `"loop": <seconds>` (the recording after its end
+  crossfaded into its start, so it repeats without a seam) and `"target_rms"` in the settings (the whole clip's level:
+  its loudest moment is only a bird close by). A call bright in the ear's most sensitive range takes `"treble": [dB, Hz]`, a high shelf (the eagle: -10 dB above 2 kHz). Longer loops are welcome (less repetition); keep them small with
+  `"rate"` and `"quality"` (24000 and 2 kept a 130 s cricket loop at 555 kB). The report gives each file's size.
+- A droning ambience made from noise, the mod's own with nothing to credit (needs numpy and ffmpeg): `python
+  scripts/drone-synth.py OUT.ogg [--center HZ] [--width OCT] [--resonance DB] [--rumble DB] [--drift DB] [--pulse HZ
+  DB] [--lufs L]`: a band of noise with a hum on its center, drifting in color, made over the whole loop so it repeats
+  without a seam. Give the command in the notes beside what it made; the same arguments and seed give the same file.
+- A short click, the mod's own (needs numpy and ffmpeg): `python scripts/click-synth.py OUT.ogg [--slide MS] [--tock
+  HZ] [--ring MS] [--latch MS] [--level DB] [--seed N]`: a snap and a ringing tone, an optional second catch and slide.
+  A crisp double click: `--slide 0 --tock 1700 --ring 8 --latch 45` (tried for the hotbar's utility equip, which
+  became a softened recorded click instead).
+- After changing `CREDITS.md`, `python scripts/credits-sync.py [--write]` brings `sounds.json`'s `ds_credits` (shown in
+  the sound settings and the now-playing toast) in line with it; `CREDITS.md` is the one to trust.
+- Finding and judging sources (numpy and ffmpeg, but for the search): `python scripts/freesound-search.py "query"...
+  [--license cc0|by] [--user NAME --previews DIR]` shortlists Freesound from its pages (read each description: a
+  remix, someone else's recording or a vintage transfer can carry CC0); `sound-calls.py FILE [GAP]` maps a
+  recording's calls (where to cut, how far over the floor); `sound-ambience.py FILE` shows an ambience's level over
+  time and its events (where to loop, what intrudes); `sound-match.py SOUND CANDIDATE... [--speeds] [--contour]` asks
+  whether a sound was cut from a candidate (strict r on every sample: a cut scores 0.9-1.0, unrelated 0.1-0.4; tonal
+  calls need `--contour`). `SOUND_REWORK.md` is the record of the 2026-11 sound rework: every sound's source, what was
+  searched and ruled out, and why each change was made.
+- Cleaning a source before it is cut (needs numpy and ffmpeg): `python scripts/sound-clean.py IN OUT [--highpass HZ]
+  [--lowpass HZ] [--denoise FLOOR_DB [--noise-pct P] [--over X]] [--dereverb T60 FLOOR_DB] [--tempo X]`, to a float
+  WAV outside the repository; the recipe's `prepare` gives the command. Filter rumble and hiss away first: spectral
+  denoising also takes down quiet calls it mistakes for noise (a pack's chorus lost as much as its background). Noise
+  that swells (surf) needs a higher profile percentile, `--noise-pct 70 --over 2`, where calls are a small part of
+  the recording (the owls, `--denoise -15`: 10 dB more off the surf, the hoots whole; a lower floor left the rest of it warbling). `--match REF START` gives a
+  longer or cleaner cut the tone of the old file cut from the same recording (REF, found at START by `sound-match.py`).
+  `sound-cut.py` also takes `"bass": [dB, Hz]` (a low shelf) and `"channel": "stereo"` (an ambience kept stereo);
+  level a loop whose rumble or hiss changed by loudness (`ebur128`), not by RMS.
 - Game jar for `javap` (check real signatures rather than assuming; 26.3 is unobfuscated):
   `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/26.3/minecraft-merged-deobf-26.3.jar`.
   NeoForge-patched classes: `~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/neoforge-<version>-minecraft-merged-deobf/26.3/*.jar`.
@@ -68,7 +118,11 @@ is known of 26.4.
 - Wait for and grep the log: `Loaded the dsurround:pipeline/<name> shader`, `Dependency registration validated`,
   `N biome configs loaded`, mixin errors (`InvalidInjection`, `MixinApplyError`), config migration
   (`has moved to`).
-- Stopping the Gradle task leaves the game JVM running; kill it (PowerShell):
+- Quitting the game ends a development run within about 2 seconds: `lib/platform/DevExit` waits for the render (main)
+  thread to end, then halts the JVM that Architectury's thread pools would hold open until vanilla's post-main
+  watchdog crash. To quit a client you launched without killing it, close its window (PowerShell, the process found as
+  below: `(Get-Process -Id <pid>).CloseMainWindow()`); the Gradle task then ends successfully.
+  Stopping the Gradle task instead leaves the game JVM running; kill it (PowerShell):
   `Get-CimInstance Win32_Process -Filter "Name='java.exe' or Name='javaw.exe'" | Where-Object { $_.CommandLine -match 'KnotClient|devlaunchinjector|net.fabricmc.loader.impl.launch' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`
   That doesn't match the NeoForge client (`:neoforge:runClient`). Both run as Architectury's `TransformerRuntime`, so
   match NeoForge's by its platform folder in `-Darchitectury.main.class`:
@@ -139,8 +193,7 @@ is known of 26.4.
   4. `python scripts/vanilla-server.py check neoforge [--against <single player biomes.txt>]` reports the members only
      a `c:` tag can give our tags, with any that are missing, and exits 1 if there are any. It reads the dumps from
      `<platform>/run-pack/none/config/dsurround/dumps`.
-  5. `python scripts/vanilla-server.py stop`, and stop the client as above. Quitting ends in the shutdown watchdog
-     crash and a failed Gradle task, and may leave a JVM to kill; none of that is the test failing.
+  5. `python scripts/vanilla-server.py stop`, and stop the client as above (or quit it: `DevExit` ends it).
 
   Why the script does what it does, for when something else needs a vanilla server:
   - `:neoforge:runClient` can't join. The dev client's extra mods (Biomes O' Plenty and the others `-Ppack` leaves out)
@@ -183,14 +236,26 @@ is known of 26.4.
 - Anything touching `Blocks`, `BiomeTrait`, tag classes, etc. needs the game bootstrapped first. Use a static block
   at the top of the test class (before static fields that use those classes), not `@BeforeAll`:
   `static { SharedConstants.tryDetectVersion(); Bootstrap.bootStrap(); }`
+- Item stacks in tests need their default components: call `testing/ItemComponents.bind()` after the bootstrap
+  (26.x binds them only once registries load; without it, "Components not bound yet").
 - No mocking library. `testing/Fakes.of(Interface.class, Map.of("method", args -> ...))` makes proxy fakes;
   `lib/threading/RecordingLog` captures logging; `Randomizer.create(seed)` for repeatable randomness.
 - Resource files from tests: anchor on a mod-owned file (`/assets/dsurround/lang/en_us.json`) — other `assets`
   folders are on the class path too.
+- Fuzzing the shipped `dsconfigs`: `testing/ConfigFuzz` reads them by kind and edits entries the way a hand-edited file
+  breaks, shrinking a failure to a minimal entry. `DsConfigFuzzTests` fuzzes decoding; `LibraryRulesFuzzTests` what
+  comes after: garbled scripts in the real evaluator (nothing escapes, stalls or repeats), block rules applied through
+  `RuleGuard` (a bad rule costs only itself), sound factories (sounds made, finite volume and pitch: it found NaN
+  pitches). It registers stand-ins for `IConditionEvaluator` and `ITagLibrary` in the root container, and checks it
+  still reaches compiling scripts and applying rules, so a stand-in that stops it there fails it.
 
 ## Architecture worth knowing
 - Dependency container (`lib/di`): classes it creates take dependencies in their constructors. Config groups are
-  registered automatically (`ConfigurationData.registerWith`). Static `ContainerManager.resolve` remains only in
+  registered automatically (`ConfigurationData.registerWith`). `resolve` gives one shared instance, registered or
+  not (an unregistered class is created once and kept); `create` makes a new one each time (entity effects, which
+  hold per-entity state). A class registered as another type's implementation (`WeatherSimulation` for
+  `IWeatherSimulation`) can't be asked for by itself: it throws, and startup validation reports it, as it would be a
+  second instance. Static `ContainerManager.resolve` remains only in
   static helpers, mixin support and codec-created objects, where nothing can inject.
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
@@ -233,11 +298,29 @@ is known of 26.4.
 - `RenderPipeline.Builder` defaults to no depth state: no test and no writes. Set one on every pipeline that should
   test or write depth (`ModShaderTests` checks the clouds' depth pass).
 - Particle pipelines cull back faces: wind quads counter-clockwise as the camera sees them.
+- Effects write their geometry with `effects/QuadWriter` (particle or position-texture-color quads, straight into
+  memory) and draw it with `effects/MeshDraw`, which checks the writer's format against the pipeline's: those two are
+  the only places an effect meets the game's buffer types, so a render API change lands there. `BufferBuilder` and
+  `VertexConsumer` remain only where geometry is handed to vanilla's own drawing (footprints, the light level overlay,
+  lightning for shader packs).
+  A shader effect's per-frame values are worked out with no GPU into a frame record (`GroundFogFrame`, `AuroraFrame`,
+  `RealisticAuroraFrame`, `PointLightFrame`), unit-tested; the renderer only packs it into its uniform block (a `pack`
+  method: the matrix, then the record's vec4s in order), so that packing is all a render API change touches. A new
+  value goes in the record, in the block's order, and in its shader include.
+  Passes over the whole screen (ground fog's three, the realistic aurora and its composite) go through
+  `effects/ScreenPasses`: `pipeline` starts their pipelines (one triangle from the vertex index, no vertex buffer, no
+  culling), `draw` opens the pass, sets the pipeline, binds and draws, and `Reduced` keeps a target at a share of the
+  screen's size.
 - Rendering is 26.3's: pipelines (`com.mojang.renderpearl.api`), `RenderPass`, GPU buffers, uniform blocks (std140, `MappableRingBuffer`), particle
   layers and extraction. Depth is reverse-Z (cleared to 0). "How 26.3 draws a level" below has how the aurora, soft
   particles and point lights hook in. GPU timings (`RenderTimer`) go through the device's timestamp queries: no raw OpenGL, as 26.3
   can run on Vulkan.
 - World and dimension queries go through `runtime/oracle` (`ILevelOracle`, `IDimensionOracle`, `IMinecraftClock`).
+- Mods' own files (biome definitions, the tag fallback) are read through the `IModFiles` registered with the container
+  (by mod id): `ModFiles.byPaths()` by default (`Client.initialize`), reading the folders `ModRoots` finds. NeoForge,
+  which hands over jar files, registers `NeoForgeModFiles` after `Client.initialize`, reading through FML's open
+  `JarContents`. Don't open mod jars as zip file systems: kept open, they cost about 300 bytes of heap a file in them
+  (36 MB for a pack of 120 mods).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
   old values carry over on load (also rename the path in `dsconfigs/presets.json`). Translation keys follow
   `dsurround.config.<group>.<field>[.tooltip]`.
@@ -296,7 +379,9 @@ is known of 26.4.
   current (`Efx.isCurrent`, asserted). The worker recalculates whatever the `ISourceProvider`s registered with
   `SourceProviders` hand it. Worker threads read the world only through `WorldContext.blocks`
   (`lib/block/NoBlockEntityView`), or, for the traces, each thread's `lib/block/ChunkCachingView` (keeps the chunk in
-  hand between reads; a quarter of a trace was the level looking chunks up): on the client `Level.getBlockEntity` can
+  hand between reads; a quarter of a trace was the level looking chunks up). Its `clip` is `lib/block/RayWalk`: the
+  same blocks in the same order as vanilla's, each tested the same way (`RayWalkTests` compares them ray for ray), but
+  nothing read in a section that holds only air; that halved traces in open air (`sound.json`, 2026-11-07): on the client `Level.getBlockEntity` can
   create a block entity from any thread, and mod blocks call it from shape methods, which corrupted chunk maps (#166).
   Nor may they call a `SoundInstance`'s
   `getVolume()`/`getPitch()`: each draws on the instance's `LegacyRandomSource`, which the sound engine also uses on the
@@ -313,6 +398,34 @@ is known of 26.4.
   A particle's `tick` isn't always on the client thread: Particle Core ticks particles on several threads at once, and
   Async Particles on a worker. So `tick` touches no shared state unguarded, and no `level.getRandom()` (fine in a
   constructor): an unguarded map in `WaterFoam` crashed with Particle Core (#213).
+- World actors (`effects/actors`, run by `processing/WorldActorHandler`; dust devils, snowspouts (both `GroundVortex`, a
+  `Style` each), waterspouts, firespouts, wisps and apparitions so far):
+  client-side things that move through the world, no entities. Every player in a world sees the same ones:
+  `ActorSpawns` gives each 128-block cell one chance per kind every 1200-tick slot, hashed from the world's
+  `BiomeManager.biomeZoomSeed` (class tweaker), and an actor's whole life is worked out from its seed (`VortexPath`, a
+  `Shape` per kind), so one met part way through is where it is for everyone. One dropped as the player leaves it behind
+  forgets that its chance was looked at, so coming back finds it again (not one that is over or broke up). Biomes give
+  them through `actors` in `biomes.json` (`actor`, `conditions`, `chance`: a number or a script giving one; a later
+  rule replaces, a plain 0 removes), dimensions through `worldActors` in `dimensions.json`. A sound that follows one
+  needs a range to match its size: a factory volume over 1 carries it further without making it louder (a waterspout
+  drifting past 22 blocks was silent). Conditions are evaluated at the
+  player, so a script on the player's own state would make players disagree. `/dsactor [kind]` summons one ahead.
+  Apparitions are the one kind not made of particles: the game's villager model posed by us and written into a
+  `QuadWriter` through `ApparitionRenderer`'s own `VertexConsumer` (depth pass, then color), its textures a
+  villager's of its biome and a seeded profession, layered in the shader (`ApparitionLook`), drawn from
+  `WorldActorHandler` in the default `IWorldRender` phase; gated by Scary Content, up to three at once (a cell has
+  three chances a slot, at 1, 0.5 and 0.25 of the biome's: `Type.shares`, `ActorSpawns.plan`'s `index`), met within 48 blocks
+  (dropped past 64, `Type.range`/`keepRange`), so a far one behind trees never holds a place. Two
+  that meet are nudged apart as mobs are (`Apparition.makeRoom`, only onto ground it can stand on). Their
+  chances triple in the week either side of Halloween (`platform.isCurrentDateInRangeOf` in `biomes.json`). They walk around
+  what is in the way (`ApparitionRoute`, A* over loaded blocks), so the way between haunts is each player's own.
+  Under a roof (the Nether's) the heightmap is the roof, so ground is looked for nearest a height (`RoofedGround`): the
+  player's for one starting, a wisp light's own last ground after; and wisps are met within 64 blocks there
+  (`Type.roofedRange`), as cliffs hide farther ones. The Nether has no night (`diurnal.isNight()` is false), so its rules
+  have no night condition.
+  A new kind is an `ActorKind`, a row in `WorldActorHandler`'s `types` (shape, sound, config switch, where it can
+  start, the ground its biome is read at, how one is made) and its class: a whirl extends `VortexActor` (life, break-up,
+  sound) and gives what is under its foot and what it shows; its particles follow the funnel with a `FunnelOrbit`.
 - Target portrait (`gui/overlay/TargetPortraitOverlay`): framed by height and width (`headBlocks`), with horses set by hand. A mob's effects aren't sent to clients, only the particles of the visible ones, so `TargetEffects` matches those back by color or type.
 - Random block effects: one `effects/systems/RandomBlockEffectSystem` (one effect per block), sampling where
   `RandomBlockSampler` says: vanilla's near (16) and far (32) triangular spreads, 667 each a tick, which also play the
@@ -324,6 +437,17 @@ is known of 26.4.
 - Features that turn themselves off for another mod are listed in `lib/platform/FeatureConflict` (checked with
   `isBlocked()`), not by skipping mixins: it logs them at startup and feeds the diagnostics overlay and `/dsconflicts`.
   A new one needs a `dsurround.conflict.<name>` entry in `en_us` (a test checks).
+  Effects a shader pack keeps off are listed in `lib/compat/ShaderPackFeature`, which `/dsconflicts` reports while one
+  is in use (those switched on in the config); a new one needs a `dsurround.shader_pack.<name>` entry (a test checks).
+- Script definitions (`dsconfigs/scripts.json`, any namespace; `config/ScriptDefinitionLoader`, `lib/scripting/ScriptDefinitions`):
+  `constants`, `biome` and `conditions` sections, names written bare and used as `def.NAME` / `def.name()`. Loaded at
+  VERY_HIGH, before the biome library checks its rules; ours first, a later file's name replaces (logged, whatever its
+  section). Constants go to both engines (`BiomeConditionEvaluator` for `biomeSelector`, `ConditionEvaluator` for
+  the rest), each section's functions to its own (`defineScripts`). `Environment` keeps them in a layer of their own,
+  replaced whole each reload; `def.` is reserved, so code can't use it and a definition can't replace code. Functions
+  take no arguments, may use each other (compiled in dependency order; loops and unknown or other-section names are
+  reported and left out with what uses them); one of constants and pure functions folds to a constant. Names ignore
+  case, as every script name does. `ConfigFuzz` skips the file; `ScriptDefinitionsTests` fuzzes it.
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
 - Biome traits (`config/biome/biometraits`) hold tables of what vanilla has, so **on every Minecraft version upgrade
@@ -352,6 +476,12 @@ is known of 26.4.
     the client thread and gone by then, so vanilla's splashes came through on grass, with vanilla's rain sounds and
     level, and `OptionalHook` saw nothing wrong. That setting takes effect at once, no world restart, so it's a quick
     way to compare. To see the order, run with `-Dmixin.debug.export=true` and read `.mixin.out` in the run folder.
+  - Fog with a mod that draws terrain past the render distance (one tried multiplies the environmental fog's range
+    only while it ends past 0.9 of the render distance): `FogHandler` holds our fog back and puts it in at the return
+    of `FogRenderer.setupFog` (`MixinFogRenderer`, priority 1100 to run after such a mod's handler there; on NeoForge
+    one may use `ViewportEvent.RenderFog`, fired before it), stretched by `processing/fog/ExtendedViewFog`. It keys off
+    `renderDistanceEnd` past the render distance, not the mod. Before this a dust storm snapped the view from 2 km to
+    230 blocks at 25% (seen in game, 2026-11-08).
   - `WindService` ticks `Wind` and publishes it via static `SceneWind` for particles to drift; `WindSounds` scales
     sound factories marked `followsWind`. `DustStorms` decides where storms raise dust.
   - `Shelter.exposure` is how open to the weather a place is (sky light, and a roof from the `MOTION_BLOCKING`
@@ -360,12 +490,16 @@ is known of 26.4.
   - On 1.21.1 our weather and ground fog replaced `renderSnowAndRain` only when `renderLevel` called it, as other mods
     call it themselves (Ars Nouveau, into its sky texture). The same holds: particle weather cancels
     `WeatherEffectRenderer.render` and `renderOit` only inside the level's main pass (`MixinLevelRenderer`), and draws in
-    `IWorldRender.WEATHER`.
+    `IWorldRender.WEATHER`. Vanilla's preparation of its columns is skipped too, at the level's own call in
+    `LevelExtractor.extract` (`MixinLevelExtractor`, `OptionalHook.VANILLA_WEATHER_SKIPPED`): it was a quarter of the
+    render thread in heavy rain, and Serene Seasons' temperature lookup for each column with it. A mod preparing the
+    weather itself still gets vanilla's; one reusing the level's prepared state finds it empty (no 26.x Ars Nouveau to
+    check as of 2026-11-09).
   - `processing/PrecipitationHandler` runs particle weather (`PrecipitationField`, `LevelColumns`, `Landings`) and
     stands aside for shader packs, a failed shader, mods that draw weather as particles (`FeatureConflict`, the table of features that stand aside for other mods) and dimensions that draw their
     own weather. The drops' tick runs on the `dsurround-Precipitation` thread, a tick behind: `PrecipitationField.finish`
     at the start of the handler's tick, `start` at its end, with two sets of the drops (`Drops`). Each frame's quads (`DropMeshes.Kind`: drops, dust, snow flecks, window streaks, damp spots) are
-    written into `ParticleQuads` on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
+    written into `QuadWriter`s on a thread of their own (`dsurround-PrecipitationQuads`, apart from the step's, which a frame's build waited behind
     at High's range) as the level starts to be drawn (`DropMeshes`, from
     `MixinGameRenderer` at the head of `GameRenderer.renderLevel`, `OptionalHook.PRECIPITATION_AHEAD`), for that camera
     and partial tick; the `IWorldRender` handler uploads and draws them, or writes them on the

@@ -1,0 +1,26 @@
+{
+  "name": "savanna_day",
+  "source": {
+    "title": "MerlothPark_morning_ambiance.wav",
+    "url": "https://freesound.org/people/reinsamba/sounds/58237/",
+    "author": "reinsamba",
+    "license": "CC BY 4.0",
+    "file": "58237__reinsamba__merlothpark_morning_ambiance.wav",
+    "prepare": "python scripts/sound-clean.py <file> savanna_day_matched.wav --match <the mod's old ambient/outside/savanna_day.ogg> 35.79, then --source savanna_day_matched.wav",
+    "notes": "44.1 kHz stereo, 214 s. The old loop was 30 s pieced together from around 36 s, its tone reshaped: matched again with --match, a 60 s loop at 24 kHz for about the old size. From 81 s: earlier stretches have low thumps (handling or wind, under 90 Hz) at 34, 52, 60 and 79.5-80.2 s."
+  },
+  "settings": {
+    "rate": 24000,
+    "quality": 4,
+    "highpass": 20,
+    "target_rms": -52.8
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/savanna_day",
+      "start": 81.0,
+      "end": 141.0,
+      "loop": 3.0
+    }
+  ]
+}

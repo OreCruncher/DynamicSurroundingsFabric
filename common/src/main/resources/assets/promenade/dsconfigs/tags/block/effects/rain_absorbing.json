@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "#promenade:leaf_piles",
+      "required": false
+    },
+    {
+      "id": "#promenade:fallen_leaves",
+      "required": false
+    }
+  ]
+}

@@ -21,7 +21,8 @@ public record DimensionConfigRule(
         Optional<Boolean> particleWeather,
         Optional<Boolean> simulateWind,
         Optional<Boolean> groundFog,
-        Optional<Boolean> dynamicClouds) {
+        Optional<Boolean> dynamicClouds,
+        Optional<Boolean> worldActors) {
 
     public static final Codec<DimensionConfigRule> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
                     Identifier.CODEC.fieldOf("dimId").forGetter(DimensionConfigRule::dimensionId),
@@ -34,7 +35,8 @@ public record DimensionConfigRule(
                 Codec.BOOL.optionalFieldOf("particleWeather").forGetter(DimensionConfigRule::particleWeather),
                 Codec.BOOL.optionalFieldOf("simulateWind").forGetter(DimensionConfigRule::simulateWind),
                 Codec.BOOL.optionalFieldOf("groundFog").forGetter(DimensionConfigRule::groundFog),
-                Codec.BOOL.optionalFieldOf("dynamicClouds").forGetter(DimensionConfigRule::dynamicClouds))
+                Codec.BOOL.optionalFieldOf("dynamicClouds").forGetter(DimensionConfigRule::dynamicClouds),
+                Codec.BOOL.optionalFieldOf("worldActors").forGetter(DimensionConfigRule::worldActors))
                 .apply(instance, DimensionConfigRule::new));
 
     @Override
@@ -51,6 +53,7 @@ public record DimensionConfigRule(
         this.simulateWind.ifPresent(v -> builder.append(" simulateWind: ").append(v));
         this.groundFog.ifPresent(v -> builder.append(" groundFog: ").append(v));
         this.dynamicClouds.ifPresent(v -> builder.append(" dynamicClouds: ").append(v));
+        this.worldActors.ifPresent(v -> builder.append(" worldActors: ").append(v));
         return builder.toString();
     }
 

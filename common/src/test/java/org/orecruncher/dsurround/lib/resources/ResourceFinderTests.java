@@ -211,6 +211,11 @@ public class ResourceFinderTests {
     @TempDir
     Path folder;
 
+    // Each mod's files in a folder of its own, named for it
+    private IModFiles modFolders() {
+        return new ModFiles.PathBased(id -> List.of(this.folder.resolve(id)));
+    }
+
     private Path dataRoot(String mod, String relative, String content) throws IOException {
         var root = this.folder.resolve(mod).resolve("data");
         var file = root.resolve(relative);
@@ -221,9 +226,9 @@ public class ResourceFinderTests {
 
     @Test
     void findsDataInEachInstalledMod() throws IOException {
-        var first = dataRoot("modone", "c/tags/block/glass_blocks.json", "{\"a\": \"1\"}");
-        var second = dataRoot("modtwo", "c/tags/block/glass_blocks.json", "{\"b\": \"2\"}");
-        var finder = new ServerResourceFinder(new RecordingLog(), () -> List.of(first, second));
+        dataRoot("modone", "c/tags/block/glass_blocks.json", "{\"a\": \"1\"}");
+        dataRoot("modtwo", "c/tags/block/glass_blocks.json", "{\"b\": \"2\"}");
+        var finder = new ServerResourceFinder(new RecordingLog(), modFolders(), () -> List.of("modone", "modtwo"));
 
         var found = finder.find(CODEC, "c:tags/block/glass_blocks");
         assertEquals(2, found.size());
@@ -241,25 +246,23 @@ public class ResourceFinderTests {
             out.write("{\"a\": \"1\"}".getBytes(StandardCharsets.UTF_8));
             out.closeEntry();
         }
-        var roots = ModRoots.of(List.of(jar));
-        assertEquals(1, roots.size());
-        var data = roots.getFirst().resolve("data");
-        assertTrue(Files.isDirectory(data));
+        var files = new ModFiles.PathBased(id -> ModRoots.of(List.of(jar)));
+        assertTrue(files.hasFolder("modjar", "data"));
 
-        var finder = new ServerResourceFinder(new RecordingLog(), () -> List.of(data));
+        var finder = new ServerResourceFinder(new RecordingLog(), files, () -> List.of("modjar"));
         assertEquals(1, finder.find(CODEC, "c:tags/block/glass_blocks").size());
     }
 
     @Test
     void nothingWhereNoInstalledModHasTheFile() throws IOException {
-        var root = dataRoot("modone", "c/tags/block/other.json", "{}");
-        var finder = new ServerResourceFinder(new RecordingLog(), () -> List.of(root));
+        dataRoot("modone", "c/tags/block/other.json", "{}");
+        var finder = new ServerResourceFinder(new RecordingLog(), modFolders(), () -> List.of("modone"));
         assertTrue(finder.find(CODEC, "c:tags/block/glass_blocks").isEmpty());
     }
 
     @Test
     void aBadLocationFindsNothingRatherThanFailing() {
-        var finder = new ServerResourceFinder(new RecordingLog(), List::of);
+        var finder = new ServerResourceFinder(new RecordingLog(), modFolders(), List::of);
         assertTrue(assertDoesNotThrow(() -> finder.find(CODEC, "Not A Location!")).isEmpty());
     }
 

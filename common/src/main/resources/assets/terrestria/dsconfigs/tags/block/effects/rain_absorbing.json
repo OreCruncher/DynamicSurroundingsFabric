@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "terrestria:sakura_leaf_pile",
+      "required": false
+    },
+    {
+      "id": "terrestria:andisol_dirt_path",
+      "required": false
+    },
+    {
+      "id": "terrestria:andisol_farmland",
+      "required": false
+    }
+  ]
+}

@@ -8,8 +8,8 @@ import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 
 /**
  * Adds lines to the diagnostics overlay. Implementations register their {@code onCollect} with
- * {@code ICollectDiagnostics.EVENT} in their constructor, so each must be created once: mark the class
- * {@code @Cacheable} (the annotation is not inherited from an interface).
+ * {@code ICollectDiagnostics.EVENT} in their constructor, so each must be created once, as the container does for
+ * any class it creates.
  */
 public interface IDiagnosticPlugin {
 

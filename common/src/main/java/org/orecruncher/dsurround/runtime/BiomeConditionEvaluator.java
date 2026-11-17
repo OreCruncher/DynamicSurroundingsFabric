@@ -3,14 +3,17 @@
 
 package org.orecruncher.dsurround.runtime;
 
-import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.biome.IBiomeIdentity;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.logging.IModLog;
+import org.orecruncher.dsurround.lib.logging.LogThrottle;
 import org.orecruncher.dsurround.lib.scripting.ExecutionContext;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
 import org.orecruncher.dsurround.runtime.variables.BiomeVariables;
+
+import java.util.function.Consumer;
 
 public final class BiomeConditionEvaluator {
 
@@ -25,6 +28,13 @@ public final class BiomeConditionEvaluator {
         this.context.add(this.biomeVariables);
         this.context.configureScripting(platformFunctions);
         this.failures = LogThrottle.oncePerKey(logger, "biome script setup failures", "the next reload");
+    }
+
+    /**
+     * Takes the config files' constants and biome functions, in place of the last
+     */
+    public void define(ScriptDefinitions definitions, Consumer<String> problems) {
+        this.context.define(definitions, ScriptDefinitions.Section.BIOME, problems);
     }
 
     public void reset() {

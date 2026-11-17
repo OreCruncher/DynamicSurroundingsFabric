@@ -3,6 +3,7 @@
 
 package org.orecruncher.dsurround.lib;
 
+import dev.architectury.platform.Platform;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.eventing.IClientStarted;
 import org.orecruncher.dsurround.eventing.IClientStopping;
@@ -39,6 +40,8 @@ public final class Library {
         // Hook server lifecycle so logs get emitted
         IClientStarted.EVENT.register((ignore -> LOGGER.info("Client starting")), HandlerPriority.VERY_HIGH);
         IClientStopping.EVENT.register(ignore -> LOGGER.info("Client stopping"), HandlerPriority.VERY_HIGH);
+        if (Platform.isDevelopmentEnvironment())
+            IClientStopping.EVENT.register(ignore -> DevExit.arm(LOGGER), HandlerPriority.VERY_LOW);
     }
 
     private static void configureServiceDependencies() {

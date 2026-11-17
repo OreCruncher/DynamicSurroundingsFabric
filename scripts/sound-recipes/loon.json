@@ -1,0 +1,57 @@
+{
+  "name": "loon",
+  "source": {
+    "title": "Loon / Diver call 3",
+    "url": "https://freesound.org/people/nicStage/sounds/432603/",
+    "author": "nicStage",
+    "license": "CC BY 4.0",
+    "file": "432603__nicstage__loon-diver-call-3.wav",
+    "notes": "96 kHz 24-bit stereo (Rode NT-4 into a Sound Devices MixPre-6), Mercer Lake, WI, 101 s: five wails of 3-4 s at 650-940 Hz (1.7-37.5 s), then 50 s of tremolo and yodel calling at 1.1-1.8 kHz, 35-49 dB over a quiet background with some rumble below 100 Hz. Chosen over his 'Loon / Diver call 1' (432605), the same calls over a background 23 dB louder. The tremolo phrases (62.5-74.9 s) were tried and left out."
+  },
+  "settings": {
+    "highpass": 300,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.08,
+    "fade_out": 0.4,
+    "target_rms_peak": -20.0
+  },
+  "clips": [
+    {
+      "file": "ambient/birds/loon1",
+      "start": 1.55,
+      "end": 5.2,
+      "notes": "wail"
+    },
+    {
+      "file": "ambient/birds/loon2",
+      "start": 13.2,
+      "end": 17.3,
+      "notes": "wail"
+    },
+    {
+      "file": "ambient/birds/loon3",
+      "start": 18.15,
+      "end": 22.5,
+      "notes": "wail"
+    },
+    {
+      "file": "ambient/birds/loon4",
+      "start": 23.8,
+      "end": 28.1,
+      "notes": "wail"
+    },
+    {
+      "file": "ambient/birds/loon5",
+      "start": 33.4,
+      "end": 37.9,
+      "notes": "wail"
+    },
+    {
+      "file": "ambient/birds/loon6",
+      "start": 47.0,
+      "end": 52.0,
+      "notes": "yodel"
+    }
+  ]
+}

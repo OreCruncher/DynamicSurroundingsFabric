@@ -1,0 +1,31 @@
+{
+  "name": "raptor_redshouldered",
+  "source": {
+    "title": "Bird - Red-shouldered hawk",
+    "url": "https://freesound.org/people/Vrymaa/sounds/770032/",
+    "author": "Vrymaa",
+    "license": "CC0",
+    "file": "770032__vrymaa__bird-red-shouldered-hawk.wav",
+    "notes": "48 kHz mono, 10 s, a bird sanctuary: a red-shouldered hawk's cry, two series of about 4.3 s at 2.4-2.6 kHz, 71 dB over a near-silent background. They join kvgarlic's red_shouldered_hawk (credited), whose file is left as it is."
+  },
+  "settings": {
+    "highpass": 600,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.02,
+    "fade_out": 0.25,
+    "target_rms_peak": -12.5
+  },
+  "clips": [
+    {
+      "file": "ambient/birds/red_shouldered_hawk2",
+      "start": 0.13,
+      "end": 4.45
+    },
+    {
+      "file": "ambient/birds/red_shouldered_hawk3",
+      "start": 4.65,
+      "end": 9.3
+    }
+  ]
+}

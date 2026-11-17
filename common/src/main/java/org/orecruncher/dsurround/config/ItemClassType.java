@@ -23,6 +23,8 @@ public enum ItemClassType {
     SWORD("sword"),
     SHIELD("shield"),
     AXE("axe"),
+    // Sounds as an axe for now (sound_factories.json), with a class of its own for a sound of its own later
+    PICKAXE("pickaxe"),
     BOW("bow"),
     CROSSBOW("crossbow"),
     POTION("potion"),
@@ -43,7 +45,11 @@ public enum ItemClassType {
         this.swingSound = Constants.asId("toolbar." + name + ".swing");
     }
 
-    private static final ISoundLibrary SOUND_LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
+    // Looked up when a sound is first asked for, not when the class loads: the classes are used where there is no
+    // container (tests, and code that only sorts items)
+    private static final class Sounds {
+        static final ISoundLibrary LIBRARY = ContainerManager.resolve(ISoundLibrary.class);
+    }
 
     public String getName() {
         return this.name;
@@ -54,10 +60,10 @@ public enum ItemClassType {
      * default factory for the id is used rather than crashing the game when an item is selected.
      */
     public ISoundFactory getToolBarSound() {
-        return SOUND_LIBRARY.getSoundFactoryOrDefault(this.toolBarSound);
+        return Sounds.LIBRARY.getSoundFactoryOrDefault(this.toolBarSound);
     }
 
     public @Nullable ISoundFactory getSwingSound() {
-        return SOUND_LIBRARY.getSoundFactory(this.swingSound).orElse(null);
+        return Sounds.LIBRARY.getSoundFactory(this.swingSound).orElse(null);
     }
 }

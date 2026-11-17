@@ -18,6 +18,9 @@ import net.minecraft.util.RandomSource;
  */
 public final class FireflyFlash {
 
+    // Ticks the body takes to fade in as the firefly appears, and out at the end of its life
+    static final int BODY_FADE_TICKS = 20;
+
     /**
      * A kind of flashing.
      *
@@ -143,6 +146,17 @@ public final class FireflyFlash {
             brightness = Math.max(brightness, this.pulse(dt));
         }
         return brightness;
+    }
+
+    /**
+     * How much of its body is seen, lit or not, 0 to 1: it is seen between flashes, as the game's fireflies are,
+     * fading in over its first {@link #BODY_FADE_TICKS} and out over its last (at most a quarter of its life each).
+     *
+     * @param age ticks since it appeared, including the part of a tick for smooth drawing
+     */
+    public float bodyAlpha(float age) {
+        var fade = Math.max(1F, Math.min(BODY_FADE_TICKS, this.lifetime / 4F));
+        return Math.clamp(Math.min(age, this.lifetime - age) / fade, 0F, 1F);
     }
 
     /**

@@ -7,6 +7,10 @@
     {
       "id": "#c:swords",
       "required": false
+    },
+    {
+      "id": "#minecraft:enchantable/sweeping",
+      "required": false
     }
   ]
 }

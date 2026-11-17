@@ -105,6 +105,10 @@ public class Configuration extends ConfigurationData {
     public final AuroraOptions auroraOptions = new AuroraOptions();
 
     @Property
+    @Comment("Configuration options for world actors: dust devils and the like")
+    public final WorldActorOptions worldActorOptions = new WorldActorOptions();
+
+    @Property
     @Comment("Configuration options for modded Music Manager")
     public final MusicManagerOptions musicManagerOptions = new MusicManagerOptions();
 
@@ -426,7 +430,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableSplashRings = true;
 
         @Property
-        @Comment("Enable/disable rings spreading on the water from players and mobs bobbing, and from boats; follows the Water Ripple Style")
+        @Comment("Enable/disable rings spreading on the water from players and mobs bobbing, and from boats, with a boat's wake foam; follows the Water Ripple Style")
         public boolean enableBobbingRings = true;
 
         @Property
@@ -687,6 +691,36 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("A bright moon washes out faint auroras, as it does the real ones")
         public boolean moonWashout = true;
+    }
+
+    public static class WorldActorOptions {
+        @Property
+        @Comment("Enable/disable world actors: things that move through the world on their own, such as dust devils, seen alike by everyone nearby")
+        public boolean enableWorldActors = true;
+
+        @Property
+        @Comment("Enable/disable dust devils: whirls of dust crossing deserts, badlands and savannas on clear days")
+        public boolean enableDustDevils = true;
+
+        @Property
+        @Comment("Enable/disable waterspouts: funnels of cloud over open sea, rare in fair weather and more often in storms")
+        public boolean enableWaterspouts = true;
+
+        @Property
+        @Comment("Enable/disable snowspouts: whirls of powder snow crossing snowy plains and frozen lakes on clear days")
+        public boolean enableSnowspouts = true;
+
+        @Property
+        @Comment("Enable/disable firespouts: whirls of fire over the Nether's lava lakes, lighting what is around them")
+        public boolean enableFirespouts = true;
+
+        @Property
+        @Comment("Enable/disable wisps: pale lights over marshes at night, and soul-fire lights over soul sand valleys, that go out as you come near")
+        public boolean enableWisps = true;
+
+        @Property
+        @Comment("Enable/disable apparitions: a pale, translucent figure that wanders dark forests and swamps at night, turning to watch you, and fades away as you come near. Off while scary content is off")
+        public boolean enableApparitions = true;
     }
 
     public static class MusicManagerOptions {

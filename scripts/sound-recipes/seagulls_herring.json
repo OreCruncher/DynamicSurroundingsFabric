@@ -1,0 +1,37 @@
+{
+  "name": "seagulls_herring",
+  "source": {
+    "title": "Herring Gull 1.wav",
+    "url": "https://freesound.org/people/Canardo55/sounds/538016/",
+    "author": "Canardo55",
+    "license": "CC0",
+    "file": "538016__canardo55__herring-gull-1.wav",
+    "notes": "48 kHz 24-bit stereo, 33 s, already edited: digital silence around 14 s of one herring gull (7.9-22.3 s, calls 700-3400 Hz). Its long call (a long note, then a run of short 'ha-ha' notes) and two later calls. A motorboat comes closer from about 18.5 s (100-400 Hz up to 20 dB, reaching 1.5 kHz in the gaps): the call after it is left out, and the 600 Hz high-pass takes what is left of the engine."
+  },
+  "settings": {
+    "highpass": 600,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.02,
+    "fade_out": 0.1,
+    "target_rms_peak": -10.0
+  },
+  "clips": [
+    {
+      "file": "ambient/seagulls/seagulls1",
+      "start": 8.3,
+      "end": 12.8,
+      "notes": "the long call"
+    },
+    {
+      "file": "ambient/seagulls/seagulls2",
+      "start": 13.5,
+      "end": 16.6
+    },
+    {
+      "file": "ambient/seagulls/seagulls3",
+      "start": 16.58,
+      "end": 18.3
+    }
+  ]
+}

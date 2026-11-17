@@ -1,0 +1,25 @@
+{
+  "name": "underwater_river",
+  "source": {
+    "title": "underwater ambience.wav",
+    "url": "https://freesound.org/people/AlienXXX/sounds/218276/",
+    "author": "AlienXXX",
+    "license": "CC BY 4.0",
+    "file": "218276__alienxxx__underwater-ambience.wav",
+    "notes": "44.1 kHz stereo, 10.6 s: the old loop was its first 9.4 s (r 0.99), untouched. Cut again at 22 kHz."
+  },
+  "settings": {
+    "rate": 22050,
+    "quality": 4,
+    "highpass": 20,
+    "target_rms": -47.5
+  },
+  "clips": [
+    {
+      "file": "ambient/underwater/river",
+      "start": 0.1,
+      "end": 9.5,
+      "loop": 1.0
+    }
+  ]
+}

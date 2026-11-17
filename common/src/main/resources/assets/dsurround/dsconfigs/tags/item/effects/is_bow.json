@@ -11,6 +11,10 @@
     {
       "id": "#forge:tools/bows",
       "required": false
+    },
+    {
+      "id": "#minecraft:enchantable/bow",
+      "required": false
     }
   ]
 }

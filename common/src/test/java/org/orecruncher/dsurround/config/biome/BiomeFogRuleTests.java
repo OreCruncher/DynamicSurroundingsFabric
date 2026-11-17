@@ -9,6 +9,9 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.BiomeTrait;
+import org.orecruncher.dsurround.config.ScriptDefinitionLoader;
+import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
+import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
 import org.orecruncher.dsurround.lib.scripting.engine.ScriptEngine;
 
 import java.io.InputStreamReader;
@@ -47,6 +50,16 @@ public class BiomeFogRuleTests {
         }
     }
 
+    private static ScriptDefinitions shippedDefinitions() throws Exception {
+        try (var stream = Objects.requireNonNull(BiomeFogRuleTests.class.getResourceAsStream("/assets/dsurround/dsconfigs/scripts.json"))) {
+            var json = JsonParser.parseReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            var problems = new ArrayList<String>();
+            var definitions = ScriptDefinitionLoader.load(List.of(new DiscoveredResource<>("dsurround", json)), problems::add, replaced -> {});
+            assertEquals(List.of(), problems);
+            return definitions;
+        }
+    }
+
     /**
      * The densities of {@code property} the rules give a biome with these traits, and no others; a selector reading
      * anything but the traits fails the test rather than guessing
@@ -59,6 +72,15 @@ public class BiomeFogRuleTests {
         // Rules naming biomes by id or name (frozen oceans, the void) name none of these
         engine.property("biome.getId", () -> "test:biome");
         engine.property("biome.getName", () -> "Test Biome");
+        // Named by definitions (def.isTemperate()), so they compile; a fog rule reading one fails rather than guesses
+        for (var unknown : List.of("biome.getTemperature", "biome.getRainfall"))
+            engine.property(unknown, () -> {
+                throw new IllegalStateException("a fog rule reads " + unknown);
+            });
+        // The shipped constants and biome functions (def.isHaunted() and the like), as the game defines them
+        var problems = new ArrayList<String>();
+        shippedDefinitions().defineIn(engine, ScriptDefinitions.Section.BIOME, problems::add);
+        assertEquals(List.of(), problems);
         var densities = new ArrayList<String>();
         for (var rule : fogRules(property)) {
             var result = engine.compile(rule.selector()).eval();

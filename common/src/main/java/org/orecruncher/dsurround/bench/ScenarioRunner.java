@@ -12,6 +12,7 @@ import dev.architectury.event.events.client.ClientTickEvent;
 import net.minecraft.client.InactivityFpsLimit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.util.Mth;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.tutorial.TutorialSteps;
@@ -35,6 +36,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.config.ConfigPreset;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.platform.DevExit;
 import org.orecruncher.dsurround.profiling.ProfileScene;
 import org.orecruncher.dsurround.profiling.Profiler;
 import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
@@ -80,6 +82,8 @@ public final class ScenarioRunner {
     private static final int OPEN_SECONDS = 600;
     private static final int FIND_SECONDS = 300;
     private static final int ARRIVE_SECONDS = 60;
+    // How far above or below the scene's place the player may be and have arrived, in blocks
+    private static final double ARRIVE_DRIFT = 6D;
     private static final int DRAWN_SECONDS = 90;
     // At least this long after arriving before the terrain is taken as drawn: it starts out with nothing to draw
     private static final int SETTLE_SECONDS = 3;
@@ -360,8 +364,15 @@ public final class ScenarioRunner {
             return true;
         }, 0);
         this.step(tag + ": find the scene", () -> {
-            if (arrival.found == null)
-                arrival.found = this.sceneLocation(run.scene(), scene, result);
+            if (arrival.found == null) {
+                var found = this.sceneLocation(run.scene(), scene, result);
+                // Arriving to one side of the place, if the scene says so: its ground loaded before its commands run
+                if (scene.offsetX() != 0 || scene.offsetZ() != 0) {
+                    var server = server();
+                    found = found.thenCompose(l -> server.submit(() -> SceneFinder.offset(server.overworld(), l, scene.offsetX(), scene.offsetZ())));
+                }
+                arrival.found = found;
+            }
             if (!arrival.found.isDone())
                 return false;
             arrival.location = arrival.found.join();
@@ -381,7 +392,8 @@ public final class ScenarioRunner {
         this.step(tag + ": arrive", () -> {
             var player = Minecraft.getInstance().player;
             var l = arrival.location;
-            if (player == null || player.distanceToSqr(l.x(), l.y(), l.z()) > 4)
+            // Across, within two blocks; up and down, within a few, as a player put over open water sinks into it
+            if (player == null || Mth.lengthSquared(player.getX() - l.x(), player.getZ() - l.z()) > 4 || Math.abs(player.getY() - l.y()) > ARRIVE_DRIFT)
                 return false;
             // The scene's commands need the ground around loaded on the server: a fill, setblock or summon where it
             // isn't fails, and under execute as @a it fails without a word
@@ -718,6 +730,7 @@ public final class ScenarioRunner {
         this.manifest.addProperty("ended", LocalDateTime.now().toString());
         this.writeManifest();
         Library.LOGGER.info("Bench: %s; results in %s", failure == null ? "done" : "failed", this.results);
+        DevExit.setExitCode(failure == null ? 0 : 1);
         Minecraft.getInstance().stop();
         // The game closes its window, but threads of other mods' can hold the JVM open after (Architectury's pools on
         // 26.2), and an unattended run would never end: everything is written by now

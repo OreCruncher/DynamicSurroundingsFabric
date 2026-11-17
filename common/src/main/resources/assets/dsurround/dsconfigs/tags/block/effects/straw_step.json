@@ -4,6 +4,9 @@
     "minecraft:sugar_cane",
     "minecraft:dead_bush",
     "minecraft:big_dripleaf_stem",
-    "minecraft:hay_block"
+    "minecraft:hay_block",
+    "minecraft:short_dry_grass",
+    "minecraft:tall_dry_grass",
+    "minecraft:straw_bed"
   ]
 }

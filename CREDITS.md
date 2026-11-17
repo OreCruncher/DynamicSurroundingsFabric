@@ -30,9 +30,9 @@ Others:
 
 * S: [Fiji Beach (Stereo)128kbps.mp3](https://www.freesound.org/people/c97059890/sounds/21754/) by [c97059890](https://www.freesound.org/people/c97059890/) | License: Creative Commons 0
 
-*dsurround:bigrockslide / dsurround:rockslide*
+*dsurround:bigrockfall / dsurround:rockfall*
 
-* S: [Rockfall in mine.wav](https://www.freesound.org/people/Benboncan/sounds/60085/) by [Benboncan](https://www.freesound.org/people/Benboncan/) | License: Attribution
+* S: [Rockfall in mine.wav](https://www.freesound.org/people/Benboncan/sounds/60085/) by [Benboncan](https://www.freesound.org/people/Benboncan/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 * S: [Rocks falling over rocks, over a steep hill, like a cliff.flac](https://www.freesound.org/people/gfrog/sounds/190505/) by [gfrog](https://www.freesound.org/people/gfrog/) | License: Creative Commons 0
 * S: [Rocks.wav](https://www.freesound.org/people/adamgryu/sounds/336023/) by [adamgryu](https://www.freesound.org/people/adamgryu/) | License: Creative Commons 0
 
@@ -47,19 +47,15 @@ Others:
 *dsurround:thunder*
 
 * S: [Thunder 1](https://www.freesound.org/people/Yoyodaman234/sounds/253953/) by [Yoyodaman234](https://www.freesound.org/people/Yoyodaman234/) | License: Creative Commons 0
-* S: [Donner1.wav](https://www.freesound.org/people/swuing/sounds/37774/) by [swuing](https://www.freesound.org/people/swuing/) | License: Attribution
-* S: [Thunder - 1](https://www.freesound.org/people/bone666138/sounds/198857/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: Attribution
-* S: [Thunder - 2](https://www.freesound.org/people/bone666138/sounds/198858/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: Attribution
+* S: [Donner1.wav](https://www.freesound.org/people/swuing/sounds/37774/) by [swuing](https://www.freesound.org/people/swuing/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [Thunder - 1](https://www.freesound.org/people/bone666138/sounds/198857/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [Thunder - 2](https://www.freesound.org/people/bone666138/sounds/198858/) by [bone666138](https://www.freesound.org/people/bone666138/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 * S: [Distant Thunder.wav](https://www.freesound.org/people/sarson/sounds/195522/) by [sarson](https://www.freesound.org/people/sarson/) | License: Creative Commons 0
 * S: [NM-Mejor-Lado-Thunder-01.wav](https://www.freesound.org/people/aaronstar/sounds/194849/) by [aaronstar](https://www.freesound.org/people/aaronstar/) | License: Creative Commons 0
 
-*dsurround:waterfall.0*
-
-* S: [Waterfall Winspit Dorset.wav](https://www.freesound.org/people/genghis%20attenborough/sounds/28266/) by [genghis attenborough](https://www.freesound.org/people/genghis%20attenborough/) | License: Attribution Noncommercial 
-
 *dsurround:waterfall.1*
 
-* S: [Waterfall, Small, B.wav](https://www.freesound.org/people/InspectorJ/sounds/365921/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
+* S: [Waterfall, Small, B.wav](https://www.freesound.org/people/InspectorJ/sounds/365921/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:waterfall.2*
 
@@ -71,43 +67,59 @@ Others:
 
 *dsurround:waterfall.4*
 
-* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
+* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:waterfall.5*
 
-* [Running-water-mountain-stream.mp3](https://orangefreesounds.com/running-water-sound-mountain-stream/) by Alexander | License Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+* S: [Waterfall, Large, A.wav](https://www.freesound.org/people/InspectorJ/sounds/335992/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: waterfall.4's loop slowed to 0.65x (pitch with it) and given a low-frequency boost, for the biggest falls
 
 *dsurround:biome.wind / dsurround:biome.wind.hills / dsurround:biome.wind.mountains*
 
-* S: [Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).](https://www.freesound.org/people/felix.blume/sounds/156414/) by [felix.blume](https://www.freesound.org/people/felix.blume/) | License: Creative Commons 0
+* S: [Wind blowing into some cactus spine, on the top of the mountain, in the desert of Atacama (Chile).](https://www.freesound.org/people/felix.blume/sounds/156414/) by [felix.blume](https://www.freesound.org/people/felix.blume/) | License: Creative Commons 0 | Modified: a 62 s loop cut, made mono, toned to the old loop, level matched
 
 *dsurround:biome.wind.arctic*
 
-* S: [Howling Wind Ambience](https://freesound.org/people/DBlover/sounds/405601/) by [DBlover](https://freesound.org/people/DBlover/) | License: Creative Commons 0
+* S: [Howling Wind Ambience](https://freesound.org/people/DBlover/sounds/405601/) by [DBlover](https://freesound.org/people/DBlover/) | License: Creative Commons 0 | Modified: a 40 s loop cut, bass reduced, level matched
 
-*dsurround:biome.ocean / dsurround:biome.ocean.deep / dsurround:biome.ocean.deep.under*
+*dsurround:biome.ocean / dsurround:biome.ocean.deep*
 
-* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: Attribution
-
-*dsurround:biome.river / dsurround:biome.ocean.under*
-
-* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
+* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.bog*
 
-* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
+* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: an 87 s loop cut, made mono, tone matched to the old loop, level matched
 
-*dsurround:underriver / dsurround:underocean / dsurround:underdeepocean*
+*dsurround:biome.river / dsurround:biome.river.under / dsurround:biome.ocean.under / dsurround:biome.ocean.deep.under*
 
-* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: Attribution
+* S: [underwater ambience.wav](https://www.freesound.org/people/AlienXXX/sounds/218276/) by [AlienXXX](https://www.freesound.org/people/AlienXXX/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: loops cut, made mono; the ocean and deep ocean slowed (pitch with it) and toned to the old loops
 
 *dsurround:biome.plains*
 
-* S: [Calm Morning Outdoor Ambience](https://www.freesound.org/people/blouhond/sounds/157947/) by [blouhond](https://www.freesound.org/people/blouhond/) | License: Attribution
+* S: [Calm Morning Outdoor Ambience](https://www.freesound.org/people/blouhond/sounds/157947/) by [blouhond](https://www.freesound.org/people/blouhond/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+*dsurround:biome.jungle*
+
+* S: [Forest Ambience.wav](https://freesound.org/people/CHRISFOPFILMS/sounds/346225/) by [CHRISFOPFILMS](https://freesound.org/people/CHRISFOPFILMS/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, high-passed, level matched
+
+*dsurround:biome.jungle.sparse*
+
+* S: [Peruvian Amazon birds frogs daytime](https://freesound.org/people/nonamethefish/sounds/653743/) by [nonamethefish](https://freesound.org/people/nonamethefish/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, high-passed, level matched
 
 *dsurround:biome.forest*
 
-* S: [001_forrest.wav](https://www.freesound.org/people/joepsporck/sounds/262037/) by [joepsporck](https://www.freesound.org/people/joepsporck/) | License: Creative Commons 0
+* S: [sfx_amb_forest_spring_afternoon-01.wav](https://freesound.org/people/bajko/sounds/385280/) by [bajko](https://freesound.org/people/bajko/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, level matched
+
+*dsurround:biome.forest.sparse*
+
+* S: [001_forrest.wav](https://www.freesound.org/people/joepsporck/sounds/262037/) by [joepsporck](https://www.freesound.org/people/joepsporck/) | License: Creative Commons 0 | Modified: a loop cut, made mono, tone matched to the old loop, level matched
+
+*dsurround:biome.forest.deep*
+
+* S: [Sussex Woodland & Meadow Bird Sounds, Evening.MP3](https://freesound.org/people/Vonora/sounds/269559/) by [Vonora](https://freesound.org/people/Vonora/) | License: Creative Commons 0 | Modified: cut into a loop, high-passed (an airplane's rumble taken out), level matched
+
+*dsurround:biome.crickets.deep*
+
+* S: [Crickets chirping in the Night at the Forest 001](https://freesound.org/people/Borgory/sounds/751465/) by [Borgory](https://freesound.org/people/Borgory/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, filtered (low hum and a high insect's trill taken out), level matched
 
 *dsurround:biome.forest.pine*
 
@@ -123,11 +135,11 @@ Others:
 
 *dsurround:biome.village.anvil*
 
-* S: [Anvil](https://www.freesound.org/people/MrAuralization/sounds/274846/) by [MrAuralization](https://www.freesound.org/people/MrAuralization/) | License: Attribution
+* S: [Anvil](https://www.freesound.org/people/MrAuralization/sounds/274846/) by [MrAuralization](https://www.freesound.org/people/MrAuralization/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:waterdrips*
 
-* S: [Dripping, Very Fast, A.wav](https://www.freesound.org/people/InspectorJ/sounds/343761/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: Attribution
+* S: [Dripping, Very Fast, A.wav](https://www.freesound.org/people/InspectorJ/sounds/343761/) by [InspectorJ](https://www.freesound.org/people/InspectorJ/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.village.dogbark*
 
@@ -135,31 +147,44 @@ Others:
 
 *dsurround:biome.water.under*
 
-* S: [UnderwaterDrowning01.wav](https://www.freesound.org/people/Abolla/sounds/213914/) by [Abolla](https://www.freesound.org/people/Abolla/) | License: Creative Commons 0
-
-*dsurround:dimension.nether*
-
-* S: [Creepy Dungeon Ambience](https://www.freesound.org/people/DrMinky/sounds/166187/) by [DrMinky](https://www.freesound.org/people/DrMinky/) | License: Attribution
+* S: [UnderwaterDrowning01.wav](https://www.freesound.org/people/Abolla/sounds/213914/) by [Abolla](https://www.freesound.org/people/Abolla/) | License: Creative Commons 0 | Modified: a loop cut, level matched
 
 *dsurround:crow*
 
 * S: [ANML_M_Ext_Crow_Calls_Single1.wav](https://www.freesound.org/people/conleec/sounds/173866/) by [conleec](https://www.freesound.org/people/conleec/) | License: Creative Commons 0
 
-*dsurround:bog*
+*dsurround:nightingale*
 
-* S: [rbh Mpls Bog birds.wav](https://www.freesound.org/people/RHumphries/sounds/1050/) by [RHumphries](https://www.freesound.org/people/RHumphries/) | License: Attribution
+* S: [nightingale song 5.wav](https://freesound.org/people/reinsamba/sounds/120226/) by [reinsamba](https://freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: phrases cut, made mono, high-passed, levels matched
 
-*dsurround:biome.desert.wind*
+*dsurround:loon*
 
-* S: [desertwind1FINAL.wav](https://www.freesound.org/people/nageor/sounds/112296/) by [nageor](https://www.freesound.org/people/nageor/) | License: Creative Commons 0
+* S: [Loon / Diver call 3](https://freesound.org/people/nicStage/sounds/432603/) by [nicStage](https://freesound.org/people/nicStage/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: wails and a yodel cut, made mono, high-passed, levels matched
+
+*dsurround:owl*
+
+* S: [Great Horned Owl Duet at Canaveral Seashore](https://freesound.org/people/felix.blume/sounds/612651/) by [felix.blume](https://freesound.org/people/felix.blume/) | License: Creative Commons 0 | Modified: hoot sequences cut, made mono, filtered, surf reduced, levels matched
+
+*dsurround:seagulls*
+
+* S: [Herring Gull 1.wav](https://freesound.org/people/Canardo55/sounds/538016/) and [Herring Gull 2.wav](https://freesound.org/people/Canardo55/sounds/538015/) by [Canardo55](https://freesound.org/people/Canardo55/) | License: Creative Commons 0 | Modified: calls cut, made mono, high-passed, levels matched
+* S: [Seagull trill and whine](https://freesound.org/people/nigelcoop/sounds/75195/) by [nigelcoop](https://freesound.org/people/nigelcoop/) | License: Creative Commons 0
+
+*dsurround:seagulls.flock*
+
+* S: [Seagulls / gaviotas clean wildtrack](https://freesound.org/people/Soojay/sounds/462462/) by [Soojay](https://freesound.org/people/Soojay/) | License: Creative Commons 0 | Modified: stretches of calling cut, made mono, filtered, surf and wind reduced, levels matched
+
+*dsurround:biome.wind.desert*
+
+* S: [desertwind1FINAL.wav](https://freesound.org/people/slugzilla/sounds/112296/) by [slugzilla](https://freesound.org/people/slugzilla/) | License: Creative Commons 0 | Modified: a loop cut, tone matched to the old loop, level matched
 
 *dsurround:biome.savanna.night*
 
-* S: [MerlothPark_crickets2.WAV](https://www.freesound.org/people/reinsamba/sounds/58236/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: Attribution
+* S: [MerlothPark_crickets2.WAV](https://www.freesound.org/people/reinsamba/sounds/58236/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 *dsurround:biome.savanna.day*
 
-* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: Attribution
+* S: [MerlothPark_morning_ambiance.wav](https://www.freesound.org/people/reinsamba/sounds/58237/) by [reinsamba](https://www.freesound.org/people/reinsamba/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: a 60 s loop cut, made mono, tone matched to the old loop, level matched
 
 *dsurround:turtledove*
 
@@ -167,4 +192,81 @@ Others:
 
 *dsurround:biome.forest.silent*
 
-* S: [Silent forest](https://freesound.org/people/ZHR%C3%98/sounds/753418/) by [ZHRØ](https://freesound.org/people/ZHR%C3%98/) | License: Creative Commons 0
+* S: [Silent forest](https://freesound.org/people/ZHR%C3%98/sounds/753418/) by [ZHRØ](https://freesound.org/people/ZHR%C3%98/) | License: Creative Commons 0 | Modified: cut into a loop, made mono, filtered (rumble and hiss reduced), level matched
+
+*dsurround:bird*
+
+* S: [Happy birds](https://freesound.org/people/sphion/sounds/158527/) by [sphion](https://freesound.org/people/sphion/) | License: Creative Commons 0
+
+*dsurround:woodpecker*
+
+* S: [FX WOODPECKER.wav](https://freesound.org/people/DjangoAltona/sounds/102972/) by [DjangoAltona](https://freesound.org/people/DjangoAltona/) | License: Creative Commons 0
+
+*dsurround:raptor*
+
+* S: [HawkMP3VersionWinterJan22nd2017.mp3](https://freesound.org/people/kvgarlic/sounds/377759/) by [kvgarlic](https://freesound.org/people/kvgarlic/) | License: Creative Commons 0 | Used for: red_shouldered_hawk | Modified: 5 s cut, made mono
+* S: [Bird - Red-shouldered hawk](https://freesound.org/people/Vrymaa/sounds/770032/) by [Vrymaa](https://freesound.org/people/Vrymaa/) | License: Creative Commons 0 | Used for: red_shouldered_hawk2-3 | Modified: two calls cut, high-passed, levels matched
+
+*dsurround:eagle*
+
+* S: [Bald Eagle Calls / Chirps](https://freesound.org/people/Kinoton/sounds/832476/) by [Kinoton](https://freesound.org/people/Kinoton/) | License: Creative Commons 0 | Modified: four phrases cut, high-passed, highs softened, levels matched
+
+*dsurround:wolf*
+
+* S: [Cooper Creek 20160313_014852 solitary wolf howl very clear.wav](https://freesound.org/people/betchkal/sounds/500646/) by [betchkal](https://freesound.org/people/betchkal/) | License: Creative Commons 0 | Modified: four howls cut, reverb reduced, sped up 1.4x with the pitch kept, levels matched
+
+*dsurround:whale / dsurround:whale.right / dsurround:whale.minke*
+
+* S: Humpback whale song, North Atlantic right whale upcalls and sounds, minke whale pulse trains, from [Sounds in the Ocean](https://www.fisheries.noaa.gov/national/science-data/sounds-ocean) by NOAA Fisheries, Northeast Fisheries Science Center, Passive Acoustics Branch | License: Public domain (U.S. government work) | Modified: calls cut, made mono, filtered, right whale background noise reduced, levels matched
+
+*dsurround:bees*
+
+* S: [Bee](https://www.nps.gov/subjects/sound/sounds-bee.htm), Yosemite National Park, from the [Natural Sounds Sound Gallery](https://www.nps.gov/subjects/sound/gallery.htm) of the U.S. National Park Service | License: Public domain (U.S. government work)
+
+*dsurround:item.tool.swing*
+
+* S: [Swing Whoosh.wav](https://freesound.org/people/yutface/sounds/257015/) by [yutface](https://freesound.org/people/yutface/) | License: Creative Commons 0
+
+*dsurround:item.utility.equip*
+
+* S: [Zippo click sound](https://opengameart.org/content/zippo-click-sound) by dawith (submitted by qubodup), via OpenGameArt | License: Creative Commons 0 | Modified: the click cut, softened (high shelf), level matched
+
+*dsurround:item.potion.equip*
+
+* S: [Water + glass bottle, sloshing 2](https://freesound.org/people/giddster/sounds/386426/) by [giddster](https://freesound.org/people/giddster/) | License: Creative Commons 0
+
+*dsurround:item.sword.swing / dsurround:item.sword.equip / dsurround:item.blunt.swing / dsurround:item.blunt.equip / dsurround:item.tool.equip / dsurround:item.shield.equip / dsurround:item.shield.use / dsurround:item.bow.equip*
+
+* Made from footstep sounds of [Presence Footsteps](https://github.com/Hurricaaane/Presence-Footsteps) by Hurricaaane (Ha3) | License: [WTFPL v2](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1290546-presence-footsteps-an-overly-complicated-sound) | Modified: altered
+
+*dsurround:lilypad.frog / dsurround:ice / dsurround:soulsand.laughter / dsurround:monstergrowl / dsurround:pageflip / dsurround:pageflipheavy / dsurround:newsprint / dsurround:netherbrick.breathing / dsurround:item.bow.pull / dsurround:item.bow.loose / dsurround:item.bow.loose.skeleton*
+
+* S: Public domain recordings; the original sources weren't recorded when they were added | License: Public domain
+
+*dsurround:weather.rain*
+
+* S: [even more rain.wav](https://freesound.org/people/mlaramie/sounds/193876/) by [mlaramie](https://freesound.org/people/mlaramie/) | License: Creative Commons 0 | Modified: four stretches cut, faded in and out, levels matched
+
+*dsurround:weather.rain.medium*
+
+* S: [Medium rain](https://freesound.org/people/Ryding/sounds/718518/) by [Ryding](https://freesound.org/people/Ryding/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: four stretches cut, made mono, faded in and out, levels matched
+
+*dsurround:weather.dust*
+
+* S: [Desert sand - Dune atmosphere](https://freesound.org/people/Vrymaa/sounds/825860/) by [Vrymaa](https://freesound.org/people/Vrymaa/) | License: Creative Commons 0 | Modified: six stretches cut, high-passed, faded in and out, levels matched
+
+*dsurround:electricarc*
+
+* S: [Welding_Electric Sparks.wav](https://freesound.org/people/weaveofkev/sounds/396240/) by [weaveofkev](https://freesound.org/people/weaveofkev/) | License: Creative Commons 0 | Modified: five bursts cut, made mono, levels matched
+
+*dsurround:player.jump*
+
+* S: [Sharp Exhale](https://freesound.org/people/sblitzer/sounds/777239/) by [sblitzer](https://freesound.org/people/sblitzer/) | License: Creative Commons 0 | Modified: made mono, level matched
+
+*dsurround:player.heartbeat*
+
+* S: [Heartbeat](https://freesound.org/people/acertingart/sounds/266531/) by [acertingart](https://freesound.org/people/acertingart/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: one beat cut, made mono, level matched
+
+*dsurround:player.tummy*
+
+* S: [Stomach Growling](https://soundbible.com/1300-Stomach-Growling.html) by XxBirdoxX, via SoundBible | License: [Sampling Plus 1.0](https://creativecommons.org/licenses/sampling+/1.0/) | Modified: three growls cut

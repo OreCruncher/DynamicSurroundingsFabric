@@ -1,6 +1,9 @@
 // Burning mobs and their light: zombies on fire for the whole recording (a long fire timer, fire resistance so they
 // never die, no AI so they stay put), at night for the light, in plains (the crowd scene). Burning
 // mobs light their surroundings with the flame jets' light (flameJetOptions.enableLight). See README.md for the format.
+// They are lit again as the warm-up starts and as recording does: after a scenario that holds a storm (the "weather"
+// profile sends "weather thunder"), the rain takes seconds to stop after "weather clear", and put out every one of
+// them as they were summoned (2026-11-07, run after precipitation.json's scenes: no Point Lights recorded).
 {
   "world": "bench",
   "seed": 20261030,
@@ -58,6 +61,13 @@
         "execute positioned ~30 ~ ~0 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}",
         "execute positioned ~21 ~ ~21 positioned over motion_blocking run summon zombie ~ ~ ~ {NoAI:1b,PersistenceRequired:1b,Fire:32767s,active_effects:[{id:\"minecraft:fire_resistance\",duration:-1,show_particles:0b}]}"
       ],
+      "settledCommands": [
+        "execute as @e[type=zombie,distance=..48] run data merge entity @s {Fire:32767s}"
+      ],
+      "shotCommands": [
+        "execute as @e[type=zombie,distance=..48] run data merge entity @s {Fire:32767s}"
+      ],
+      "shotDelay": 4,
       "profile": "general"
     }
   },

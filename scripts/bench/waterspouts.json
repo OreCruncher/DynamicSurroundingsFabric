@@ -1,0 +1,80 @@
+// Waterspouts (WorldActorHandler, Waterspout, WaterspoutMist): summoned with /dsactor as the warm-up starts, from a
+// block of stone at sea level in a deep ocean, open water all around and too deep for seagrass. By day, clear, so few
+// start on their own (a fair-weather chance is small, but a run can still get one). A summoned one has a random size and
+// path, so compare with --spread. Two, as a storm might show, and six, far more than ever start naturally. One lives 45
+// seconds at least, and takes 15 to grow: the warm-up and the recording fit in that. Facing east, downwind on the bench
+// world's day, as in dust-devils.json, and a little up, as they reach the clouds. See README.md.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 16,
+  "record": 25,
+  "repeats": 2,
+  "scenes": {
+    "spouts": {
+      "biome": "minecraft:deep_ocean",
+      "yaw": -90,
+      "pitch": -15,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "tp @s ~ 64 ~",
+        "setblock ~ ~-1 ~ stone"
+      ],
+      "settledCommands": [
+        "dsactor waterspout",
+        "dsactor waterspout"
+      ],
+      "profile": "general"
+    },
+    "spouts-many": {
+      "biome": "minecraft:deep_ocean",
+      "yaw": -90,
+      "pitch": -15,
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "tp @s ~ 64 ~",
+        "setblock ~ ~-1 ~ stone"
+      ],
+      "settledCommands": [
+        "dsactor waterspout",
+        "dsactor waterspout",
+        "dsactor waterspout",
+        "dsactor waterspout",
+        "dsactor waterspout",
+        "dsactor waterspout"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "spouts-2",
+      "scene": "spouts"
+    },
+    {
+      "label": "spouts-6",
+      "scene": "spouts-many"
+    },
+    {
+      "label": "spouts-off",
+      "scene": "spouts",
+      "settings": {
+        "worldActorOptions.enableWaterspouts": false
+      }
+    }
+  ]
+}

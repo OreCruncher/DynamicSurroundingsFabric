@@ -7,7 +7,6 @@ import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
@@ -16,6 +15,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
+import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogConditions;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogField;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
@@ -33,6 +33,7 @@ import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 import org.orecruncher.dsurround.runtime.weather.WindService;
+import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -79,13 +80,13 @@ public class GroundFogHandler extends AbstractClientHandler {
     private float driftZ;
     private int ticks;
 
-    public GroundFogHandler(WindService windService, IWeatherSimulation weatherSimulation, IBiomeLibrary biomeLibrary,
+    public GroundFogHandler(WindService windService, IWeatherSimulation weatherSimulation, IBiomeLibrary biomeLibrary, ITagLibrary tagLibrary,
                             IDimensionOracle dimensionInformation, Configuration config, IModLog logger) {
         super("Ground Fog Handler", config, logger);
         this.windService = windService;
         this.weatherSimulation = weatherSimulation;
         this.dimensionInformation = dimensionInformation;
-        this.source = new LevelSource(biomeLibrary);
+        this.source = new LevelSource(biomeLibrary, tagLibrary);
         // Columns are looked at again only when something in them changes
         IBlockUpdates.EVENT.register(this::blockUpdates);
         IWorldRender.EVENT.register(this::render, IWorldRender.GROUND_FOG);
@@ -245,22 +246,26 @@ public class GroundFogHandler extends AbstractClientHandler {
      */
     private static final class LevelSource implements IGroundFogSource {
 
-        // How far down through leaves to look for the ground
+        // How far down through a canopy to look for the ground
         private static final int MAX_CANOPY_DEPTH = 32;
 
         private final IBiomeLibrary biomeLibrary;
+        private final ITagLibrary tagLibrary;
         private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         @Nullable
         ClientLevel level;
 
-        LevelSource(IBiomeLibrary biomeLibrary) {
+        LevelSource(IBiomeLibrary biomeLibrary, ITagLibrary tagLibrary) {
             this.biomeLibrary = biomeLibrary;
+            this.tagLibrary = tagLibrary;
         }
 
         /**
          * The client only has the heightmaps the server sends it, which count leaves as ground (the one that doesn't
-         * is the server's alone, and empty here). So from the top of what blocks motion, down past leaves and the air
-         * between them, to the ground under the trees.
+         * is the server's alone, and empty here). So from the top of what blocks motion, down past a canopy (leaves,
+         * huge mushrooms' caps, giant flowers' heads: {@link BlockEffectTags#FOG_CANOPY}) and the air under and within
+         * it, to the ground beneath. Without that, mist lay on top of a canopy that isn't leaves, and on a slope in the
+         * air from its edge down to the ground around it, seen from below as streaks.
          */
         @Override
         public int groundHeight(int x, int z) {
@@ -270,7 +275,7 @@ public class GroundFogHandler extends AbstractClientHandler {
             int y = top - 1;
             while (y > lowest) {
                 var state = this.level.getBlockState(this.pos.set(x, y, z));
-                if (!state.isAir() && !state.is(BlockTags.LEAVES))
+                if (!state.isAir() && !this.tagLibrary.is(BlockEffectTags.FOG_CANOPY, state))
                     break;
                 y--;
             }

@@ -5,7 +5,6 @@ package org.orecruncher.dsurround.processing;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import it.unimi.dsi.fastutil.longs.LongCollection;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,6 +21,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.effects.DepthCopy;
 import org.orecruncher.dsurround.effects.MeshDraw;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.frost.FrostConditions;
 import org.orecruncher.dsurround.effects.frost.FrostField;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
@@ -66,7 +66,7 @@ public class WindowFrostHandler extends AbstractClientHandler {
     private float forced = Float.NaN;
     private int drawn;
     // Drawing: made on first use, on the render thread
-    private ByteBufferBuilder meshBytes;
+    private QuadWriter quads;
     private final MeshDraw frostDraw = new MeshDraw("window frost");
     // The depth the level's main pass left
     private final DepthCopy sceneDepth = new DepthCopy("Dynamic Surroundings window frost depth");
@@ -156,15 +156,18 @@ public class WindowFrostHandler extends AbstractClientHandler {
         int[] drawn = {0};
         var camera = GameUtils.getMC().gameRenderer.mainCamera();
         var lightmap = GameUtils.getMC().gameRenderer.lightmap();
-        if (this.meshBytes == null)
-            this.meshBytes = new ByteBufferBuilder(4096);
+        if (this.quads == null)
+            this.quads = new QuadWriter(QuadWriter.Format.PARTICLE);
         FrostRenderer.RENDER_TIMER.begin();
         try {
-            FrostRenderer.SHADER.run(() -> drawn[0] = FrostRenderer.draw(this.field, this.meshBytes, mesh -> this.frostDraw.draw(mesh, FrostRenderer.SHADER.pipeline(), target, pass -> {
-                pass.setUniform("Sampler0", texture, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR, true));
-                pass.setUniform("Sampler2", lightmap, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-                pass.setUniform(FrostRenderer.DEPTH_SAMPLER, this.sceneDepth.view(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
-            }), camera), () -> {});
+            FrostRenderer.SHADER.run(() -> {
+                drawn[0] = FrostRenderer.build(this.field, this.quads, camera);
+                this.frostDraw.draw(this.quads, FrostRenderer.SHADER.pipeline(), target, pass -> {
+                    pass.setUniform("Sampler0", texture, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR, true));
+                    pass.setUniform("Sampler2", lightmap, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
+                    pass.setUniform(FrostRenderer.DEPTH_SAMPLER, this.sceneDepth.view(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST));
+                });
+            }, () -> {});
         } finally {
             FrostRenderer.RENDER_TIMER.end();
         }

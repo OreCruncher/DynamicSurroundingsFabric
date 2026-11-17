@@ -6,6 +6,7 @@ package org.orecruncher.dsurround.mixins.core;
 import net.minecraft.client.renderer.ShaderManager;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.ModShaders;
+import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,5 +23,6 @@ public class MixinShaderManager {
     @Inject(method = "apply(Lcom/mojang/renderpearl/api/device/GpuDevice;Lnet/minecraft/client/renderer/ShaderManager$PendingResults;)V", at = @At("TAIL"))
     private void dsurround$compileModShaders(CallbackInfo ci) {
         ModShaders.SHADERS.forEach(ModShader::validate);
+        SoftParticles.onShadersReloaded();
     }
 }

@@ -1,0 +1,28 @@
+{
+  "name": "thunder_swuing",
+  "source": {
+    "title": "Donner1.wav",
+    "url": "https://freesound.org/people/swuing/sounds/37774/",
+    "author": "swuing",
+    "license": "CC BY 4.0",
+    "file": "37774__swuing__donner1.wav",
+    "notes": "Cut again 2026-11-10 from the original (sound-match: r 0.99-1.00 against the old file, which started 2.3 s in): the same stretch, at 24000 Hz (its content stops well under 12000 Hz), the old loudest-50-ms level."
+  },
+  "settings": {
+    "rate": 24000,
+    "quality": 4,
+    "highpass": 20,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.005,
+    "fade_out": 0.3,
+    "target_rms_peak": -11.4
+  },
+  "clips": [
+    {
+      "file": "ambient/weather/thunder1",
+      "start": 2.3,
+      "end": 18.11
+    }
+  ]
+}

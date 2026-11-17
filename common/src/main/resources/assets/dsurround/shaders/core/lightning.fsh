@@ -24,13 +24,7 @@ const float CELL_STEP = 4.0;
 const float NOISE_SIZE = 128.0;
 
 #ifndef CORE
-// Smooth value noise from the noise texture, in one read (see NoiseTexture)
-float noise(vec2 p) {
-    vec2 cell = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
-}
+#include <dsurround:noise.glsl>
 #endif
 
 void main() {

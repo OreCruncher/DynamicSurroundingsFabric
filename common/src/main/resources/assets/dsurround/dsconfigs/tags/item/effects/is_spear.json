@@ -8,6 +8,26 @@
     {
       "id": "#c:spears",
       "required": false
+    },
+    {
+      "id": "#minecraft:spears",
+      "required": false
+    },
+    {
+      "id": "#minecraft:enchantable/lunge",
+      "required": false
+    },
+    {
+      "id": "#minecraft:enchantable/trident",
+      "required": false
+    },
+    {
+      "id": "#c:tools/spear",
+      "required": false
+    },
+    {
+      "id": "#c:tools/trident",
+      "required": false
     }
   ]
 }

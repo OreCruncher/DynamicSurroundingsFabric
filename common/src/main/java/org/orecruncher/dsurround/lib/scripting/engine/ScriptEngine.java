@@ -8,6 +8,9 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.scripting.*;
 import org.orecruncher.dsurround.lib.scripting.engine.expression.Expression;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 public final class ScriptEngine implements IConfigureDefinition {
 
     final Environment environment;
@@ -18,6 +21,11 @@ public final class ScriptEngine implements IConfigureDefinition {
         this.compiler = new Compiler(this.environment);
         LibraryFunctions.configure(this);
         MathFunctions.configure(this);
+    }
+
+    private ScriptEngine(Environment environment) {
+        this.environment = environment;
+        this.compiler = new Compiler(environment);
     }
 
     /**
@@ -42,6 +50,53 @@ public final class ScriptEngine implements IConfigureDefinition {
     public void defineFunction(@NotNull ScriptFunction function) {
         Preconditions.checkNotNull(function);
         this.environment.defineFunction(function);
+    }
+
+    /**
+     * An engine with this one's built-in names and no config definitions ({@code def.} names), to define a new set in
+     * and compile them with; {@link #adopt} then hands them to this engine all at once. Nothing may be defined in code
+     * on this engine while one is in use.
+     */
+    public ScriptEngine staged() {
+        return new ScriptEngine(this.environment.staged());
+    }
+
+    /**
+     * Replaces this engine's config definitions with a staged engine's, in one step
+     */
+    public void adopt(ScriptEngine staged) {
+        Preconditions.checkNotNull(staged);
+        this.environment.adopt(staged.environment);
+    }
+
+    /**
+     * Adds a config definition of a constant or other variable; its name starts with {@code def.}
+     */
+    public void define(@NotNull String name, @NotNull IScriptVariable variable) {
+        Preconditions.checkNotNull(name);
+        Preconditions.checkNotNull(variable);
+        this.environment.define(name, variable);
+    }
+
+    /**
+     * Adds a config definition of a function; its name starts with {@code def.}
+     */
+    public void define(@NotNull ScriptFunction function) {
+        Preconditions.checkNotNull(function);
+        this.environment.define(function);
+    }
+
+    /**
+     * The config definition names ({@code def.}...) a script uses, in the order it uses them first
+     *
+     * @throws ScriptException if the script can't be read
+     */
+    public static Set<String> definitionsUsed(String script) {
+        var names = new LinkedHashSet<String>();
+        for (var token : new Lexer(script).getTokens())
+            if (token.type() == TokenType.IDENTIFIER && Environment.isDefName(token.lexeme()))
+                names.add(token.lexeme());
+        return names;
     }
 
 }

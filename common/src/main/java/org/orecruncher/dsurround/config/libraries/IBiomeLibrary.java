@@ -9,6 +9,9 @@ import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.lib.scripting.Script;
+import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
+
+import java.util.function.Consumer;
 
 /**
  * Per-biome settings (traits, fog, sounds) from biomes.json. Client thread only.
@@ -33,4 +36,11 @@ public interface IBiomeLibrary extends ILibrary {
      * Not to be used for other purposes.
      */
     Object eval(Biome biome, Script script);
+
+    /**
+     * Takes the config files' script definitions (constants, and the functions for biome rules), in place of the last;
+     * each problem with them is described to {@code problems}. Stand-ins have none.
+     */
+    default void defineScripts(ScriptDefinitions definitions, Consumer<String> problems) {
+    }
 }

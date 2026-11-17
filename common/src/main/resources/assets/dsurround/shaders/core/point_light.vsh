@@ -3,42 +3,16 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
-// Dynamic Surroundings point light (a firefly's, a flame jet's): a small light, lighting whatever is near it on
-// screen. All four vertices of a light are at its centre; this spreads them into a square facing the camera that
-// covers the light's sphere on screen. When the camera is in or right next to the sphere, the square covers the whole
-// screen instead.
+// Dynamic Surroundings point lights (fireflies', flame jets'): two triangles, made from the vertex's index, over the
+// part of the screen the frame's lights can light between them (Area), where point_light.fsh lights the scene.
 
-#include <minecraft:dynamictransforms.glsl>
-#include <minecraft:projection.glsl>
+#include <dsurround:point_lights.glsl>
 
-layout(location = 0) in vec3 Position;  // the light's centre, relative to the camera
-layout(location = 1) in vec2 UV0;       // which corner, at the light's radius: -radius or radius on each axis
-layout(location = 2) in vec4 Color;     // the light's colour; alpha is its strength
-
-layout(location = 0) flat out vec3 lightCenter;  // in view space
-layout(location = 1) flat out vec4 lightColor;
-layout(location = 2) flat out float lightRadius;
+// The corners of the two triangles: 0 is (x0, y0), 1 (x1, y0), 2 (x0, y1), 3 (x1, y1)
+const int CORNERS[6] = int[6](0, 1, 2, 2, 1, 3);
 
 void main() {
-    vec3 center = (ModelViewMat * vec4(Position, 1.0)).xyz;
-    float radius = abs(UV0.x);
-    vec2 corner = sign(UV0);
-    lightCenter = center;
-    lightColor = Color;
-    lightRadius = radius;
-
-    // No early return: Veil's shader parser (glsl-processor) fails on a return without a value
-    float dist = length(center);
-    if (dist < radius * 1.05) {
-        gl_Position = vec4(corner, 0.0, 1.0);
-    } else {
-        // A square through the centre, square to the view of it, as wide as the sphere looks from here
-        vec3 dir = center / dist;
-        vec3 up = abs(dir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-        vec3 right = normalize(cross(dir, up));
-        up = cross(right, dir);
-        float halfSize = radius * dist / sqrt(dist * dist - radius * radius);
-        vec3 cornerPosition = center + (right * corner.x + up * corner.y) * halfSize;
-        gl_Position = ProjMat * vec4(cornerPosition, 1.0);
-    }
+    int corner = CORNERS[gl_VertexIndex];
+    vec2 at = vec2(corner & 1, corner >> 1);
+    gl_Position = vec4(mix(Area.xy, Area.zw, at), 0.0, 1.0);
 }

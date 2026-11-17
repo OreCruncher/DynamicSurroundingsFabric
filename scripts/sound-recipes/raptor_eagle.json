@@ -1,0 +1,48 @@
+{
+  "name": "raptor_eagle",
+  "source": {
+    "title": "Bald Eagle Calls / Chirps",
+    "url": "https://freesound.org/people/Kinoton/sounds/832476/",
+    "author": "Kinoton",
+    "license": "CC0",
+    "file": "832476__kinoton__bald-eagle-calls-chirps.wav",
+    "notes": "48 kHz mono, 18 s: two bald eagles' chittering calls (1.3-4.5 kHz), already isolated, with a short reverb, 53-55 dB over the background. Four phrases: two loud chitters, a run of softer calls and a short series. A real bald eagle chitters; the scream films give eagles is a red-tailed hawk's. A high shelf (-10 dB above 2 kHz) eases the chitter's peaks at 2.5-3 and 4-5 kHz, the ear's most sensitive range, which were painful to the author."
+  },
+  "settings": {
+    "highpass": 600,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.03,
+    "fade_out": 0.25,
+    "target_rms_peak": -12.5,
+    "treble": [
+      -10,
+      2000
+    ]
+  },
+  "clips": [
+    {
+      "file": "ambient/birds/bald_eagle1",
+      "start": 0.3,
+      "end": 5.9,
+      "notes": "a loud chitter"
+    },
+    {
+      "file": "ambient/birds/bald_eagle2",
+      "start": 5.85,
+      "end": 9.1,
+      "notes": "softer calls"
+    },
+    {
+      "file": "ambient/birds/bald_eagle3",
+      "start": 9.2,
+      "end": 11.75
+    },
+    {
+      "file": "ambient/birds/bald_eagle4",
+      "start": 11.81,
+      "end": 16.0,
+      "notes": "a loud chitter"
+    }
+  ]
+}

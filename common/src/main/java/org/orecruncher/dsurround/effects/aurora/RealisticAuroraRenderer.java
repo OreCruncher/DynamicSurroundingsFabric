@@ -6,16 +6,12 @@ package org.orecruncher.dsurround.effects.aurora;
 import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.GpuFormat;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
-import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.UniformType;
 import com.mojang.renderpearl.api.textures.FilterMode;
@@ -25,17 +21,16 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
-import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.config.AuroraQuality;
 import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.RenderTimer;
+import org.orecruncher.dsurround.effects.ScreenPasses;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 /**
  * Draws a {@link RealisticAurora}: a pass over the whole screen, after the stars, that follows each pixel's line of
@@ -74,7 +69,7 @@ public final class RealisticAuroraRenderer {
 
     static {
         var size = new Std140SizeCalculator().putMat4f();
-        for (int i = 0; i < 8 + RealisticAurora.MAX_ARCS * 4; i++)
+        for (int i = 0; i < RealisticAuroraFrame.VECTORS; i++)
             size.putVec4();
         INFO_SIZE = size.get();
     }
@@ -84,25 +79,15 @@ public final class RealisticAuroraRenderer {
 
     // A triangle over the whole of what it draws to, from the vertex's index alone. Nothing is tested against or
     // written to the depth buffer
-    private static final RenderPipeline PIPELINE = RenderPipeline.builder()
-            .withLocation(Constants.asId("pipeline/aurora_realistic"))
-            .withVertexShader(Constants.asId("core/aurora_realistic"))
-            .withFragmentShader(Constants.asId("core/aurora_realistic"))
+    private static final RenderPipeline PIPELINE = ScreenPasses.pipeline("pipeline/aurora_realistic", "core/aurora_realistic", "core/aurora_realistic")
             .withBindGroupLayout(INFO_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADD))
-            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
-            .withCull(false)
             .build();
 
     // Lays the aurora, drawn at a share of the screen's size, over the sky
-    private static final RenderPipeline COMPOSITE_PIPELINE = RenderPipeline.builder()
-            .withLocation(Constants.asId("pipeline/aurora_composite"))
-            .withVertexShader(Constants.asId("core/aurora_composite"))
-            .withFragmentShader(Constants.asId("core/aurora_composite"))
+    private static final RenderPipeline COMPOSITE_PIPELINE = ScreenPasses.pipeline("pipeline/aurora_composite", "core/aurora_composite", "core/aurora_composite")
             .withBindGroupLayout(COMPOSITE_LAYOUT)
             .withColorTargetState(new ColorTargetState(ADD))
-            .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
-            .withCull(false)
             .build();
 
     public static final ModShader SHADER = new ModShader(PIPELINE, "the realistic aurora", "realistic auroras will not be drawn", Library.LOGGER);
@@ -134,14 +119,6 @@ public final class RealisticAuroraRenderer {
      */
     public static final float FIELD_CELL = 3F;
 
-    // The colors of the light, as a photograph shows it: oxygen's green (557.7 nm) and red (630 nm), and nitrogen's
-    // pink at the lower edge
-    private static final float[] GREEN = {0.25F, 1.0F, 0.45F};
-    private static final float[] RED = {1.0F, 0.12F, 0.2F};
-    private static final float[] FRINGE = {1.0F, 0.3F, 0.75F};
-    // And the blue-violet of nitrogen lit by the sun, at the tops of the rays above the Earth's shadow (427.8 nm)
-    private static final float[] SUNLIT = {0.45F, 0.3F, 1.0F};
-
     @Nullable
     private static DynamicTexture noise;
     // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
@@ -149,8 +126,7 @@ public final class RealisticAuroraRenderer {
     @Nullable
     private static GpuBuffer info;
     // Where it is drawn at FAST, at a share of the screen's size
-    @Nullable
-    private static TextureTarget reduced;
+    private static final ScreenPasses.Reduced REDUCED = new ScreenPasses.Reduced("Dynamic Surroundings aurora (realistic)");
 
     private RealisticAuroraRenderer() {
     }
@@ -192,95 +168,38 @@ public final class RealisticAuroraRenderer {
                              AuroraQuality quality, float shadow, float washout, float alpha, Matrix4f viewMatrix, float time) {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
-        RenderTarget target = fast ? reducedFor(screen, quality.scale()) : screen;
-        writeInfo(aurora, moment, motion, quality, shadow, washout, alpha, viewMatrix, time, target.height);
+        RenderTarget target = fast ? REDUCED.of(screen, quality.scale()) : screen;
+        pack(RealisticAuroraFrame.of(aurora, moment, motion, quality, shadow, washout, alpha, LevelProjection.get(), viewMatrix,
+                time, target.height));
 
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
-        var encoder = RenderSystem.getDevice().createCommandEncoder();
-        try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic)", target.getColorTextureView(),
-                fast ? Optional.of(CLEAR) : Optional.empty(), null, OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(PIPELINE));
-            pass.setUniform(INFO, info);
-            pass.setUniform(NOISE_SAMPLER, noiseView, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
-            pass.draw(3, 1, 0, 0);
-        }
+        var block = info;
+        ScreenPasses.draw(() -> "Dynamic Surroundings aurora (realistic)", target.getColorTextureView(),
+                fast ? Optional.of(CLEAR) : Optional.empty(), PIPELINE, pass -> {
+                    pass.setUniform(INFO, block);
+                    pass.setUniform(NOISE_SAMPLER, noiseView, RenderSystem.getSamplerCache().getRepeat(FilterMode.LINEAR));
+                });
 
         if (fast) {
-            COMPOSITE.run(() -> {
-                try (RenderPass pass = encoder.createRenderPass(() -> "Dynamic Surroundings aurora (realistic) composite", screen.getColorTextureView(),
-                        Optional.empty(), null, OptionalDouble.empty())) {
-                    pass.setPipeline(RenderSystem.getCompiledPipeline(COMPOSITE_PIPELINE));
-                    pass.setUniform(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
-                    pass.draw(3, 1, 0, 0);
-                }
-            }, () -> {});
+            COMPOSITE.run(() -> ScreenPasses.draw(() -> "Dynamic Surroundings aurora (realistic) composite", screen.getColorTextureView(),
+                    Optional.empty(), COMPOSITE_PIPELINE,
+                    pass -> pass.setUniform(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))),
+                    () -> {});
         }
     }
 
     /**
-     * The target it is drawn to at a share of the screen's size, created or resized, rounded up
+     * Writes the frame's values into the uniform block (see shaders/include/aurora_realistic.glsl)
      */
-    private static TextureTarget reducedFor(RenderTarget screen, int scale) {
-        int width = (screen.width + scale - 1) / scale;
-        int height = (screen.height + scale - 1) / scale;
-        if (reduced == null)
-            reduced = new TextureTarget("Dynamic Surroundings aurora (realistic)", width, height, GpuFormat.RGBA8_UNORM, null);
-        else if (reduced.width != width || reduced.height != height)
-            reduced.resize(width, height);
-        return reduced;
-    }
-
-    /**
-     * The shader's values this frame (see shaders/include/aurora_realistic.glsl)
-     */
-    private static void writeInfo(RealisticAurora aurora, RealisticAurora.Moment moment, RealisticAuroraMotion motion,
-                                  AuroraQuality quality, float shadow, float washout, float alpha, Matrix4f viewMatrix, float time, int height) {
+    private static void pack(RealisticAuroraFrame frame) {
         if (info == null)
             info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings aurora (realistic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        var arcs = aurora.arcs();
-        int count = Math.min(arcs.size(), RealisticAurora.MAX_ARCS);
-        var projection = LevelProjection.get();
-        var invViewProj = new Matrix4f(projection).mul(viewMatrix).invert();
-        float pixelAngle = 2F / (projection.m11() * height);
+        var v = frame.vec4s();
         try (var stack = MemoryStack.stackPush()) {
-            var builder = Std140Builder.onStack(stack, INFO_SIZE)
-                    .putMat4f(invViewProj)
-                    .putVec4(GREEN[0] * moment.green(), GREEN[1] * moment.green(), GREEN[2] * moment.green(), washout)
-                    .putVec4(RED[0], RED[1], RED[2], pixelAngle)
-                    .putVec4(FRINGE[0], FRINGE[1], FRINGE[2], quality.fieldSamples())
-                    .putVec4(time, Math.clamp(alpha, 0F, 1F), height, count)
-                    .putVec4(moment.lowerEdge(), RealisticAurora.FIELD_TILT, moment.red(), moment.fringe())
-                    .putVec4(moment.rayContrast(), moment.pulse(), (float) Math.cos(aurora.declination()), (float) Math.sin(aurora.declination()))
-                    .putVec4(moment.fieldNorth(), moment.fieldWidth(), moment.rayField() * moment.gain(), motion.field())
-                    .putVec4(SUNLIT[0] * RealisticAurora.SUNLIT, SUNLIT[1] * RealisticAurora.SUNLIT, SUNLIT[2] * RealisticAurora.SUNLIT, shadow);
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++) {
-                if (i < count) {
-                    var arc = arcs.get(i);
-                    // Where it is now: as much closer as the aurora has come
-                    builder.putVec4(arc.distance() - moment.approach(), arc.foldAmplitude(), arc.foldWavelength(), arc.phase());
-                } else {
-                    builder.putVec4(0F, 0F, 1F, 0F);
-                }
-            }
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++) {
-                if (i < count) {
-                    var arc = arcs.get(i);
-                    builder.putVec4(arc.waveAmplitude(), arc.waveWavelength(), motion.wave(i), arc.curlAmplitude());
-                } else {
-                    builder.putVec4(0F, 1F, 0F, 0F);
-                }
-            }
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++) {
-                if (i < count) {
-                    var arc = arcs.get(i);
-                    builder.putVec4(arc.brightness() * moment.gain(), arc.thickness(), motion.curl(i), motion.ray(i));
-                } else {
-                    builder.putVec4(0F, 1F, 0F, 0F);
-                }
-            }
-            for (int i = 0; i < RealisticAurora.MAX_ARCS; i++)
-                builder.putVec4(i < count ? arcs.get(i).bow() : 0F, 0F, 0F, 0F);
+            var builder = Std140Builder.onStack(stack, INFO_SIZE).putMat4f(frame.invViewProj());
+            for (int i = 0; i < v.length; i += 4)
+                builder.putVec4(v[i], v[i + 1], v[i + 2], v[i + 3]);
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
     }

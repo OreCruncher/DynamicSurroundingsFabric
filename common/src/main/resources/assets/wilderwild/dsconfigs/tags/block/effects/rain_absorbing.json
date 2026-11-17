@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "#wilderwild:leaf_litters",
+      "required": false
+    },
+    {
+      "id": "wilderwild:auburn_moss_carpet",
+      "required": false
+    },
+    {
+      "id": "wilderwild:auburn_creeping_moss",
+      "required": false
+    }
+  ]
+}

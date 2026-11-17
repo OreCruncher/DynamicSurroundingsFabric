@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
@@ -47,6 +48,9 @@ public class ItemLibrary implements IItemLibrary {
     // of the same item can have different equip sounds.
     private final Reference2ObjectOpenHashMap<Item, Optional<ISoundFactory>> itemEquipFactories = new Reference2ObjectOpenHashMap<>();
     private final Reference2ObjectOpenHashMap<Item, Optional<ISoundFactory>> itemSwingFactories = new Reference2ObjectOpenHashMap<>();
+    // The convention tags for mining tools in general (singular on NeoForge, both on Fabric): the last thing looked at
+    private static final TagKey<Item> MINING_TOOL = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "tools/mining_tool"));
+    private static final TagKey<Item> MINING_TOOLS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "tools/mining_tools"));
     private final Reference2ObjectOpenHashMap<Item, Optional<ISoundFactory>> itemArmorStepFactories = new Reference2ObjectOpenHashMap<>();
     private int version;
 
@@ -182,6 +186,8 @@ public class ItemLibrary implements IItemLibrary {
     private ItemClassType resolveClassType(ItemStack stack) {
         if (this.tagLibrary.is(ItemEffectTags.AXES, stack))
             return ItemClassType.AXE;
+        if (this.tagLibrary.is(ItemEffectTags.PICKAXES, stack))
+            return ItemClassType.PICKAXE;
         if (this.tagLibrary.is(ItemEffectTags.BOOKS, stack))
             return ItemClassType.BOOK;
         if (this.tagLibrary.is(ItemEffectTags.BOWS, stack))
@@ -199,6 +205,14 @@ public class ItemLibrary implements IItemLibrary {
         if (this.tagLibrary.is(ItemEffectTags.SWORDS, stack))
             return ItemClassType.SWORD;
         if (this.tagLibrary.is(ItemEffectTags.TOOLS, stack))
+            return ItemClassType.TOOL;
+
+        // No tag of ours: what the item does, then a mining tool the convention tags know of but whose tool says
+        // nothing more
+        var byBehavior = ItemBehavior.classify(stack);
+        if (byBehavior != ItemClassType.NONE)
+            return byBehavior;
+        if (this.tagLibrary.is(MINING_TOOL, stack) || this.tagLibrary.is(MINING_TOOLS, stack))
             return ItemClassType.TOOL;
 
         return ItemClassType.NONE;

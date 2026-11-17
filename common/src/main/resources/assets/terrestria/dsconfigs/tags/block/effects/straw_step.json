@@ -1,0 +1,12 @@
+{
+  "values": [
+    {
+      "id": "terrestria:cattail",
+      "required": false
+    },
+    {
+      "id": "terrestria:tall_cattail",
+      "required": false
+    }
+  ]
+}

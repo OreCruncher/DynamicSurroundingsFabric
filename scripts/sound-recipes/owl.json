@@ -1,0 +1,79 @@
+{
+  "name": "owl",
+  "source": {
+    "title": "Great Horned Owl Duet at Canaveral Seashore",
+    "url": "https://freesound.org/people/felix.blume/sounds/612651/",
+    "author": "felix.blume",
+    "license": "CC0",
+    "file": "612651__felixblume__great-horned-owl-duet-at-canaveral-seashore.wav",
+    "prepare": "python scripts/sound-clean.py <file> owl_clean.wav --highpass 180 --lowpass 1500 --denoise -15 --noise-pct 70 --over 2, then --source owl_clean.wav",
+    "notes": "96 kHz 24-bit stereo (Sound Devices MixPre-6), Florida, 4.5 min: a pair of great horned owls hooting back and forth, about 80 hoots at 266-330 Hz (the lower one probably the male), over the seashore's surf, which swells and falls over seconds. Filtered to 180-1500 Hz (the hoots and their second harmonic), the calls stood about 37 dB over the surf; the denoise, its profile at the 70th percentile so the swells count, takes the surf down about 10 dB more and leaves the hoots whole (floors of -30 and -18 dB took 18 and 13 dB, but what was left of the surf warbled). Whole hoot sequences, the far owl's soft replies left out."
+  },
+  "settings": {
+    "highpass": 180,
+    "lowpass": 1500,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.05,
+    "fade_out": 0.3,
+    "target_rms_peak": -12.0
+  },
+  "clips": [
+    {
+      "file": "ambient/owl/owl1",
+      "start": 1.95,
+      "end": 5.07
+    },
+    {
+      "file": "ambient/owl/owl2",
+      "start": 12.16,
+      "end": 15.87
+    },
+    {
+      "file": "ambient/owl/owl3",
+      "start": 20.48,
+      "end": 23.83
+    },
+    {
+      "file": "ambient/owl/owl4",
+      "start": 27.86,
+      "end": 30.83
+    },
+    {
+      "file": "ambient/owl/owl5",
+      "start": 37.57,
+      "end": 40.19
+    },
+    {
+      "file": "ambient/owl/owl6",
+      "start": 45.94,
+      "end": 48.65
+    },
+    {
+      "file": "ambient/owl/owl7",
+      "start": 79.63,
+      "end": 83.37
+    },
+    {
+      "file": "ambient/owl/owl8",
+      "start": 109.0,
+      "end": 111.77
+    },
+    {
+      "file": "ambient/owl/owl9",
+      "start": 123.4,
+      "end": 128.81,
+      "notes": "the two owls answering"
+    },
+    {
+      "file": "ambient/owl/owl10",
+      "start": 167.58,
+      "end": 171.85
+    },
+    {
+      "file": "ambient/owl/owl11",
+      "start": 205.2,
+      "end": 209.45
+    }
+  ]
+}

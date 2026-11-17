@@ -33,15 +33,7 @@ layout(location = 0) out vec4 fragColor;
 // The noise texture's size, which it repeats at (AuroraRenderer.NOISE_SIZE): wider than a curtain's finest noise
 const float NOISE_SIZE = 512.0;
 
-// Smooth value noise, 0 to 1, a cell to a texel of the noise texture. The texture is read between texels in a straight
-// line; moving the point within its cell along an S-curve first rounds that off, as working out the four corners would,
-// in one read
-float noise(vec2 p) {
-    vec2 cell = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    return texture(NoiseSampler, (cell + f + 0.5) / NOISE_SIZE).r;
-}
+#include <dsurround:noise.glsl>
 
 void main() {
     float x = texCoord0.x;

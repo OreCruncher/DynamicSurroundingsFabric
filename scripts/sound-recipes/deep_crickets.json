@@ -1,0 +1,27 @@
+{
+  "name": "deep_crickets",
+  "source": {
+    "title": "Crickets chirping in the Night at the Forest 001",
+    "url": "https://freesound.org/people/Borgory/sounds/751465/",
+    "author": "Borgory",
+    "license": "CC0",
+    "file": "751465__borgory__crickets-chirping-in-the-night-at-the-forest-001.wav",
+    "prepare": "python scripts/sound-clean.py <file> crickets_clean.wav --highpass 1500 --lowpass 6000, then --source crickets_clean.wav",
+    "notes": "48 kHz stereo, 181 s: a cricket chorus at about 2.8 kHz (a harmonic near 5.6 kHz) swelling and fading about once a minute, over two steady layers as loud as the crickets: a low hum under 1 kHz (distant traffic or wind) and a hiss at 8-12 kHz that doesn't swell with them. The 1.5 kHz high-pass takes the hum; the 6 kHz low-pass, twice (in the cleaning and the cut), and 16 kHz take the hiss. The loop runs two whole swells, from one to the next."
+  },
+  "settings": {
+    "rate": 16000,
+    "quality": 2,
+    "highpass": 0,
+    "target_rms": -50.9,
+    "lowpass": 6000
+  },
+  "clips": [
+    {
+      "file": "ambient/outside/deep_crickets",
+      "start": 41.0,
+      "end": 171.0,
+      "loop": 3.0
+    }
+  ]
+}

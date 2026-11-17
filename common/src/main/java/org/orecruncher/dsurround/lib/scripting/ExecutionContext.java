@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.lib.scripting.engine.ScriptHelpers;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * Holds a script engine along with its variable sets, and evaluates scripts against it.
@@ -60,6 +61,19 @@ public final class ExecutionContext {
     public void configureScripting(IConfigureScripting config) {
         config.configure(this.engine);
         this.onDefinitionsChanged();
+    }
+
+    /**
+     * Defines the config files' constants and one section's functions, in place of what was defined before; scripts
+     * compile again with them. Each problem is described to {@code problems}, and what it concerns is left out.
+     */
+    public void define(ScriptDefinitions definitions, ScriptDefinitions.Section functions, Consumer<String> problems) {
+        Preconditions.checkNotNull(definitions);
+        definitions.defineIn(this.engine, functions, problems);
+        // Compiled scripts hold the definitions they were compiled with. The generation moves first, so a compile
+        // begun with the old definitions doesn't put its result in the caches after they are cleared
+        this.onDefinitionsChanged();
+        this.expressions.clear();
     }
 
     public String getName() {
@@ -146,12 +160,18 @@ public final class ExecutionContext {
         var cached = script.getCompiledExpression(this, gen);
         if (cached != null)
             return cached;
-        var compiled = this.generateExpression(script.asString());
+        var compiled = this.generateExpression(script.asString(), gen);
         script.setCompiledScript(this, gen, compiled);
         return compiled;
     }
 
-    private Expression generateExpression(final String script) {
+    // Kept only while the definitions it was compiled with are still the current ones
+    private void cache(Map<String, Expression> cache, String script, Expression expression, int gen) {
+        if (this.generation == gen)
+            cache.put(script, expression);
+    }
+
+    private Expression generateExpression(final String script, int gen) {
         var cached = this.expressions.get(script);
         if (cached != null)
             return cached;
@@ -161,18 +181,18 @@ public final class ExecutionContext {
 
         try {
             var compiled = this.engine.compile(script);
-            this.expressions.put(script, compiled);
+            this.cache(this.expressions, script, compiled, gen);
             return compiled;
         } catch (final ScriptException e) {
             var msg = e.getMessageForLogging(script);
             this.logger.error(e, "%s", msg);
             var error = e.asExpression();
-            this.failedCompiles.put(script, error);
+            this.cache(this.failedCompiles, script, error, gen);
             return error;
         } catch (final Throwable t) {
             this.logger.error(t, "Error compiling script: %s", t.getMessage());
             var error = makeErrorFunction(t);
-            this.failedCompiles.put(script, error);
+            this.cache(this.failedCompiles, script, error, gen);
             return error;
         }
     }

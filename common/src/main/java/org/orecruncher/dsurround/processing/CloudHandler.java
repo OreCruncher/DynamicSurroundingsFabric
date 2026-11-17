@@ -13,6 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.effects.clouds.CloudField;
@@ -138,8 +139,10 @@ public class CloudHandler extends AbstractClientHandler {
      * Whether the clouds are the mod's
      */
     public boolean isActive() {
+        // Drawn from the world effects hook: without it vanilla's stay, or there would be none at all
         return this.config.weatherOptions.enableDynamicClouds && !FeatureConflict.DYNAMIC_CLOUDS.isBlocked()
-                && CloudRenderer.isUsable() && GameUtils.isInGame()
+                && CloudRenderer.isUsable() && OptionalHook.WORLD_EFFECTS.status() != OptionalHook.Status.MISSING
+                && GameUtils.isInGame()
                 && GameUtils.getMC().options.cloudStatus().get() != CloudStatus.OFF && this.dimensionInformation.dynamicClouds();
     }
 
@@ -384,7 +387,6 @@ public class CloudHandler extends AbstractClientHandler {
 
         private final IBiomeLibrary biomeLibrary;
         private final CloudCover[] byWetness = new CloudCover[WETNESS_STEPS + 1];
-        private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         @Nullable
         private ClientLevel level;
         private double driftX;
@@ -467,7 +469,9 @@ public class CloudHandler extends AbstractClientHandler {
             float known = this.wetness.get(square);
             if (!Float.isNaN(known))
                 return known;
-            var biome = current.getBiome(this.pos.set(x, this.sampleY, z)).value();
+            // The biome of the 4 by 4 square itself, not vanilla's blurred borders between squares (BiomeManager.getBiome
+            // hashes neighboring points for those): clouds are 12 blocks wide, and this was half of the clouds' tick
+            var biome = current.getNoiseBiome(x >> 2, this.sampleY >> 2, z >> 2).value();
             float wet = this.biomeLibrary.getBiomeInfo(biome).getDownfall();
             this.wetness.put(square, wet);
             return wet;

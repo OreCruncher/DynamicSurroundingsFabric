@@ -40,6 +40,7 @@ public class ShoreFoam extends SingleQuadParticle {
     private final double startX, startZ, startY;
     private final double reachX, reachZ;
     private final BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
+    private final Quaternionf orientation;
     private float fade;
     // The furthest it can go, 0 to 1 of its reach: lowered if it comes to a rise
     private float furthest = 1F;
@@ -72,6 +73,9 @@ public class ShoreFoam extends SingleQuadParticle {
         this.quadSize = (0.2F + random.nextFloat() * 0.2F) * scale;
         this.alpha = 0F;
         this.roll = this.oRoll = random.nextFloat() * Mth.TWO_PI;
+        // Lying flat, turned by its roll in its own plane: extractRotatedQuad takes the rotation whole and applies no
+        // roll, so without it every patch along a shore faced the same way
+        this.orientation = new Quaternionf(FLAT).rotateZ(this.roll);
 
         var biomeColor = level.getBiome(BlockPos.containing(x, y, z)).value().getWaterColor();
         var colorRgb = ARGB.srgbLerp(WHITENESS, biomeColor, ColorPalette.MC_WHITE.getValue());
@@ -130,7 +134,7 @@ public class ShoreFoam extends SingleQuadParticle {
     public void extract(final @NonNull QuadParticleRenderState state, final @NonNull Camera camera, final float tickDelta) {
         this.setAlpha(this.fade * PEAK_ALPHA);
         var cam = camera.position();
-        this.extractRotatedQuad(state, FLAT, (float) (Mth.lerp(tickDelta, this.xo, this.x) - cam.x),
+        this.extractRotatedQuad(state, this.orientation, (float) (Mth.lerp(tickDelta, this.xo, this.x) - cam.x),
                 (float) (Mth.lerp(tickDelta, this.yo, this.y) - cam.y), (float) (Mth.lerp(tickDelta, this.zo, this.z) - cam.z), tickDelta);
     }
 

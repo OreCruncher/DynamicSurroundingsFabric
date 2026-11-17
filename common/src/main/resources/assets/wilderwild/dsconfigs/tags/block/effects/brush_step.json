@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "wilderwild:frozen_tall_grass",
+      "required": false
+    },
+    {
+      "id": "wilderwild:frozen_large_fern",
+      "required": false
+    },
+    {
+      "id": "wilderwild:frozen_bush",
+      "required": false
+    },
+    {
+      "id": "wilderwild:shrub",
+      "required": false
+    }
+  ]
+}

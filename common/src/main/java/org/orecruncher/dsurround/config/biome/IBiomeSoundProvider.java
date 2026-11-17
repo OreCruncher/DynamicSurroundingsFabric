@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.config.biome;
 
 import net.minecraft.sounds.Music;
+import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.SoundEventType;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
@@ -15,11 +16,12 @@ import java.util.Optional;
 public interface IBiomeSoundProvider {
 
     /**
-     * Gets a collection of SoundEvents that match the existing conditions within the game.
+     * Gets the loop entries whose conditions match the existing conditions within the game; each gives its sound
+     * ({@link AcousticEntry#getAcoustic()}) and its volume now ({@link AcousticEntry#volume()}).
      *
-     * @return Collection of matching SoundEvents.
+     * @return Collection of matching loop entries.
      */
-    Collection<ISoundFactory> findBiomeSoundMatches();
+    Collection<AcousticEntry> findBiomeSoundMatches();
 
     /**
      * Gets an add-on SoundEvent based on existing conditions within the game as well

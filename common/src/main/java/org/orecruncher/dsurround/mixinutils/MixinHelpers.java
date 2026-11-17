@@ -39,6 +39,7 @@ public class MixinHelpers {
     // Mixin bodies run every frame, tick or particle inside the game's own code: a failure is logged a few times and
     // the game's own behavior used in its place, rather than thrown into the game
     public static final Guard FOG_TINT_GUARD = Guard.named("Fog color tint");
+    public static final Guard FOG_FINISH_GUARD = Guard.named("Fog past the render distance");
     public static final Guard SKY_TINT_GUARD = Guard.named("Sky color tint");
     public static final Guard SUNSET_TINT_GUARD = Guard.named("Sunrise and sunset color tint");
     public static final Guard STORM_RAIN_LEVEL_GUARD = Guard.named("Storm rain level");
@@ -62,6 +63,7 @@ public class MixinHelpers {
     public static final Guard RAIN_SPLASH_GUARD = Guard.named("Vanilla rain splash suppression");
     public static final Guard WIND_BLOWN_GUARD = Guard.named("Marking wind blown particles");
     public static final Guard WIND_DRIFT_GUARD = Guard.named("Wind drift");
+    public static final Guard FIREFLY_GUARD = Guard.named("Firefly bush fireflies");
     public static final Guard VANILLA_FIRE_GUARD = Guard.named("Vanilla fire suppression on burning mobs");
     public static final Guard DEATH_PUFF_GUARD = Guard.named("Death mist");
     public static final Guard LIGHTNING_GUARD = Guard.named("Lightning");

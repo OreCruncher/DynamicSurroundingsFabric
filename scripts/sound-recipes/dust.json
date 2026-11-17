@@ -1,0 +1,27 @@
+{
+  "name": "dust",
+  "source": {
+    "title": "Desert sand - Dune atmosphere",
+    "url": "https://freesound.org/people/Vrymaa/sounds/825860/",
+    "author": "Vrymaa",
+    "license": "CC0",
+    "file": "825860__vrymaa__desert-sand-dune-atmosphere.wav",
+    "notes": "48 kHz mono, 128 s: wind-blown sand flowing down a dune. Its first 23 s is one flow, swelling in over 2 s, steady from about 2 to 19.5 s across the whole range (the flow's rumble to the grains' hiss), fading out by 22.5 s. Six slices of the steady part, with soft fades so the bursts a dust storm plays from spots around the player blend together. The old file was one generated 2 s burst, mostly under 150 Hz; the level matches its loudness (-40 LUFS), not its RMS, which its rumble made up."
+  },
+  "settings": {
+    "highpass": 100,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.25,
+    "fade_out": 0.35,
+    "target_rms": -42.0
+  },
+  "clips": [
+    {"file": "ambient/weather/dust1", "start": 2.2, "end": 4.8},
+    {"file": "ambient/weather/dust2", "start": 5.0, "end": 7.6},
+    {"file": "ambient/weather/dust3", "start": 8.0, "end": 10.6},
+    {"file": "ambient/weather/dust4", "start": 11.0, "end": 13.6},
+    {"file": "ambient/weather/dust5", "start": 14.0, "end": 16.6},
+    {"file": "ambient/weather/dust6", "start": 16.8, "end": 19.4}
+  ]
+}

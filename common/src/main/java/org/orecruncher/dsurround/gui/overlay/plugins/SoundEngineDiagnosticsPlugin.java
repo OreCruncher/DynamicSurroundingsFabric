@@ -9,7 +9,6 @@ import net.minecraft.sounds.SoundSource;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.overlay.IDiagnosticPlugin;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
@@ -17,7 +16,6 @@ import org.orecruncher.dsurround.lib.gui.ColorPalette;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Cacheable
 public final class SoundEngineDiagnosticsPlugin implements IDiagnosticPlugin {
 
     private static final String FMT_DBG_SOUND = "%s: %d";

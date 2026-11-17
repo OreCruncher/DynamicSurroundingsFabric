@@ -23,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.commands.Commands;
 import org.orecruncher.dsurround.config.PresetLoader;
+import org.orecruncher.dsurround.config.ScriptDefinitionLoader;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.config.libraries.impl.*;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
@@ -47,6 +48,8 @@ import org.orecruncher.dsurround.lib.logging.ModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.lib.platform.IMinecraftDirectories;
 import org.orecruncher.dsurround.lib.registry.ReloadListener;
+import org.orecruncher.dsurround.lib.resources.IModFiles;
+import org.orecruncher.dsurround.lib.resources.ModFiles;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.seasons.SeasonManager;
@@ -95,7 +98,9 @@ public final class Client {
 
         ContainerManager.getRootContainer()
                 .registerSingleton(IModLog.class, Library.LOGGER)
-                .registerSingleton(IConfigScreenFactoryProvider.class, ClothAPIFactoryProvider.class);
+                .registerSingleton(IConfigScreenFactoryProvider.class, ClothAPIFactoryProvider.class)
+                // A platform reading mods' files its own way registers that after initialize (NeoForge does)
+                .registerSingleton(IModFiles.class, ModFiles.byPaths());
 
         // Setup debug trace on the logger. It's not guaranteed that we
         // are the first getting the log file, so we can't rely
@@ -160,6 +165,7 @@ public final class Client {
                 .registerSingleton(IBiomeLibrary.class, BiomeLibrary.class)
                 .registerSingleton(IDimensionLibrary.class, DimensionLibrary.class)
                 .registerSingleton(PresetLoader.class)
+                .registerSingleton(ScriptDefinitionLoader.class)
                 .registerSingleton(IDimensionOracle.class, DimensionOracle.class)
                 .registerSingleton(ILevelOracle.class, LevelOracle.class)
                 .registerSingleton(IMinecraftClock.class, MinecraftClock.class)
@@ -213,6 +219,8 @@ public final class Client {
         // notification.
         IReloadEvent.EVENT.register(container.resolve(ISoundLibrary.class)::reload, HandlerPriority.VERY_HIGH);
         IReloadEvent.EVENT.register(container.resolve(ITagLibrary.class)::reload, HandlerPriority.VERY_HIGH);
+        // Before anything whose scripts use the definitions: the biome rules are checked as the biome library loads
+        IReloadEvent.EVENT.register(container.resolve(ScriptDefinitionLoader.class)::reload, HandlerPriority.VERY_HIGH);
         IReloadEvent.EVENT.register(container.resolve(IBiomeLibrary.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(container.resolve(IBlockLibrary.class)::reload, HandlerPriority.HIGH);
         IReloadEvent.EVENT.register(container.resolve(IItemLibrary.class)::reload, HandlerPriority.HIGH);

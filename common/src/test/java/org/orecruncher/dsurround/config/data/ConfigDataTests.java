@@ -206,19 +206,20 @@ public class ConfigDataTests {
 
     @Test
     void dimensionRulesSetWeatherAndWind() {
-        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false, \"groundFog\": true, \"dynamicClouds\": false}").getOrThrow();
+        var rule = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"twilightforest:twilight_forest\", \"particleWeather\": true, \"simulateWind\": false, \"groundFog\": true, \"dynamicClouds\": false, \"worldActors\": false}").getOrThrow();
         assertEquals(Optional.of(true), rule.particleWeather());
         assertEquals(Optional.of(false), rule.simulateWind());
         assertEquals(Optional.of(true), rule.groundFog());
         assertEquals(Optional.of(false), rule.dynamicClouds());
+        assertEquals(Optional.of(false), rule.worldActors());
         var text = rule.toString();
         assertTrue(text.contains("particleWeather: true") && text.contains("simulateWind: false") && text.contains("groundFog: true")
-                && text.contains("dynamicClouds: false"), text);
+                && text.contains("dynamicClouds: false") && text.contains("worldActors: false"), text);
 
         // Left out, they are left to the dimension's own guess
         var plain = parse(DimensionConfigRule.CODEC, "{\"dimId\": \"minecraft:overworld\"}").getOrThrow();
         assertTrue(plain.particleWeather().isEmpty() && plain.simulateWind().isEmpty() && plain.groundFog().isEmpty()
-                && plain.dynamicClouds().isEmpty());
+                && plain.dynamicClouds().isEmpty() && plain.worldActors().isEmpty());
     }
 
     @Test

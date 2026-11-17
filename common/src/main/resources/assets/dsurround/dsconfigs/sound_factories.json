@@ -3,7 +3,11 @@
     "location": "dsurround:toolbar.none.equip",
     "soundEvent": "dsurround:item.utility.equip",
     "category": "PLAYER",
-    "volume": 0.3
+    "volume": 0.15,
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
   },
   {
     "location": "dsurround:toolbar.tool.equip",
@@ -77,6 +81,26 @@
   },
   {
     "location": "dsurround:toolbar.axe.swing",
+    "soundEvent": "dsurround:item.blunt.swing",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.pickaxe.equip",
+    "soundEvent": "dsurround:item.blunt.equip",
+    "category": "PLAYER",
+    "volume": 0.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:toolbar.pickaxe.swing",
     "soundEvent": "dsurround:item.blunt.swing",
     "category": "PLAYER",
     "volume": 0.5,
@@ -210,6 +234,42 @@
     "soundEvent": "minecraft:block.fire.ambient"
   },
   {
+    "location": "dsurround:actor/waterspout",
+    "soundEvent": "dsurround:waterfall.1",
+    "volume": 2.2,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.0
+    }
+  },
+  {
+    "location": "dsurround:actor/firespout",
+    "soundEvent": "minecraft:block.fire.ambient",
+    "volume": 2.0,
+    "pitch": {
+      "min": 0.5,
+      "max": 0.7
+    }
+  },
+  {
+    "location": "dsurround:actor/snowspout",
+    "soundEvent": "minecraft:block.sand.idle",
+    "volume": 1.5,
+    "pitch": {
+      "min": 1.1,
+      "max": 1.35
+    }
+  },
+  {
+    "location": "dsurround:actor/dust_devil",
+    "soundEvent": "minecraft:block.sand.idle",
+    "volume": 1.5,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.1
+    }
+  },
+  {
     "location": "dsurround:brush_step/brush",
     "soundEvent": "dsurround:footsteps.brush_through",
     "category": "PLAYER",
@@ -294,13 +354,13 @@
     "location": "dsurround:player_jump",
     "soundEvent": "dsurround:player.jump",
     "pitch": {
-      "min": 0.8,
+      "min": 1.0,
       "max": 1.2
     }
   },
   {
     "location": "dsurround:waterfalls/0",
-    "soundEvent": "dsurround:waterfall.0",
+    "soundEvent": "dsurround:waterfall.1",
     "pitch": {
       "min": 0.8,
       "max": 1.2
@@ -443,5 +503,77 @@
     "location": "dsurround:biome.wind.arctic",
     "soundEvent": "dsurround:biome.wind.arctic",
     "followsWind": true
+  },
+  {
+    "location": "dsurround:wolf",
+    "soundEvent": "dsurround:wolf",
+    "pitch": {
+      "min": 0.85,
+      "max": 1.15
+    }
+  },
+  {
+    "location": "dsurround:whale",
+    "soundEvent": "dsurround:whale",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:whale.right",
+    "soundEvent": "dsurround:whale.right",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:whale.minke",
+    "soundEvent": "dsurround:whale.minke",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:loon",
+    "soundEvent": "dsurround:loon",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:seagulls",
+    "soundEvent": "dsurround:seagulls",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:seagulls.flock",
+    "soundEvent": "dsurround:seagulls.flock",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:nightingale",
+    "soundEvent": "dsurround:nightingale",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
+  },
+  {
+    "location": "dsurround:owl",
+    "soundEvent": "dsurround:owl",
+    "pitch": {
+      "min": 0.9,
+      "max": 1.1
+    }
   }
 ]

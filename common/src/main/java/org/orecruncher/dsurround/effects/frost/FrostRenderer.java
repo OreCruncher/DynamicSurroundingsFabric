@@ -3,10 +3,7 @@
 
 package org.orecruncher.dsurround.effects.frost;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
@@ -21,11 +18,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
+import org.orecruncher.dsurround.effects.QuadWriter;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Draws the frost on windows: each frosted face as a grid of small quads just off the glass, with the frost texture
@@ -104,16 +101,16 @@ public final class FrostRenderer {
     }
 
     /**
-     * Builds the frost into a buffer and hands it to {@code drawer}, which draws it with the frost's pipeline and
-     * texture
+     * Writes the frost into {@code quads}, of the {@link QuadWriter.Format#PARTICLE} format, around the camera, to be
+     * drawn with the frost's pipeline and texture
      *
-     * @return how many faces were drawn
+     * @return how many faces were written
      */
-    public static int draw(FrostField field, ByteBufferBuilder bytes, Consumer<MeshData> drawer, Camera camera) {
+    public static int build(FrostField field, QuadWriter quads, Camera camera) {
         var cam = camera.position();
         float range = FrostField.RANGE;
         float rangeSq = range * range;
-        BufferBuilder builder = new BufferBuilder(bytes, PrimitiveTopology.QUADS, DefaultVertexFormat.PARTICLE);
+        quads.begin(64);
         int[] drawn = {0};
         field.forEachFace(face -> {
             if (face.shown < MIN_SHOWN)
@@ -121,16 +118,13 @@ public final class FrostRenderer {
             double dx = face.x + 0.5D - cam.x, dy = face.y + 0.5D - cam.y, dz = face.z + 0.5D - cam.z;
             if (dx * dx + dy * dy + dz * dz > rangeSq)
                 return;
-            drawFace(builder, face, cam.x, cam.y, cam.z);
+            drawFace(quads, face, cam.x, cam.y, cam.z);
             drawn[0]++;
         });
-        var mesh = builder.build();
-        if (mesh != null)
-            drawer.accept(mesh);
         return drawn[0];
     }
 
-    private static void drawFace(BufferBuilder builder, FrostFace face, double camX, double camY, double camZ) {
+    private static void drawFace(QuadWriter quads, FrostFace face, double camX, double camY, double camZ) {
         // Fully frosted, the frost is the same all over, so one quad does: a window frosts fully on cold nights, and
         // the grid's quads were most of drawing it
         boolean uniform = isUniform(face);
@@ -152,22 +146,22 @@ public final class FrostRenderer {
             float va = face.v0 + j * stepV, vb = va + stepV;
             for (int i = 0; i < cellsU; i++) {
                 double ua = face.u0 + i * stepU, ub = ua + stepU;
-                corner(builder, face, alongX, ua, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
-                corner(builder, face, alongX, ub, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
-                corner(builder, face, alongX, ub, vb, originU, originV, offsetU, offsetV, camX, camY, camZ);
-                corner(builder, face, alongX, ua, vb, originU, originV, offsetU, offsetV, camX, camY, camZ);
+                corner(quads, face, alongX, ua, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
+                corner(quads, face, alongX, ub, va, originU, originV, offsetU, offsetV, camX, camY, camZ);
+                corner(quads, face, alongX, ub, vb, originU, originV, offsetU, offsetV, camX, camY, camZ);
+                corner(quads, face, alongX, ua, vb, originU, originV, offsetU, offsetV, camX, camY, camZ);
             }
         }
     }
 
-    private static void corner(BufferBuilder builder, FrostFace face, boolean alongX, double u, float v, float originU,
+    private static void corner(QuadWriter quads, FrostFace face, boolean alongX, double u, float v, float originU,
                                float originV, float offsetU, float offsetV, double camX, double camY, double camZ) {
         float x = (float) ((alongX ? u : face.plane) - camX);
         float y = (float) (v - camY);
         float z = (float) ((alongX ? face.plane : u) - camZ);
         float texU = (float) (u - originU) / TEXTURE_BLOCKS + offsetU;
         float texV = (originV - v) / TEXTURE_BLOCKS + offsetV;
-        builder.addVertex(x, y, z).setUv(texU, texV).setColor(RED, GREEN, BLUE, grown(face, u, v)).setLight(face.light);
+        quads.vertex(x, y, z, texU, texV, QuadWriter.color(RED, GREEN, BLUE, grown(face, u, v)), face.light);
     }
 
     /**

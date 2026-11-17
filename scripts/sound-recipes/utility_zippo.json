@@ -1,0 +1,30 @@
+{
+  "name": "utility_zippo",
+  "source": {
+    "title": "Zippo click sound",
+    "url": "https://opengameart.org/content/zippo-click-sound",
+    "author": "dawith (submitted by qubodup)",
+    "license": "CC0",
+    "file": "zipclick.flac",
+    "notes": "44.1 kHz stereo FLAC, 0.5 s: one soft mechanical click of about 30 ms (a Zippo lighter), the rest digital silence. OpenGameArt, 2012-06-02. Not the source of the old utility_draw (r 0.15 at any speed). Softened with a high shelf (-12 dB above 2.5 kHz; its energy peaked at 3-5 and 8-12 kHz) and 3 dB quieter."
+  },
+  "settings": {
+    "highpass": 80,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.002,
+    "fade_out": 0.01,
+    "target_rms_peak": -26.0,
+    "treble": [
+      -12,
+      2500
+    ]
+  },
+  "clips": [
+    {
+      "file": "items/utility_zippo",
+      "start": 0.078,
+      "end": 0.135
+    }
+  ]
+}

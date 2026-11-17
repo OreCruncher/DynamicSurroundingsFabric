@@ -4,15 +4,15 @@
 package org.orecruncher.dsurround.lib.resources;
 
 import com.mojang.serialization.Codec;
+import dev.architectury.platform.Mod;
 import dev.architectury.platform.Platform;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
+import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.function.SingletonSupplier;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
@@ -23,21 +23,25 @@ import java.util.function.Supplier;
  */
 public class ServerResourceFinder extends AbstractResourceFinder {
 
-    // The installed mods' data folders. Mods can't come or go during a session, so these are found once.
-    private static final Supplier<List<Path>> INSTALLED_DATA_ROOTS = SingletonSupplier.from(ServerResourceFinder::findInstalledDataRoots);
+    private static final String DATA = PackType.SERVER_DATA.getDirectory();
+    // The installed mods with a data folder. Mods can't come or go during a session, so these are found once.
+    private static final Supplier<List<String>> INSTALLED_DATA_MODS = SingletonSupplier.from(ServerResourceFinder::findInstalledDataMods);
 
-    private final Supplier<? extends Collection<Path>> dataRoots;
+    private final IModFiles files;
+    private final Supplier<? extends Collection<String>> mods;
 
     protected ServerResourceFinder(IModLog logger) {
-        this(logger, INSTALLED_DATA_ROOTS);
+        this(logger, ContainerManager.resolve(IModFiles.class), INSTALLED_DATA_MODS);
     }
 
     /**
-     * @param dataRoots the data folders to look in
+     * @param files the mods' files
+     * @param mods  the ids of the mods to look in
      */
-    ServerResourceFinder(IModLog logger, Supplier<? extends Collection<Path>> dataRoots) {
+    ServerResourceFinder(IModLog logger, IModFiles files, Supplier<? extends Collection<String>> mods) {
         super(logger);
-        this.dataRoots = dataRoots;
+        this.files = files;
+        this.mods = mods;
     }
 
     /**
@@ -51,30 +55,17 @@ public class ServerResourceFinder extends AbstractResourceFinder {
             return List.of();
         }
 
-        var relative = withJsonExtension(location.getNamespace() + "/" + location.getPath());
+        var relative = DATA + "/" + withJsonExtension(location.getNamespace() + "/" + location.getPath());
         var results = new ObjectArray<DiscoveredResource<T>>();
-        for (var root : this.dataRoots.get()) {
-            var file = root.resolve(relative.replace("/", root.getFileSystem().getSeparator()));
-            if (Files.exists(file))
-                this.readInto(location, location.getNamespace(), file, () -> Files.newInputStream(file), codec, results);
+        for (var mod : this.mods.get()) {
+            if (this.files.has(mod, relative))
+                this.readInto(location, location.getNamespace(), mod + ":" + relative, () -> this.files.open(mod, relative), codec, results);
         }
         return results;
     }
 
-    private static List<Path> findInstalledDataRoots() {
-        var folder = PackType.SERVER_DATA.getDirectory();
-        var roots = new ObjectArray<Path>();
-        for (var mod : Platform.getMods()) {
-            // A mod may be spread over several roots (in development, its classes and resources); the first with a
-            // data folder is the one. On NeoForge a mod's path is its jar, opened by ModRoots.
-            for (var root : ModRoots.of(mod)) {
-                var data = root.resolve(folder);
-                if (Files.exists(data)) {
-                    roots.add(data);
-                    break;
-                }
-            }
-        }
-        return List.copyOf(roots);
+    private static List<String> findInstalledDataMods() {
+        var files = ContainerManager.resolve(IModFiles.class);
+        return Platform.getMods().stream().map(Mod::getModId).filter(id -> files.hasFolder(id, DATA)).toList();
     }
 }

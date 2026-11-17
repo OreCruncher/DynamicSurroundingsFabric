@@ -32,6 +32,17 @@ public class BlockEffectTags {
     public static final TagKey<Block> SOUL_SKULL_FLAMES = of("soul_skull_flames");
     public static final TagKey<Block> RAIN_ABSORBING = of("rain_absorbing");
     public static final TagKey<Block> DUST_SOURCES = of("dust_sources");
+    // Dry plants a dust devil lifts and whirls about with it
+    public static final TagKey<Block> DUST_DEVIL_DEBRIS = of("dust_devil_debris");
+    // Sea plants a waterspout tears up from shallow water
+    public static final TagKey<Block> WATERSPOUT_DEBRIS = of("waterspout_debris");
+    // Snow and ice a snowspout starts on and whirls up as powder
+    public static final TagKey<Block> SNOWSPOUT_SOURCES = of("snowspout_sources");
+    // What a wisp haunts: marsh water and mud, soul sand
+    public static final TagKey<Block> WISP_GROUNDS = of("wisp_grounds");
+    // Canopies ground fog lies under, not on: leaves, huge mushrooms' caps, giant flowers' heads. The fog looks down
+    // through them, and the air beneath, for the ground
+    public static final TagKey<Block> FOG_CANOPY = of("fog_canopy");
     public static final TagKey<Block> WINDOWS = of("windows");
     public static final TagKey<Block> FROSTED_WINDOWS = of("frosted_windows");
     // Blocks feet leave prints in, besides those that sound like sand, gravel, snow or mud underfoot

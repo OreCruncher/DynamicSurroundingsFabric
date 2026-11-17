@@ -1,0 +1,27 @@
+{
+  "name": "rain_calm",
+  "source": {
+    "title": "even more rain.wav",
+    "url": "https://freesound.org/people/mlaramie/sounds/193876/",
+    "author": "mlaramie",
+    "license": "CC0",
+    "file": "193876__mlaramie__even-more-rain.wav",
+    "notes": "44.1 kHz 16-bit mono, 8.5 minutes of steady rain. Chosen over barkenov's 'Soft rain' (CC0; quiet, hissy, about 7 sharp drops a second) and Ryding's 'Medium rain' (CC BY 4.0; little low end) as the closest to the calm rain it replaces (Wirsbo's, no license stated): a smooth wash with a heavy low end. Stretches picked by profile against the old clips (third octaves within about 2 dB RMS), no sharp drops, level steady within 0.2 dB (scratchpad rain_pick.py)."
+  },
+  "settings": {
+    "highpass": 30,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.6,
+    "fade_out": 0.5,
+    "target_rms_peak": -43.4,
+    "limit": false
+  },
+  "clips": [
+    {"file": "ambient/weather/rain_calm1", "start": 94.5, "end": 96.5, "notes": "the heaviest low end"},
+    {"file": "ambient/weather/rain_calm2", "start": 307.5, "end": 309.5},
+    {"file": "ambient/weather/rain_calm3", "start": 400.0, "end": 402.0},
+    {"file": "ambient/weather/rain_calm4", "start": 444.5, "end": 446.5}
+  ],
+  "shape": "Each clip is a 2 s swell (0.6 s in, 0.5 s out), as the old ones were: the calm rain plays in place of each of vanilla's rain sounds (MixinClientLevel.dsurround$rainSound), several overlapping at once. Level as the old ones' on average (RMS about -46 dB; their loudest 50 ms read -42, these are steadier, so -43.4 here)."
+}

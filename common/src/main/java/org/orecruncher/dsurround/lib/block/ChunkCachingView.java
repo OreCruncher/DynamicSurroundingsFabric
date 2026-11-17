@@ -6,6 +6,7 @@ package org.orecruncher.dsurround.lib.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +25,9 @@ import java.util.Objects;
  * in it too. {@code Level.getBlockState} looks the chunk up for every block, which was about a quarter of a sound's
  * trace; a ray walks through a chunk's blocks one after another, so most reads find the chunk already in hand. Reads
  * as the level does: void air and no fluid outside its bounds, an empty chunk where none is loaded.
+ * <p>
+ * Rays are traced by {@link RayWalk}, which reads nothing in a section that holds only air, and finds the same hit as
+ * the level's own trace.
  * <p>
  * Never its block entities, as {@link NoBlockEntityView}: on the client, asking for one from another thread can create
  * it (issue #166). Not thread safe: one per thread, attached to the level while tracing and detached after, so a kept
@@ -35,6 +40,7 @@ public final class ChunkCachingView implements BlockGetter {
     private @Nullable LevelChunk chunk;
     private int chunkX;
     private int chunkZ;
+    private final RayWalk.SectionTest air = this::holdsOnlyAir;
 
     /**
      * Reads from the level until {@link #detach()}
@@ -72,6 +78,21 @@ public final class ChunkCachingView implements BlockGetter {
     }
 
     @Override
+    public @NotNull BlockHitResult clip(@NotNull ClipContext context) {
+        return RayWalk.clip(this, context, this.air);
+    }
+
+    /**
+     * Whether a section holds only air: outside the level's height, void air; where no chunk is loaded, an empty one
+     */
+    boolean holdsOnlyAir(int sectionX, int sectionY, int sectionZ) {
+        var level = this.level();
+        if (sectionY < level.getMinSectionY() || sectionY > level.getMaxSectionY())
+            return true;
+        return this.chunk(sectionX, sectionZ).getSection(level.getSectionIndexFromSectionY(sectionY)).hasOnlyAir();
+    }
+
+    @Override
     public int getHeight() {
         return this.level().getHeight();
     }
@@ -86,8 +107,10 @@ public final class ChunkCachingView implements BlockGetter {
     }
 
     private LevelChunk chunk(BlockPos pos) {
-        int x = SectionPos.blockToSectionCoord(pos.getX());
-        int z = SectionPos.blockToSectionCoord(pos.getZ());
+        return this.chunk(SectionPos.blockToSectionCoord(pos.getX()), SectionPos.blockToSectionCoord(pos.getZ()));
+    }
+
+    private LevelChunk chunk(int x, int z) {
         var current = this.chunk;
         if (current == null || x != this.chunkX || z != this.chunkZ) {
             current = this.level().getChunk(x, z);

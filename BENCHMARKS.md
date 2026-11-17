@@ -30,6 +30,13 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-05: boats (`boats.json`)](#results-2026-11-05-boats-boatsjson)
 - [Results, 2026-11-05: beach waves (`shore.json`)](#results-2026-11-05-beach-waves-shorejson)
 - [Results, 2026-11-05: G1 against ZGC (`gc.json`)](#results-2026-11-05-g1-against-zgc-gcjson)
+- [Results, 2026-11-07: rays skip air, random block check](#results-2026-11-07-rays-skip-air-random-block-check)
+- [Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)](#results-2026-11-07-firefly-bushes-firefly-bushesjson)
+- [Results, 2026-11-07: dust devils (`dust-devils.json`)](#results-2026-11-07-dust-devils-dust-devilsjson)
+- [Results, 2026-11-07: waterspouts (`waterspouts.json`)](#results-2026-11-07-waterspouts-waterspoutsjson)
+- [Results, 2026-11-07: snowspouts (`snowspouts.json`)](#results-2026-11-07-snowspouts-snowspoutsjson)
+  - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
+  - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
 - [Rerunning](#rerunning)
 
@@ -79,6 +86,18 @@ A swamp at dawn, standing on its floor in the mist.
 | Fabulous | 2.546 (2.533-2.560) | 1.522 | 1.118 | 0.252 | 0.121 |
 
 The fog's own CPU time is 0.02 ms in each case; Ground Fog Handler takes 0.04 ms a tick.
+
+**Fewer reads in the march (2026-11-09, 5.2.0, Fabric, OpenGL):** the swirl's two directions from one read of a noise
+texture with a second noise in green (`noise2`), and the scene's distance from the depth the march already read rather
+than reading it again. The same session, before and after (`off` frames 0.775 and 0.772):
+
+| Run | Frame GPU ms, before / after | Ground Fog GPU | March |
+|---|---|---|---|
+| Fast | 0.997 / 0.978 | 0.213 / 0.195 | 0.121 / 0.103 |
+| Fancy | 1.194 / 1.155 | 0.395 / 0.357 | 0.292 / 0.255 |
+| Fabulous | 2.156 / 2.023 | 1.336 / 1.203 | 1.157 / 1.026 |
+
+The march 11-15% cheaper; smooth and composite unchanged.
 
 At 2560x1369, the size of the window the ATM10 recordings were made in, on the same floor (a one-off scenario, not
 committed): Fancy 0.83 ms of fog GPU, Fabulous 2.64 ms (march 1.94).
@@ -269,6 +288,22 @@ Drawing ours costs at most about 0.1 ms of GPU more than vanilla's, in the storm
 the tick: working out the field (`- Field *`) is about 0.3 ms a tick in every weather, about half of all the handlers'
 time in these scenes.
 
+**A cheaper field (2026-11-09, 5.2.0, Fabric, OpenGL, Cloud Distance 64 so the grid at its 97 by 97 most; vanilla's
+default, 128, is the same):** a recording put half the field's time in the cells' noise and half in looking up the
+biome under each cell, half of that in `BiomeManager.getBiome`'s blurred borders. Now the biome is the 4 by 4 square's
+own (`getNoiseBiome`), and cells past 24 from the camera's (`CloudField.NEAR_CELLS`, three quarters of that grid) are
+worked out once in 3 rounds of turns rather than every round. Cloud Handler a tick, each repeat, the same session:
+
+| Run | Before | After | fps, before / after |
+|---|---|---|---|
+| fair, dynamic | 0.34, 0.33 | 0.24, 0.22 | 1104 / 1092 |
+| storm, dynamic | 0.39, (2.45) | 0.31, 0.30 | 784 / 856 |
+| tall clouds, dynamic | 0.35, 0.35 | 0.29, 0.28 | 822 / 872 |
+
+The 2.45 is one repeat whose 95th percentile tick was 1.04 ms: a few long ticks, most likely the whole grid worked out
+at once as `/dsweather clouds` took hold (every cell, with the biome cache cold), skew its mean. That full rework is
+still the field's longest tick.
+
 ### Aurora, classic (`aurora.json`)
 
 A clear winter night facing north, every night with an aurora (chance 100), standing on the ground. The scene has
@@ -425,6 +460,39 @@ Lowering the cap or skipping lights close to the camera are the places to save; 
 lights were drawn. A block's effects are made as the config loads, so the scene runs `dsreload` for `enableFireflies`
 to take effect, and to undo it in the next run.
 
+**The projection's inverse out of the shader (2026-11-08, 5.2.0, Fabric, OpenGL):** `point_light.fsh` inverted
+`ProjMat` for each pixel of each light; `PointLights` now works it out once a frame (`InvProjMat` in its block). The
+same session, before and after (`fireflies.json`, `burning-lights.json`, two runs a label):
+
+| Run | Frame GPU ms, before / after | Point Lights GPU, before / after |
+|---|---|---|
+| fireflies default | 1.397 / 1.241 | 0.515 / 0.350 |
+| fireflies no glow | 1.424 / 1.211 | 0.546 / 0.332 |
+| burning default | 0.359 / 0.373 | 0.037 / 0.033 |
+
+About a third off the lights where there are many (fireflies aren't seeded, so a little of it is the swarm). The burning
+crowd's lights are too few to tell.
+
+**All the lights in one pass (2026-11-09, 5.2.0, Fabric, OpenGL):** in place of a square a light, each pixel reading the
+depth and working out where it is for every light over it, two triangles over the part of the screen the lights cover
+between them, each pixel reading the depth once and testing each light's square (`PointLightFrame.place` works the
+squares out). Against the runs above with the inverse out of the shader (the night before; `off` and `nolights` frames
+within 0.01 ms of them):
+
+| Run | Frame GPU ms, before / after | Point Lights GPU, before / after |
+|---|---|---|
+| fireflies default | 1.241 / 1.068 | 0.350 / 0.204 |
+| fireflies no glow | 1.211 / 1.062 | 0.332 / 0.203 |
+| burning default | 0.373 / 0.330 | 0.033 / 0.029 |
+
+From 0.52 ms before either change to 0.20: the lights went from a third of the frame to a fifth. The screenshots' lights
+add as much brightness as before.
+
+**Cap of 128 lights instead of 64** (fading from 96 instead of 48; one-pass lights, same morning, `off` and `nolights`
+within 0.01 ms): Point Lights 0.294 and 0.306 ms (default, no glow) against 0.204 and 0.203, frame GPU 1.155 against
+1.068. Half as much again for lights further off, which the screenshots barely show (a little more faint glow toward the
+back of the field). The cap stays at 64.
+
 ### Rain and snow on 26.3
 
 | Run | Precipitation GPU/CPU, OpenGL | Vulkan | Waiting for Quads CPU, OpenGL / Vulkan | Precipitation Handler ms/tick |
@@ -435,6 +503,45 @@ to take effect, and to undo it in the next run.
 | snow Low | 0.013/0.069 | 0.042/0.070 | 0.002 / 0.008 | 0.097 |
 | snow Medium | 0.020/0.299 | 0.078/0.165 | 0.168 / 0.076 | 0.171 |
 | snow High | 0.040/0.815 | 0.138/0.579 | 0.608 / 0.448 | 0.295 |
+
+**The drops' upload on Vulkan (2026-11-09, 5.2.0, Fabric, AMD 26.10.1, a fresh bench world):** a temporary GPU timer
+around `MeshDraw.upload` for the rain and snow drops alone (the largest mesh; a timer measures one span a frame, so the
+flecks', streaks' and spots' uploads aren't in it), against "- Drops", which holds it and the dust, flecks and streaks:
+
+| Run | Precipitation GPU | - Drops | - Drops Upload | - Damp Spots |
+|---|---|---|---|---|
+| rain Low | 0.049 | 0.030 | 0.010 | 0.018 |
+| rain Medium | 0.088 | 0.061 | 0.030 | 0.027 |
+| rain High | 0.151 | 0.106 | 0.059 | 0.044 |
+| snow Low | 0.042 | 0.036 | 0.012 | 0.006 |
+| snow Medium | 0.079 | 0.072 | 0.038 | 0.006 |
+| snow High | 0.138 | 0.130 | 0.074 | 0.008 |
+
+The copy of the drops' vertices is about half of "- Drops" from Medium up, and grows with the drops; the drawing is the
+rest, flecks and dust included. Fewer bytes a drop (a smaller vertex, or an instance a drop) is where the GPU time is.
+The timer was taken out again. (The bench world was deleted first: raised stages other scenarios build over the shared
+plains and snowy plains spots, the firespouts' lava lake at y 88-90 and the snowspouts' platform at y 199-200, had
+roofed the precipitation stages, and no drops were drawn.)
+
+**Vanilla's weather left unprepared (2026-11-09, 5.2.0, Fabric, OpenGL):** vanilla still worked out its rain and snow
+columns every frame (`WeatherEffectRenderer.extractRenderState`, from `LevelExtractor.extract`), only for their drawing
+to be canceled; a recording of rain High had it in a quarter of the render thread's samples, with Serene Seasons'
+temperature lookup for each column (its `getPrecipitationAt` hook) and 860 MB of allocations in 43 seconds between them.
+`MixinLevelExtractor` skips that call while particle weather replaces vanilla's (`OptionalHook.VANILLA_WEATHER_SKIPPED`).
+The same session, the skip turned off for "before":
+
+| Run | fps, before / after | Frame ms (1000 / fps) | Frame GPU ms |
+|---|---|---|---|
+| rain Low | 976 / 1026 | 1.025 / 0.975 | 0.651 / 0.641 |
+| rain Medium | 840 / 973 | 1.190 / 1.028 | 0.712 / 0.673 |
+| rain High | 609 / 798 | 1.642 / 1.253 | 0.976 / 0.764 |
+| snow Low | 820 / 860 | 1.220 / 1.163 | 0.772 / 0.778 |
+| snow Medium | 754 / 844 | 1.326 / 1.185 | 0.815 / 0.801 |
+| snow High | 507 / 593 | 1.972 / 1.686 | 1.184 / 0.998 |
+
+The GPU gains too (vanilla's `prepare` built and uploaded vertices from those columns). The frame's CPU column isn't
+the measure here: with the render thread done sooner, it waits longer for the quads' thread ("Waiting for Quads" at
+snow High 0.511 ms before, 1.103 after), which is now what holds a heavy storm's frame.
 
 **Open:** waiting for the quads' thread has grown. Precipitation's CPU on NeoForge 1.21.11 was 0.091 ms at rain Medium
 and 0.168 at High; here 0.475 and 1.068, and at High the wait is over half of the frame's CPU. The step's own time
@@ -664,6 +771,52 @@ the same ground, in a later session of the game.
   stays the default so runs compare with the rest of this file. The mod can't choose a collector: for players it is a
   launcher setting.
 
+## Results, 2026-11-07: rays skip air, random block check
+
+Fabric, OpenGL, 1920x1080, the machine above, on `OreCruncher/26.3-5.2.0` (5.2.0 work).
+
+### Rays skip sections of air (`sound.json`)
+
+Sound traces now go through `lib/block/RayWalk` (`ChunkCachingView.clip`): the same blocks in the same order as the
+level's own trace, each tested the same way, but nothing read in a section (16 by 16 by 16) that holds only air. The
+hits are the level's (`RayWalkTests` compares 40,000 rays), so the acoustics are unchanged. Before is the same code with
+`clip` handed back to the level's trace, run straight after; each label two repeats. Sound device on (the Bose
+headphones: they had disconnected while idle, and the first try started with `Error starting SoundSystem`).
+
+| Run | Trace ms, before | after | Start ms/s, before | after |
+|---|---|---|---|---|
+| open | 0.413 | 0.189 (-54%) | 8.4 | 4.0 |
+| open, occlusion on | 0.416 | 0.200 (-52%) | 8.6 | 4.1 |
+| enclosed | 0.362 | 0.326 (-10%) | 7.1 | 6.3 |
+| enclosed, simplified shared airspace | 0.259 | 0.233 (-10%) | 5.1 | 4.6 |
+| occluded | 0.391 | 0.154 (-61%) | 8.0 | 3.3 |
+| occluded, occlusion on | 0.398 | 0.162 (-59%) | 8.2 | 3.4 |
+| burst | 0.341 | 0.299 (-12%) | 30.3 | 31.0 |
+
+- Open air was where a trace spent its time: every reverb ray ran its full 128 blocks, reading each. Now a ray through
+  open sky reads almost nothing. The box's sections hold blocks, so the enclosed scenes gain only what their rays cross
+  outside it.
+- In `burst`, sounds starting without effects (past the start budget) went from 54.9 a second to 37.6.
+- Reuse and sharing are as they were (about 52 reused a second in the open), as they should be: only the cost of a
+  trace changed. Frames are unaffected, none of this being on the render thread.
+- Left as it is: occlusion still starts a new trace after each block it passes (`ReusableRaycastIterator`). Each is far
+  cheaper now; walking it in one pass would change how occlusion is measured, so the acoustics with it.
+
+### Random block effects' ignore check
+
+The 2026-10-27 profiles put a third of a random block sample in the `BLOCKS_TO_IGNORE` set lookup. Tried in its place:
+`state.isAir()` (a flag on the state), then barrier and command block by identity, checked against the set for every
+vanilla block state. Plains, swamp and birch forest, 40 s each, three repeats; Area Block Effects, median ms a tick:
+
+| Scene | Set lookup | `isAir()` |
+|---|---|---|
+| plains | 0.127 / 0.122 / 0.121 | 0.134 / 0.127 / 0.121 |
+| swamp | 0.173 / 0.167 / 0.156 | 0.179 / 0.177 / 0.162 |
+| birch forest | 0.194 / 0.186 / 0.180 | 0.211 / 0.198 / 0.183 |
+
+No gain, within the noise if anything slower, and reverted: the time is the first read of the block state, which only
+moves to the next line. Not worth trying again.
+
 ## Field recordings
 
 These are `/dsprofile` recordings made in play on the same machine, mostly from the ATM10 modpack (NeoForge, 0.4.9 on
@@ -685,6 +838,125 @@ changes the picture.
 - **The first recording after the client starts:** Java Flight Recorder's first start slowed the game for about 8
   seconds, with frames up to a second. Since 0.4.9 the first recording waits 10 seconds longer, with a throwaway
   recording running.
+
+## Results, 2026-11-07: firefly bushes (`firefly-bushes.json`)
+
+Firefly bushes give the mod's fireflies in place of the game's: they wink, with a halo and a light, and their bodies
+stay seen between flashes. The game still says when a bush makes one. The scene is `fireflies.json`'s stage with a row
+of bushes every fourth row, 637 bushes and no poppies, at night. OpenGL, Fabric, the machine above; commit `6d2556f9`
+with the change uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | Point Lights GPU/CPU ms |
+|---|---|---|---|
+| mod's fireflies | 1.531 (1.507-1.555) | 0.556 | 0.782 / 0.026 |
+| mod's fireflies, no lights | 0.733 (0.729-0.737) | 0.508 | 0 |
+| game's fireflies (`enableFireflies` off) | 0.734 (0.732-0.735) | 0.475 | 0.008 / 0.009 |
+
+The fireflies themselves cost nothing measurable against the game's: without lights the frame is the same. All of the
+difference is the lights, 0.78 ms, more than the poppy field's 0.49 ms (`fireflies.json`, 2026-11-04): the bushes make
+more fireflies near the camera, and the lights are capped at 64 drawn, so this is close to their worst. A natural patch
+is a handful of bushes, not 637. Lowering the cap or skipping lights close to the camera remain the places to save,
+as for the poppies. `enableLight` turns them off, and the Low performance preset already does.
+
+## Results, 2026-11-07: dust devils (`dust-devils.json`)
+
+Dust devils, the first world actors: puffs of dust whirled up a funnel, a skirt at the foot, debris, and a gust of the
+game's sand wind every couple of seconds. Summoned with `/dsactor` on a flat platform of sand over a desert, at night so
+none start on their own, facing downwind so they travel away from the camera and stay in view (a first pass facing
+south lost them off the side of the frame, and with them their drawing). OpenGL, Fabric, the machine above; commit
+`97b2504f`. Two repeats each, A B C then C B A. A summoned one has a random size and path, so the spreads are wide.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick | Sounds started a second |
+|---|---|---|---|---|
+| 4 dust devils | 0.445 (0.440-0.449) | 0.395 | 0.061 | 2.4 |
+| 12 dust devils | 0.635 (0.625-0.645) | 0.585 | 0.092 | 6.3 |
+| none (`enableDustDevils` off) | 0.384 (0.382-0.385) | 0.249 | 0.005 | 0.5 |
+
+Each dust devil in view costs about 0.02 ms of GPU and 0.03 ms of CPU a frame (its particles, a few hundred puffs, drawn
+soft), and about 0.007 ms of tick. Four, more than are ever likely in view at once naturally, add 0.06 ms of GPU and 0.15
+ms of CPU a frame. Their gusts went through enhanced sound processing for about 0.6 ms a second with four and 1.6 with
+twelve. Nothing here calls for a cut; the game's Particles option thins them (Decreased) or turns them off (Minimal).
+
+## Results, 2026-11-07: waterspouts (`waterspouts.json`)
+
+Waterspouts: a funnel of cloud from the sea to the clouds (about 130 blocks, ten puffs a tick through it), a ring of
+spray and splashes at the foot, and a rush of water every few seconds. Summoned with `/dsactor` from a block of stone at
+sea level in a deep ocean, by day, facing downwind and a little up. All summoned ones start at the same spot, so six
+stand together, overlapping close to the camera: a worst case for overdraw. OpenGL, Fabric, the machine above; commit
+`34f50a15` with the waterspouts uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick | Sounds started a second |
+|---|---|---|---|---|
+| 2 waterspouts | 0.847 (0.825-0.869) | 0.499 | 0.039 | 0.6 |
+| 6 waterspouts | 0.976 (0.962-0.990) | 0.499 | 0.057 | 1.4 |
+| none (`enableWaterspouts` off) | 0.758 (0.751-0.765) | 0.404 | 0.005 | 0 |
+
+A waterspout costs about 0.04 ms of GPU a frame and well under 0.1 ms of CPU (the CPU frame is the same with two and
+six, so the difference is mostly noise around 0.1 ms), and 0.01 ms of tick, about what a dust devil costs: more puffs,
+but most of them far off and small on the screen. Two, as a storm might show, add 0.09 ms of GPU. Their rush of water
+plays long clips, which enhanced sound processing keeps updating: 1.4 ms a second with two, 2.6 with six. Nothing here
+calls for a cut.
+
+The first runs found two things: the clip carried only 22 blocks, so a waterspout drifting off past that was silent
+(its factory's volume is now 2.2, heard out to about 48 blocks), and the bench timed out arriving over deep ocean, as
+the player sinks there (it now allows a few blocks up or down, `ScenarioRunner.ARRIVE_DRIFT`).
+
+## Results, 2026-11-07: snowspouts (`snowspouts.json`)
+
+Snowspouts: a dust devil of powder snow (`GroundVortex`, as dust devils now are), with the game's snowflakes whirling
+in it. Summoned with `/dsactor` on a platform of snow over snowy plains, at night, facing downwind, as in
+`dust-devils.json`. An aurora was up and the player's breath showed, in every run alike. OpenGL, Fabric, the machine
+above; commit `91057c06` with the snowspouts uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick | Sounds started a second |
+|---|---|---|---|---|
+| 4 snowspouts | 0.683 (0.640-0.727) | 0.400 | 0.059 | 1.6 |
+| 12 snowspouts | 0.778 (0.760-0.796) | 0.585 | 0.111 | 5.2 |
+| none (`enableSnowspouts` off) | 0.612 (0.607-0.617) | 0.306 | 0.005 | 0 |
+
+A snowspout costs what a dust devil does: about 0.015 ms of GPU and 0.025 ms of CPU a frame, and 0.009 ms of tick.
+The snowflakes add little. Nothing here calls for a cut.
+
+## Results, 2026-11-08: firespouts (`firespouts.json`)
+
+Firespouts: big flame tongues whirled up a funnel 10 to 22 blocks tall, about 7 of them lighting what is around, with
+smoke, sparks and lava drops. Summoned with `/dsactor` from the middle of a walled lava lake built at height 90, at
+night, facing downwind and a little up: the two over a desert, the six over plains, as one can live 90 seconds and six
+left over spoiled the next run's two in a first try. The six aren't set against an off run of their own, and two of
+them started close to the camera, so their range is wide. OpenGL, Fabric, the machine above; commit `aa52627e` with the
+firespouts uncommitted. Two repeats each, A B C then C B A.
+
+| Run | Frame GPU ms | Frame CPU ms | Point Lights GPU ms | World Actors ms a tick |
+|---|---|---|---|---|
+| 2 firespouts | 0.546 (0.523-0.570) | 0.490 | 0.065 | 0.030 |
+| 6 firespouts | 0.903 (0.805-1.002) | 0.603 | 0.232 | 0.063 |
+| none (`enableFirespouts` off) | 0.474 (0.468-0.479) | 0.411 | 0.054 | 0.006 |
+
+A firespout costs about 0.04 ms of GPU and 0.04 ms of CPU a frame, and 0.01 ms of tick, at a fair distance: twice a
+dust devil, for flames many times a dust puff's size. Close to the camera its flames and lights fill more of the screen:
+with six, two of them near, about 0.07 ms of GPU each, a third or more of it its light. The lake's popping lava starts about 15 sounds a second in every run; the firespouts' roar adds little.
+Nothing here calls for a cut.
+
+## Results, 2026-11-08: wisps (`wisps.json`)
+
+Wisps: one to four small lights each, a halo and a core, shedding motes, each casting a faint light of 4 blocks (the
+fireflies' light option, on in every run). Summoned with `/dsactor` 16 blocks ahead, at night, over a walled sheet of
+water built at height 130: the two over plains, the six over savanna, as one can live three minutes. A first try in
+real swamps put the player on the canopy, with the leaves hiding most of the lights. The six aren't set against an off
+run of their own. OpenGL, Fabric, the machine above; commit `542b52a8` with the wisps uncommitted. Two repeats each,
+A B C then C B A.
+
+| Run | Frame GPU ms | Point Lights GPU ms | World Actors ms a tick |
+|---|---|---|---|
+| 2 wisps | 0.790 (0.664-0.917) | 0.023 | 0.022 |
+| 6 wisps | 0.767 (0.763-0.771) | 0.045 | 0.020 |
+| none (`enableWisps` off) | 0.633 (0.624-0.643) | 0 | 0.007 |
+
+The first two-wisp run read high (0.917), as a session's first run does; its twin, 0.664, is 0.03 ms over the off
+runs. Six over savanna came to 0.13 ms more than the off runs over plains. So a wisp costs about 0.015-0.02 ms of GPU a
+frame, its lights a third of it to a half, and well under 0.01 ms of tick. The CPU frame isn't in the table: every
+recording, the off runs too, had a frame of half a second to a second and a CPU mean from 0.4 to 2 ms, with nothing to
+tie it to the wisps. Nothing here calls for a cut.
 
 ## Rerunning
 

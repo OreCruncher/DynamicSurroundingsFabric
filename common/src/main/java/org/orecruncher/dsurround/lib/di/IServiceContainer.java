@@ -10,8 +10,11 @@ import java.util.stream.Stream;
 
 /**
  * A simple dependency injection container. Types are registered as singletons or factories, and resolving a type
- * gives its instance. A concrete class that isn't registered is created on request, its constructor parameters
- * resolved the same way; it is cached if annotated {@link Cacheable}.
+ * gives its instance. A concrete class that isn't registered is created on first request, its constructor parameters
+ * resolved the same way, and kept: everything that asks for it shares the one instance. The exception is a class
+ * registered as the implementation of another type ({@code registerSingleton(IThing.class, Thing.class)}): asking
+ * for {@code Thing} is an error, as creating it would make a second one apart from the registered {@code IThing}.
+ * For a new instance each time, use {@link #create} or register a factory.
  * <p>
  * Registration methods return the container, so registrations can be chained. Problems are reported with a
  * {@link DependencyException} saying what failed.
@@ -66,6 +69,16 @@ public interface IServiceContainer {
      * @throws DependencyException if it can't be resolved or created
      */
     <T> T resolve(Class<T> clazz);
+
+    /**
+     * Creates a new instance of the concrete class {@code clazz} every time, its constructor parameters and
+     * {@link Injection} fields resolved from the container. Nothing is registered or kept: for objects that hold
+     * state of their own, such as one entity's effects.
+     *
+     * @throws DependencyException if it can't be created, or if {@code clazz} is registered (asking for a registered
+     *                             type is {@link #resolve}'s job)
+     */
+    <T> T create(Class<T> clazz);
 
     /**
      * Returns a stand-in for the interface {@code clazz} that resolves the real instance the first time one of its

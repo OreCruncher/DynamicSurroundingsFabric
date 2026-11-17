@@ -15,7 +15,6 @@ import org.orecruncher.dsurround.eventing.IClientTickEnd;
 import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.di.Cacheable;
 import org.orecruncher.dsurround.lib.system.ITickCount;
 import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
@@ -30,7 +29,6 @@ import org.orecruncher.dsurround.processing.scanner.BiomeScanner;
 import org.orecruncher.dsurround.processing.scanner.CeilingScanner;
 import org.orecruncher.dsurround.processing.scanner.VillageScanner;
 
-@Cacheable
 public class Handlers {
 
     private final IModLog logger;
@@ -67,6 +65,7 @@ public class Handlers {
         this.register(FootprintHandler.class);
         this.register(BoatRingHandler.class);
         this.register(ShoreWaveHandler.class);
+        this.register(WorldActorHandler.class);
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(PrecipitationHandler.class);
@@ -189,6 +188,7 @@ public class Handlers {
             .registerSingleton(FootprintHandler.class)
             .registerSingleton(BoatRingHandler.class)
             .registerSingleton(ShoreWaveHandler.class)
+            .registerSingleton(WorldActorHandler.class)
             .registerSingleton(HolisticFogRangeCalculator.class)
             .registerSingleton(FogHandler.class)
             .registerSingleton(AuroraHandler.class)

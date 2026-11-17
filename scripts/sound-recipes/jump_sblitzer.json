@@ -1,0 +1,26 @@
+{
+  "name": "jump_sblitzer",
+  "source": {
+    "title": "Sharp Exhale",
+    "url": "https://freesound.org/people/sblitzer/sounds/777239/",
+    "author": "sblitzer",
+    "license": "CC0",
+    "file": "777239__sblitzer__sharp-exhale.wav",
+    "notes": "48 kHz 24-bit stereo, 1.4 s: one sharp exhale pushed out from the stomach, unvoiced and dark (centroid about 1 kHz), over a -85 dBFS floor with nothing else in the file. It rises from silence to full in 50 ms and decays to the floor by 0.98 s, so it is cut whole, 0.4 s, within a flat-ground jump (12 ticks, 0.6 s). One clip: the jump factory varies its pitch 1.0-1.2 (0.85 at the low end was too deep) so repeats differ. Chosen by ear (2026-11-16) over scottemoil's relaxed breaths (too vocal, too slow to peak), TSP-Talk's push-up effort breathing and sblitzer's own \"Sharp Breathing\"."
+  },
+  "settings": {
+    "highpass": 150,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.005,
+    "fade_out": 0.05,
+    "target_rms_peak": -24.0
+  },
+  "clips": [
+    {
+      "file": "ambient/steve/jump1",
+      "start": 0.55,
+      "end": 0.95
+    }
+  ]
+}

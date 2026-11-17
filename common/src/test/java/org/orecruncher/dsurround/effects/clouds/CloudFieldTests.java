@@ -40,22 +40,62 @@ public class CloudFieldTests {
     }
 
     @Test
-    void basesAreFlatAndHeightsComeInSteps() {
+    void basesAreFlatButRoundedAndHeightsComeInSteps() {
         var cover = CloudCover.of(0F, 0F, AFTERNOON, 1F, 1F);
         var field = fieldFor(cover, 0, 0, 0);
         assertFalse(field.isEmpty());
         boolean taller = false;
+        int flat = 0, tucked = 0, sagging = 0;
         for (int j = 0; j < field.size(); j++)
             for (int i = 0; i < field.size(); i++) {
                 if (!field.has(CloudField.Layer.LOW, i, j))
                     continue;
-                assertEquals(0, field.base(CloudField.Layer.LOW, i, j), "fair weather bases are where vanilla's are");
-                int thickness = field.top(CloudField.Layer.LOW, i, j) - field.base(CloudField.Layer.LOW, i, j);
+                int base = field.base(CloudField.Layer.LOW, i, j);
+                int thickness = field.top(CloudField.Layer.LOW, i, j) - base;
                 assertEquals(0, thickness % CloudField.STEP, "in steps");
                 assertTrue(thickness >= CloudField.STEP && thickness <= cover.maxThickness() + CloudField.STEP);
                 taller |= thickness > CloudField.STEP * 2;
+                if (base == 0)
+                    flat++;
+                else if (base == CloudField.STEP)
+                    tucked++;
+                else if (base == -CloudField.STEP) {
+                    sagging++;
+                    assertTrue(thickness >= CloudField.SAG_STEPS * CloudField.STEP, "only a tall cloud sags");
+                } else
+                    fail("fair weather bases are where vanilla's are, or a step from it: " + base);
             }
         assertTrue(taller, "a wet afternoon builds some up");
+        var counts = "%d flat, %d tucked, %d sagging".formatted(flat, tucked, sagging);
+        assertTrue(flat > tucked && flat > sagging, "mostly flat: " + counts);
+        assertTrue(tucked > 0, "edges tucked up: " + counts);
+        assertTrue(sagging > 0, "tall middles hang lower: " + counts);
+    }
+
+    @Test
+    void anEdgeIsTuckedUpAndAMiddleIsNot() {
+        var cover = CloudCover.of(0F, 0F, AFTERNOON, 1F, 1F);
+        var field = fieldFor(cover, 0, 0, 0);
+        // A cell beside clear sky is at a cloud's edge far more often than one with cloud all round it
+        int edges = 0, edgesTucked = 0, inner = 0, innerTucked = 0;
+        for (int j = 1; j < field.size() - 1; j++)
+            for (int i = 1; i < field.size() - 1; i++) {
+                if (!field.has(CloudField.Layer.LOW, i, j))
+                    continue;
+                boolean tucked = field.base(CloudField.Layer.LOW, i, j) == CloudField.STEP;
+                boolean edge = !field.has(CloudField.Layer.LOW, i - 1, j) || !field.has(CloudField.Layer.LOW, i + 1, j)
+                        || !field.has(CloudField.Layer.LOW, i, j - 1) || !field.has(CloudField.Layer.LOW, i, j + 1);
+                if (edge) {
+                    edges++;
+                    if (tucked) edgesTucked++;
+                } else {
+                    inner++;
+                    if (tucked) innerTucked++;
+                }
+            }
+        assertTrue(edges > 0 && inner > 0);
+        float edgeShare = edgesTucked / (float) edges, innerShare = innerTucked / (float) inner;
+        assertTrue(edgeShare > 2 * innerShare, () -> "edges %.2f tucked, inside %.2f".formatted(edgeShare, innerShare));
     }
 
     @Test
@@ -148,6 +188,40 @@ public class CloudFieldTests {
                 }
             }
         assertTrue(changed > 0, "some changed");
+    }
+
+    @Test
+    void farCellsTakeTurnsOverSeveralRounds() {
+        // A grid reaching past the near cells, as vanilla's default Cloud Distance makes it
+        int radius = CloudField.NEAR_CELLS + 8;
+        var cover = CloudCover.of(0.2F, 0F, AFTERNOON, 0.7F, 0.6F);
+        var field = new CloudField();
+        field.update(cover, 0, 0, radius, 0, 1F, 0F);
+        var before = copy(field);
+        // Much later, on tick 1043: turn 3 of the near cells' 20, and of the far cells' 60, turn 43 (the third round)
+        long tick = 1043;
+        int turn = (int) (tick % 20);
+        int farTurn = (int) (tick % (20 * CloudField.FAR_TURNS));
+        field.update(cover, 0, 0, radius, 50, 1F, 0F, tick, turn, 20);
+        int near = 0, far = 0;
+        for (int j = 0; j < field.size(); j++)
+            for (int i = 0; i < field.size(); i++) {
+                int cx = field.originX() + i;
+                int cz = field.originZ() + j;
+                boolean same = before[0][i + j * field.size()] == field.top(CloudField.Layer.LOW, i, j)
+                        && before[1][i + j * field.size()] == field.top(CloudField.Layer.HIGH, i, j);
+                if (same)
+                    continue;
+                if (Math.max(Math.abs(i - radius), Math.abs(j - radius)) > CloudField.NEAR_CELLS) {
+                    far++;
+                    assertEquals(farTurn, CloudField.turnOf(cx, cz, 20 * CloudField.FAR_TURNS), "a far cell changed out of turn");
+                } else {
+                    near++;
+                    assertEquals(turn, CloudField.turnOf(cx, cz, 20), "a near cell changed out of turn");
+                }
+            }
+        assertTrue(near > 0, "some near cells changed");
+        assertTrue(far > 0, "some far cells changed");
     }
 
     @Test

@@ -22,6 +22,22 @@ public class FireflyFlashTests {
     }
 
     @Test
+    void theBodyIsSeenBetweenFlashesAndFadesAtEitherEnd() {
+        for (int seed = 0; seed < 50; seed++) {
+            var flash = new FireflyFlash(Randomizer.create(seed));
+            var life = flash.lifetime();
+            assertEquals(0F, flash.bodyAlpha(0F), 1e-6F);
+            assertEquals(0F, flash.bodyAlpha(life), 1e-6F);
+            // Fully seen through the middle of its life, flashing or not
+            for (float age = FireflyFlash.BODY_FADE_TICKS; age <= life - FireflyFlash.BODY_FADE_TICKS; age += 1F)
+                assertEquals(1F, flash.bodyAlpha(age), 1e-6F, "seed " + seed + " age " + age);
+            // Fading in, then out
+            assertTrue(flash.bodyAlpha(5F) < flash.bodyAlpha(10F));
+            assertTrue(flash.bodyAlpha(life - 5F) < flash.bodyAlpha(life - 10F));
+        }
+    }
+
+    @Test
     void darkBeforeTheFirstFlash() {
         for (long seed = 0; seed < SEEDS; seed++) {
             var flash = new FireflyFlash(Randomizer.create(seed));

@@ -17,6 +17,7 @@ import org.orecruncher.dsurround.config.DimensionInfo;
 import org.orecruncher.dsurround.gui.overlay.OverlayManager;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.platform.KnownMod;
+import org.orecruncher.dsurround.lib.resources.IModFiles;
 import net.minecraft.world.phys.Vec3;
 
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
@@ -33,6 +34,9 @@ public final class NeoForgeMod {
         DimensionInfo.drawsOwnClouds = level -> CustomEnvironmentEffectsRendererManager.getCustomCloudsRenderer(level, Vec3.ZERO) != null;
 
         Client.initialize();
+        // Mods' files read through the jars NeoForge has open, not opened again (see ModFiles). After initialize, which
+        // registers the default, and before anything reads them: the first resource reload
+        ContainerManager.getRootContainer().registerSingleton(IModFiles.class, new NeoForgeModFiles());
         Client.initializeClient();
 
         if (KnownMod.CLOTH_CONFIG.isInstalled())

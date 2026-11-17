@@ -18,6 +18,7 @@
       "biome": "minecraft:flower_forest",
       "pitch": 25,
       "boatSpeed": 0.35,
+      "offset": [160, 0],
       "commands": [
         "time set 6000",
         "weather clear",

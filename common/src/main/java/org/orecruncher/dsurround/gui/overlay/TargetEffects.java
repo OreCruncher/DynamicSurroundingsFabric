@@ -64,14 +64,21 @@ final class TargetEffects {
             return;
         BY_COLOR.clear();
         BY_TYPE.clear();
+        // Recorded first: a mod's effect that fails is left out, not looked at again every tick
+        known = BuiltInRegistries.MOB_EFFECT.size();
         BuiltInRegistries.MOB_EFFECT.listElements().forEach(effect -> {
-            var particle = effect.value().createParticleOptions(new MobEffectInstance(effect));
+            ParticleOptions particle;
+            try {
+                particle = effect.value().createParticleOptions(new MobEffectInstance(effect));
+            } catch (RuntimeException e) {
+                // A mod's effect that needs more than a plain instance to make its particle: not matched
+                return;
+            }
             if (particle instanceof ColorParticleOption color)
                 BY_COLOR.putIfAbsent(rgb(color), effect);
-            else
+            else if (particle != null)
                 BY_TYPE.putIfAbsent(particle.getType(), effect);
         });
-        known = BuiltInRegistries.MOB_EFFECT.size();
     }
 
     /**

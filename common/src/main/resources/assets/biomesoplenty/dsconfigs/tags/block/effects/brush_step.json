@@ -27,6 +27,30 @@
     {
       "id": "biomesoplenty:flesh_tendons_strand",
       "required": false
+    },
+    {
+      "id": "biomesoplenty:high_grass",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:spanish_moss",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:lumaloop",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:lumaloop_plant",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:flesh_tendons",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:tundra_shrub",
+      "required": false
     }
   ]
 }

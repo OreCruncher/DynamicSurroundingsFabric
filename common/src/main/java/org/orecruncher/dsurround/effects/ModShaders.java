@@ -3,6 +3,7 @@
 
 package org.orecruncher.dsurround.effects;
 
+import org.orecruncher.dsurround.effects.actors.ApparitionRenderer;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
 import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
@@ -29,7 +30,7 @@ public final class ModShaders {
                     AuroraRenderer.SHADER,
                     PointLights.SHADER),
             Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS, RealisticAuroraRenderer.SHADERS,
-                    LightningRenderer.SHADERS, CloudRenderer.SHADERS, SoftParticles.oitShaders()).flatMap(List::stream)).toList();
+                    LightningRenderer.SHADERS, CloudRenderer.SHADERS, ApparitionRenderer.SHADERS, SoftParticles.oitShaders()).flatMap(List::stream)).toList();
 
     private ModShaders() {
     }

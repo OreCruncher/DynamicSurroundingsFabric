@@ -55,6 +55,24 @@ public final class LibraryFunctions {
                     var value = args.number(0);
                     return value >= args.number(1) && value <= args.number(2);
                 });
+
+        // 0 at or below "from", 1 at or above "to", rising on an S-curve between: for blending one sound into another
+        // (a biome loop's volume by height, say). With "to" below "from", it falls instead
+        config.function("lib.smoothStep")
+                .param(ArgType.NUMBER).param(ArgType.NUMBER).param(ArgType.NUMBER)
+                .pure()
+                .handler(args -> smoothStep(args.number(0), args.number(1), args.number(2)));
+    }
+
+    static double smoothStep(double from, double to, double x) {
+        if (from == to)
+            return x < from ? 0D : 1D;
+        double t = (x - from) / (to - from);
+        // Math.clamp passes NaN through (an argument that isn't a number, or infinities that cancel): read it as 0
+        if (Double.isNaN(t))
+            return 0D;
+        t = Math.clamp(t, 0D, 1D);
+        return t * t * (3D - 2D * t);
     }
 
     private static boolean oneOf(ScriptArguments args) {

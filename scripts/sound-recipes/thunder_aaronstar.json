@@ -1,0 +1,13 @@
+{
+  "name": "thunder_aaronstar",
+  "source": {
+    "title": "NM-Mejor-Lado-Thunder-01.wav",
+    "url": "https://freesound.org/people/aaronstar/sounds/194849/",
+    "author": "aaronstar",
+    "license": "CC0",
+    "file": "194849__aaronstar__nm-mejor-lado-thunder-01.wav",
+    "notes": "48 kHz stereo, 15.7 s. Cut again 2026-11-10 from the original (sound-match: r 1.00 against the old file, which started 2.13 s in): the same stretch, at 32000 Hz (its content stops under 13 kHz), the old loudest-50-ms level."
+  },
+  "settings": {"rate": 32000, "quality": 4, "highpass": 20, "pad_before": 0.0, "pad_after": 0.0, "fade_in": 0.005, "fade_out": 0.3, "target_rms_peak": -9.4},
+  "clips": [{"file": "ambient/weather/thunder4", "start": 2.13, "end": 15.65}]
+}

@@ -1,6 +1,6 @@
 [
   {
-    "biomeSelector": "OVERWORLD && !(WINDSWEPT || MOUNTAIN || WASTELAND || DESERT || BADLANDS || (COLD && ICY) || UNDERGROUND)",
+    "biomeSelector": "OVERWORLD && !(WINDSWEPT || MOUNTAIN || WASTELAND || def.isArid() || def.isFrozen() || UNDERGROUND)",
     "_comment": "Storm wind, where the biome has no wind of its own: as loud as the wind blows",
     "acoustics": [
       {
@@ -37,7 +37,7 @@
     ]
   },
   {
-    "biomeSelector": "(DESERT || BADLANDS) && !(WINDSWEPT || MOUNTAIN || LUSH)",
+    "biomeSelector": "def.isArid() && !(WINDSWEPT || MOUNTAIN || LUSH)",
     "_comment": "Desert/Badlands Wind",
     "acoustics": [
       {
@@ -55,12 +55,12 @@
       },
       {
         "factory": "biome.crickets",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
   {
-    "biomeSelector": "COLD && ICY",
+    "biomeSelector": "def.isFrozen()",
     "_comment": "Arctic Wind",
     "acoustics": [
       {
@@ -69,13 +69,25 @@
     ]
   },
   {
-    "biomeSelector": "JUNGLE",
-    "_comment": "Basic Jungle and Tropical",
+    "biomeSelector": "JUNGLE && !(SPARSE_VEGETATION || SWAMP)",
+    "_comment": "Basic Jungle and Tropical: dense and magical",
     "priority": 100,
     "clearSounds": true,
     "acoustics": [
       {
         "factory": "biome.jungle",
+        "conditions": "weather.isNotRaining()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "JUNGLE && (SPARSE_VEGETATION || SWAMP)",
+    "_comment": "Sparse and swampy Jungle",
+    "priority": 100,
+    "clearSounds": true,
+    "acoustics": [
+      {
+        "factory": "biome.jungle.sparse",
         "conditions": "weather.isNotRaining()"
       }
     ]
@@ -88,11 +100,11 @@
     "acoustics": [
       {
         "factory": "biome.savanna.day",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()"
+        "conditions": "def.isFairDay()"
       },
       {
         "factory": "biome.savanna.night",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()"
+        "conditions": "def.isFairNight()"
       }
     ]
   },
@@ -102,59 +114,63 @@
     "acoustics": [
       {
         "factory": "biome.plains",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
   {
-    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY) && lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
+    "biomeSelector": "FOREST && !(DEAD || WASTELAND || SWAMP || SPOOKY || SPARSE_VEGETATION) && def.isTemperate()",
     "_comment": "Basic Forest w/Crickets",
     "acoustics": [
       {
         "factory": "biome.forest",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
   {
-    "biomeSelector": "CONIFEROUS && !(SNOWY || FOREST || SWAMP)",
+    "biomeSelector": "FOREST && SPARSE_VEGETATION && !(DEAD || WASTELAND || SWAMP || SPOOKY) && def.isTemperate()",
+    "_comment": "Sparse Forest w/Crickets",
+    "acoustics": [
+      {
+        "factory": "biome.forest.sparse",
+        "conditions": "def.isMildDay()"
+      },
+      {
+        "factory": "biome.crickets",
+        "conditions": "def.isMildNight()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "CONIFEROUS && !(SNOWY || COLD || FOREST || SWAMP)",
     "_comment": "Pine Forest",
     "acoustics": [
       {
         "factory": "biome.forest.pine",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       }
     ]
   },
   {
-    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && lib.isBetween(biome.getTemperature(), 0.2, 1.0)",
+    "biomeSelector": "FOREST && SPOOKY && !(DEAD || WASTELAND || SWAMP || JUNGLE) && def.isTemperate()",
     "_comment": "Deep Forest w/Crickets",
     "acoustics": [
       {
         "factory": "biome.forest.deep",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets.deep",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isNight()"
-      }
-    ]
-  },
-  {
-    "biomeSelector": "FOREST && COLD && !(SWAMP || SNOWY || DEAD || DENSE_VEGETATION)",
-    "_comment": "Simple Forest",
-    "acoustics": [
-      {
-        "factory": "biome.forest",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildNight()"
       }
     ]
   },
@@ -164,7 +180,7 @@
     "acoustics": [
       {
         "factory": "wolf",
-        "conditions": "weather.isNotRaining() && diurnal.isNight() && global.allowScary()",
+        "conditions": "def.isFairNight() && global.allowScary()",
         "type": "mood"
       }
     ]
@@ -185,12 +201,18 @@
       {
         "factory": "seagulls",
         "conditions": "diurnal.isDay()",
+        "type": "mood",
+        "weight": 4
+      },
+      {
+        "factory": "seagulls.flock",
+        "conditions": "diurnal.isDay()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "lib.oneof(biome.getId(), 'minecraft:frozen_ocean', 'minecraft:deep_frozen_ocean')",
+    "biomeSelector": "def.isFrozenOcean()",
     "_comment": "Frozen Ocean/Deep Frozen Ocean explicit set",
     "fogColor": "#DCDBDF",
     "fogDensity": "normal"
@@ -205,7 +227,7 @@
     ]
   },
   {
-    "biomeSelector": "OCEAN || SHALLOW_OCEAN",
+    "biomeSelector": "def.isShallowOcean()",
     "_comment": "Ocean background",
     "acoustics": [
       {
@@ -252,7 +274,7 @@
     "acoustics": [
       {
         "factory": "biome.bog",
-        "conditions": "weather.isNotRaining() && !weather.canWaterFreeze() && diurnal.isDay()"
+        "conditions": "def.isMildDay()"
       },
       {
         "factory": "biome.crickets",
@@ -263,78 +285,85 @@
     "fogDensity": "medium"
   },
   {
-    "biomeSelector": "!(NETHER || END) && biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
+    "biomeSelector": "!def.isOtherDimension() && biome.getRainfall() < 0.1 && (DESERT || (WASTELAND && !(COLD || SNOWY || SWAMP)))",
     "_comment": "Dust for desert like biomes",
     "fogColor": "#FFEA97"
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || MUSHROOM) && !(SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
+    "biomeSelector": "def.isOpenLand() && !(MUSHROOM || SNOWY || SWAMP || JUNGLE || BEACH || WASTELAND || WET)",
     "_comment": "Coyote",
     "acoustics": [
       {
         "factory": "coyote",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()",
+        "conditions": "def.isFairNight()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || SNOWY || JUNGLE || HOT || BEACH)",
+    "biomeSelector": "def.isOpenLand() && !(SNOWY || JUNGLE || HOT || BEACH)",
     "_comment": "Crow",
     "acoustics": [
       {
         "factory": "crow",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || OCEAN || SHALLOW_OCEAN || RIVER || NETHER || END || DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
+    "biomeSelector": "def.isOpenLand() && !(DRY || JUNGLE || HOT || BEACH || SWAMP || WASTELAND)",
     "_comment": "Owl",
     "acoustics": [
       {
         "factory": "owl",
-        "conditions": "weather.isNotRaining() && diurnal.isNight()",
+        "conditions": "def.isFairNight()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "FOREST && !(HOT || SWAMP || DEAD || COLD || OCEAN || SHALLOW_OCEAN || WASTELAND || JUNGLE)",
+    "biomeSelector": "FOREST && !def.isShallowOcean() && !(HOT || SWAMP || DEAD || COLD || WASTELAND || JUNGLE)",
     "_comment": "Birds",
     "acoustics": [
       {
         "factory": "bird",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       },
       {
         "factory": "nightingale",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "FOREST && !(END || NETHER || OCEAN || SHALLOW_OCEAN || RIVER)",
+    "biomeSelector": "FOREST && !(def.isOtherDimension() || def.isShallowOcean() || RIVER)",
     "_comment": "Woodpecker",
     "acoustics": [
       {
         "factory": "woodpecker",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
+        "conditions": "def.isFairDay()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector": "!(UNDERGROUND || MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || OCEAN || SHALLOW_OCEAN || SNOWY || NETHER || END)",
-    "_comment": "Raptors",
+    "biomeSelector": "!(UNDERGROUND || def.isShallowOcean() || def.isOtherDimension()) && !(MUSHROOM || DEAD || SWAMP || JUNGLE || WASTELAND || SNOWY)",
+    "_comment": "Raptors: hawks and eagles, as often as each other",
     "acoustics": [
       {
         "factory": "raptor",
-        "conditions": "weather.isNotRaining() && diurnal.isDay()",
-        "type": "mood"
+        "conditions": "def.isFairDay()",
+        "type": "mood",
+        "weight": 5
+      },
+      {
+        "factory": "eagle",
+        "conditions": "def.isFairDay()",
+        "type": "mood",
+        "weight": 5
       }
     ]
   },
@@ -344,29 +373,29 @@
     "acoustics": [
       {
         "factory": "loon",
-        "conditions": "weather.isNotRaining() && !diurnal.isNight()",
+        "conditions": "def.isFairDaylight()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && !(SWAMP || WASTELAND || JUNGLE || DEAD || NETHER || END)",
+    "biomeSelector" : "def.isWooded() && !(SWAMP || WASTELAND || JUNGLE || DEAD || def.isOtherDimension())",
     "_comment": "Turtledove",
     "acoustics": [
       {
         "factory": "turtledove",
-        "conditions": "weather.isNotRaining() && !diurnal.isNight()",
+        "conditions": "def.isFairDaylight()",
         "type": "mood"
       }
     ]
   },
   {
-    "biomeSelector" : "(FOREST || CONIFEROUS || DECIDUOUS) && (SNOWY || COLD)",
-    "_comment": "Silent forest",
+    "biomeSelector" : "def.isWooded() && (SNOWY || COLD) && !(FOREST && def.isTemperate() && !(DEAD || WASTELAND || SWAMP))",
+    "_comment": "Silent forest, in cold woods that no other forest loop covers",
     "acoustics": [
       {
         "factory": "biome.forest.silent",
-        "conditions": "weather.isNotRaining() && !diurnal.isNight()"
+        "conditions": "def.isFairDaylight()"
       }
     ]
   },
@@ -377,7 +406,7 @@
     "clearSounds": true
   },
   {
-    "biomeSelector": "SPOOKY && !(NETHER || END || UNDERGROUND)",
+    "biomeSelector": "def.isHaunted() && !def.isOtherDimension()",
     "_comment": "Fog density for spooky biomes, above ground: fog is the sky's, and a spooky cave (the deep dark, Biomes O' Plenty's spider nest) would fill with it. Mist lies on the ground.",
     "fogDensity": "medium",
     "groundFog": "heavy"
@@ -388,7 +417,13 @@
     "acoustics": [
       {
         "factory": "biome.underground",
-        "conditions": "state.isInside()"
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(lib.smoothStep(-4, 4, player.getY()))"
+      },
+      {
+        "factory": "biome.underground.deep",
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(1 - lib.smoothStep(-4, 4, player.getY()))"
       },
       {
         "factory": "rockfall",
@@ -403,12 +438,12 @@
     ]
   },
   {
-    "biomeSelector": "UNDERGROUND && !(CAVE || NETHER || END)",
+    "biomeSelector": "UNDERGROUND && !(CAVE || def.isOtherDimension())",
     "_comment": "Underground and not in a cave",
     "acoustics": [
       {
         "factory": "monstergrowl",
-        "conditions": "diurnal.isNight() && global.allowScary()",
+        "conditions": "def.isScaryNight()",
         "type": "mood",
         "weight": 10
       }
@@ -425,7 +460,13 @@
     "acoustics": [
       {
         "factory": "biome.underground",
-        "conditions": "state.isInside()"
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(lib.smoothStep(-4, 4, player.getY()))"
+      },
+      {
+        "factory": "biome.underground.deep",
+        "conditions": "state.isInside()",
+        "volume": "math.sqrt(1 - lib.smoothStep(-4, 4, player.getY()))"
       },
       {
         "factory": "rockfall",
@@ -439,7 +480,7 @@
       },
       {
         "factory": "monstergrowl",
-        "conditions": "diurnal.isNight() && global.allowScary()",
+        "conditions": "def.isScaryNight()",
         "type": "mood",
         "weight": 10
       }
@@ -464,6 +505,15 @@
       {
         "factory": "whale",
         "type": "mood"
+      },
+      {
+        "factory": "whale.right",
+        "type": "mood"
+      },
+      {
+        "factory": "whale.minke",
+        "type": "mood",
+        "weight": 3
       }
     ]
   },
@@ -501,17 +551,17 @@
     "acoustics": [
       {
         "factory": "biome.village.rooster",
-        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isSunrise() && weather.isNotRaining()",
+        "conditions": "def.isOutInVillage() && diurnal.isSunrise() && weather.isNotRaining()",
         "type": "addition"
       },
       {
         "factory": "biome.village.anvil",
-        "conditions": "state.isInVillage() && !state.isInside() && diurnal.isDay() && weather.isNotRaining()",
+        "conditions": "def.isOutInVillage() && def.isFairDay()",
         "type": "addition"
       },
       {
         "factory": "biome.village.dogbark",
-        "conditions": "state.isInVillage() && !state.isInside() && weather.isNotRaining()",
+        "conditions": "def.isOutInVillage() && weather.isNotRaining()",
         "type": "addition"
       }
     ]
@@ -529,6 +579,113 @@
         "factory": "player.tummy",
         "conditions": "player.getFoodLevel() <= 4 || player.hasEffect('minecraft:hunger')",
         "type": "addition"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "def.isArid() && !(LUSH || UNDERGROUND)",
+    "_comment": "Dust devils on clear days: they start on sand, red sand, terracotta and coarse dirt",
+    "actors": [
+      {
+        "actor": "dsurround:dust_devil",
+        "conditions": "def.isFairDay()",
+        "chance": 0.06
+      }
+    ]
+  },
+  {
+    "biomeSelector": "SAVANNA && !UNDERGROUND",
+    "_comment": "Dust devils on clear days, from the savanna's patches of coarse dirt",
+    "actors": [
+      {
+        "actor": "dsurround:dust_devil",
+        "conditions": "def.isFairDay()",
+        "chance": 0.1
+      }
+    ]
+  },
+  {
+    "biomeSelector": "def.isAnyOcean() && !(COLD || ICY || SNOWY)",
+    "_comment": "Waterspouts over open sea: rare in fair weather, more often in a storm; none where the sea freezes",
+    "actors": [
+      {
+        "actor": "dsurround:waterspout",
+        "conditions": "!weather.canWaterFreeze()",
+        "chance": "weather.isRaining() ? 0.06 : 0.01"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "(SNOWY || ICY) && !(FOREST || MOUNTAIN || UNDERGROUND || def.isAnyOcean() || RIVER || BEACH)",
+    "_comment": "Snowspouts on clear days: whirls of powder snow over snowy plains and frozen lakes",
+    "actors": [
+      {
+        "actor": "dsurround:snowspout",
+        "conditions": "def.isFairDay()",
+        "chance": 0.03
+      }
+    ]
+  },
+  {
+    "biomeSelector": "NETHER",
+    "_comment": "Firespouts over the Nether's lava lakes: they start only on open lava",
+    "actors": [
+      {
+        "actor": "dsurround:firespout",
+        "chance": 0.08
+      }
+    ]
+  },
+  {
+    "biomeSelector": "SWAMP && !UNDERGROUND",
+    "_comment": "Wisps over swamps, bogs, marshes and fens on still nights: they start over water or mud",
+    "actors": [
+      {
+        "actor": "dsurround:wisp",
+        "conditions": "def.isMildNight()",
+        "chance": 0.05
+      }
+    ]
+  },
+  {
+    "biomeSelector": "def.isHaunted() && NETHER",
+    "_comment": "Soul-fire wisps over soul sand valleys and other spooky Nether biomes, at any time: the Nether has no night",
+    "actors": [
+      {
+        "actor": "dsurround:wisp",
+        "chance": "def.NETHER_WISP_CHANCE"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "def.isHaunted()",
+    "_comment": "Apparitions wander dark forests and pale gardens at night (Scary Content), more often around Halloween (scripts.json)",
+    "actors": [
+      {
+        "actor": "dsurround:apparition",
+        "conditions": "diurnal.isNight()",
+        "chance": "def.APPARITION_CHANCE * def.halloweenFactor()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "SWAMP && !SPOOKY && !UNDERGROUND",
+    "_comment": "Now and then one wanders a swamp at night, more often around Halloween",
+    "actors": [
+      {
+        "actor": "dsurround:apparition",
+        "conditions": "diurnal.isNight()",
+        "chance": "def.SWAMP_APPARITION_CHANCE * def.halloweenFactor()"
+      }
+    ]
+  },
+  {
+    "biomeSelector": "def.isHaunted() && NETHER",
+    "_comment": "Apparitions haunt soul sand valleys: the Nether has no night, so always, and less often than a dark forest at night",
+    "actors": [
+      {
+        "actor": "dsurround:apparition",
+        "chance": "def.NETHER_APPARITION_CHANCE * def.halloweenFactor()"
       }
     ]
   }

@@ -69,6 +69,19 @@ final class SceneFinder {
     }
 
     /**
+     * A place moved {@code dx} blocks east and {@code dz} south of a scene's, on the ground there (its chunk generated if
+     * it must be), facing as the scene's does
+     */
+    static SceneLocations.Location offset(ServerLevel level, SceneLocations.Location location, int dx, int dz) {
+        double x = location.x() + dx, z = location.z() + dz;
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+        level.getChunk(bx >> 4, bz >> 4);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING, bx, bz);
+        return new SceneLocations.Location(location.biome(), location.dimension(), x, y, z, location.yaw(), location.pitch(),
+                location.biomeShare(), location.marked());
+    }
+
+    /**
      * Whether a remembered place is still in its biome
      */
     static boolean stillThere(ServerLevel level, SceneLocations.Location location) {

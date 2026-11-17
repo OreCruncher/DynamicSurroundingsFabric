@@ -14,6 +14,11 @@
     "minecraft:soul_sand",
     "minecraft:soul_soil",
     "minecraft:moss_carpet",
-    "minecraft:hay_block"
+    "minecraft:hay_block",
+    "#minecraft:wool_slabs",
+    "#minecraft:wool_stairs",
+    "minecraft:pale_moss_carpet",
+    "minecraft:leaf_litter",
+    "minecraft:straw_bed"
   ]
 }

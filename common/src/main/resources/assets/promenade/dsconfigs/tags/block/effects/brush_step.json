@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "promenade:coiled_vines",
+      "required": false
+    },
+    {
+      "id": "promenade:coiled_vines_plant",
+      "required": false
+    },
+    {
+      "id": "promenade:palm_hanging_leaves",
+      "required": false
+    }
+  ]
+}

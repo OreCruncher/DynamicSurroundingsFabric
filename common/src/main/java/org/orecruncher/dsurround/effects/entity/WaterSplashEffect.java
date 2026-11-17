@@ -4,7 +4,6 @@
 package org.orecruncher.dsurround.effects.entity;
 
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
@@ -63,16 +62,13 @@ public class WaterSplashEffect extends EntityEffectBase {
     private void strike(Level level, double x, double y, double z, float width, double fallSpeed) {
         if (GameUtils.getGameSettings().particles().get() == ParticleStatus.MINIMAL)
             return;
-        var pos = BlockPos.containing(x, y, z).mutable();
-        int searched = 0;
-        while (searched++ < SURFACE_SEARCH && !level.getFluidState(pos.above()).isEmpty())
-            pos.move(0, 1, 0);
-        var fluid = level.getFluidState(pos);
-        if (fluid.isEmpty())
+        // Only on a still surface that ripples: not inside a waterfall's column, on flowing water or another fluid
+        var surface = WaterRippleHandler.stillSurface(level, x, y, z, SURFACE_SEARCH);
+        if (surface.isEmpty())
             return;
 
         this.ringX = x;
-        this.ringY = pos.getY() + fluid.getHeight(level, pos);
+        this.ringY = surface.getAsDouble();
         this.ringZ = z;
         this.ringSize = ringSize(width, fallSpeed);
         this.ringsLeft = RINGS;

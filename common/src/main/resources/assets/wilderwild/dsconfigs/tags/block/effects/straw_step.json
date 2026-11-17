@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "wilderwild:cattail",
+      "required": false
+    },
+    {
+      "id": "wilderwild:tumbleweed",
+      "required": false
+    },
+    {
+      "id": "wilderwild:tumbleweed_plant",
+      "required": false
+    }
+  ]
+}
