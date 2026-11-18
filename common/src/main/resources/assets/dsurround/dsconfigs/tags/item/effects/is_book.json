@@ -1,7 +1,7 @@
 {
   "values": [
     {
-      "id": "#c:bookshelves",
+      "id": "#minecraft:bookshelf_books",
       "required": false
     }
   ]
