@@ -23,54 +23,71 @@ final class ItemBehavior {
     private ItemBehavior() {
     }
 
+    /**
+     * What kind of item a stack is, and why: the reason goes into the item dump.
+     */
+    record Classification(ItemClassType type, String reason) {
+        static final Classification NONE = new Classification(ItemClassType.NONE, "nothing it does says");
+    }
+
     static ItemClassType classify(ItemStack stack) {
+        return explain(stack).type();
+    }
+
+    static Classification explain(ItemStack stack) {
         if (stack.isEmpty())
-            return ItemClassType.NONE;
+            return Classification.NONE;
 
         switch (stack.getUseAnimation()) {
             case BOW -> {
-                return ItemClassType.BOW;
+                return new Classification(ItemClassType.BOW, "drawn like a bow");
             }
             case CROSSBOW -> {
-                return ItemClassType.CROSSBOW;
+                return new Classification(ItemClassType.CROSSBOW, "loaded like a crossbow");
             }
             case BLOCK -> {
-                return ItemClassType.SHIELD;
+                return new Classification(ItemClassType.SHIELD, "raised like a shield");
             }
             case SPEAR, TRIDENT -> {
-                return ItemClassType.SPEAR;
+                return new Classification(ItemClassType.SPEAR, "held like a spear");
             }
             case DRINK -> {
                 // A drink is a potion only with a potion's contents: milk and honey aren't
                 if (stack.has(DataComponents.POTION_CONTENTS))
-                    return ItemClassType.POTION;
+                    return new Classification(ItemClassType.POTION, "a drink with potion contents");
             }
             default -> {
             }
         }
 
         if (stack.has(DataComponents.CHARGED_PROJECTILES))
-            return ItemClassType.CROSSBOW;
+            return new Classification(ItemClassType.CROSSBOW, "charged with projectiles");
         if (stack.has(DataComponents.BLOCKS_ATTACKS))
-            return ItemClassType.SHIELD;
+            return new Classification(ItemClassType.SHIELD, "blocks attacks");
         if (stack.has(DataComponents.KINETIC_WEAPON) || stack.has(DataComponents.PIERCING_WEAPON))
-            return ItemClassType.SPEAR;
+            return new Classification(ItemClassType.SPEAR, "a kinetic or piercing weapon");
 
         // A sword has a tool too, for cobwebs and the like: only what a tool mines in quantity says what it is
         var tool = stack.get(DataComponents.TOOL);
         if (tool != null) {
             if (mines(tool, BlockTags.MINEABLE_WITH_AXE))
-                return ItemClassType.AXE;
+                return minesWith(ItemClassType.AXE, BlockTags.MINEABLE_WITH_AXE);
             if (mines(tool, BlockTags.MINEABLE_WITH_PICKAXE))
-                return ItemClassType.PICKAXE;
-            if (mines(tool, BlockTags.MINEABLE_WITH_SHOVEL) || mines(tool, BlockTags.MINEABLE_WITH_HOE))
-                return ItemClassType.TOOL;
+                return minesWith(ItemClassType.PICKAXE, BlockTags.MINEABLE_WITH_PICKAXE);
+            if (mines(tool, BlockTags.MINEABLE_WITH_SHOVEL))
+                return minesWith(ItemClassType.TOOL, BlockTags.MINEABLE_WITH_SHOVEL);
+            if (mines(tool, BlockTags.MINEABLE_WITH_HOE))
+                return minesWith(ItemClassType.TOOL, BlockTags.MINEABLE_WITH_HOE);
         }
 
         if (stack.has(DataComponents.WEAPON))
-            return ItemClassType.SWORD;
+            return new Classification(ItemClassType.SWORD, "a weapon");
 
-        return ItemClassType.NONE;
+        return Classification.NONE;
+    }
+
+    private static Classification minesWith(ItemClassType type, TagKey<Block> blocks) {
+        return new Classification(type, "its tool mines #" + blocks.location());
     }
 
     /**

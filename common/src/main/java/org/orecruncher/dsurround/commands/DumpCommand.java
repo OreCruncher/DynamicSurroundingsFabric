@@ -4,8 +4,10 @@
 package org.orecruncher.dsurround.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.architectury.event.events.client.ClientCommandRegistrationEvent;
 import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.SharedSuggestionProvider;
 import org.orecruncher.dsurround.commands.handlers.DumpCommandHandler;
 
 class DumpCommand extends AbstractClientCommand {
@@ -20,6 +22,7 @@ class DumpCommand extends AbstractClientCommand {
     private static final String BLOCKCONFIGRULES = "blockconfigrules";
     private static final String BLOCKSTATES = "blockstates";
     private static final String ITEMS = "items";
+    private static final String NAMESPACE = "namespace";
     private static final String TAGS = "tags";
     private static final String ENTITIES = "entities";
     private static final String DIREGISTRATIONS = "diregistrations";
@@ -34,7 +37,11 @@ class DumpCommand extends AbstractClientCommand {
                 .then(subCommand(BLOCKSBYTAG, DumpCommandHandler::dumpBlocksByTag))
                 .then(subCommand(BLOCKCONFIGRULES, DumpCommandHandler::dumpBlockConfigRules))
                 .then(subCommand(BLOCKSTATES, DumpCommandHandler::dumpBlockState))
-                .then(subCommand(ITEMS, DumpCommandHandler::dumpItems))
+                .then(subCommand(ITEMS, () -> DumpCommandHandler.dumpItems(null))
+                        .then(ClientCommandRegistrationEvent.argument(NAMESPACE, StringArgumentType.word())
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(DumpCommandHandler.itemNamespaces(), builder))
+                                .executes(ctx -> this.execute(ctx,
+                                        () -> DumpCommandHandler.dumpItems(StringArgumentType.getString(ctx, NAMESPACE))))))
                 .then(subCommand(TAGS, DumpCommandHandler::dumpTags))
                 .then(subCommand(ENTITIES, DumpCommandHandler::dumpEntities))
                 .then(subCommand(DIREGISTRATIONS, DumpCommandHandler::dumpDIRegistrations))

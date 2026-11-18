@@ -4,7 +4,10 @@
 package org.orecruncher.dsurround.commands.handlers;
 
 import com.google.common.collect.ImmutableList;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.libraries.*;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
@@ -55,8 +58,18 @@ public class DumpCommandHandler {
         return handle("blocksbytag", blockLibrary::dump);
     }
 
-    public static Component dumpItems() {
-        return handle("items", itemLibrary::dump);
+    /**
+     * Every item, or only one mod's (by namespace, written to items-namespace.txt).
+     */
+    public static Component dumpItems(@Nullable String namespace) {
+        return handle(namespace == null ? "items" : "items-" + namespace, () -> itemLibrary.dump(namespace));
+    }
+
+    /**
+     * The namespaces items are registered in, for the namespace argument's suggestions.
+     */
+    public static Stream<String> itemNamespaces() {
+        return BuiltInRegistries.ITEM.keySet().stream().map(Identifier::getNamespace).distinct().sorted();
     }
 
     public static Component dumpEntities() {
