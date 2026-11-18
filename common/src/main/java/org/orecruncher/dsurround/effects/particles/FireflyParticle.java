@@ -31,6 +31,7 @@ public class FireflyParticle extends SimpleAnimatedParticle {
     static {
         // Drawn with a shader pack too, with the pack's program for translucent particles
         IrisCompat.assignPipeline(PIPELINE, IrisCompat.Program.PARTICLES_TRANSLUCENT);
+        ParticleLayerTimers.register(PIPELINE, ParticleLayerTimers.FIREFLIES);
     }
     private static final float XZ_MOTION_DELTA = 0.03F; //0.04F;
     private static final float Y_MOTION_DELTA = XZ_MOTION_DELTA / 2.0F;

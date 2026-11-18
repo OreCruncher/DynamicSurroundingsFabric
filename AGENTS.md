@@ -139,6 +139,13 @@ is known of 26.4.
   spawned and played by 1-block distance shell once a second (`dsurround.RandomBlockSamples`, through `profiling/RandomBlockSamples`),
   the classic aurora's shape (bands, distance, height...) and the pixels its quads covered a frame, overdraw counted,
   once a second while drawn (`dsurround.Aurora`, through `profiling/AuroraSamples`; `AuroraCoverage` clips the quads),
+  the realistic aurora's night (activity, color, phase, arcs, ray field), quality and the pixels its shader marched a
+  frame (`dsurround.RealisticAurora`, through `profiling/RealisticAuroraSamples`; `RealisticAuroraFrame.marchedShare`
+  takes the shader's horizon, a test keeps the two in step), each kind of particle's CPU time once a second, the mod's
+  classes one by one and all others as `Others` (`dsurround.Particles`, through `profiling/ParticleSamples`: ticks and
+  extracts timed one by one from `MixinParticleGroup`/`MixinQuadParticleGroup`, `OptionalHook.PARTICLE_COSTS`), and our
+  particle layers' drawing as render timers (`Particles: Mist` and the others, `effects/particles/ParticleLayerTimers`;
+  with Improved Transparency off only, as its stages draw each layer three times),
   what enhanced sound processing did once a second (`dsurround.EnhancedSounds`, through `profiling/SoundSamples`:
   calculations as sounds start, on the sound engine's thread, which waits for them; the workers' updates and passes;
   uploads; each calculation traced (timed), shared, reused or skipped; whether it ran at all),
@@ -150,7 +157,8 @@ is known of 26.4.
   running them in parallel would gain at best, `--dispatch-us`/`--worth-ms` for its cost and threshold, dependencies
   in `FIRST_HANDLERS`/`HANDLER_CHAINS`; random block effects' rate a block by distance against what
   `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; the
-  classic aurora's shape and coverage against its GPU time (ns a covered pixel); enhanced sounds' work a second; threads,
+  classic aurora's shape and coverage against its GPU time (ns a covered pixel); the realistic aurora's against the pixels
+  marched (ns a marched pixel); particles by kind (alive, drawn, tick and extract time, share); enhanced sounds' work a second; threads,
   mod packages, our frames, allocation, GC;
   `--callers <method>` for who calls something).
   Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
@@ -160,7 +168,9 @@ is known of 26.4.
   `Profiler.WARM_UP_SECONDS` longer, with a throwaway recording running (`ProfileRecording.warmUp`): JFR's first start
   slowed the game for about 8 seconds (frames up to a second in ATM10), and later recordings showed nothing of it. A
   recording soon after joining a world still shows the pack settling in. Record under Run, not IntelliJ's Debug (its async stack trace agent
-  throws thousands of Throwables a second).
+  throws thousands of Throwables a second). A scene (`ProfileScene`) holds its look only from the start of the recording
+  (the weather scene, a full thunderstorm), so a bench run's warm-up isn't its recording's scene: compare recordings
+  with recordings. JFR's own cost is within the difference between launches (`BENCHMARKS.md`, 2026-11-17).
 - Bench scenarios (`scripts/bench/README.md`): `./gradlew :fabric:runClientBench -Pscenario=<file>` (or
   `runClientBenchPotatoCpu`) opens or makes a world in `<platform>/run-bench`, records each run's settings in its scene
   (biomes found and remembered in the world's `dsurround-bench.json`; others marked with `/dsbench mark <name>`) with

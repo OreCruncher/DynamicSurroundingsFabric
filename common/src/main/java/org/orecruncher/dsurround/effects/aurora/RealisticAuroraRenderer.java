@@ -28,6 +28,7 @@ import org.orecruncher.dsurround.effects.NoiseTexture;
 import org.orecruncher.dsurround.effects.RenderTimer;
 import org.orecruncher.dsurround.effects.ScreenPasses;
 import org.orecruncher.dsurround.lib.Library;
+import org.orecruncher.dsurround.profiling.RealisticAuroraSamples;
 
 import java.util.List;
 import java.util.Optional;
@@ -169,8 +170,12 @@ public final class RealisticAuroraRenderer {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
         RenderTarget target = fast ? REDUCED.of(screen, quality.scale()) : screen;
-        pack(RealisticAuroraFrame.of(aurora, moment, motion, quality, shadow, washout, alpha, LevelProjection.get(), viewMatrix,
-                time, target.height));
+        var frame = RealisticAuroraFrame.of(aurora, moment, motion, quality, shadow, washout, alpha, LevelProjection.get(), viewMatrix,
+                time, target.height);
+        pack(frame);
+        // For a recording: how much there was to march, which the GPU's time follows
+        if (RealisticAuroraSamples.isRecording())
+            RealisticAuroraSamples.drawn(aurora, moment, quality, alpha, target.width, target.height, frame.marchedShare());
 
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();

@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.effects.aurora;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
+import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -509,5 +510,31 @@ public class RealisticAuroraTests {
         assertTrue(fragment.contains("wave.w * sin((east - ArcLight[i].z) * TWO_PI / CURL_WAVELENGTH + shape.w * 3.0)"), "curls");
         assertTrue(fragment.contains("return north + arc_bow(i, east);"), "the bow");
         assertTrue(fragment.contains("ArcBow[i].x * e2 / (e2 + BOW_LENGTH * BOW_LENGTH)"), "the bow's shape");
+    }
+
+    // A frame looking from a camera turned up or down by the given degrees (negative: down), through a perspective as
+    // the game makes it (70 degrees, 16:9, reverse-Z)
+    private static RealisticAuroraFrame looking(float pitchDegrees) {
+        var projection = new Matrix4f().perspective((float) Math.toRadians(70), 16F / 9F, 1000F, 0.05F, true);
+        var view = new Matrix4f().rotationX((float) Math.toRadians(-pitchDegrees));
+        return new RealisticAuroraFrame(new Matrix4f(projection).mul(view).invert(),
+                new float[RealisticAuroraFrame.VECTORS * 4]);
+    }
+
+    @Test
+    void theShareMarchedIsThePixelsLookingAboveTheHorizon() {
+        assertEquals(1.0, looking(90F).marchedShare(), "straight up: all of it");
+        assertEquals(0.0, looking(-90F).marchedShare(), "straight down: none of it");
+        double level = looking(0F).marchedShare();
+        assertTrue(level > 0.45 && level < 0.6, "level: about half, " + level);
+        assertTrue(looking(30F).marchedShare() > level && looking(-30F).marchedShare() < level, "more looking up");
+    }
+
+    @Test
+    void theHorizonMarchedToIsTheShaders() throws IOException {
+        var fragment = resource("core/aurora_realistic.fsh");
+        var discard = Pattern.compile("if \\(view\\.y < (-?[0-9.]+) \\|\\|").matcher(fragment);
+        assertTrue(discard.find(), "the shader's discard below the horizon");
+        assertEquals(RealisticAuroraFrame.HORIZON, Float.parseFloat(discard.group(1)), 1e-6F);
     }
 }

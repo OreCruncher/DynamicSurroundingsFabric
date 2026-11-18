@@ -591,8 +591,22 @@ weather.
 | damp spots | 0.11-0.12 warm-up, 0.14-0.15 recording | - |
 | window streaks | 0.08-0.09 warm-up, 0.10-0.13 recording | - |
 
-- **A `/dsprofile` recording slows the build**: the drops' build is 50-60% longer once recording starts (JFR's
-  sampling and events), so "- Waiting for Quads" in a recording reads higher than the game has without one.
+- **The recording phase has twice the storm, not a slower build.** The build is 50-90% longer once a run records
+  than in its warm-up. First put down to JFR (and so said in commit b8cc8697), it isn't: the `weather` profile scene
+  holds a full thunderstorm (`ProfileScene.WEATHER`: `weather thunder`, strength 1) from the start of `/dsprofile`, and
+  the warm-up runs on whatever weather the world had. Checked the same day by launching rain High four times with
+  parts of the recording switched off (a temporary switch, taken out), the build timed directly on the quads' thread:
+
+  | Recording | warm-up build | record build | record / warm-up |
+  |---|---|---|---|
+  | as made | 0.53-0.57 ms | 0.97-1.02 ms | about 1.8 |
+  | no JFR recording at all | 0.36-0.43 ms | 0.78-0.82 ms | about 1.9 |
+  | our samplers off (handler ticks, frame timer, random block and sound counts) | 0.42-0.51 ms | 0.74-0.79 ms | about 1.6 |
+  | the JDK's thread samplers off | 0.32-0.35 ms | 0.66-0.69 ms | about 1.95 |
+
+  The jump is there with no recording at all, so a recording's "- Waiting for Quads" is a full storm's, as meant.
+  JFR's own cost is within the difference from one launch to the next (warm-up alone 0.32-0.57 ms): compare
+  recordings with recordings, and a warm-up with a warm-up.
 - **The surfaces are a third of the build** in a scene like the bench's stage, where nearly every fleck, spot and
   streak lies ahead (rain High 40%, snow High 28%). Packing them as the drops are (tried, and taken out again)
   made no difference beyond the run's noise (spots 0.150 to 0.145, streaks 0.132 to 0.104, flecks 0.140 to 0.158).
@@ -1010,6 +1024,39 @@ runs. Six over savanna came to 0.13 ms more than the off runs over plains. So a 
 frame, its lights a third of it to a half, and well under 0.01 ms of tick. The CPU frame isn't in the table: every
 recording, the off runs too, had a frame of half a second to a second and a CPU mean from 0.4 to 2 ms, with nothing to
 tie it to the wisps. Nothing here calls for a cut.
+
+## Results, 2026-11-17: particles and the realistic aurora in recordings
+
+5.3.0, NeoForge, OpenGL, 1920x1080. First recordings with `dsurround.Particles` (each kind of particle's CPU time,
+the mod's apart from all others), the particle layer timers (`Particles: Mist` and the others) and
+`dsurround.RealisticAurora` (see `AGENTS.md`, Profiling). Results: `neoforge/run-bench/bench-results/`
+`aurora-20261117-151528`, `fireflies-20261117-153001`, `burning-lights-20261117-153908`, `shore-20261117-154613`
+and `waterfall-mist-20261117-155417` (a scenario of `performance-rest.json`'s waterfall runs only).
+
+**Particles**, first repeat of each run. Tick ms is a particle tick's (20 a second), extract ms a frame's (writing the
+quads of those in view); each particle is timed, two clock reads each, so they read a little dearer than they are:
+
+| Scene | Kind | Alive | Tick ms | Drawn | Extract ms | Layer GPU ms |
+|---|---|---:|---:|---:|---:|---:|
+| waterfall | WaterfallMist | 495 | 0.137 | 494 | 0.059 | 0.133 |
+| waterfall | WaterFoam | 443 | 0.220 | 442 | 0.043 | in vanilla's |
+| waterfall | others (vanilla) | 609 | 0.689 | 581 | 0.115 | - |
+| shore, storm | ShoreFoam | 2,099 | 0.517 | 680 | 0.114 | in vanilla's |
+| shore, storm | WaterRippleParticle | 2,827 | 0.252 | 1,192 | 0.127 | in vanilla's |
+| shore, storm | others | 858 | 0.565 | 285 | 0.062 | - |
+| fireflies | FireflyParticle | 486 | 0.195 | 192 | 0.041 | 0.005 |
+| burning mobs | FlameTongue | 126 | 0.011 | 42 | 0.010 | 0.004 |
+
+- Waterfall mist is the one whose drawing costs: 0.133 ms GPU for 494 puffs (soft, large and overlapping), against
+  0.06 ms extracting them a frame. Its tick is cheap. If mist becomes a system of its own, as
+  `effects/particles/package-info.java` weighs, its GPU time is what to compare.
+- A storm at the shore has the most particles of ours: 4,900 foam and ripples, 0.77 ms of ticks a tick and 0.24 ms of
+  extraction a frame, more than vanilla's particles there. Foam ticks at 0.25 us each, ripples at 0.09.
+- Fireflies and flames cost little. A firefly's tick (0.4 us) is its flight; flames tick at 0.09 us each.
+
+**Realistic aurora** (`aurora.json`, its first repeat): the bench leaves the night as it is (a quiet night in growth, one
+arc), and the scene looks high enough that the whole screen is marched. Fancy: 0.321 ms GPU for 2.07 Mpx marched,
+0.15 ns a pixel. Fast: 0.165 ms for 0.52 Mpx, 0.32 ns a pixel (two field samples a step, and the composite).
 
 ## Rerunning
 

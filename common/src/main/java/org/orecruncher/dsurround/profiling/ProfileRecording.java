@@ -9,7 +9,9 @@ import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.effects.RenderTimers;
+import org.orecruncher.dsurround.config.AuroraQuality;
 import org.orecruncher.dsurround.effects.aurora.Aurora;
+import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,7 +29,9 @@ import java.util.Set;
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
  * ({@link FramesEvent}), each client tick handler's time every tick
  * ({@link HandlerTickEvent}), what random block effects did by distance once a second
- * ({@link RandomBlockSamplesEvent}), the classic aurora's shape and screen coverage once a second ({@link AuroraEvent}) and what enhanced sound
+ * ({@link RandomBlockSamplesEvent}), the classic aurora's shape and screen coverage once a second ({@link AuroraEvent}), the realistic
+ * aurora's night, quality and pixels marched once a second ({@link RealisticAuroraEvent}), each kind of particle's CPU
+ * time once a second ({@link ParticlesEvent}) and what enhanced sound
  * processing did once a second ({@link EnhancedSoundsEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
@@ -115,6 +119,11 @@ final class ProfileRecording {
         var auroras = new AuroraTotals();
         Runnable auroraWriter = auroras::write;
         FlightRecorder.addPeriodicEvent(AuroraEvent.class, auroraWriter);
+        var realistic = new RealisticAuroraTotals();
+        Runnable realisticWriter = realistic::write;
+        FlightRecorder.addPeriodicEvent(RealisticAuroraEvent.class, realisticWriter);
+        Runnable particleWriter = ProfileRecording::writeParticles;
+        FlightRecorder.addPeriodicEvent(ParticlesEvent.class, particleWriter);
         Runnable soundWriter = ProfileRecording::writeSounds;
         FlightRecorder.addPeriodicEvent(EnhancedSoundsEvent.class, soundWriter);
         try {
@@ -127,6 +136,8 @@ final class ProfileRecording {
                 FrameTimes.start();
                 RandomBlockSamples.start(samples::add);
                 AuroraSamples.start(auroras::add);
+                RealisticAuroraSamples.start(realistic::add);
+                ParticleSamples.start();
                 SoundSamples.start();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
@@ -135,10 +146,14 @@ final class ProfileRecording {
                 FrameTimes.stop();
                 RandomBlockSamples.stop();
                 AuroraSamples.stop();
+                RealisticAuroraSamples.stop();
+                ParticleSamples.stop();
                 SoundSamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
                 auroras.write();
+                realistic.write();
+                writeParticles();
                 writeSounds();
                 recording.stop();
                 recording.dump(unfinished);
@@ -154,11 +169,15 @@ final class ProfileRecording {
             FrameTimes.stop();
             RandomBlockSamples.stop();
             AuroraSamples.stop();
+            RealisticAuroraSamples.stop();
+            ParticleSamples.stop();
             SoundSamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
             FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
             FlightRecorder.removePeriodicEvent(auroraWriter);
+            FlightRecorder.removePeriodicEvent(realisticWriter);
+            FlightRecorder.removePeriodicEvent(particleWriter);
             FlightRecorder.removePeriodicEvent(soundWriter);
             Files.deleteIfExists(unfinished);
         }
@@ -214,6 +233,8 @@ final class ProfileRecording {
         FlightRecorder.register(FramesEvent.class);
         FlightRecorder.register(RandomBlockSamplesEvent.class);
         FlightRecorder.register(AuroraEvent.class);
+        FlightRecorder.register(RealisticAuroraEvent.class);
+        FlightRecorder.register(ParticlesEvent.class);
         FlightRecorder.register(EnhancedSoundsEvent.class);
     }
 
@@ -225,6 +246,8 @@ final class ProfileRecording {
         recording.enable(HandlerTickEvent.class);
         recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(AuroraEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(RealisticAuroraEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(ParticlesEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(EnhancedSoundsEvent.class).withPeriod(Duration.ofSeconds(1));
     }
 
@@ -255,6 +278,24 @@ final class ProfileRecording {
         var second = FrameTimes.take();
         if (second != null)
             FramesEvent.write(second);
+    }
+
+    /**
+     * An event for each kind of particle counted since the last, with the ticks and frames it covers
+     */
+    private static void writeParticles() {
+        var second = ParticleSamples.take();
+        for (var type : second.types()) {
+            var event = new ParticlesEvent();
+            event.type = type.type();
+            event.ticks = second.ticks();
+            event.frames = second.frames();
+            event.ticked = type.ticked();
+            event.tickTime = type.tickNanos();
+            event.extracted = type.extracted();
+            event.extractTime = type.extractNanos();
+            event.commit();
+        }
     }
 
     /**
@@ -363,6 +404,70 @@ final class ProfileRecording {
             this.strength = 0;
             this.pixels = 0;
             this.share = 0;
+        }
+    }
+
+    /**
+     * The realistic aurora's frames added up between the render thread's draws and the recorder's writes, once a second
+     */
+    private static final class RealisticAuroraTotals {
+        private @Nullable RealisticAurora aurora;
+        private @Nullable RealisticAurora.Phase phase;
+        private @Nullable AuroraQuality quality;
+        private int frames;
+        private int width;
+        private int height;
+        private double strength;
+        private double rayField;
+        private double share;
+        private double pixels;
+
+        synchronized void add(RealisticAurora aurora, RealisticAurora.Moment moment, AuroraQuality quality, float strength,
+                              int width, int height, double marchedShare) {
+            this.aurora = aurora;
+            this.phase = moment.phase();
+            this.quality = quality;
+            this.width = width;
+            this.height = height;
+            this.frames++;
+            this.strength += strength;
+            this.rayField += moment.rayField() * moment.gain();
+            this.share += marchedShare;
+            this.pixels += marchedShare * width * height;
+        }
+
+        /**
+         * An event for the aurora drawn since the last write, if it was
+         */
+        synchronized void write() {
+            var drawn = this.aurora;
+            var at = this.phase;
+            var how = this.quality;
+            if (drawn == null || at == null || how == null || this.frames == 0)
+                return;
+            var event = new RealisticAuroraEvent();
+            event.frames = this.frames;
+            event.activity = drawn.activity().name();
+            event.color = drawn.color().name();
+            event.phase = at.name();
+            event.arcs = Math.min(drawn.arcs().size(), RealisticAurora.MAX_ARCS);
+            event.rayField = (float) (this.rayField / this.frames);
+            event.quality = how.name();
+            event.fieldSamples = how.fieldSamples();
+            event.width = this.width;
+            event.height = this.height;
+            event.strength = (float) (this.strength / this.frames);
+            event.marchedShare = this.share / this.frames;
+            event.pixels = this.pixels / this.frames;
+            event.commit();
+            this.aurora = null;
+            this.phase = null;
+            this.quality = null;
+            this.frames = 0;
+            this.strength = 0;
+            this.rayField = 0;
+            this.share = 0;
+            this.pixels = 0;
         }
     }
 }

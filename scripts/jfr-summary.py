@@ -7,7 +7,9 @@ Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr
 the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and
 drawing one on the GPU and CPU), the mod's render timers (each as a share of drawing a frame), the
 client tick's handlers (and what running them in parallel could gain), the classic aurora's shape and how much of the
-screen it covered (against its GPU time), what random block effects did by distance (each
+screen it covered (against its GPU time), the realistic aurora's night, quality and the pixels its shader marched
+(against its GPU time), each kind of particle's CPU time (the mod's apart from all others) and our particle layers'
+drawing, what random block effects did by distance (each
 rate against what the sampler means it to be), what enhanced sound processing did (calculations as sounds start, on
 the sound engine's thread, and the worker's updates and passes), where each busy thread spends its time (by
 method and by mod package), what allocates, and GC.
@@ -375,6 +377,78 @@ def aurora_coverage(jfr, recording, timer_rows):
         print(f"  GPU {gpu:.3f} ms a frame: {1e6 * gpu / pixels:.2f} ns a covered pixel")
 
 
+def realistic_aurora(jfr, recording, timer_rows):
+    seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.RealisticAurora"], 1)]
+    if not seconds:
+        return
+    frames = sum(int(number(f.get("frames"))) for f in seconds)
+    # Means over the frames drawn, each second weighted by its frames
+    mean = lambda key: sum(number(f.get(key)) * int(number(f.get("frames"))) for f in seconds) / frames
+    text = lambda f, key: (f.get(key) or "?").strip('"')
+    nights = Counter((text(f, "activity"), text(f, "color"), int(number(f.get("arcs")))) for f in seconds)
+    phases = Counter(text(f, "phase") for f in seconds)
+    drawn = Counter((text(f, "quality"), int(number(f.get("fieldSamples"))), int(number(f.get("width"))),
+                     int(number(f.get("height")))) for f in seconds)
+    shares = sorted(number(f.get("marchedShare")) for f in seconds)
+    print(f"\n== Realistic aurora ({len(seconds)} seconds drawn, {frames} frames; marched: the pixels the shader works, "
+          f"those looking above the horizon, the sky behind the world included)")
+    for (activity, color, arcs), count in nights.most_common():
+        print(f"  {activity.lower()} night, {color.lower()} colors, {arcs} arc{'s' if arcs != 1 else ''} ({count} s)")
+    print("  phases: " + ", ".join(f"{phase.lower()} {count} s" for phase, count in phases.most_common()))
+    for (quality, samples, width, height), count in drawn.most_common():
+        print(f"  {quality.lower()}, {samples} field sample{'s' if samples != 1 else ''} a step, drawn to {width}x{height} "
+              f"({count} s)")
+    pixels = mean("pixels")
+    print(f"  strength {mean('strength'):.2f}, ray field {mean('rayField'):.2f}; marched a frame: mean "
+          f"{pixels / 1e6:.2f} Mpx, {100 * mean('marchedShare'):.0f}% of what it was drawn to (seconds from "
+          f"{100 * shares[0]:.0f}% to {100 * shares[-1]:.0f}%)")
+    if timer_rows and pixels > 0:
+        gpu = sum(number(r.get("gpuAverage")) for r in timer_rows) / len(timer_rows)
+        print(f"  GPU {gpu:.3f} ms a frame: {1e6 * gpu / pixels:.2f} ns a marched pixel")
+
+
+def particle_costs(jfr, recording, timers):
+    seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.Particles"], 1)]
+    if not seconds:
+        return
+    # The ticks and frames each second covers are the same for every kind in it: counted once per second
+    covered = {}
+    by_type = defaultdict(lambda: {"ticked": 0, "tick_ms": 0.0, "extracted": 0, "extract_ms": 0.0, "seconds": 0})
+    for f in seconds:
+        when = f.get("startTime")
+        covered[when] = (int(number(f.get("ticks"))), int(number(f.get("frames"))))
+        row = by_type[(f.get("type") or "?").strip('"')]
+        row["ticked"] += int(number(f.get("ticked")))
+        row["tick_ms"] += duration_ms(f.get("tickTime"))
+        row["extracted"] += int(number(f.get("extracted")))
+        row["extract_ms"] += duration_ms(f.get("extractTime"))
+        row["seconds"] += 1
+    ticks = sum(t for t, _ in covered.values())
+    frames = sum(fr for _, fr in covered.values())
+    total_ms = sum(r["tick_ms"] + r["extract_ms"] for r in by_type.values())
+    print(f"\n== Particles' CPU time ({len(covered)} seconds, {ticks} particle ticks, {frames} frames; alive: ticked a "
+          f"tick, mean; drawn: quads written a frame, those in view; each particle timed, so slightly dearer than it is; "
+          f"Others: every particle not the mod's)")
+    print(f"  {'kind':26} {'alive':>7} {'tick ms':>8} {'us each':>8} {'drawn':>7} {'frame ms':>9} {'us each':>8} {'share':>6}")
+    order = sorted(by_type.items(), key=lambda item: -(item[1]["tick_ms"] + item[1]["extract_ms"]))
+    for kind, r in order:
+        alive = r["ticked"] / ticks if ticks else 0.0
+        drawn = r["extracted"] / frames if frames else 0.0
+        tick_ms = r["tick_ms"] / ticks if ticks else 0.0
+        frame_ms = r["extract_ms"] / frames if frames else 0.0
+        tick_each = 1000 * r["tick_ms"] / r["ticked"] if r["ticked"] else 0.0
+        extract_each = 1000 * r["extract_ms"] / r["extracted"] if r["extracted"] else 0.0
+        share = 100 * (r["tick_ms"] + r["extract_ms"]) / total_ms if total_ms else 0.0
+        print(f"  {kind:26} {alive:7.0f} {tick_ms:8.3f} {tick_each:8.2f} {drawn:7.0f} {frame_ms:9.3f} {extract_each:8.2f} "
+              f"{share:5.0f}%")
+    # Our own layers' drawing, timed apart (with Improved Transparency off)
+    layers = [(name, rows) for name, rows in timers.items() if name.startswith("Particles: ")]
+    if layers:
+        print("  our layers' drawing (render timers, mean): " + ", ".join(
+            f"{name[len('Particles: '):].lower()} GPU {sum(number(r.get('gpuAverage')) for r in rows) / len(rows):.3f} / "
+            f"CPU {sum(number(r.get('cpuAverage')) for r in rows) / len(rows):.3f} ms" for name, rows in layers))
+
+
 def enhanced_sounds(jfr, recording):
     seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.EnhancedSounds"], 1)]
     if not seconds:
@@ -567,6 +641,8 @@ def main():
                   f"{frame_share(mean('gpuAverage'), frame_gpu)} {frame_share(mean('cpuAverage'), frame_cpu)}")
 
     aurora_coverage(jfr, recording, timers.get("Aurora"))
+    realistic_aurora(jfr, recording, timers.get("Aurora (realistic)"))
+    particle_costs(jfr, recording, timers)
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)
     enhanced_sounds(jfr, recording)

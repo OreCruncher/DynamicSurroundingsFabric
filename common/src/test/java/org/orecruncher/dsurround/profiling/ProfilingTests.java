@@ -13,8 +13,10 @@ import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.AuroraQuality;
 import org.orecruncher.dsurround.effects.RenderTimers;
 import org.orecruncher.dsurround.effects.aurora.Aurora;
+import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.Randomizer;
@@ -555,6 +557,125 @@ public class ProfilingTests {
     }
 
     @Test
+    void aRecordingHasTheRealisticAurora() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // Drawn as the renderer would each frame: at Fast, to a 960x540 target, 0.6 of it above the horizon
+        var aurora = RealisticAurora.create(11, 25);
+        var moment = aurora.at(aurora.progressOf(RealisticAurora.Phase.EXPANSION));
+        while (recorder.isAlive()) {
+            RealisticAuroraSamples.drawn(aurora, moment, AuroraQuality.FAST, 0.75F, 960, 540, 0.6);
+            Thread.sleep(20);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.RealisticAurora"))
+                .toList();
+        assertFalse(events.isEmpty());
+        for (var event : events) {
+            assertTrue(event.getInt("frames") > 0);
+            assertEquals(aurora.activity().name(), event.getString("activity"));
+            assertEquals(aurora.color().name(), event.getString("color"));
+            assertEquals(moment.phase().name(), event.getString("phase"));
+            assertEquals(Math.min(aurora.arcs().size(), RealisticAurora.MAX_ARCS), event.getInt("arcs"));
+            assertEquals(moment.rayField() * moment.gain(), event.getFloat("rayField"), 1e-6);
+            assertEquals("FAST", event.getString("quality"));
+            assertEquals(AuroraQuality.FAST.fieldSamples(), event.getInt("fieldSamples"));
+            assertEquals(960, event.getInt("width"));
+            assertEquals(540, event.getInt("height"));
+            assertEquals(0.75F, event.getFloat("strength"), 1e-6);
+            assertEquals(0.6, event.getDouble("marchedShare"), 1e-9);
+            assertEquals(0.6 * 960 * 540, event.getDouble("pixels"), 1e-6);
+        }
+        // Not recording any more: nothing is kept for the next
+        assertFalse(RealisticAuroraSamples.isRecording());
+    }
+
+    // Stands in for one of the mod's particles: in the mod's package, so counted under its own name
+    private static final class TestParticle {
+    }
+
+    @Test
+    void particlesAreCountedByKindTheModsApartFromAllOthers() {
+        ParticleSamples.take();
+        ParticleSamples.tick();
+        ParticleSamples.tick();
+        ParticleSamples.frame();
+        ParticleSamples.ticked(new TestParticle(), 1000);
+        ParticleSamples.ticked(new TestParticle(), 3000);
+        ParticleSamples.extracted(new TestParticle(), 500);
+        ParticleSamples.ticked("a vanilla particle", 200);
+        ParticleSamples.ticked(42, 100);
+
+        var second = ParticleSamples.take();
+        assertEquals(2, second.ticks());
+        assertEquals(1, second.frames());
+        var ours = second.types().stream().filter(t -> t.type().equals("ProfilingTests$TestParticle")).findFirst().orElseThrow();
+        assertEquals(2, ours.ticked());
+        assertEquals(4000, ours.tickNanos());
+        assertEquals(1, ours.extracted());
+        assertEquals(500, ours.extractNanos());
+        var others = second.types().stream().filter(t -> t.type().equals(ParticleSamples.OTHERS)).findFirst().orElseThrow();
+        assertEquals(2, others.ticked());
+        assertEquals(300, others.tickNanos());
+        assertEquals(2, second.types().size());
+        // Taken: counted afresh
+        assertTrue(ParticleSamples.take().types().isEmpty());
+    }
+
+    @Test
+    void aRecordingHasTheParticles() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // As the game would tick and draw them: three of ours a tick, 20 microseconds each
+        while (recorder.isAlive()) {
+            if (ParticleSamples.isRecording()) {
+                ParticleSamples.tick();
+                ParticleSamples.frame();
+                for (int i = 0; i < 3; i++) {
+                    ParticleSamples.ticked(new TestParticle(), 20_000);
+                    ParticleSamples.extracted(new TestParticle(), 5_000);
+                }
+            }
+            Thread.sleep(20);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Particles"))
+                .toList();
+        assertFalse(events.isEmpty());
+        long ticks = 0;
+        for (var event : events) {
+            assertEquals("ProfilingTests$TestParticle", event.getString("type"));
+            long eventTicks = event.getLong("ticks");
+            assertEquals(3 * eventTicks, event.getLong("ticked"));
+            assertEquals(3 * eventTicks * 20_000, event.getDuration("tickTime").toNanos());
+            assertEquals(3 * event.getLong("frames"), event.getLong("extracted"));
+            assertEquals(3 * event.getLong("frames") * 5_000, event.getDuration("extractTime").toNanos());
+            ticks += eventTicks;
+        }
+        assertTrue(ticks > 0);
+        // Not recording any more
+        assertFalse(ParticleSamples.isRecording());
+    }
+
+    @Test
     void aRecordingHasTheEnhancedSounds() throws Exception {
         var file = this.folder.resolve("test.jfr");
         // Counted before the recording: not in it
@@ -712,7 +833,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("AuroraEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("AuroraEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ParticlesEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RealisticAuroraEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

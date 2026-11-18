@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.effects.aurora;
 
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector4f;
 import org.orecruncher.dsurround.config.AuroraQuality;
 
 /**
@@ -86,6 +87,41 @@ public record RealisticAuroraFrame(Matrix4fc invViewProj, float[] vec4s) {
             }
         }
         return new RealisticAuroraFrame(invViewProj, v);
+    }
+
+    /**
+     * The view's height of the horizon the shader stops at: pixels looking further down than this are discarded
+     * (aurora_realistic.fsh, main), all others are marched
+     */
+    static final float HORIZON = -0.01F;
+    // Points across and down the screen at which marchedShare looks
+    static final int SHARE_COLUMNS = 32;
+    static final int SHARE_ROWS = 18;
+
+    /**
+     * The share of the screen the shader marches, 0 to 1: the pixels whose line of sight is above {@link #HORIZON}, the
+     * sky behind the world included (the world covers it after). Looked at on a grid of points, each pixel's direction
+     * taken as the shader takes it, between two points along its line. For recordings, set against the GPU's time.
+     */
+    public double marchedShare() {
+        var near = new Vector4f();
+        var far = new Vector4f();
+        int marched = 0;
+        for (int row = 0; row < SHARE_ROWS; row++) {
+            float y = (row + 0.5F) / SHARE_ROWS * 2F - 1F;
+            for (int column = 0; column < SHARE_COLUMNS; column++) {
+                float x = (column + 0.5F) / SHARE_COLUMNS * 2F - 1F;
+                this.invViewProj.transform(near.set(x, y, 1F, 1F));
+                this.invViewProj.transform(far.set(x, y, 0.5F, 1F));
+                float dx = far.x / far.w - near.x / near.w;
+                float dy = far.y / far.w - near.y / near.w;
+                float dz = far.z / far.w - near.z / near.w;
+                float length = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+                if (length > 0F && dy / length >= HORIZON)
+                    marched++;
+            }
+        }
+        return marched / (double) (SHARE_ROWS * SHARE_COLUMNS);
     }
 
     private static void put(float[] v, int vector, float x, float y, float z, float w) {

@@ -14,12 +14,14 @@ import org.orecruncher.dsurround.Client;
 import org.orecruncher.dsurround.effects.particles.FireflyParticle;
 import org.orecruncher.dsurround.mixinutils.IWindBlown;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
+import org.orecruncher.dsurround.profiling.ParticleSamples;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
 import org.orecruncher.dsurround.tags.ParticleTags;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ParticleEngine.class)
@@ -66,5 +68,26 @@ public abstract class MixinParticleEngine {
         } catch (Throwable t) {
             MixinHelpers.WIND_BLOWN_GUARD.failed(t);
         }
+    }
+
+    /**
+     * Counts the particles' ticks while /dsprofile records (see ParticleSamples). Optional: without it, recordings
+     * have no particle times.
+     */
+    @Inject(method = "tick()V", at = @At("HEAD"), require = 0)
+    private void dsurround$countTick(CallbackInfo ci) {
+        if (ParticleSamples.isRecording())
+            ParticleSamples.tick();
+    }
+
+    /**
+     * Counts the frames the particles are extracted for while /dsprofile records (see ParticleSamples). Optional:
+     * without it, recordings have no particle times.
+     */
+    @Inject(method = "extract(Lnet/minecraft/client/renderer/state/level/ParticlesRenderState;Lnet/minecraft/client/renderer/culling/Frustum;Lnet/minecraft/client/Camera;F)V",
+            at = @At("HEAD"), require = 0)
+    private void dsurround$countFrame(CallbackInfo ci) {
+        if (ParticleSamples.isRecording())
+            ParticleSamples.frame();
     }
 }

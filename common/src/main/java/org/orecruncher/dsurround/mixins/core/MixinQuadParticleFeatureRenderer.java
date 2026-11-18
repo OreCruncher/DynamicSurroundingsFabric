@@ -12,6 +12,7 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.renderer.feature.FeatureFrameContext;
 import net.minecraft.client.renderer.feature.QuadParticleFeatureRenderer;
+import org.orecruncher.dsurround.effects.particles.ParticleLayerTimers;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
 import org.orecruncher.dsurround.effects.particles.Streaks;
@@ -37,9 +38,20 @@ public class MixinQuadParticleFeatureRenderer {
      */
     @WrapOperation(method = "drawLayers", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;getCompiledPipeline(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;)Lcom/mojang/renderpearl/api/pipeline/CompiledRenderPipeline;"))
     private static CompiledRenderPipeline dsurround$choosePipeline(RenderPipeline pipeline, Operation<CompiledRenderPipeline> original, @Local(argsOnly = true) RenderPass pass) {
+        // Timed from here to its draw, if it is one of ours (see ParticleLayerTimers)
+        ParticleLayerTimers.begin(pipeline);
         var chosen = SoftParticles.choosePipeline(pipeline);
         SoftParticles.bind(pass, chosen);
         return original.call(chosen);
+    }
+
+    /**
+     * Ends the timing of one of our layers once it is drawn (see ParticleLayerTimers)
+     */
+    @WrapOperation(method = "drawLayers", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/RenderPass;drawIndexed(IIIII)V"))
+    private static void dsurround$layerDrawn(RenderPass pass, int a, int b, int c, int d, int e, Operation<Void> original) {
+        original.call(pass, a, b, c, d, e);
+        ParticleLayerTimers.end();
     }
 
     /**

@@ -137,6 +137,12 @@ public final class SoftParticles {
         FALLBACKS.put(MIST_PIPELINE, MIST_FALLBACK_PIPELINE);
         FALLBACKS.put(FLAME_PIPELINE, FLAME_FALLBACK_PIPELINE);
         FALLBACKS.put(EYE_FLAME_PIPELINE, FLAME_FALLBACK_PIPELINE);
+        // Each layer's drawing timed, whichever of its pipelines it was made with
+        ParticleLayerTimers.register(MIST_PIPELINE, ParticleLayerTimers.MIST);
+        ParticleLayerTimers.register(MIST_FALLBACK_PIPELINE, ParticleLayerTimers.MIST);
+        ParticleLayerTimers.register(FLAME_PIPELINE, ParticleLayerTimers.FLAMES);
+        ParticleLayerTimers.register(FLAME_FALLBACK_PIPELINE, ParticleLayerTimers.FLAMES);
+        ParticleLayerTimers.register(EYE_FLAME_PIPELINE, ParticleLayerTimers.EYE_FLAMES);
         addOitFallbacks(MIST_OIT, RenderPipelines.OIT_PARTICLE, "soft particles");
         addOitFallbacks(FLAME_OIT, FLAME_FALLBACK_OIT, "soft flames");
         addOitFallbacks(EYE_FLAME_OIT, FLAME_FALLBACK_OIT, "soft skull flames");

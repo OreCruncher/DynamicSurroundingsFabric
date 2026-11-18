@@ -37,6 +37,8 @@
     "core.MixinEntityRenderer",
     "core.MixinParticle",
     "core.MixinParticleEngine",
+    "core.MixinParticleGroup",
+    "core.MixinQuadParticleGroup",
     "core.MixinWeatherEffectRenderer",
     "core.MixinRainSplashParticle",
     "core.MixinWaterDropParticle",

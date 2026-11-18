@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
+import org.orecruncher.dsurround.effects.particles.ParticleLayerTimers;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.Streaks;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
@@ -41,7 +42,11 @@ public final class RenderTimers {
             CloudRenderer.RENDER_TIMER,
             CloudRenderer.FIELD_TIMER,
             PointLights.RENDER_TIMER,
-            Streaks.RENDER_TIMER);
+            Streaks.RENDER_TIMER,
+            ParticleLayerTimers.MIST,
+            ParticleLayerTimers.FLAMES,
+            ParticleLayerTimers.EYE_FLAMES,
+            ParticleLayerTimers.FIREFLIES);
 
     private RenderTimers() {
     }
