@@ -230,6 +230,106 @@
     }
   },
   {
+    "location": "dsurround:armor.leather.equip",
+    "soundEvent": "minecraft:item.armor.equip_leather",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:armor.leather.step",
+    "soundEvent": "minecraft:item.armor.equip_leather",
+    "category": "PLAYER",
+    "volume": 0.07,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.0
+    }
+  },
+  {
+    "location": "dsurround:armor.chain.equip",
+    "soundEvent": "minecraft:item.armor.equip_chain",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:armor.chain.step",
+    "soundEvent": "minecraft:block.chain.step",
+    "category": "PLAYER",
+    "volume": 0.07,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.0
+    }
+  },
+  {
+    "location": "dsurround:armor.plate.equip",
+    "soundEvent": "minecraft:item.armor.equip_iron",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:armor.plate.step",
+    "soundEvent": "minecraft:item.armor.equip_iron",
+    "category": "PLAYER",
+    "volume": 0.07,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.0
+    }
+  },
+  {
+    "location": "dsurround:armor.crystal.equip",
+    "soundEvent": "minecraft:item.armor.equip_diamond",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:armor.crystal.step",
+    "soundEvent": "minecraft:item.armor.equip_diamond",
+    "category": "PLAYER",
+    "volume": 0.07,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.0
+    }
+  },
+  {
+    "location": "dsurround:armor.heavy.equip",
+    "soundEvent": "minecraft:item.armor.equip_netherite",
+    "category": "PLAYER",
+    "volume": 0.25,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.2
+    }
+  },
+  {
+    "location": "dsurround:armor.heavy.step",
+    "soundEvent": "minecraft:item.armor.equip_netherite",
+    "category": "PLAYER",
+    "volume": 0.07,
+    "pitch": {
+      "min": 0.8,
+      "max": 1.0
+    }
+  },
+  {
     "location": "dsurround:fire_ambient",
     "soundEvent": "minecraft:block.fire.ambient"
   },

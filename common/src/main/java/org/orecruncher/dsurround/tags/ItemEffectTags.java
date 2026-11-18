@@ -30,6 +30,12 @@ public class ItemEffectTags {
     public static final TagKey<Item> COMPASS_WOBBLE = of("compass_wobble");
     public static final TagKey<Item> CLOCKS = of("is_clock");
     public static final TagKey<Item> CLOCK_WOBBLE = of("clock_wobble");
+    // Armor families (config/ArmorFamily): empty, for packs to put a piece in a family its equip sound doesn't say
+    public static final TagKey<Item> LEATHER_ARMOR = of("is_leather_armor");
+    public static final TagKey<Item> CHAIN_ARMOR = of("is_chain_armor");
+    public static final TagKey<Item> PLATE_ARMOR = of("is_plate_armor");
+    public static final TagKey<Item> CRYSTAL_ARMOR = of("is_crystal_armor");
+    public static final TagKey<Item> HEAVY_ARMOR = of("is_heavy_armor");
 
     private static TagKey<Item> of(String id) {
         var tagKey = TagKey.create(Registries.ITEM, Constants.asId("effects/" + id));

@@ -15,6 +15,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.*;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.ArmorFamily;
 import org.orecruncher.dsurround.config.ItemClassType;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -90,7 +91,20 @@ public class ItemLibrary implements IItemLibrary {
     public Optional<ISoundFactory> getItemEquipSound(ItemStack stack) {
         if (stack.isEmpty())
             return Optional.empty();
-        return this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> Optional.ofNullable(resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound)));
+        return this.itemEquipFactories.computeIfAbsent(stack.getItem(), k -> Optional.ofNullable(resolveEquipSound(stack)));
+    }
+
+    private @Nullable ISoundFactory resolveEquipSound(ItemStack stack) {
+        // An item class wins: armor only sounds as its family where nothing else says what the item is
+        if (resolveClassType(stack) == ItemClassType.NONE) {
+            var family = resolveArmorFamily(stack);
+            if (family != null) {
+                var factory = family.getEquipSound();
+                if (factory != null)
+                    return factory;
+            }
+        }
+        return resolve(stack, ItemClassType::getToolBarSound, ItemClassType.NONE::getToolBarSound);
     }
 
     @Override
@@ -108,6 +122,17 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     /**
+     * The piece's family: a family's tag, or else its equip sound. Null for a piece in none, or an item that isn't
+     * worn.
+     */
+    private @Nullable ArmorFamily resolveArmorFamily(ItemStack stack) {
+        for (var family : ArmorFamily.values())
+            if (this.tagLibrary.is(family.tag(), stack))
+                return family;
+        return ArmorFamily.byEquipSound(getEquipableSoundEvent(stack));
+    }
+
+    /**
      * Each item with its tags and what it resolves to: item class, and the toolbar, swing and armor-step sounds
      * (by factory id, or "none").
      */
@@ -117,7 +142,15 @@ public class ItemLibrary implements IItemLibrary {
         return itemRegistry.stream().map(kvp -> formatItemOutput(kvp.getKey().identifier(), kvp.getValue())).sorted();
     }
 
-    private static @Nullable ISoundFactory resolveEquipableStepSound(ItemStack stack) {
+    private @Nullable ISoundFactory resolveEquipableStepSound(ItemStack stack) {
+        var family = resolveArmorFamily(stack);
+        if (family != null) {
+            var factory = family.getStepSound();
+            if (factory != null)
+                return factory;
+        }
+
+        // In no family: the piece's own equip sound, played quietly
         var sound = getEquipableSoundEvent(stack);
         if (sound != null)
             return SoundFactoryBuilder
@@ -230,6 +263,7 @@ public class ItemLibrary implements IItemLibrary {
         var stack = new ItemStack(item);
         return id + "\nTags: " + tags
                 + "\nClass: " + (stack.isEmpty() ? "none" : resolveClassType(stack).getName())
+                + "\nArmor family: " + (stack.isEmpty() ? "none" : Optional.ofNullable(resolveArmorFamily(stack)).map(ArmorFamily::getName).orElse("none"))
                 + "\nToolbar sound: " + describe(this.getItemEquipSound(stack))
                 + "\nSwing sound: " + describe(this.getItemSwingSound(stack))
                 + "\nArmor step sound: " + describe(this.getEquipableStepAccentSound(stack))
