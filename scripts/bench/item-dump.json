@@ -1,0 +1,21 @@
+// Item dump for scripts/item-mod-survey.py: opens a world, writes /dsdump items and closes the game. Not a timing
+// run: the warm-up and recording are as short as a scenario allows. Run it in the survey's pack folder:
+//   ./gradlew :neoforge:runClientPack -Ppack=item-survey -Pscenario=scripts/bench/item-dump.json
+{
+  "world": "item-dump",
+  "seed": 20261118,
+  "setup": ["gamemode creative", "gamerule spawn_mobs false"],
+  "warmup": 1,
+  "record": 1,
+  "repeats": 1,
+  "screenshots": false,
+  "scenes": {
+    "plains": {
+      "biome": "minecraft:plains",
+      "commands": ["dsdump items"]
+    }
+  },
+  "runs": [
+    {"label": "dump", "scene": "plains"}
+  ]
+}

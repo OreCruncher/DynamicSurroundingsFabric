@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.config.libraries.impl;
 
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ArmorFamily;
 import org.orecruncher.dsurround.config.ItemClassType;
@@ -25,6 +26,8 @@ import java.util.stream.Stream;
 final class ItemAudit {
 
     private static final String VANILLA = "minecraft";
+    // An elytra is made of no material a family stands for: a mod's, as vanilla's, keeps the elytra's sound
+    private static final Identifier ELYTRA = SoundEvents.ARMOR_EQUIP_ELYTRA.value().location();
 
     private ItemAudit() {
     }
@@ -52,7 +55,10 @@ final class ItemAudit {
         if (report.id().getNamespace().equals(VANILLA))
             return result;
 
-        if (report.wornArmor() && report.family().family() == null)
+        // Only a vanilla equip sound no family claims (a turtle shell's, the generic one): a mod's own is played
+        var equipSound = report.family().equipSound();
+        if (report.wornArmor() && report.family().family() == null
+                && equipSound != null && equipSound.getNamespace().equals(VANILLA) && !equipSound.equals(ELYTRA))
             result.add("worn as armor, but in no armor family (" + report.family().reason()
                     + "): tag it with one of " + familyTags());
         if (report.classified().type() == ItemClassType.NONE && !report.toolTags().isEmpty())
@@ -60,10 +66,25 @@ final class ItemAudit {
                     + ", but has no class");
         var byTag = report.byTag();
         var byBehavior = report.byBehavior();
-        if (byTag != null && byBehavior.type() != ItemClassType.NONE && byBehavior.type() != byTag.type())
+        if (byTag != null && byBehavior.type() != ItemClassType.NONE && byBehavior.type() != byTag.type()
+                && !stillTheWeapon(byTag.type(), byBehavior.type()))
             result.add(byTag.reason() + " makes it a " + byTag.type().getName() + ", but it acts as a "
                     + byBehavior.type().getName() + " (" + byBehavior.reason() + ")");
         return result;
+    }
+
+    /**
+     * Still the weapon it is tagged as, so no disagreement: a melee weapon raised to parry, as a mod's two-handed
+     * swords and polearms are (Epic Knights' are blocked with, as a shield is), or a spear charged as a bow is drawn
+     * (Epic Knights' lances).
+     */
+    private static boolean stillTheWeapon(ItemClassType tagged, ItemClassType acts) {
+        if (acts == ItemClassType.SHIELD)
+            return switch (tagged) {
+                case SWORD, AXE, MACE, SPEAR -> true;
+                default -> false;
+            };
+        return tagged == ItemClassType.SPEAR && acts == ItemClassType.BOW;
     }
 
     private static String familyTags() {

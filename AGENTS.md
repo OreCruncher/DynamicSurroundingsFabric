@@ -56,6 +56,14 @@ is known of 26.4.
   fetches each (SHA-1 checked, read only as a zip) into `build/biome-mods/<version>/`, drops those with no blocks and
   writes each survey beside it. Judge them, then add entries to `assets/<mod id>/dsconfigs/tags/block/effects/`, each
   `"required": false`; prefer the mod's own tags (`#promenade:leaf_piles`, BetterX's `#wover:vegetation/vines`).
+- Item sounds by mod: an item's class and armor family come from its components, set in code, so the survey runs the
+  game. `python scripts/item-mod-survey.py fetch [--min-downloads N] [--slug s] [--leave-out id] [--list]` puts
+  Modrinth's NeoForge equipment mods past 250k downloads (only those adding items) and their required dependencies in
+  `neoforge/run-pack/item-survey`, and prints the run: `./gradlew :neoforge:runClientPack -Ppack=item-survey
+  [-Pneoforge_version=...] -Pscenario=scripts/bench/item-dump.json` (writes `/dsdump items`, closes the game); then
+  `item-mod-survey.py report` lists each mod's armor families, classes and the dump's "needs a look" lines (also in
+  `build/item-mods/<version>/report.txt`). Fixes go in `assets/<mod id>/dsconfigs/tags/item/effects/`
+  (`is_<family>_armor`, `is_<class>`), each `"required": false`. `/dsdump items <namespace>` dumps one mod's items.
 - Rewriting biome selectors (moving a fragment into `scripts.json`, say): `python scripts/biome-selector-diff.py
   [--since REV] [--dump biomes.txt]` checks each rule matches the same biomes as at REV (HEAD by default), def.
   functions expanded: proved over every combination of its traits and terms, and checked on each biome of a

@@ -33,7 +33,7 @@ public class ItemAuditTests {
     }
 
     private static final SoundResult NO_SOUND = new SoundResult(null, "none");
-    private static final FamilyResult NOT_WORN = new FamilyResult(null, "not worn");
+    private static final FamilyResult NOT_WORN = new FamilyResult(null, "not worn", null);
 
     private static ItemAudit.Report report(String id, Classification classified, @Nullable Classification byTag,
                                            Classification byBehavior, FamilyResult family, boolean wornArmor,
@@ -58,19 +58,29 @@ public class ItemAuditTests {
     @Test
     void armorInNoFamilyNeedsALook() {
         var bronze = report("mymod:bronze_chestplate", Classification.NONE, null, Classification.NONE,
-                new FamilyResult(null, "equip sound mymod:equip_bronze is in no family"), true, List.of());
+                new FamilyResult(null, "equip sound minecraft:item.armor.equip_turtle is in no family", Identifier.parse("minecraft:item.armor.equip_turtle")), true, List.of());
         var concerns = ItemAudit.concerns(bronze);
         assertEquals(1, concerns.size());
-        assertTrue(concerns.getFirst().contains("mymod:equip_bronze"), concerns.getFirst());
+        assertTrue(concerns.getFirst().contains("minecraft:item.armor.equip_turtle"), concerns.getFirst());
         assertTrue(concerns.getFirst().contains("#dsurround:effects/is_plate_armor"), concerns.getFirst());
 
         var plate = report("mymod:steel_chestplate", Classification.NONE, null, Classification.NONE,
-                new FamilyResult(ArmorFamily.PLATE, "equip sound minecraft:item.armor.equip_iron"), true, List.of());
+                new FamilyResult(ArmorFamily.PLATE, "equip sound minecraft:item.armor.equip_iron", Identifier.parse("minecraft:item.armor.equip_iron")), true, List.of());
         assertTrue(ItemAudit.concerns(plate).isEmpty());
+
+        // A mod's elytra keeps the elytra's sound, as vanilla's does
+        var elytra = report("mymod:ender_elytra", Classification.NONE, null, Classification.NONE,
+                new FamilyResult(null, "equip sound minecraft:item.armor.equip_elytra is in no family", Identifier.parse("minecraft:item.armor.equip_elytra")), true, List.of());
+        assertTrue(ItemAudit.concerns(elytra).isEmpty());
+
+        // A mod's own equip sound is played, so nothing to tag
+        var own = report("mymod:wizard_robe", Classification.NONE, null, Classification.NONE,
+                new FamilyResult(null, "equip sound mymod:robe_equip is the mod's own, played instead", Identifier.parse("mymod:robe_equip")), true, List.of());
+        assertTrue(ItemAudit.concerns(own).isEmpty());
 
         // Only what a player wears in an armor slot: a horse's armor makes no steps of ours
         var horse = report("mymod:bronze_horse_armor", Classification.NONE, null, Classification.NONE,
-                new FamilyResult(null, "equip sound mymod:equip_bronze is in no family"), false, List.of());
+                new FamilyResult(null, "equip sound minecraft:item.armor.equip_turtle is in no family", Identifier.parse("minecraft:item.armor.equip_turtle")), false, List.of());
         assertTrue(ItemAudit.concerns(horse).isEmpty());
     }
 
@@ -94,6 +104,15 @@ public class ItemAuditTests {
         assertEquals(1, concerns.size());
         assertTrue(concerns.getFirst().contains("sword") && concerns.getFirst().contains("axe"), concerns.getFirst());
 
+        // A sword raised to parry (Epic Knights' two-handed swords) is still a sword; one drawn like a bow needs a look
+        var parrying = report("mymod:zweihander", tag, tag, as(ItemClassType.SHIELD, "raised like a shield"), NOT_WORN, false, List.of());
+        assertTrue(ItemAudit.concerns(parrying).isEmpty());
+        var drawn = report("mymod:lance", tag, tag, as(ItemClassType.BOW, "drawn like a bow"), NOT_WORN, false, List.of());
+        assertEquals(1, ItemAudit.concerns(drawn).size());
+        // Tagged a spear, the lance charged as a bow is drawn is still a spear
+        var spear = as(ItemClassType.SPEAR, "tag #dsurround:effects/is_spear");
+        assertTrue(ItemAudit.concerns(report("mymod:lance", spear, spear, as(ItemClassType.BOW, "drawn like a bow"), NOT_WORN, false, List.of())).isEmpty());
+
         // Behavior that says nothing doesn't disagree
         var book = as(ItemClassType.BOOK, "tag #dsurround:effects/is_book");
         assertTrue(ItemAudit.concerns(report("mymod:tome", book, book, Classification.NONE, NOT_WORN, false, List.of())).isEmpty());
@@ -110,9 +129,9 @@ public class ItemAuditTests {
     void theSummaryCountsAndListsWhatNeedsALook() {
         var reports = List.of(
                 report("mymod:bronze_chestplate", Classification.NONE, null, Classification.NONE,
-                        new FamilyResult(null, "equip sound mymod:equip_bronze is in no family"), true, List.of()),
+                        new FamilyResult(null, "equip sound minecraft:item.armor.equip_turtle is in no family", Identifier.parse("minecraft:item.armor.equip_turtle")), true, List.of()),
                 report("mymod:steel_boots", Classification.NONE, null, Classification.NONE,
-                        new FamilyResult(ArmorFamily.PLATE, "equip sound minecraft:item.armor.equip_iron"), true, List.of()),
+                        new FamilyResult(ArmorFamily.PLATE, "equip sound minecraft:item.armor.equip_iron", Identifier.parse("minecraft:item.armor.equip_iron")), true, List.of()),
                 report("mymod:bronze_axe", as(ItemClassType.AXE, "tag"), null, Classification.NONE, NOT_WORN, false, List.of()));
         var lines = ItemAudit.format("mymod", reports).toList();
         assertEquals("Items: 3 in namespace mymod", lines.get(0));

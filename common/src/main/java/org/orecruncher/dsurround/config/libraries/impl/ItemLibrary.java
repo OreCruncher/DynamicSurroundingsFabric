@@ -58,9 +58,9 @@ public class ItemLibrary implements IItemLibrary {
     private static final TagKey<Item> MINING_TOOLS = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("c", "tools/mining_tools"));
 
     /**
-     * A piece's armor family, or null for none, and why.
+     * A piece's armor family, or null for none, why, and its equip sound (null for an item not worn).
      */
-    record FamilyResult(@Nullable ArmorFamily family, String reason) {
+    record FamilyResult(@Nullable ArmorFamily family, String reason, @Nullable Identifier equipSound) {
     }
 
     /**
@@ -169,7 +169,7 @@ public class ItemLibrary implements IItemLibrary {
 
         if (stack.isEmpty())
             return new ItemAudit.Report(id, tags, Classification.NONE, null, Classification.NONE,
-                    new FamilyResult(null, "not worn"), false, toolTags,
+                    new FamilyResult(null, "not worn", null), false, toolTags,
                     new SoundResult(null, "an empty stack"), new SoundResult(null, "an empty stack"), new SoundResult(null, "an empty stack"));
 
         var equippable = stack.get(DataComponents.EQUIPPABLE);
@@ -256,14 +256,17 @@ public class ItemLibrary implements IItemLibrary {
     private FamilyResult explainArmorFamily(ItemStack stack) {
         for (var family : ArmorFamily.values())
             if (this.tagLibrary.is(family.tag(), stack))
-                return new FamilyResult(family, "tag #" + family.tag().location());
+                return new FamilyResult(family, "tag #" + family.tag().location(), equipSoundId(stack));
         var sound = getEquipableSoundEvent(stack);
         if (sound == null)
-            return new FamilyResult(null, "not worn");
+            return new FamilyResult(null, "not worn", null);
         var family = ArmorFamily.byEquipSound(sound);
-        if (family == null)
-            return new FamilyResult(null, "equip sound " + sound.location() + " is in no family");
-        return new FamilyResult(family, "equip sound " + sound.location());
+        if (family != null)
+            return new FamilyResult(family, "equip sound " + sound.location(), sound.location());
+        // A mod's own equip sound says what its armor sounds like better than a family would: it keeps it
+        if (!sound.location().getNamespace().equals("minecraft"))
+            return new FamilyResult(null, "equip sound " + sound.location() + " is the mod's own, played instead", sound.location());
+        return new FamilyResult(null, "equip sound " + sound.location() + " is in no family", sound.location());
     }
 
     /**
@@ -278,6 +281,11 @@ public class ItemLibrary implements IItemLibrary {
      * Equippable record, which compares by value. Only EQUIPPABLE matters here; damage, enchantments and other
      * components don't affect these sounds, so "the stack has any component changes" is not the right test.
      */
+    private static @Nullable Identifier equipSoundId(ItemStack stack) {
+        var sound = getEquipableSoundEvent(stack);
+        return sound == null ? null : sound.location();
+    }
+
     @Nullable
     private static SoundEvent getEquipableSoundEvent(ItemStack stack) {
         var equipable = stack.getComponents().get(DataComponents.EQUIPPABLE);
