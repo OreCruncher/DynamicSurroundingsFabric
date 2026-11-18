@@ -1,0 +1,49 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "magistuarmory:wood_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:stone_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:copper_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:tin_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:bronze_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:iron_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:steel_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:silver_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:gold_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:diamond_chivalrylance",
+      "required": false
+    },
+    {
+      "id": "magistuarmory:netherite_chivalrylance",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "alexsmobs:centipede_leggings",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:crocodile_chestplate",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:moose_headgear",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:roadrunner_boots",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:rocky_chestplate",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:spiked_turtle_shell",
+      "required": false
+    }
+  ]
+}

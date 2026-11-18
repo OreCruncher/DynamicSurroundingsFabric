@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "toughasnails:leaf_helmet",
+      "required": false
+    },
+    {
+      "id": "toughasnails:leaf_chestplate",
+      "required": false
+    },
+    {
+      "id": "toughasnails:leaf_leggings",
+      "required": false
+    },
+    {
+      "id": "toughasnails:leaf_boots",
+      "required": false
+    },
+    {
+      "id": "toughasnails:wool_helmet",
+      "required": false
+    },
+    {
+      "id": "toughasnails:wool_chestplate",
+      "required": false
+    },
+    {
+      "id": "toughasnails:wool_leggings",
+      "required": false
+    },
+    {
+      "id": "toughasnails:wool_boots",
+      "required": false
+    }
+  ]
+}
