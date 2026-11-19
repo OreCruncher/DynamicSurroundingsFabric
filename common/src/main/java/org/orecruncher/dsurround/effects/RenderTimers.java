@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.effects.particles.ParticleLayerTimers;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.Streaks;
 import org.orecruncher.dsurround.effects.precipitation.PrecipitationShaders;
+import org.orecruncher.dsurround.effects.rainbow.RainbowRenderer;
 
 import java.util.List;
 
@@ -28,6 +29,7 @@ public final class RenderTimers {
     public static final List<RenderTimer> ALL = List.of(
             AuroraRenderer.RENDER_TIMER,
             RealisticAuroraRenderer.RENDER_TIMER,
+            RainbowRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
             PrecipitationShaders.WAIT_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,

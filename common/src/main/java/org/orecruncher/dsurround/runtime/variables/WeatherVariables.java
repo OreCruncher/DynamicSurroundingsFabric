@@ -11,6 +11,7 @@ import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.RainbowState;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
 public final class WeatherVariables extends VariableSet {
@@ -40,12 +41,16 @@ public final class WeatherVariables extends VariableSet {
     private static final float STORM_WIND_UNTIL = 55F;
 
     private final WindService windService;
+    private final RainbowState rainbow;
+    private boolean isRainbow;
     private float windSpeed;
     private boolean isGusting;
     private final Hysteresis stormWind = new Hysteresis(STORM_WIND_FROM, STORM_WIND_UNTIL);
 
-    public WeatherVariables(ILevelOracle levelOracle, ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation, WindService windService) {
+    public WeatherVariables(ILevelOracle levelOracle, ISeasonalInformation seasonalInformation, IWeatherSimulation weatherSimulation, WindService windService,
+                            RainbowState rainbow) {
         super("weather");
+        this.rainbow = rainbow;
         this.levelOracle = levelOracle;
         this.windService = windService;
         this.seasonalInformation = seasonalInformation;
@@ -69,6 +74,7 @@ public final class WeatherVariables extends VariableSet {
             this.windSpeed = Wind.percentOfFullStorm(this.windService.steadySpeed());
             this.stormWind.update(this.windSpeed);
             this.isGusting = !this.windService.isStill() && this.windService.wind().isGusting();
+            this.isRainbow = this.rainbow.isShowing();
         } else {
             this.rainIntensity = 0F;
             this.thunderIntensity = 0F;
@@ -79,6 +85,7 @@ public final class WeatherVariables extends VariableSet {
             this.canWaterFreeze = false;
             this.windSpeed = 0F;
             this.isGusting = false;
+            this.isRainbow = false;
             this.stormWind.reset();
         }
     }
@@ -97,5 +104,13 @@ public final class WeatherVariables extends VariableSet {
         config.property(id("isWindy"), () -> this.windSpeed >= WINDY_FROM);
         config.property(id("isGusting"), () -> this.isGusting);
         config.property(id("isStormWind"), this.stormWind::isOn);
+        config.property(id("isRainbow"), () -> this.isRainbow);
+    }
+
+    /**
+     * What weather.isRainbow gives, as of the last tick
+     */
+    boolean isRainbow() {
+        return this.isRainbow;
     }
 }

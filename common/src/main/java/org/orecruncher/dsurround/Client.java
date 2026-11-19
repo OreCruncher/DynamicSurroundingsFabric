@@ -70,6 +70,7 @@ import org.orecruncher.dsurround.runtime.oracle.impl.DimensionOracle;
 import org.orecruncher.dsurround.runtime.oracle.impl.LevelOracle;
 import org.orecruncher.dsurround.runtime.oracle.impl.MinecraftClock;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.RainbowState;
 import org.orecruncher.dsurround.runtime.weather.WeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 import org.orecruncher.dsurround.sound.AudioPlayer;
@@ -176,6 +177,7 @@ public final class Client {
                 .registerSingleton(IEntityEffectLibrary.class, EntityEffectLibrary.class)
                 .registerSingleton(IWeatherSimulation.class, WeatherSimulation.class)
                 .registerSingleton(WindService.class)
+                .registerSingleton(RainbowState.class)
                 .registerSingleton(OverlayManager.class);
 
         // Depending on debug settings, enable the appropriate player

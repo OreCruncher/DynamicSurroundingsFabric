@@ -17,7 +17,7 @@ import java.util.Locale;
 /**
  * /dsweather shows the storm's strength; /dsweather strength 0-100 sets it, as a percent of full strength, until
  * /dsweather clear. /dsweather wind does the same for the wind; groundfog and frost set the ground fog's thickness and
- * the frost on windows, and clouds the clouds' coverage and thickness. /dsweather lightning strikes ahead of the player: a bolt, or spider lightning or a flash in the
+ * the frost on windows, and clouds the clouds' coverage and thickness, and rainbow shows a rainbow. /dsweather lightning strikes ahead of the player: a bolt, or spider lightning or a flash in the
  * cloud.
  */
 class WeatherCommand extends AbstractClientCommand {
@@ -35,6 +35,8 @@ class WeatherCommand extends AbstractClientCommand {
     private static final String LIGHTNING = "lightning";
     private static final String CLOUDS = "clouds";
     private static final String THICKNESS_PARAMETER = "thickness";
+    private static final String RAINBOW = "rainbow";
+    private static final String PRIMARY = "primary";
     // The thickest clouds can be set, in blocks
     private static final int MAX_CLOUD_THICKNESS = 120;
     // A full storm's wind is 100: thunderstorms and dust storms blow harder
@@ -53,6 +55,7 @@ class WeatherCommand extends AbstractClientCommand {
                 .then(this.groundFogCommand())
                 .then(this.frostCommand())
                 .then(this.cloudsCommand())
+                .then(this.rainbowCommand())
                 .then(this.lightningCommand()));
     }
 
@@ -95,6 +98,22 @@ class WeatherCommand extends AbstractClientCommand {
                                         () -> WeatherCommandHandler.clouds(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER),
                                                 IntegerArgumentType.getInteger(ctx, THICKNESS_PARAMETER))))))
                 .then(subCommand(CLEAR, WeatherCommandHandler::cloudsClear));
+    }
+
+    /**
+     * /dsweather rainbow 0-100 shows a rainbow at that strength, as a percent, whatever the weather, with the secondary
+     * bow; rainbow 0-100 primary without it; clear lets the weather decide again
+     */
+    private LiteralArgumentBuilder<ClientCommandRegistrationEvent.ClientCommandSourceStack> rainbowCommand() {
+        return ClientCommandRegistrationEvent.literal(RAINBOW)
+                .executes(ctx -> this.execute(ctx, WeatherCommandHandler::rainbowStatus))
+                .then(ClientCommandRegistrationEvent.argument(PERCENT_PARAMETER, IntegerArgumentType.integer(0, 100))
+                        .executes(ctx -> this.execute(ctx,
+                                () -> WeatherCommandHandler.rainbow(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER), true)))
+                        .then(ClientCommandRegistrationEvent.literal(PRIMARY)
+                                .executes(ctx -> this.execute(ctx,
+                                        () -> WeatherCommandHandler.rainbow(IntegerArgumentType.getInteger(ctx, PERCENT_PARAMETER), false)))))
+                .then(subCommand(CLEAR, WeatherCommandHandler::rainbowClear));
     }
 
     /**

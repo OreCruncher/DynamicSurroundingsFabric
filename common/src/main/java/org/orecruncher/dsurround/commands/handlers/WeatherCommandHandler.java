@@ -10,6 +10,7 @@ import org.orecruncher.dsurround.effects.lightning.Strike;
 import org.orecruncher.dsurround.processing.CloudHandler;
 import org.orecruncher.dsurround.processing.GroundFogHandler;
 import org.orecruncher.dsurround.processing.LightningHandler;
+import org.orecruncher.dsurround.processing.RainbowHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.WindService;
@@ -155,6 +156,33 @@ public class WeatherCommandHandler {
         var wasSet = handler.forced().isPresent();
         handler.clearForced();
         return Component.translatable(KEY + (wasSet ? "frost.clear.success" : "frost.clear.notset"));
+    }
+
+    public static Component rainbow(int percent, boolean secondary) {
+        return rainbow(ContainerManager.resolve(RainbowHandler.class), percent, secondary);
+    }
+
+    public static Component rainbowStatus() {
+        return rainbowStatus(ContainerManager.resolve(RainbowHandler.class));
+    }
+
+    public static Component rainbowClear() {
+        return rainbowClear(ContainerManager.resolve(RainbowHandler.class));
+    }
+
+    static Component rainbowStatus(RainbowHandler handler) {
+        return handler.held()
+                .map(held -> Component.translatable(KEY + (handler.heldSecondary() ? "rainbow.status.set" : "rainbow.status.set.primary"), percent(held)))
+                .orElseGet(() -> Component.translatable(KEY + "rainbow.status", handler.status()));
+    }
+
+    static Component rainbow(RainbowHandler handler, int percent, boolean secondary) {
+        handler.hold(percent / 100F, secondary);
+        return Component.translatable(KEY + (secondary ? "rainbow.success" : "rainbow.success.primary"), percent);
+    }
+
+    static Component rainbowClear(RainbowHandler handler) {
+        return Component.translatable(KEY + (handler.clearHeld() ? "rainbow.clear.success" : "rainbow.clear.notset"));
     }
 
     private static IWeatherSimulation simulation() {

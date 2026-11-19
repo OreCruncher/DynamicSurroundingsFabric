@@ -32,6 +32,7 @@ import org.orecruncher.dsurround.runtime.PlatformFunctions;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import org.orecruncher.dsurround.runtime.variables.*;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.RainbowState;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactory;
 import org.orecruncher.dsurround.testing.ConfigFuzz;
@@ -130,7 +131,7 @@ public class LibraryRulesFuzzTests {
         return new ConditionEvaluator(log, new PlatformFunctions(clock),
                 new BiomeVariables(Fakes.of(IBiomeLibrary.class, Map.of())), new DimensionVariables(),
                 new DiurnalVariables(oracle), new PlayerVariables(oracle),
-                new WeatherVariables(oracle, seasons, Fakes.of(IWeatherSimulation.class, Map.of()), null),
+                new WeatherVariables(oracle, seasons, Fakes.of(IWeatherSimulation.class, Map.of()), null, new RainbowState()),
                 new EnvironmentState(null), new GlobalVariables(new Configuration()), new SeasonVariables(seasons));
     }
 

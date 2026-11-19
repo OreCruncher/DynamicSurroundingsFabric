@@ -37,6 +37,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-07: snowspouts (`snowspouts.json`)](#results-2026-11-07-snowspouts-snowspoutsjson)
   - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
   - [Random block effects' ignore check](#random-block-effects-ignore-check)
+- [Results, 2026-11-19: rainbow (`rainbow.json`)](#results-2026-11-19-rainbow-rainbowjson)
 - [Field recordings](#field-recordings)
 - [Results, 2026-11-18: NeoForge chain (5.3.0)](#results-2026-11-18-neoforge-chain-530)
 - [Rerunning](#rerunning)
@@ -1178,6 +1179,23 @@ As on Fabric: at most 0.14 ms of GPU over vanilla's clouds, and the field 0.23-0
 
 The same as Fabric after the march's fewer reads (2026-11-09): 0.20, 0.36 and 1.20 ms there. The fog's CPU is 0.03 ms
 a frame; Ground Fog Handler 0.04 ms a tick.
+
+## Results, 2026-11-19: rainbow (`rainbow.json`)
+
+5.3.0 before commit, NeoForge, OpenGL, 1920x1080, two repeats. A beach at time 11500 (the sun 20 degrees up in the
+west), facing the bow in the east, held at full strength with `/dsweather rainbow 100` (with the secondary bow) and
+`100 primary`, against Rainbows off. Recorded before the patches were softened (a shader constant change, not a cost
+change).
+
+| Run | Frame GPU ms | Rainbow GPU / CPU ms |
+|---|---|---|
+| both bows | 0.555 | 0.026 / 0.007 |
+| primary only | 0.556 | 0.026 / 0.007 |
+| off | 0.526 | - |
+
+The pass costs the same with or without the secondary bow: a pixel reads both rows of the color table either way, and
+the ones further than 56 degrees from the point opposite the sun stop after one dot product. About the classic
+aurora's cost; it draws only with a low sun as rain clears, and is skipped entirely otherwise.
 
 ## Rerunning
 

@@ -627,6 +627,15 @@ public class Configuration extends ConfigurationData {
         @Experimental
         @Comment("Clouds that change with the weather: scattered puffs that build up through fair afternoons, a low dark deck in a storm, towering in a thunderstorm. Drawn in place of vanilla's clouds")
         public boolean enableDynamicClouds = true;
+
+        @Property
+        @Comment("As rain eases off with the sun low, a rainbow can show in the sky opposite the sun; after a strong storm, a fainter second bow outside it")
+        public boolean enableRainbows = true;
+
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("How likely rain clearing with the sun low is to leave a rainbow, as a percent")
+        public int rainbowChance = 50;
     }
 
     public static class FogOptions {
