@@ -1,3 +1,42 @@
+> ### DynamicSurroundings-26.3-5.3.0
+
+Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
+
+This release brings rainbows after the rain, and armor that sounds like what it's made of.
+
+**All Loaders**
+* JAVA 25+  
+* Architectury 22.0.5+
+
+**Fabric**
+* Fabric Loader >= 0.20.1
+* Fabric API >= 0.165.2+26.3
+
+**NeoForge**
+* NeoForge 26.3.0.101+
+
+**AI Disclosure**
+* Built the rainbows, working their colors out from how sunlight passes through raindrops, and measured them with benchmark runs
+* Built armor families and surveyed popular equipment mods to sort their armor and weapons
+* Made particle rain and snow cheaper to draw, measuring each change with benchmark runs
+
+**What's New**
+* Rainbows. As rain eases to a drizzle or stops while the sun is low, a rainbow can show in the sky opposite the sun, fading as the shower moves on. Its colors come from how sunlight passes through raindrops: red outside, violet inside, with the sky brighter within the bow. After a strong storm, a fainter second bow shows outside it with its colors reversed and a darker band between the two. Only where it rains rather than snows, and every player in a world sees the same rainbows
+  * Rainbows and Rainbow chance (50% by default) are in the Weather options
+  * `/dsweather rainbow 0-100 [primary]` shows one whatever the weather, and `/dsweather rainbow clear` goes back to the weather's
+  * Scripts can ask `weather.isRainbow()`
+* Armor sounds by what it's made of. Each piece of armor belongs to a family (leather, chain, plate, crystal or heavy), which gives its footstep accent, its hotbar sound and its swing sound. Modded armor is sorted by its tag, or else by the equip sound it uses, so most needs no tagging. The families use the game's sounds for now
+
+**Changes**
+* Particle rain and snow take less time to draw. Drops past the edges of the view are left out, not only those behind it (42% fewer to draw), the drops are built 14-16% faster, and the building starts earlier in the frame
+* Tough As Nails' wool and leaf armor and Alex's Mobs' creature armor sound like leather, and Epic Knights' lances like spears
+* `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items
+* `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
+* `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state
+
+**Fixes**
+* Books in the hotbar play the book sound, and bookshelves no longer do
+
 > ### DynamicSurroundings-26.3-5.2.0
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
