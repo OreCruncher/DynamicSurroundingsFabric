@@ -53,9 +53,21 @@ const int REFINE = 3;
 // Kilometers along an arc to a cell of the rays' finest noise (RealisticAuroraRenderer.FINE_RAY), and of the coarser
 const float FINE_RAY = 0.7;
 const float COARSE_RAY = 2.3;
+// Kilometers along an arc to a cell of the hair-fine strands' noise (RealisticAuroraRenderer.HAIR_RAY); and how far the
+// finer strands sway as they rise, in kilometers, and along a cell of what sways them (RealisticAuroraRenderer.SWAY_CELL)
+const float HAIR_RAY = 0.35;
+const float RAY_SWAY = 1.2;
+const float SWAY_CELL = 8.05;
+// How much of an arc's light is the glow its strands lie in, rather than the strands themselves
+const float CURTAIN_GLOW = 0.3;
 // The most of a sheet a line of sight is counted as going through, in kilometers: seen exactly edge on, a sheet's
 // height and length limit it
-const float MAX_PATH = 25.0;
+const float MAX_PATH = 14.0;
+// How much less each crossing of a folded arc behind the nearest adds: the second 1 / (1 + STACK_FADE), the third
+// 1 / (1 + 2 STACK_FADE)
+const float STACK_FADE = 0.7;
+// How bright a pulsing patch is at its dimmest, next to its brightest: it dims, but never goes out
+const float PULSE_FLOOR = 0.35;
 // How bright a kilometer of the light is, before it is brought into range; and how much the brightest parts pale
 // toward white
 const float EXPOSURE = 0.25;
@@ -192,10 +204,10 @@ float red_at(float altitude, float above) {
     return Emission.z * exp(-d * d) * smoothstep(0.0, RED_RISE, above);
 }
 
-// How much of a ray's light there is at a height, given how far up it reaches: all of it below, none of it a little
-// above; and none at the top of the layer whatever the ray
+// How much of a ray's light there is at a height, given how far up it reaches: all of it well below, thinning out over
+// the last hundred kilometers or so, none of it a little above; and none at the top of the layer whatever the ray
 float ray_top(float altitude, float top) {
-    return (1.0 - smoothstep(top - 60.0, top + 30.0, altitude))
+    return (1.0 - smoothstep(top - 110.0, top + 40.0, altitude))
          * (1.0 - smoothstep(SHELL_TOP - TOP_FADE, SHELL_TOP, altitude));
 }
 
@@ -239,17 +251,24 @@ vec3 arc_light(int i, vec3 dir, float t, float mu) {
     float slantLength = length(slant);
     float alongArc = slantLength > 1e-4 ? abs(dot(slant / slantLength, lengthwise)) : 0.0;
     float footprint = t * RedColor.a * (1.0 + (1.0 / max(square, 0.05) - 1.0) * alongArc);
-    float fine = mix(0.5, noise(vec2(s / FINE_RAY, altitude / 40.0 + time * 0.15)),
+    // The finer strands sway a little as they rise, each stretch of the arc its own way, as a feather's barbs do, rather
+    // than run dead straight
+    float sway = s + RAY_SWAY * (noise(vec2(s / SWAY_CELL + 61.0, altitude / 70.0 + time * 0.02)) - 0.5);
+    float hair = mix(0.5, noise(vec2(sway / HAIR_RAY + 37.0, altitude / 120.0 + time * 0.1)),
+                     1.0 - smoothstep(0.4, 1.2, footprint / HAIR_RAY));
+    float fine = mix(0.5, noise(vec2(sway / FINE_RAY, altitude / 90.0 + time * 0.15)),
                      1.0 - smoothstep(0.4, 1.2, footprint / FINE_RAY));
     float coarse = mix(0.5, noise(vec2(s / COARSE_RAY + 17.0, altitude / 150.0 + time * 0.03)),
                        1.0 - smoothstep(0.4, 1.2, footprint / COARSE_RAY));
-    // Less distinct as the aurora calms and goes diffuse
-    float rays = mix(0.55, smoothstep(0.2, 0.9, coarse * 0.6 + fine * 0.4), Activity.x);
-    // Brighter and dimmer stretches along the arc, slowly changing; and patches pulsing on and off. These stay where
+    // Strands of every width over one another, softly, so the curtain is streaked all through rather than split into
+    // spikes with dark sky between; less distinct as the aurora calms and goes diffuse
+    float strands = coarse * 0.5 + fine * 0.3 + hair * 0.2;
+    float rays = mix(0.55, smoothstep(0.15, 0.85, strands), Activity.x);
+    // Brighter and dimmer stretches along the arc, slowly changing; and patches pulsing brighter and dimmer. These stay where
     // they are along it, a different place for each arc, rather than move with its rays
     float along = east + ArcShape[i].w * 150.0;
     float patches = 0.55 + 0.45 * noise(vec2(along / 60.0 + 41.0, time * 0.02));
-    patches *= mix(1.0, 1.6 * pulse_at(i, along), Activity.y);
+    patches *= mix(1.0, 1.6 * mix(PULSE_FLOOR, 1.0, pulse_at(i, along)), Activity.y);
 
     // The lower edge: waving up and down along the arc, with a finer ripple, and each ray starting a little lower or
     // higher, the brighter ones lower, so it is ragged rather than one clean line
@@ -265,10 +284,15 @@ vec3 arc_light(int i, vec3 dir, float t, float mu) {
     float red = red_at(altitude, above);
     float rim = (above + 2.0) / soft;
     float fringe = Emission.w * exp(-rim * rim);
-    // How far up this ray reaches: higher along the brighter, coarser rays
-    float top = ray_top(altitude, mix(LOWEST_TOP, HIGHEST_TOP, clamp(coarse * 1.4 - 0.2, 0.0, 1.0)));
+    // How far up this strand reaches: higher along the brighter, coarser rays, and each finer strand a little higher or
+    // lower within them, so the tops are feathered rather than pointed. The glow the strands lie in reaches up evenly,
+    // only a little higher or lower with the coarser rays, so a strand ending early leaves glow, not dark sky
+    float reach = clamp((coarse * 0.6 + fine * 0.25 + hair * 0.15) * 1.7 - 0.35, 0.0, 1.0);
+    float strandTop = ray_top(altitude, mix(LOWEST_TOP, HIGHEST_TOP, reach));
+    float glowTop = ray_top(altitude, mix(LOWEST_TOP, HIGHEST_TOP, 0.55 + 0.3 * (coarse - 0.5)));
 
-    float intensity = light.x * path * patches * (0.2 + 0.8 * rays) * top;
+    float intensity = light.x * path * patches
+                    * (CURTAIN_GLOW * glowTop + (1.0 - CURTAIN_GLOW) * (0.15 + 0.85 * rays) * strandTop);
     return intensity * (GreenColor.rgb * green + RedColor.rgb * red + FringeColor.rgb * fringe + sunlit_at(altitude, above));
 }
 
@@ -404,11 +428,15 @@ void main() {
         float stride = (tTo - tFrom) / float(steps);
         float t0 = tFrom;
         float g0 = offset_at(i, dir, t0, mu);
+        // Where the line of sight crosses a folded arc more than once, each crossing behind the nearest adds less, so
+        // folds seen through one another read as depth rather than piling up into a solid mass
+        float behind = 0.0;
         for (int n = 1; n <= steps; n++) {
             float t1 = tFrom + stride * float(n);
             float g1 = offset_at(i, dir, t1, mu);
             if ((g0 < 0.0) != (g1 < 0.0)) {
-                light += arc_light(i, dir, crossing(i, dir, mu, t0, g0, t1, g1), mu);
+                light += arc_light(i, dir, crossing(i, dir, mu, t0, g0, t1, g1), mu) / (1.0 + STACK_FADE * behind);
+                behind += 1.0;
             }
             t0 = t1;
             g0 = g1;

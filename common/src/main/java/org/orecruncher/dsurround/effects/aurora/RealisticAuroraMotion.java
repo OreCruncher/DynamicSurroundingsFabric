@@ -17,9 +17,10 @@ import org.jetbrains.annotations.Nullable;
 public final class RealisticAuroraMotion {
 
     /**
-     * The length the rays' pattern repeats at along an arc, in kilometres: both of the shader's ray noises repeat
-     * within it (the noise texture's size of cells of {@link RealisticAuroraRenderer#FINE_RAY} and of
-     * {@link RealisticAuroraRenderer#COARSE_RAY} kilometres)
+     * The length the rays' pattern repeats at along an arc, in kilometers: each of the shader's ray noises repeats
+     * within it (the noise texture's size of cells of {@link RealisticAuroraRenderer#HAIR_RAY},
+     * {@link RealisticAuroraRenderer#FINE_RAY}, {@link RealisticAuroraRenderer#COARSE_RAY} and
+     * {@link RealisticAuroraRenderer#SWAY_CELL} kilometers)
      */
     static final double RAY_WRAP = RealisticAuroraRenderer.NOISE_SIZE * 16.1D;
     /**

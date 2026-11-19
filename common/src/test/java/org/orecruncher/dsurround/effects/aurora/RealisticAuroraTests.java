@@ -72,18 +72,27 @@ public class RealisticAuroraTests {
     @Test
     void theNearestArcStartsInTheNorthernSky() {
         // Its lower edge in the north, from low over the horizon to well up the sky, whenever, across the part of the sky
-        // in front of the viewer: its ends, bowed, may come further up the sky or go further down
+        // in front of the viewer: its ends, bowed, may come further up the sky or go further down. On a night it starts
+        // near, high up the sky, but still north of the viewer
+        int near = 0;
         for (long night = 0; night < NIGHTS; night++) {
             var arc = create(night).arcs().getFirst();
+            boolean starts = arc.distance() <= RealisticAurora.NEAR_FARTHEST;
+            if (starts)
+                near++;
+            float highest = starts ? 80F : 36F;
             for (float time = 0F; time < 600F; time += 97F) {
                 for (float along = -200F; along <= 200F; along += 20F) {
                     float north = arc.northAt(along, time, 0F, time * arc.waveSpeed(), time * arc.raySpeed());
                     assertTrue(north > 0F, "night " + night + ": south of the viewer");
                     float elevation = RealisticAurora.elevation(north, RealisticAurora.LOWER_EDGE);
-                    assertTrue(elevation > 8F && elevation < 36F, "night " + night + ": lower edge at " + elevation + " degrees");
+                    assertTrue(elevation > 8F && elevation < highest, "night " + night + ": lower edge at " + elevation + " degrees");
                 }
             }
         }
+        // About NEAR_CHANCE percent of nights
+        float share = 100F * near / NIGHTS;
+        assertTrue(Math.abs(share - RealisticAurora.NEAR_CHANCE) < 8F, "near on " + share + "% of nights");
     }
 
     @Test
@@ -493,6 +502,8 @@ public class RealisticAuroraTests {
         assertEquals(RealisticAuroraRenderer.NOISE_SIZE, constant(fragment, "const float NOISE_SIZE = ([0-9.]+);"));
         assertEquals(RealisticAuroraRenderer.FINE_RAY, constant(fragment, "const float FINE_RAY = ([0-9.]+);"));
         assertEquals(RealisticAuroraRenderer.COARSE_RAY, constant(fragment, "const float COARSE_RAY = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.HAIR_RAY, constant(fragment, "const float HAIR_RAY = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.SWAY_CELL, constant(fragment, "const float SWAY_CELL = ([0-9.]+);"));
         assertEquals(RealisticAuroraRenderer.FIELD_CELL, constant(fragment, "const float FIELD_CELL = ([0-9.]+);"));
         assertEquals(RealisticAurora.BOW_LENGTH, constant(fragment, "const float BOW_LENGTH = ([0-9.]+);"));
         assertEquals(RealisticAurora.EARTH_RADIUS, constant(fragment, "const float EARTH_RADIUS = ([0-9.]+);"));

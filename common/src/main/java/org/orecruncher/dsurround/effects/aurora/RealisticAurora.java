@@ -67,6 +67,8 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColor c
     private static final long COLOR_SALT = 0x636F6C72L;
     private static final long DECLINATION_SALT = 0x6465636CL;
     private static final long BOW_SALT = 0x626F7773L;
+    // And whether its arcs start near, so the nights that had them far keep their other shapes
+    private static final long NEAR_SALT = 0x6E656172L;
 
     /**
      * The most magnetic north is from true north, either way, in radians
@@ -80,7 +82,7 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColor c
     /**
      * The most an arc's ends bend north or south, in kilometres
      */
-    static final float MAX_BOW = 200F;
+    static final float MAX_BOW = 320F;
     /**
      * How strong the blue-violet glow of the sunlit tops of the rays is, next to the green
      */
@@ -108,11 +110,23 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColor c
      */
     static final float FARTHEST = 750F;
     /**
+     * Percent of nights whose nearest arc starts near, high in the sky, as it is from under the auroral oval: the folds
+     * that a far arc only shows as a wobble in its lower edge are seen as curves sweeping across the sky
+     */
+    static final int NEAR_CHANCE = 25;
+    /**
+     * How far north the nearest arc starts on those nights, and on the others, in kilometres
+     */
+    static final float NEAR_NEAREST = 90F;
+    static final float NEAR_FARTHEST = 200F;
+    static final float FAR_NEAREST = 220F;
+    static final float FAR_FARTHEST = 450F;
+    /**
      * The steepest an arc's folds together bend it, in kilometres north for each kilometre east. A line of sight
      * slanting across a steeply bent arc meets it at points that jump along it from one pixel to the next, and its rays
      * zig-zag; real arcs seen from hundreds of kilometres off are gentler than that
      */
-    static final float MAX_SLOPE = 0.45F;
+    static final float MAX_SLOPE = 0.7F;
 
     // The night's timeline, as shares of the night. The arcs drift this many kilometres closer before the breakup (all
     // night, if there is none); the breakup takes this long to reach its height (about fifteen seconds); afterwards the
@@ -247,6 +261,7 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColor c
         float colorRoll = Randomizer.create(Mixers.splitMix64(night ^ COLOR_SALT)).nextFloat();
         float declination = Randomizer.create(Mixers.splitMix64(night ^ DECLINATION_SALT)).nextFloat(-MAX_DECLINATION, MAX_DECLINATION);
         var bows = Randomizer.create(Mixers.splitMix64(night ^ BOW_SALT));
+        var nearness = Randomizer.create(Mixers.splitMix64(night ^ NEAR_SALT));
         var random = Randomizer.create(Mixers.splitMix64(night ^ SHAPE_SALT));
         // Mostly one or two; four rarely. A storm has at least two
         int roll = random.nextInt(100);
@@ -257,7 +272,10 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColor c
         float peakLength = random.nextFloat(0.1F, 0.2F);
 
         var arcs = new ArrayList<Arc>(count);
-        float distance = random.nextFloat(220F, 450F);
+        // Drawn whether or not it is used, so the shapes after it stay the same on every night
+        float distance = random.nextFloat(FAR_NEAREST, FAR_FARTHEST);
+        if (nearness.nextInt(100) < NEAR_CHANCE)
+            distance = nearness.nextFloat(NEAR_NEAREST, NEAR_FARTHEST);
         float brightness = random.nextFloat(0.8F, 1.1F);
         for (int i = 0; i < count && distance <= FARTHEST; i++) {
             // Each fold's size from how steeply it bends the arc (see MAX_SLOPE)
@@ -265,10 +283,10 @@ public record RealisticAurora(long night, AuroraActivity activity, AuroraColor c
             float waveWavelength = random.nextFloat(100F, 220F);
             arcs.add(new Arc(
                     distance,
-                    amplitude(random.nextFloat(0.05F, 0.2F), foldWavelength),
+                    amplitude(random.nextFloat(0.1F, 0.35F), foldWavelength),
                     foldWavelength,
                     random.nextFloat() * Mth.TWO_PI,
-                    amplitude(random.nextFloat(0.04F, 0.15F), waveWavelength),
+                    amplitude(random.nextFloat(0.06F, 0.25F), waveWavelength),
                     waveWavelength,
                     random.nextFloat(1F, 4F) * (random.nextBoolean() ? 1F : -1F),
                     amplitude(random.nextFloat(0.02F, 0.1F), CURL_WAVELENGTH),

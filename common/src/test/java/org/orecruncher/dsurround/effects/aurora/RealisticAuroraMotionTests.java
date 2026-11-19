@@ -110,12 +110,11 @@ public class RealisticAuroraMotionTests {
 
     @Test
     void theRaysRepeatWhereTheyWrap() {
-        // A whole number of both ray noises' repeats, so the wrap can't be seen
-        double fine = RealisticAuroraRenderer.NOISE_SIZE * (double) RealisticAuroraRenderer.FINE_RAY;
-        double coarse = RealisticAuroraRenderer.NOISE_SIZE * (double) RealisticAuroraRenderer.COARSE_RAY;
-        double fineRepeats = RealisticAuroraMotion.RAY_WRAP / fine;
-        double coarseRepeats = RealisticAuroraMotion.RAY_WRAP / coarse;
-        assertEquals(Math.round(fineRepeats), fineRepeats, 1e-3);
-        assertEquals(Math.round(coarseRepeats), coarseRepeats, 1e-3);
+        // A whole number of every ray noise's repeats, so the wrap can't be seen
+        for (float cell : new float[]{RealisticAuroraRenderer.HAIR_RAY, RealisticAuroraRenderer.FINE_RAY,
+                RealisticAuroraRenderer.COARSE_RAY, RealisticAuroraRenderer.SWAY_CELL}) {
+            double repeats = RealisticAuroraMotion.RAY_WRAP / (RealisticAuroraRenderer.NOISE_SIZE * (double) cell);
+            assertEquals(Math.round(repeats), repeats, 1e-3, "cell " + cell);
+        }
     }
 }

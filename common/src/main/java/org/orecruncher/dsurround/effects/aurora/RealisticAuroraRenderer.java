@@ -116,6 +116,15 @@ public final class RealisticAuroraRenderer {
      */
     public static final float COARSE_RAY = 2.3F;
     /**
+     * Kilometers along an arc to a cell of the rays' hair-fine strands (in the shader, HAIR_RAY)
+     */
+    public static final float HAIR_RAY = 0.35F;
+    /**
+     * Kilometers along an arc to a cell of the noise that sways the finer strands as they rise (in the shader,
+     * SWAY_CELL)
+     */
+    public static final float SWAY_CELL = 8.05F;
+    /**
      * Kilometers across the ground to a cell of the ray field's noise, which places its rays (in the shader, FIELD_CELL)
      */
     public static final float FIELD_CELL = 3F;
