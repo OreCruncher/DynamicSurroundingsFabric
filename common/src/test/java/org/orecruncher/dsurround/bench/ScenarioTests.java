@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.bench;
 
 import com.google.gson.JsonParser;
 import net.minecraft.ChatFormatting;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 
@@ -141,10 +142,21 @@ public class ScenarioTests {
         assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("argument.entity.notfound.entity"))));
         assertTrue(ScenarioRunner.nothingToChange(List.of(Component.empty().append(nothing).withStyle(ChatFormatting.RED))));
         assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("commands.setblock.failed"))));
+        // A setup's gamerule or time already at its value
+        assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("commands.gamerule.not_set"))));
+        assertTrue(ScenarioRunner.nothingToChange(List.of(Component.translatable("commands.time.set.already_at_time"))));
         // A fill above the build limit, or nothing said at all, has failed
         assertFalse(ScenarioRunner.nothingToChange(List.of(Component.translatable("argument.pos.outofworld"))));
         assertFalse(ScenarioRunner.nothingToChange(List.of()));
         assertFalse(ScenarioRunner.nothingToChange(List.of(nothing, Component.literal("Unknown block type"))));
+    }
+
+    @Test
+    void theNothingToChangeMessagesAreTheGames() {
+        // A key the game renames would quietly stop matching, and the failures would come back
+        var language = Language.getInstance();
+        for (var key : ScenarioRunner.NOTHING_TO_CHANGE)
+            assertTrue(language.has(key), key);
     }
 
     @Test

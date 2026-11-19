@@ -40,6 +40,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-19: rainbow (`rainbow.json`)](#results-2026-11-19-rainbow-rainbowjson)
 - [Field recordings](#field-recordings)
 - [Results, 2026-11-18: NeoForge chain (5.3.0)](#results-2026-11-18-neoforge-chain-530)
+- [Results, 2026-11-19: Fabric chain (5.3.0)](#results-2026-11-19-fabric-chain-530)
 - [Rerunning](#rerunning)
 
 ## Method
@@ -1196,6 +1197,107 @@ change).
 The pass costs the same with or without the secondary bow: a pixel reads both rows of the color table either way, and
 the ones further than 56 degrees from the point opposite the sun stop after one dot product. About the classic
 aurora's cost; it draws only with a low sun as rain clears, and is skipped entirely otherwise.
+
+## Results, 2026-11-19: Fabric chain (5.3.0)
+
+5.3.0 on Fabric, OpenGL, the machine above (Minecraft 26.3), commit `c2276834` on `OreCruncher/26.3-5.3.0` (the
+aurora's feathery rays, curvier arcs and near nights), clean tree. 1920x1080, Fancy, render distance 16, vsync off,
+limit 260. Two repeats each, A B C then C B A. Every scenario but `sound.json`, `compat.json`, `item-dump.json` and
+`gc.json`: 21 in one unattended chain, 3 hours 10 minutes, all finished, every screenshot where its scene means it to be.
+Results in `fabric/run-bench/bench-results/<scenario>-20261119-<time>`. Frame GPU ms is the mean of the two repeats,
+lowest and highest in brackets.
+
+The manifests list every scene's `gamerule ... false` and `time set` as failed commands: 26.3 answers "is already set
+to" when nothing changes, which the runner didn't take for "nothing to change" (fixed since). Harmless, and in
+yesterday's NeoForge chain too.
+
+| Scenario | Scene | Run | fps | Frame GPU ms | Frame CPU ms |
+|---|---|---|---:|---|---:|
+| `apparitions` | apparitions | apparitions-1 | 1230 | 0.452 (0.423-0.481) | 0.518 |
+| `apparitions` | apparitions | apparitions-off | 1280 | 0.435 (0.419-0.452) | 0.491 |
+| `apparitions` | apparitions-many | apparitions-3 | 831 | 0.870 (0.869-0.871) | 0.474 |
+| `aurora` | aurora | realistic-fancy | 1504 | 0.363 (0.354-0.372) | 0.161 |
+| `aurora` | aurora | realistic-fast | 1715 | 0.277 (0.276-0.277) | 0.194 |
+| `aurora` | aurora | classic-default | 1526 | 0.279 (0.277-0.281) | 0.415 |
+| `aurora` | aurora | classic-bands1 | 1529 | 0.273 (0.265-0.281) | 0.364 |
+| `aurora` | aurora | aurora-off | 1690 | 0.242 (0.239-0.246) | 0.208 |
+| `boats` | boats | wake | 742 | 0.925 (0.922-0.928) | 0.708 |
+| `boats` | boats | wake-nofoam | 762 | 0.923 (0.920-0.926) | 0.667 |
+| `boats` | boats | off | 772 | 0.913 (0.913-0.913) | 0.649 |
+| `burning-lights` | crowd | burning-default | 938 | 0.669 (0.667-0.670) | 0.607 |
+| `burning-lights` | crowd | burning-nolights | 1028 | 0.624 (0.622-0.626) | 0.548 |
+| `burning-lights` | crowd | burning-noflames | 1074 | 0.611 (0.610-0.612) | 0.508 |
+| `clouds` | fair | fair-dynamic | 1109 | 0.584 (0.582-0.586) | 0.477 |
+| `clouds` | fair | fair-vanilla | 1126 | 0.580 (0.580-0.580) | 0.457 |
+| `clouds` | overcast | overcast-dynamic | 834 | 0.722 (0.715-0.730) | 0.667 |
+| `clouds` | overcast | overcast-vanilla | 888 | 0.677 (0.667-0.687) | 0.629 |
+| `clouds` | towers | towers-dynamic | 847 | 0.708 (0.698-0.717) | 0.665 |
+| `clouds` | towers | towers-vanilla | 904 | 0.664 (0.658-0.670) | 0.628 |
+| `crowd` | pen | crowd-default | 878 | 0.739 (0.739-0.739) | 0.847 |
+| `crowd` | pen | crowd-noprints | 924 | 0.719 (0.703-0.735) | 0.758 |
+| `crowd` | pen | crowd-nobreath | 886 | 0.730 (0.726-0.735) | 0.843 |
+| `dust-devils` | devils | devils-4 | 916 | 0.630 (0.619-0.641) | 0.589 |
+| `dust-devils` | devils | devils-off | 1320 | 0.459 (0.455-0.462) | 0.371 |
+| `dust-devils` | many | devils-12 | 583 | 0.923 (0.918-0.928) | 0.770 |
+| `dust-low` | dust | default | 662 | 1.163 (1.100-1.225) | 0.476 |
+| `dust-low` | dust | low | 958 | 0.759 (0.733-0.785) | 0.408 |
+| `fireflies` | field | fireflies-default | 704 | 1.079 (1.075-1.083) | 0.470 |
+| `fireflies` | field | fireflies-nolights | 828 | 0.889 (0.887-0.892) | 0.452 |
+| `fireflies` | field | fireflies-noglow | 710 | 1.080 (1.076-1.084) | 0.457 |
+| `fireflies` | field | fireflies-off | 832 | 0.891 (0.887-0.896) | 0.423 |
+| `firefly-bushes` | bushes | bushes-mod | 753 | 0.962 (0.958-0.965) | 0.502 |
+| `firefly-bushes` | bushes | bushes-nolights | 882 | 0.741 (0.741-0.741) | 0.515 |
+| `firefly-bushes` | bushes | bushes-vanilla | 872 | 0.742 (0.742-0.743) | 0.463 |
+| `firespouts` | firespouts | firespouts-2 | 1122 | 0.498 (0.487-0.510) | 0.466 |
+| `firespouts` | firespouts | firespouts-off | 1383 | 0.401 (0.398-0.404) | 0.417 |
+| `firespouts` | firespouts-plains | firespouts-6 | 815 | 0.721 (0.712-0.730) | 0.578 |
+| `frost` | frost | frost-100 | 1057 | 0.634 (0.630-0.638) | 0.445 |
+| `frost` | frost | frost-off | 1220 | 0.519 (0.516-0.522) | 0.404 |
+| `lightning` | thunderstorm | lightning-on | 816 | 0.757 (0.756-0.758) | 0.681 |
+| `lightning` | thunderstorm | lightning-off | 824 | 0.752 (0.747-0.757) | 0.675 |
+| `lightning` | thunderstorm | noclouds-lightning-on | 866 | 0.716 (0.711-0.722) | 0.643 |
+| `lightning` | thunderstorm | noclouds-lightning-off | 876 | 0.710 (0.708-0.712) | 0.628 |
+| `performance-rest` | waterfall | waterfall-default | 935 | 0.607 (0.589-0.625) | 0.494 |
+| `performance-rest` | waterfall | waterfall-range32 | 938 | 0.608 (0.595-0.621) | 0.493 |
+| `performance-rest` | waterfall | waterfall-range64 | 928 | 0.611 (0.606-0.616) | 0.491 |
+| `performance-rest` | waterfall | waterfall-nolights | 952 | 0.593 (0.586-0.600) | 0.482 |
+| `performance-rest` | waterfall | waterfall-nomist | 1174 | 0.463 (0.457-0.468) | 0.411 |
+| `performance-rest` | crowd | crowd-range16 | 1060 | 0.605 (0.603-0.607) | 0.597 |
+| `performance-rest` | crowd | crowd-range32 | 1028 | 0.607 (0.604-0.609) | 0.636 |
+| `performance-rest` | crowd | crowd-range48 | 1058 | 0.615 (0.608-0.621) | 0.603 |
+| `performance-rest` | dust | dust-default | 721 | 1.040 (0.914-1.167) | 0.484 |
+| `performance-rest` | dust | dust-range20 | 717 | 1.055 (1.053-1.058) | 0.472 |
+| `precipitation` | rain | rain-low | 954 | 0.676 (0.671-0.681) | 0.711 |
+| `precipitation` | rain | rain-medium | 922 | 0.690 (0.688-0.692) | 0.766 |
+| `precipitation` | rain | rain-high | 877 | 0.720 (0.718-0.723) | 0.879 |
+| `precipitation` | snow | snow-low | 883 | 0.762 (0.761-0.763) | 0.589 |
+| `precipitation` | snow | snow-medium | 872 | 0.774 (0.774-0.775) | 0.622 |
+| `precipitation` | snow | snow-high | 794 | 0.804 (0.802-0.805) | 0.917 |
+| `rainbow` | both | rainbow-both | 1152 | 0.546 (0.544-0.548) | 0.448 |
+| `rainbow` | both | rainbow-off | 1186 | 0.516 (0.515-0.517) | 0.427 |
+| `rainbow` | primary | rainbow-primary | 1176 | 0.545 (0.543-0.547) | 0.429 |
+| `shore` | shore-calm | calm-waves | 792 | 0.897 (0.897-0.898) | 0.608 |
+| `shore` | shore-calm | calm-off | 804 | 0.901 (0.897-0.906) | 0.587 |
+| `shore` | shore-storm | storm-waves | 564 | 1.107 (1.095-1.120) | 0.907 |
+| `shore` | shore-storm | storm-off | 669 | 0.996 (0.994-0.999) | 0.810 |
+| `snowspouts` | snowspouts | snowspouts-4 | 1059 | 0.593 (0.582-0.604) | 0.458 |
+| `snowspouts` | snowspouts | snowspouts-off | 1122 | 0.587 (0.586-0.587) | 0.403 |
+| `snowspouts` | snowspouts-many | snowspouts-12 | 924 | 0.671 (0.662-0.679) | 0.529 |
+| `swamp-fog` | swamp | off | 888 | 0.804 (0.800-0.809) | 0.465 |
+| `swamp-fog` | swamp | fast | 756 | 0.994 (0.990-0.998) | 0.489 |
+| `swamp-fog` | swamp | fancy | 657 | 1.197 (1.183-1.211) | 0.489 |
+| `swamp-fog` | swamp | fabulous | 396 | 2.168 (2.157-2.179) | 0.544 |
+| `waterspouts` | spouts | spouts-2 | 868 | 0.780 (0.753-0.806) | 0.482 |
+| `waterspouts` | spouts | spouts-off | 942 | 0.734 (0.733-0.734) | 0.443 |
+| `waterspouts` | spouts-many | spouts-6 | 786 | 0.891 (0.889-0.892) | 0.514 |
+| `wisps` | wisps-marsh | wisps-2 | 878 | 0.807 (0.806-0.808) | 0.482 |
+| `wisps` | wisps-marsh | wisps-off | 881 | 0.808 (0.807-0.808) | 0.462 |
+| `wisps` | wisps-marsh-many | wisps-6 | 901 | 0.784 (0.783-0.784) | 0.451 |
+
+- The realistic aurora after this week's look changes (a hair strand and a sway sample more a step): Aurora (realistic)
+  0.232 ms GPU Fancy, 0.110 Fast, against 0.224 / 0.119 on 2026-11-04 (NeoForge; the bench's night differs from run
+  to run). The two extra noise samples cost nothing measurable.
+- Dust's default runs are the widest apart again (1.100-1.225 and 0.914-1.167), as in earlier sessions.
 
 ## Rerunning
 

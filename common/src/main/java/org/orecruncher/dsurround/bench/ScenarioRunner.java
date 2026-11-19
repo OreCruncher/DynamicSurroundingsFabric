@@ -105,9 +105,10 @@ public final class ScenarioRunner {
     private final JsonArray runResults = new JsonArray();
     private final Map<String, SceneLocations.Location> sessionScenes = new HashMap<>();
     // What a command says when it fails only because there was nothing to change: a scene's building commands, once
-    // the scene is built
-    private static final Set<String> NOTHING_TO_CHANGE = Set.of("commands.fill.failed", "commands.setblock.failed",
-            "commands.clone.failed", "argument.entity.notfound.entity");
+    // the scene is built, and a setup's gamerule or time already at its value (26.3 calls that a failure)
+    static final Set<String> NOTHING_TO_CHANGE = Set.of("commands.fill.failed", "commands.setblock.failed",
+            "commands.clone.failed", "argument.entity.notfound.entity", "commands.gamerule.not_set",
+            "commands.time.set.already_at_time", "commands.time.set.already_at_time_marker");
     // The boats kept going in this scene, how fast and around where
     private double boatSpeed;
     // How fast the player is flown east in this scene, and how high: over the mountains and trees
