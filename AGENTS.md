@@ -427,7 +427,7 @@ is known of 26.4.
   rule replaces, a plain 0 removes), dimensions through `worldActors` in `dimensions.json`. A sound that follows one
   needs a range to match its size: a factory volume over 1 carries it further without making it louder (a waterspout
   drifting past 22 blocks was silent). Conditions are evaluated at the
-  player, so a script on the player's own state would make players disagree. `/dsactor [kind]` summons one ahead.
+  player, so a script on the player's own state would make players disagree. `/dsactor [kind] [seed]` summons one ahead (a seed gives the same one every time, as the bench scenes do; without one, the reply names the seed picked).
   Apparitions are the one kind not made of particles: the game's villager model posed by us and written into a
   `QuadWriter` through `ApparitionRenderer`'s own `VertexConsumer` (depth pass, then color), its textures a
   villager's of its biome and a seeded profession, layered in the shader (`ApparitionLook`), drawn from

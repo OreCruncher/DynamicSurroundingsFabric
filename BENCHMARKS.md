@@ -38,6 +38,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
   - [Rays skip sections of air (`sound.json`)](#rays-skip-sections-of-air-soundjson)
   - [Random block effects' ignore check](#random-block-effects-ignore-check)
 - [Field recordings](#field-recordings)
+- [Results, 2026-11-18: NeoForge chain (5.3.0)](#results-2026-11-18-neoforge-chain-530)
 - [Rerunning](#rerunning)
 
 ## Method
@@ -1057,6 +1058,126 @@ quads of those in view); each particle is timed, two clock reads each, so they r
 **Realistic aurora** (`aurora.json`, its first repeat): the bench leaves the night as it is (a quiet night in growth, one
 arc), and the scene looks high enough that the whole screen is marched. Fancy: 0.321 ms GPU for 2.07 Mpx marched,
 0.15 ns a pixel. Fast: 0.165 ms for 0.52 Mpx, 0.32 ns a pixel (two field samples a step, and the composite).
+
+## Results, 2026-11-18: NeoForge chain (5.3.0)
+
+5.3.0 on NeoForge 26.3.0.101, OpenGL, the machine above (Minecraft 26.3); commit `34b88f3e` on `OreCruncher/26.3-5.3.0`
+with `frost.json`, `apparitions.json` and `crowd.json` uncommitted. 1920x1080, Fancy, render distance 16, vsync off,
+limit 260. Two repeats each, A B C then C B A. One chain of eleven scenarios, unattended, 75 minutes: the three new
+scenes, then the 5.2.0 scenes measured only on Fabric so far. Waterspouts timed out arriving over the deep ocean once
+(`01-spouts-2: arrive`) and passed run again alone; its numbers are from that run. Results in
+`neoforge/run-bench/bench-results/<scenario>-20261118-<time>`.
+
+### Window frost (`frost.json`)
+
+An open-topped room of glass over snowy plains at noon, the camera inside, frost held at 100% (`/dsweather frost`):
+every pane frosted, close to the camera, about its worst.
+
+| Run | Frame GPU ms | Frame CPU ms | Window Frost GPU/CPU ms | Window Frost Handler ms a tick |
+|---|---|---|---|---|
+| frost 100% | 0.677 (0.664-0.690) | 0.454 | 0.089 / 0.038 | 0.026 |
+| frost off (`enableWindowFrost`) | 0.606 (0.599-0.613) | 0.402 | - | 0.002 |
+
+Frost costs 0.07 ms of frame GPU and 0.05 ms of CPU a frame with the room frosted all round. Nothing to cut.
+
+### Apparitions (`apparitions.json`)
+
+A sheet of grass at night, high over plains (one apparition) and over savanna (three, apart from the first one's
+leftovers). The three aren't set against an off run of their own.
+
+| Run | Frame GPU ms | Frame CPU ms | World Actors ms a tick |
+|---|---|---|---|
+| 1 apparition (plains) | 0.546 (0.544-0.549) | 0.357 | 0.038 |
+| none (plains; `enableApparitions` off) | 0.537 (0.531-0.543) | 0.327 | 0.009 |
+| 3 apparitions (savanna) | 0.889 (0.888-0.889) | 0.436 | 0.018 |
+
+One apparition costs nothing measurable in the frame's GPU (0.01 ms, within the noise), 0.03 ms of CPU a frame and
+0.03 ms of tick, its route finding included. The three over savanna say little: the stage and view differ, so most of
+the 0.889 is the place. Apparitions have no render timer of their own, and the scene needs an off run over savanna
+before the three can be judged.
+
+### Crowd (`crowd.json`)
+
+48 cows, sheep and pigs wandering a fenced pen of snow over snowy plains at noon, looking down on them a little.
+Wandering mobs make the repeats differ more than usual.
+
+| Run | Frame GPU ms | Frame CPU ms | EntityEffect Handler ms a tick | Particles: Mist GPU ms |
+|---|---|---|---|---|
+| default | 0.920 (0.884-0.956) | 0.893 | 0.076 | 0.018 |
+| no footprints (`enableFootprints`) | 0.901 (0.885-0.916) | 0.832 | 0.056 | 0.016 |
+| no breath (`enableBreathEffect`) | 0.897 (0.878-0.917) | 0.893 | 0.044 | 0 |
+
+Both are within the frame's noise. Footprints take about 0.02 ms of the handler a tick (and perhaps 0.06 ms of CPU a
+frame, inside the spread), breath 0.03 ms a tick and 0.02 ms of GPU for its puffs. Nothing to cut.
+
+### World actors
+
+Summoned with `/dsactor` as before (the Fabric sections of 2026-11-07 and 11-08). Particles: Mist is the soft
+particles' layer timer, new since those runs: the whirls' puffs are drawn there.
+
+| Run | Frame GPU ms | Off run | Difference | Layer GPU ms | World Actors ms a tick | Fabric difference (11-07/08) |
+|---|---|---|---|---|---|---|
+| 4 dust devils | 0.728 (0.701-0.755) | 0.599 | +0.13 | Mist 0.042 | 0.022 | +0.06 |
+| 12 dust devils | 0.988 (0.984-0.992) | 0.599 | +0.39 | Mist 0.315 | 0.052 | +0.25 |
+| 2 waterspouts | 1.071 (0.970-1.172) | 0.745 | +0.33 | Mist 0.161 | 0.040 | +0.09 |
+| 6 waterspouts | 1.274 (1.015-1.534) | 0.745 | +0.53 | Mist 0.376 | 0.043 | +0.22 |
+| 4 snowspouts | 0.876 (0.840-0.912) | 0.657 | +0.22 | Mist 0.126 (off 0.013, breath) | 0.048 | +0.07 |
+| 12 snowspouts | 1.267 (1.235-1.299) | 0.657 | +0.61 | Mist 0.402 | 0.052 | +0.17 |
+| 2 firespouts | 0.676 (0.628-0.724) | 0.638 | +0.04 | Flames 0.030, Mist 0.021, Point Lights 0.066 (off 0.053) | 0.034 | +0.07 |
+| 6 firespouts (plains, no off run) | 0.929 (0.918-0.940) | - | - | Flames 0.125, Mist 0.075, Point Lights 0.128 | 0.052 | (0.903) |
+| 2 wisps | 1.170 (1.016-1.324) | 1.097 | within noise | Point Lights 0.019 | 0.029 | +0.03 |
+| 6 wisps (no off run) | 0.794 (0.791-0.796) | - | - | Point Lights 0.028 | 0.031 | - |
+
+- Firespouts and wisps cost what they did on Fabric. The first two-wisp run read high again, as a session's first
+  run does. In one six-firespout repeat a firespout started on the camera, but the two repeats still agree.
+- The whirls (dust devils, waterspouts, snowspouts) read two to four times the Fabric figures, all of it in their
+  puffs' drawing (the Mist layer), while their ticks are as before. Dust devils run again on Fabric the same afternoon,
+  on this build (`fabric/run-bench/bench-results/dust-devils-20261118-125618`), gave +0.001 ms for four (Mist 0.005:
+  they drifted out of view) and Mist 0.200 for twelve, against NeoForge's 0.042 and 0.315. A summoned whirl's size
+  and path are random, and how much of the screen its puffs cover sets its cost: in a six-waterspout run one stood close in
+  front of the camera (screenshot `02-spouts-6.png`), and both waterspout labels' repeats are far apart. So these runs can't tell a
+  platform or build difference from the luck of the draw. What they show is the range: a whirl that comes near costs
+  0.1-0.2 ms of GPU, one far off 0.01-0.03.
+- Since these runs `/dsactor` takes a seed (`dsactor dust_devil 3`), and the actor scenes give each summons a fixed
+  one, so every run summons the same sizes and paths. Rerun them before comparing actors across platforms or builds.
+
+### Firefly bushes (`firefly-bushes.json`)
+
+| Run | Frame GPU ms | Frame CPU ms | Point Lights GPU/CPU ms |
+|---|---|---|---|
+| mod's fireflies | 0.981 (0.977-0.985) | 0.514 | 0.232 / 0.033 |
+| mod's fireflies, no lights | 0.857 (0.853-0.861) | 0.490 | 0 |
+| game's fireflies (`enableFireflies` off) | 0.988 (0.982-0.993) | 0.463 | 0.014 / 0.010 |
+
+The lights are 0.23 ms, a third of Fabric's 0.78 (2026-11-07), as `9cfff1da` (point lights drawn in one pass) said they
+would be. The mod's fireflies with their lights now cost what the game's do. Without lights they read 0.13 ms cheaper
+than the game's, where on Fabric the two were the same.
+
+### Dynamic clouds (`clouds.json`)
+
+| Run | Frame GPU ms | Clouds GPU ms | Cloud Handler ms a tick |
+|---|---|---|---|
+| fair, dynamic | 0.679 (0.664-0.694) | 0.037 | 0.233 |
+| fair, vanilla | 0.637 (0.634-0.639) | - | 0.001 |
+| overcast, dynamic | 0.992 (0.978-1.006) | 0.136 | 0.298 |
+| overcast, vanilla | 0.851 (0.838-0.865) | - | 0.002 |
+| towers, dynamic | 0.927 (0.918-0.935) | 0.101 | 0.281 |
+| towers, vanilla | 0.849 (0.845-0.852) | - | 0.002 |
+
+As on Fabric: at most 0.14 ms of GPU over vanilla's clouds, and the field 0.23-0.30 ms a tick (the cheaper field of
+2026-11-09).
+
+### Ground fog (`swamp-fog.json`)
+
+| Run | Frame GPU ms | Ground Fog GPU | March | Smooth | Composite |
+|---|---|---|---|---|---|
+| off | 0.781 (0.775-0.787) | - | - | - | - |
+| Fast | 0.983 (0.981-0.985) | 0.198 | 0.105 | 0.011 | 0.052 |
+| Fancy | 1.165 (1.156-1.174) | 0.368 | 0.265 | 0.021 | 0.053 |
+| Fabulous | 2.051 (2.044-2.059) | 1.231 | 1.049 | 0.078 | 0.067 |
+
+The same as Fabric after the march's fewer reads (2026-11-09): 0.20, 0.36 and 1.20 ms there. The fog's CPU is 0.03 ms
+a frame; Ground Fog Handler 0.04 ms a tick.
 
 ## Rerunning
 

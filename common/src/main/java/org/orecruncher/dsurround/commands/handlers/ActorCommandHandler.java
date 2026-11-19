@@ -4,9 +4,11 @@
 package org.orecruncher.dsurround.commands.handlers;
 
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.ActorKind;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
+import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.processing.WorldActorHandler;
 
 import java.util.Arrays;
@@ -24,14 +26,18 @@ public class ActorCommandHandler {
         return Component.translatable(KEY + "status", counts);
     }
 
-    public static Component summon(ActorKind kind) {
+    /**
+     * @param seed the one to summon, or null for any (the reply names the seed picked, to summon it again)
+     */
+    public static Component summon(ActorKind kind, @Nullable Long seed) {
         var handler = ContainerManager.resolve(WorldActorHandler.class);
-        var summoned = GameUtils.getPlayer().map(player -> handler.summon(player, kind)).orElse(WorldActorHandler.Summoned.OFF);
+        long chosen = seed != null ? seed : Randomizer.current().nextLong();
+        var summoned = GameUtils.getPlayer().map(player -> handler.summon(player, kind, chosen)).orElse(WorldActorHandler.Summoned.OFF);
         var result = switch (summoned) {
             case STARTED -> "summon.success";
             case OFF -> "summon.off";
             case NO_PLACE -> "summon.noplace";
         };
-        return Component.translatable(KEY + result, kind.getName());
+        return Component.translatable(KEY + result, kind.getName(), Long.toString(chosen));
     }
 }

@@ -1,9 +1,11 @@
 // Waterspouts (WorldActorHandler, Waterspout, WaterspoutMist): summoned with /dsactor as the warm-up starts, from a
 // block of stone at sea level in a deep ocean, open water all around and too deep for seagrass. By day, clear, so few
-// start on their own (a fair-weather chance is small, but a run can still get one). A summoned one has a random size and
-// path, so compare with --spread. Two, as a storm might show, and six, far more than ever start naturally. One lives 45
-// seconds at least, and takes 15 to grow: the warm-up and the recording fit in that. Facing east, downwind on the bench
-// world's day, as in dust-devils.json, and a little up, as they reach the clouds. See README.md.
+// start on their own (a fair-weather chance is small, but a run can still get one). Each is summoned with a fixed seed
+// ("dsactor <kind> <n>"), so every run, on either platform, has the same ones (size, path, life; the held day gives the
+// same wind), and the bigger run's first ones are the smaller run's. Two, as a storm might show, and six, far more than
+// ever start naturally. One lives 45 seconds at least, and takes 15 to grow: the warm-up and the recording fit in that.
+// Facing east, downwind on the bench world's day, as in dust-devils.json, and a little up, as they reach the clouds.
+// See README.md.
 {
   "world": "bench",
   "seed": 20261030,
@@ -34,8 +36,8 @@
         "setblock ~ ~-1 ~ stone"
       ],
       "settledCommands": [
-        "dsactor waterspout",
-        "dsactor waterspout"
+        "dsactor waterspout 1",
+        "dsactor waterspout 2"
       ],
       "profile": "general"
     },
@@ -50,12 +52,12 @@
         "setblock ~ ~-1 ~ stone"
       ],
       "settledCommands": [
-        "dsactor waterspout",
-        "dsactor waterspout",
-        "dsactor waterspout",
-        "dsactor waterspout",
-        "dsactor waterspout",
-        "dsactor waterspout"
+        "dsactor waterspout 1",
+        "dsactor waterspout 2",
+        "dsactor waterspout 3",
+        "dsactor waterspout 4",
+        "dsactor waterspout 5",
+        "dsactor waterspout 6"
       ],
       "profile": "general"
     }

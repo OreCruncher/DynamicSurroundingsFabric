@@ -1,10 +1,11 @@
 // Dust devils (WorldActorHandler, DustDevilPuff, DustDevilDebris): summoned with /dsactor as the warm-up starts, on a
 // flat platform of sand built high over a desert, so no wall or water breaks them up and nothing else is in view. At
-// night, so none start on their own: each run has only the summoned ones. A summoned one has a random size and path, so
-// compare with --spread. Four, as a few could be in view on a busy afternoon, and twelve, far more than ever start
-// naturally. A dust devil lives 37 seconds at least: the warm-up and the recording fit in that. Facing east, downwind
-// on the bench world's day (the time is held), so they travel away from the camera and stay in view: facing south they
-// drifted out of it to the left, and their drawing went unmeasured. See README.md.
+// night, so none start on their own: each run has only the summoned ones. Each is summoned with a fixed seed ("dsactor
+// <kind> <n>"), so every run, on either platform, has the same ones (size, path, life; the held day gives the same
+// wind), and the bigger run's first ones are the smaller run's. Four, as a few could be in view on a busy afternoon,
+// and twelve, far more than ever start naturally. A dust devil lives 37 seconds at least: the warm-up and the recording
+// fit in that. Facing east, downwind on the bench world's day (the time is held), so they travel away from the camera
+// and stay in view: facing south they drifted out of it to the left, and their drawing went unmeasured. See README.md.
 {
   "world": "bench",
   "seed": 20261030,
@@ -37,10 +38,10 @@
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 sand"
       ],
       "settledCommands": [
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil"
+        "dsactor dust_devil 1",
+        "dsactor dust_devil 2",
+        "dsactor dust_devil 3",
+        "dsactor dust_devil 4"
       ],
       "profile": "general"
     },
@@ -57,18 +58,18 @@
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 sand"
       ],
       "settledCommands": [
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil",
-        "dsactor dust_devil"
+        "dsactor dust_devil 1",
+        "dsactor dust_devil 2",
+        "dsactor dust_devil 3",
+        "dsactor dust_devil 4",
+        "dsactor dust_devil 5",
+        "dsactor dust_devil 6",
+        "dsactor dust_devil 7",
+        "dsactor dust_devil 8",
+        "dsactor dust_devil 9",
+        "dsactor dust_devil 10",
+        "dsactor dust_devil 11",
+        "dsactor dust_devil 12"
       ],
       "profile": "general"
     }

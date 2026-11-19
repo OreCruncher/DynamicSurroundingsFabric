@@ -345,9 +345,10 @@ public class WorldActorHandler extends AbstractClientHandler {
     /**
      * Starts one ahead of the player, whatever the biome and weather, for testing
      *
+     * @param seed its path's seed (size, course, life), so the same seed summons the same one again
      * @return how it went
      */
-    public Summoned summon(Player player, ActorKind kind) {
+    public Summoned summon(Player player, ActorKind kind, long seed) {
         if (!(player.level() instanceof ClientLevel clientLevel) || !this.enabled() || !this.kindEnabled(kind))
             return Summoned.OFF;
         this.follow(clientLevel);
@@ -366,13 +367,13 @@ public class WorldActorHandler extends AbstractClientHandler {
         var length = Math.max(1e-3D, Math.sqrt(look.x * look.x + look.z * look.z));
         double x = player.getX() + look.x / length * SUMMON_AHEAD;
         double z = player.getZ() + look.z / length * SUMMON_AHEAD;
-        return this.summon(this.types.get(kind), clientLevel, x, z);
+        return this.summon(this.types.get(kind), clientLevel, x, z, seed);
     }
 
-    private <P extends ActorPath> Summoned summon(Type<P> type, ClientLevel level, double x, double z) {
+    private <P extends ActorPath> Summoned summon(Type<P> type, ClientLevel level, double x, double z, long seed) {
         if (!level.hasChunkAt(BlockPos.containing(x, 0, z)) || (!type.summonsAnywhere() && !type.placement().canStart(level, x, z)))
             return Summoned.NO_PLACE;
-        var path = type.path().make(x, z, RANDOM.nextLong(), windHeading(level.getGameTime()));
+        var path = type.path().make(x, z, seed, windHeading(level.getGameTime()));
         return this.start(type, level, path, 0, biomeAt(type, level, x, z), null) ? Summoned.STARTED : Summoned.NO_PLACE;
     }
 

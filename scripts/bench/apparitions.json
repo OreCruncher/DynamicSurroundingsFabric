@@ -1,0 +1,96 @@
+// Apparitions (WorldActorHandler, Apparition, ApparitionRenderer): summoned with /dsactor as the warm-up starts, at
+// night, onto a sheet of grass built high over plains (one) and savanna (three, the most there can be), so no trees
+// hide them and the three never meet the one's leftovers. Scary Content on. Against them off. Each is a villager's
+// model drawn in two passes, and walks around what is in its way (ApparitionRoute). Facing south. Stages stand south of
+// the biomes' places ([0, 160]); wisps' are east and the firespouts' west. See README.md. Each is summoned with a fixed
+// seed ("dsactor <kind> <n>"), so every run, on either platform, has the same ones (size, path, life; the held day
+// gives the same wind), and the bigger run's first ones are the smaller run's.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 12,
+  "record": 30,
+  "repeats": 2,
+  "scenes": {
+    "apparitions": {
+      "biome": "minecraft:plains",
+      "yaw": 0,
+      "pitch": 5,
+      "offset": [
+        0,
+        160
+      ],
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "kill @e[type=!player]",
+        "tp @s ~ 130 ~",
+        "fill ~-40 ~-1 ~-40 ~40 ~-1 ~40 grass_block"
+      ],
+      "settledCommands": [
+        "dsactor apparition 1"
+      ],
+      "profile": "general"
+    },
+    "apparitions-many": {
+      "biome": "minecraft:savanna",
+      "yaw": 0,
+      "pitch": 5,
+      "offset": [
+        0,
+        160
+      ],
+      "commands": [
+        "time set 18000",
+        "weather clear",
+        "kill @e[type=!player]",
+        "tp @s ~ 130 ~",
+        "fill ~-40 ~-1 ~-40 ~40 ~-1 ~40 grass_block"
+      ],
+      "settledCommands": [
+        "dsactor apparition 1",
+        "dsactor apparition 2",
+        "dsactor apparition 3"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "apparitions-1",
+      "scene": "apparitions",
+      "settings": {
+        "scaryContent.allowScaryContent": true,
+        "worldActorOptions.enableApparitions": true
+      }
+    },
+    {
+      "label": "apparitions-3",
+      "scene": "apparitions-many",
+      "settings": {
+        "scaryContent.allowScaryContent": true,
+        "worldActorOptions.enableApparitions": true
+      }
+    },
+    {
+      "label": "apparitions-off",
+      "scene": "apparitions",
+      "settings": {
+        "scaryContent.allowScaryContent": true,
+        "worldActorOptions.enableApparitions": false
+      }
+    }
+  ]
+}

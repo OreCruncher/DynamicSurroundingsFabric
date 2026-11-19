@@ -1,0 +1,62 @@
+// Window frost (WindowFrostHandler, FrostRenderer): a glass room open to the sky, built high over snowy plains so
+// nothing but sky is behind its walls, at noon in clear weather (no falling snow to draw), the frost held at its
+// most with /dsweather frost 100 as the warm-up starts. Against frost off. The stage stands south of the biome's
+// place ([0, 160]: the snowspouts' platform is east of it). See README.md.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {
+    "width": 1920,
+    "height": 1080,
+    "vsync": false,
+    "maxFps": 260
+  },
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "frost": {
+      "biome": "minecraft:snowy_plains",
+      "yaw": 0,
+      "pitch": 0,
+      "offset": [
+        0,
+        160
+      ],
+      "commands": [
+        "time set 6000",
+        "weather clear",
+        "tp @s ~ 130 ~",
+        "fill ~-4 ~-1 ~-4 ~4 ~3 ~4 glass hollow",
+        "fill ~-4 ~-1 ~-4 ~4 ~-1 ~4 stone",
+        "fill ~-3 ~3 ~-3 ~3 ~3 ~3 air"
+      ],
+      "settledCommands": [
+        "dsweather frost 100"
+      ],
+      "profile": "general"
+    }
+  },
+  "runs": [
+    {
+      "label": "frost-100",
+      "scene": "frost",
+      "settings": {
+        "weatherOptions.enableWindowFrost": true
+      }
+    },
+    {
+      "label": "frost-off",
+      "scene": "frost",
+      "settings": {
+        "weatherOptions.enableWindowFrost": false
+      }
+    }
+  ]
+}

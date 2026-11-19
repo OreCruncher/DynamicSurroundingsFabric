@@ -1,10 +1,12 @@
 // Wisps (WorldActorHandler, Wisp, WispGlow): summoned with /dsactor as the warm-up starts, 16 blocks ahead, at night,
 // over a walled sheet of water built high over plains, so no trees hide them (in a swamp the bench stood on a canopy
-// and the leaves hid most of the lights) and no natural ones start: the scene's biome has none. Each wisp is one to four
-// lights with their halos, motes and faint lights (the fireflies' light option, set on). A summoned one has a random
-// number of lights and haunts, so compare with --spread. Two, as a marsh might show, and six, far more than ever start
-// naturally. One lives a minute at least, and can live three, so the six have a sheet of their own, over savanna, or
-// the next run's two would find them still there (the off runs clear them). Facing east, a little down. See README.md.
+// and the leaves hid most of the lights) and no natural ones start: the scene's biome has none. Each wisp is one to
+// four lights with their halos, motes and faint lights (the fireflies' light option, set on). Each is summoned with a
+// fixed seed ("dsactor <kind> <n>"), so every run, on either platform, has the same ones (size, path, life; the held
+// day gives the same wind), and the bigger run's first ones are the smaller run's. Two, as a marsh might show, and six,
+// far more than ever start naturally. One lives a minute at least, and can live three, so the six have a sheet of their
+// own, over savanna, or the next run's two would find them still there (the off runs clear them). Facing east, a little
+// down. See README.md.
 {
   "world": "bench",
   "seed": 20261030,
@@ -39,8 +41,8 @@
         "setblock ~ ~-1 ~ stone"
       ],
       "settledCommands": [
-        "dsactor wisp",
-        "dsactor wisp"
+        "dsactor wisp 1",
+        "dsactor wisp 2"
       ],
       "profile": "general"
     },
@@ -59,12 +61,12 @@
         "setblock ~ ~-1 ~ stone"
       ],
       "settledCommands": [
-        "dsactor wisp",
-        "dsactor wisp",
-        "dsactor wisp",
-        "dsactor wisp",
-        "dsactor wisp",
-        "dsactor wisp"
+        "dsactor wisp 1",
+        "dsactor wisp 2",
+        "dsactor wisp 3",
+        "dsactor wisp 4",
+        "dsactor wisp 5",
+        "dsactor wisp 6"
       ],
       "profile": "general"
     }

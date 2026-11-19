@@ -1,9 +1,11 @@
 // Snowspouts (WorldActorHandler, GroundVortex, VortexPuff): summoned with /dsactor as the warm-up starts, on a flat
 // platform of snow built high over snowy plains, so no wall or water breaks them up and nothing else is in view. At
-// night, so none start on their own: each run has only the summoned ones. A summoned one has a random size and path, so
-// compare with --spread. Four and twelve, as in dust-devils.json. A snowspout lives 30 seconds at least: the warm-up and
-// the recording fit in that. Facing east, downwind on the bench world's day (the time is held). The scenes have names of
-// their own: the bench world remembers each by name, and "snow" is the weather scenarios'. See README.md.
+// night, so none start on their own: each run has only the summoned ones. Each is summoned with a fixed seed ("dsactor
+// <kind> <n>"), so every run, on either platform, has the same ones (size, path, life; the held day gives the same
+// wind), and the bigger run's first ones are the smaller run's. Four and twelve, as in dust-devils.json. A snowspout
+// lives 30 seconds at least: the warm-up and the recording fit in that. Facing east, downwind on the bench world's day
+// (the time is held). The scenes have names of their own: the bench world remembers each by name, and "snow" is the
+// weather scenarios'. See README.md.
 {
   "world": "bench",
   "seed": 20261030,
@@ -36,10 +38,10 @@
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 snow_block"
       ],
       "settledCommands": [
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout"
+        "dsactor snowspout 1",
+        "dsactor snowspout 2",
+        "dsactor snowspout 3",
+        "dsactor snowspout 4"
       ],
       "profile": "general"
     },
@@ -56,18 +58,18 @@
         "fill ~-64 ~-1 ~-64 ~64 ~-1 ~64 snow_block"
       ],
       "settledCommands": [
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout",
-        "dsactor snowspout"
+        "dsactor snowspout 1",
+        "dsactor snowspout 2",
+        "dsactor snowspout 3",
+        "dsactor snowspout 4",
+        "dsactor snowspout 5",
+        "dsactor snowspout 6",
+        "dsactor snowspout 7",
+        "dsactor snowspout 8",
+        "dsactor snowspout 9",
+        "dsactor snowspout 10",
+        "dsactor snowspout 11",
+        "dsactor snowspout 12"
       ],
       "profile": "general"
     }
