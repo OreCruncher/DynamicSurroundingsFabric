@@ -123,7 +123,7 @@ public final class WindService {
                 && this.dimensionInformation.particleWeather()
                 && DustStorms.enabled(this.options)
                 && DustStorms.isDusty(this.seasons.getPrecipitationAt(at), level.getBiome(at).value(), this.biomeLibrary);
-        this.wind.setReach(this.options.precipitationRange);
+        this.wind.setReach(this.options.precipitation.precipitationRange);
         this.wind.tick(rainLevel, level.isThundering(), dusty, level.getDefaultClockTime() / SharedConstants.TICKS_PER_GAME_DAY, RANDOM);
         SceneWind.update(this.wind, pos.x, pos.z);
     }

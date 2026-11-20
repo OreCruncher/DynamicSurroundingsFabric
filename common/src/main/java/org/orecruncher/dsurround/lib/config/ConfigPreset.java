@@ -9,6 +9,7 @@ import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.text.Localization;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -131,31 +132,100 @@ public record ConfigPreset(String id, @Nullable String name, @Nullable String de
      * The preset with only the values it can apply to {@code config}: each value naming a property, of a type and in a
      * range it can have, that doesn't need a restart and that {@code allowed} accepts by its path. Each value left out
      * is described to {@code problems}.
+     * <p>
+     * A path naming no property, but one a property has moved from (see {@link MovedFrom}), is followed to where it
+     * went, its value paired as a config file's would be, so a modpack's presets written before a move keep working;
+     * the move is described to {@code problems}, for the preset's author. A value given at the new path as well is the
+     * one kept.
      */
     public ConfigPreset validated(ConfigurationData config, Predicate<String> allowed, Consumer<String> problems) {
+        var specification = config.getSpecification();
         var kept = new LinkedHashMap<String, JsonElement>();
         for (var entry : this.values.entrySet()) {
             var path = entry.getKey();
-            var target = resolve(config.getSpecification(), config, path);
-            var value = target == null ? null : convert(target.property(), entry.getValue());
-            String problem = null;
-            if (target == null)
-                problem = "no such property";
-            else if (value == null)
-                problem = entry.getValue() + " isn't a value it can have";
-            else if (!target.inRange(value))
-                problem = entry.getValue() + " is outside its range";
-            else if (target.property().isClientRestartRequired() || target.property().isWorldRestartRequired())
-                problem = "it needs a restart";
-            else if (!allowed.test(path))
-                problem = "presets can't change it";
-
+            if (resolve(specification, config, path) == null) {
+                var moves = MovedProperties.movesFrom(specification, path);
+                if (!moves.isEmpty()) {
+                    this.followMoves(config, allowed, problems, path, entry.getValue(), moves, kept);
+                    continue;
+                }
+            }
+            var problem = problem(config, allowed, path, entry.getValue());
             if (problem == null)
                 kept.put(path, entry.getValue());
             else
                 problems.accept("preset '" + this.id + "', " + path + ": " + problem);
         }
         return new ConfigPreset(this.id, this.name, this.description, this.group, this.hidden, kept);
+    }
+
+    /**
+     * Keeps a value written at an old path at each place it moved to where its value has a pair and fits. Only if it
+     * fits none is a problem described: a value that one of its places has no pair for (an old "off" folded into a
+     * switch, but not into the quality beside it) belongs at the others.
+     */
+    private void followMoves(ConfigurationData config, Predicate<String> allowed, Consumer<String> problems,
+                             String oldPath, JsonElement value, List<MovedProperties.Move> moves,
+                             Map<String, JsonElement> kept) {
+        var placed = new ArrayList<String>();
+        var refused = new ArrayList<String>();
+        for (var move : moves) {
+            if (this.values.containsKey(move.path()) || kept.containsKey(move.path()))
+                continue;
+            var converted = MovedProperties.convert(value, move.values());
+            if (converted == null)
+                continue;
+            if (move.values().length > 0)
+                converted = typed(converted);
+            var problem = problem(config, allowed, move.path(), converted);
+            if (problem == null) {
+                kept.put(move.path(), converted);
+                placed.add(move.path());
+            } else {
+                refused.add(move.path() + ": " + problem);
+            }
+        }
+        var prefix = "preset '" + this.id + "', " + oldPath + ": ";
+        if (!placed.isEmpty())
+            problems.accept(prefix + "has moved to " + String.join(" and ", placed) + "; the preset should name the new place");
+        else if (!refused.isEmpty())
+            refused.forEach(problem -> problems.accept(prefix + "moved to " + problem));
+    }
+
+    /**
+     * A paired value (see {@link MovedFrom#values}), always written as text, as the JSON a preset would have given:
+     * true and false as booleans, numbers as numbers, anything else (an enum's name) as text.
+     */
+    private static JsonElement typed(JsonElement paired) {
+        if (!(paired instanceof JsonPrimitive primitive) || !primitive.isString())
+            return paired;
+        var text = primitive.getAsString();
+        if (text.equals("true") || text.equals("false"))
+            return new JsonPrimitive(Boolean.parseBoolean(text));
+        try {
+            return new JsonPrimitive(new BigDecimal(text));
+        } catch (NumberFormatException e) {
+            return paired;
+        }
+    }
+
+    /**
+     * What keeps a value from being applied at a path, or null if nothing does
+     */
+    private static @Nullable String problem(ConfigurationData config, Predicate<String> allowed, String path, JsonElement written) {
+        var target = resolve(config.getSpecification(), config, path);
+        if (target == null)
+            return "no such property";
+        var value = convert(target.property(), written);
+        if (value == null)
+            return written + " isn't a value it can have";
+        if (!target.inRange(value))
+            return written + " is outside its range";
+        if (target.property().isClientRestartRequired() || target.property().isWorldRestartRequired())
+            return "it needs a restart";
+        if (!allowed.test(path))
+            return "presets can't change it";
+        return null;
     }
 
     /**

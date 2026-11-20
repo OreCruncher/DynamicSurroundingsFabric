@@ -191,7 +191,7 @@ public class ProfilingTests {
                 "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
                 3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
                 List.of(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false),
-                        new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "true", true)));
+                        new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.precipitation.enableDustStorms", "true", true)));
     }
 
     private static List<ProfileFeature> features(Configuration config) {
@@ -207,7 +207,7 @@ public class ProfilingTests {
     @Test
     void theFeaturesSayWhatIsOffAndWhatWasChanged() {
         var config = new Configuration();
-        config.weatherOptions.enableDustStorms = false;
+        config.weatherOptions.precipitation.enableDustStorms = false;
         config.entityEffects.entityEffectRange = 16;
         var features = features(config);
 
@@ -216,11 +216,11 @@ public class ProfilingTests {
         assertEquals(new ProfileFeature(ProfileFeature.CONFLICT, "PARTICLE_WEATHER", "off (particlerain installed)", false),
                 named(features, "PARTICLE_WEATHER"));
         assertEquals(new ProfileFeature(ProfileFeature.CONFLICT, "RAIN_RIPPLES", "on", true), named(features, "RAIN_RIPPLES"));
-        assertEquals(new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.enableDustStorms", "false", false),
-                named(features, "weatherOptions.enableDustStorms"));
+        assertEquals(new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.precipitation.enableDustStorms", "false", false),
+                named(features, "weatherOptions.precipitation.enableDustStorms"));
         assertEquals(new ProfileFeature(ProfileFeature.SETTING, "entityEffects.entityEffectRange", "16", false),
                 named(features, "entityEffects.entityEffectRange"));
-        assertTrue(named(features, "weatherOptions.enableDynamicClouds").usual());
+        assertTrue(named(features, "weatherOptions.sky.enableDynamicClouds").usual());
         // Every setting is named by its group, and every hook and conflict is there
         assertTrue(features.stream().filter(f -> f.kind().equals(ProfileFeature.SETTING)).allMatch(f -> f.name().contains(".")));
         assertEquals(OptionalHook.values().length, features.stream().filter(f -> f.kind().equals(ProfileFeature.HOOK)).count());

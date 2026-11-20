@@ -22,16 +22,17 @@ This release brings rainbows after the rain, and armor that sounds like what it'
 
 **What's New**
 * Rainbows (experimental). As rain eases to a drizzle or stops while the sun is low, a rainbow can show in the sky opposite the sun, fading as the shower moves on. Its colors come from how sunlight passes through raindrops: red outside, violet inside, with the sky brighter within the bow. After a strong storm, a fainter second bow shows outside it with its colors reversed and a darker band between the two. Only where it rains rather than snows, and every player in a world sees the same rainbows
-  * Rainbows and Rainbow chance (50% by default) are in the Weather options
+  * Rainbows and Rainbow chance (50% by default) are in the Weather options, under Sky
   * Moonbows: at night, with the moon full or nearly so and low, a clearing can leave a faint, pale bow opposite the moon, as eyes see one
-  * Rainbow style: Blocky by default, flat stripes stepping in blocks around the bow to suit the game, or Realistic, with the colors worked out from the raindrops
+  * Sky style: Blocky by default, flat stripes stepping in blocks around the bow to suit the game, or Realistic, with the colors worked out from the raindrops
   * `/dsweather rainbow 0-100 [primary]` shows one whatever the weather, and `/dsweather rainbow clear` goes back to the weather's
   * Scripts can ask `weather.isRainbow()`
-* Halos and sun dogs (experimental). In cold biomes under a clear sky, ice crystals in the air can ring the sun with a halo 22 degrees out, red on its inner edge, with a sun dog level with the sun either side, moving out and fading as the sun climbs. Drawn in blocks with Rainbow style Blocky; every player in a world sees the same
-  * Halos and sun dogs and Halo chance (25% by default) are in the Weather options
+* Halos and sun dogs (experimental). In cold biomes under a clear sky, ice crystals in the air can ring the sun with a halo 22 degrees out, red on its inner edge, with a sun dog level with the sun either side, moving out and fading as the sun climbs. Sky style sets how they look; every player in a world sees the same
+  * Halos and sun dogs and Halo chance (25% by default) are in the Weather options, under Sky
 * Armor sounds by what it's made of. Each piece of armor belongs to a family (leather, chain, plate, crystal or heavy), which gives its footstep accent, its hotbar sound and its swing sound. Modded armor is sorted by its tag, or else by the equip sound it uses, so most needs no tagging. The families use the game's sounds for now
 
 **Changes**
+* The Weather options are grouped into Storms, Precipitation and Sky, and Ground fog has moved to the Fog options. Settings players had carry over, and modpack presets naming a setting's old place still apply, with a log line saying where it moved
 * Particle rain and snow take less time to draw. Drops past the edges of the view are left out, not only those behind it (42% fewer to draw), the drops are built 14-16% faster, and the building starts earlier in the frame
 * Tough As Nails' wool and leaf armor and Alex's Mobs' creature armor sound like leather, and Epic Knights' lances like spears
 * `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items

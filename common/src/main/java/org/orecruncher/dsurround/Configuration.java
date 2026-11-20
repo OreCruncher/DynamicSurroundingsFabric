@@ -13,7 +13,7 @@ import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
 import org.orecruncher.dsurround.config.MarginPosition;
 import org.orecruncher.dsurround.config.PocketWatchStyle;
-import org.orecruncher.dsurround.config.RainbowStyle;
+import org.orecruncher.dsurround.config.SkyStyle;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.Comment;
 import org.orecruncher.dsurround.lib.config.ConfigPlacement;
@@ -541,115 +541,142 @@ public class Configuration extends ConfigurationData {
 
     public static class WeatherOptions {
         @Property
+        @Comment("Frost forms on the outside of glass windows when it is cold")
+        public boolean enableWindowFrost = true;
+
+        @Property
+        @Comment("Storms: how strong they get, how they surge, and how they sound")
+        public final Storms storms = new Storms();
+
+        @Property
+        @Comment("Rain, snow and dust storms drawn as particles, and what they leave behind")
+        public final Precipitation precipitation = new Precipitation();
+
+        @Property
+        @Comment("Clouds, rainbows and halos")
+        public final Sky sky = new Sky();
+    }
+
+    public static class Storms {
+        @Property
+        @MovedFrom("weatherOptions.enableStormSimulation")
         @Comment("Enable/disable simulated storms, each storm has its own strength, from a drizzle to a downpour")
         public boolean enableStormSimulation = true;
 
         @Property
         @Slider(min = 1, max = 100)
+        @MovedFrom("weatherOptions.minStormIntensity")
         @Comment("The weakest a storm can be, as a percent of full strength")
         public int minStormIntensity = 10;
 
         @Property
         @Slider(min = 1, max = 100)
+        @MovedFrom("weatherOptions.maxStormIntensity")
         @Comment("The strongest a storm can be, as a percent of full strength")
         public int maxStormIntensity = 100;
 
         @Property
         @Slider(min = 0, max = 100)
+        @MovedFrom("weatherOptions.stormVariation")
         @Comment("How far a storm eases off between its surges, as a percent of its peak")
         public int stormVariation = 40;
 
         @Property
+        @MovedFrom("weatherOptions.enableStormSounds")
+        @Comment("Rain sounds that follow the storm's strength, from a patter to a roar, and the sound of blowing dust")
+        public boolean enableStormSounds = true;
+    }
+
+    public static class Precipitation {
+        @Property
+        @MovedFrom("weatherOptions.enableParticlePrecipitation")
         @Comment("Draw rain and snow as individual drops instead of vanilla's sheets")
         public boolean enableParticlePrecipitation = true;
 
         @Property
         @Slider(min = 25, max = 100)
+        @MovedFrom("weatherOptions.precipitationDensity")
         @Comment("How many drops of particle rain and snow there are, as a percent of the most")
         public int precipitationDensity = 100;
 
         @Property
         @Slider(min = 8, max = 32)
+        @MovedFrom("weatherOptions.precipitationRange")
         @Comment("How far from the player, in blocks, particle rain, snow and dust are drawn")
         public int precipitationRange = 14;
 
         @Property
         @Slider(min = 50, max = 250)
+        @MovedFrom("weatherOptions.rainDropScale")
         @Comment("How big particle rain drops are drawn, as a percent of their usual size")
         public int rainDropScale = 100;
 
         @Property
         @Slider(min = 0, max = 100)
+        @MovedFrom("weatherOptions.rainTint")
         @Comment("How blue particle rain is: 0 is a nearly colorless pale gray, 100 a deep blue")
         public int rainTint = 15;
 
         @Property
         @Slider(min = 50, max = 200)
+        @MovedFrom("weatherOptions.snowflakeScale")
         @Comment("How big particle snowflakes are drawn, as a percent of their usual size")
         public int snowflakeScale = 100;
 
         @Property
+        @MovedFrom("weatherOptions.enableDustStorms")
         @Comment("With particle rain and snow on, storms in deserts and badlands blow dust and thicken the fog")
         public boolean enableDustStorms = true;
 
         @Property
-        @Comment("Rain sounds that follow the storm's strength, from a patter to a roar, and the sound of blowing dust")
-        public boolean enableStormSounds = true;
-
-        @Property
+        @MovedFrom("weatherOptions.enableAfterRainDrips")
         @Comment("Water drips from leaves and overhanging edges for a while after the rain stops")
         public boolean enableAfterRainDrips = true;
 
         @Property
+        @MovedFrom("weatherOptions.enableSnowOnSides")
         @Comment("With particle snow on, snowflakes blown by the wind against a wall or tree trunk stick to it for a moment")
         public boolean enableSnowOnSides = true;
 
         @Property
+        @MovedFrom("weatherOptions.enableWindowStreaks")
         @Comment("With particle rain on, rain drops run down the outside of windows in stick-and-slide streaks")
         public boolean enableWindowStreaks = true;
+    }
 
-        @Property
-        @Comment("Frost forms on the outside of glass windows when it is cold")
-        public boolean enableWindowFrost = true;
-
-        // 0.4.8 kept the switch as the quality's NONE: declared before the quality, and its NONE (no longer one of
-        // the quality's) is put back to the default on load
+    public static class Sky {
         @Property
         @Experimental
-        @MovedFrom(value = "weatherOptions.groundFogQuality", values = "NONE=false")
-        @Comment("Mist lying low over the ground in swamps and eerie biomes, drifting with the wind")
-        public boolean enableGroundFog = true;
-
-        @Property
-        @Comment("How finely the ground fog is drawn. Fast costs least; Fabulous costs several times Fancy")
-        public GroundFogQuality groundFogQuality = GroundFogQuality.FANCY;
-
-        @Property
-        @Experimental
+        @MovedFrom("weatherOptions.enableDynamicClouds")
         @Comment("Clouds that change with the weather: scattered puffs that build up through fair afternoons, a low dark deck in a storm, towering in a thunderstorm. Drawn in place of vanilla's clouds")
         public boolean enableDynamicClouds = true;
 
         @Property
+        @MovedFrom("weatherOptions.rainbowStyle")
+        @Comment("How rainbows, moonbows and halos look: BLOCKY, flat stripes stepping in blocks to suit the game, or REALISTIC, their colors worked out from how light passes through raindrops and ice")
+        public SkyStyle skyStyle = SkyStyle.BLOCKY;
+
+        @Property
         @Experimental
+        @MovedFrom("weatherOptions.enableRainbows")
         @Comment("As rain eases off with the sun low, a rainbow can show in the sky opposite the sun; after a strong storm, a fainter second bow outside it. By a full moon, a pale moonbow")
         public boolean enableRainbows = true;
 
         @Property
         @Slider(min = 0, max = 100)
+        @MovedFrom("weatherOptions.rainbowChance")
         @Comment("How likely rain clearing with the sun low is to leave a rainbow, as a percent")
         public int rainbowChance = 50;
 
         @Property
-        @Comment("How rainbows look: REALISTIC, their colors worked out from sunlight through raindrops, or BLOCKY, flat stripes stepping in blocks around the bow")
-        public RainbowStyle rainbowStyle = RainbowStyle.BLOCKY;
-
-        @Property
         @Experimental
-        @Comment("In cold biomes, under a clear sky, ice in the air can ring the sun with a halo, with a bright sun dog either side of it. Drawn in blocks with Rainbow style BLOCKY")
+        @MovedFrom("weatherOptions.enableHalos")
+        @Comment("In cold biomes, under a clear sky, ice in the air can ring the sun with a halo, with a bright sun dog either side of it")
         public boolean enableHalos = true;
 
         @Property
         @Slider(min = 0, max = 100)
+        @MovedFrom("weatherOptions.haloChance")
         @Comment("How likely a quarter of a day of cold fair weather is to have a halo, as a percent")
         public int haloChance = 25;
     }
@@ -670,6 +697,21 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Enable/disable weather fog effect")
         public boolean enableWeatherFog = true;
+
+        // Moved from the weather options, where 0.4.8 kept the switch as the quality's NONE: the pairs carry the
+        // switch over as it is, and that NONE as off (the quality's other values leave it on). Declared before the
+        // quality, whose NONE (no longer one of its values) is put back to the default on load
+        @Property
+        @Experimental
+        @MovedFrom(value = {"weatherOptions.enableGroundFog", "weatherOptions.groundFogQuality"},
+                values = {"true=true", "false=false", "NONE=false"})
+        @Comment("Mist lying low over the ground in swamps and eerie biomes, drifting with the wind")
+        public boolean enableGroundFog = true;
+
+        @Property
+        @MovedFrom("weatherOptions.groundFogQuality")
+        @Comment("How finely the ground fog is drawn. Fast costs least; Fabulous costs several times Fancy")
+        public GroundFogQuality groundFogQuality = GroundFogQuality.FANCY;
     }
 
     public static class AuroraOptions {

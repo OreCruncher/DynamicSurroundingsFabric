@@ -15,6 +15,6 @@ layout(std140) uniform HaloInfo {
     // xyz: how far round from the sun the sun dogs are, level with it, for red, green and blue light, in degrees;
     // w: how high the sun is, in degrees
     vec4 Dogs;
-    // x: 1 for blocks (Rainbow style Blocky), 0 for its real look; y, z and w unused
+    // x: 1 for blocks (Sky style Blocky), 0 for its real look; y, z and w unused
     vec4 Style;
 };

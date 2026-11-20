@@ -11,7 +11,7 @@ import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.RainbowStyle;
+import org.orecruncher.dsurround.config.SkyStyle;
 import org.orecruncher.dsurround.effects.rainbow.RainbowConditions;
 import org.orecruncher.dsurround.effects.rainbow.RainbowRenderer;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -84,12 +84,12 @@ public class RainbowHandler extends AbstractClientHandler {
 
         var level = player.level();
         var options = this.config.weatherOptions;
-        this.conditions.update(level.getGameTime(), this.weatherSimulation.intensity(), options.rainbowChance / 100F);
+        this.conditions.update(level.getGameTime(), this.weatherSimulation.intensity(), options.sky.rainbowChance / 100F);
 
         float target = 0F;
         float secondaryTarget = 0F;
         var held = this.held;
-        if (!options.enableRainbows) {
+        if (!options.sky.enableRainbows) {
             this.status = "disabled";
         } else if (!RainbowRenderer.isAvailable()) {
             this.status = "shader unavailable or failed";
@@ -175,7 +175,7 @@ public class RainbowHandler extends AbstractClientHandler {
         var secondary = Mth.lerp(partialTick, this.prevSecondary, this.secondary);
         var celestialAngle = this.levelOracle.currentCelestialAngle();
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
-        var blocky = this.config.weatherOptions.rainbowStyle == RainbowStyle.BLOCKY;
+        var blocky = this.config.weatherOptions.sky.skyStyle == SkyStyle.BLOCKY;
         RainbowRenderer.render(celestialAngle, alpha, secondary, viewMatrix, time, this.conditions.seed(), blocky, this.moonbow);
     }
 

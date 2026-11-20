@@ -75,7 +75,7 @@ public class PresetLoaderTests {
     // What the performance presets set that the feature presets may set too: details that are features as well
     // (accepted: a feature preset after Low turns them back on). Quality and ranges are the performance presets' alone
     private static final List<String> SHARED_WITH_FEATURES = List.of("waterfallOptions.enableMist",
-            "waterfallOptions.enableFroth", "waterfallOptions.enableRings", "weatherOptions.enableDynamicClouds", "flameJetOptions.enableLight",
+            "waterfallOptions.enableFroth", "waterfallOptions.enableRings", "weatherOptions.sky.enableDynamicClouds", "flameJetOptions.enableLight",
             "fireflyOptions.enableLight");
 
     @Test
@@ -101,14 +101,14 @@ public class PresetLoaderTests {
     void lowIsCheaperAndHighFiner() {
         var config = new Configuration();
         modPreset("low").apply(config);
-        assertEquals(GroundFogQuality.FAST, config.weatherOptions.groundFogQuality);
+        assertEquals(GroundFogQuality.FAST, config.fogOptions.groundFogQuality);
         assertEquals(AuroraQuality.FAST, config.auroraOptions.realistic.quality);
-        assertTrue(config.weatherOptions.enableGroundFog, "Low leaves the ground fog's switch, a feature, alone");
+        assertTrue(config.fogOptions.enableGroundFog, "Low leaves the ground fog's switch, a feature, alone");
         assertFalse(config.waterfallOptions.enableMist);
 
         modPreset("high").apply(config);
         // Fancy, not Fabulous: Fabulous cost about three times as much walking through the mist
-        assertEquals(GroundFogQuality.FANCY, config.weatherOptions.groundFogQuality);
+        assertEquals(GroundFogQuality.FANCY, config.fogOptions.groundFogQuality);
         assertEquals(AuroraQuality.FANCY, config.auroraOptions.realistic.quality);
         assertTrue(config.blockEffects.blockEffectRange > new Configuration().blockEffects.blockEffectRange);
     }
@@ -206,14 +206,14 @@ public class PresetLoaderTests {
         assertTrue(config.entityEffects.showCritWords);
         assertTrue(config.entityEffects.enableJumpSound);
         assertTrue(config.entityEffects.enableBurningEffect);
-        assertFalse(config.weatherOptions.enableParticlePrecipitation);
-        assertFalse(config.weatherOptions.enableGroundFog);
+        assertFalse(config.weatherOptions.precipitation.enableParticlePrecipitation);
+        assertFalse(config.fogOptions.enableGroundFog);
         assertFalse(config.fireflyOptions.enableFireflies);
         assertTrue(config.footstepAccents.enableAccents);
 
         modPreset("atmosphere").apply(config);
-        assertTrue(config.weatherOptions.enableParticlePrecipitation);
-        assertTrue(config.weatherOptions.enableGroundFog);
+        assertTrue(config.weatherOptions.precipitation.enableParticlePrecipitation);
+        assertTrue(config.fogOptions.enableGroundFog);
         assertTrue(config.entityEffects.showCritWords);
     }
 
@@ -284,5 +284,38 @@ public class PresetLoaderTests {
 
         assertEquals(8, presets.size());
         assertEquals(1, problems.size());
+    }
+
+    @Test
+    void aModpackPresetWrittenBeforeTheWeatherRegroupingStillApplies() {
+        var problems = new ArrayList<String>();
+        var presets = PresetLoader.load(new Configuration(), List.of(file("apack", """
+                [{"id": "calm", "values": {"weatherOptions.enableDynamicClouds": false,
+                  "weatherOptions.stormVariation": 10, "weatherOptions.rainbowStyle": "REALISTIC",
+                  "weatherOptions.groundFogQuality": "NONE"}}]""")), problems::add);
+
+        var preset = presets.getFirst();
+        assertEquals(List.of("weatherOptions.sky.enableDynamicClouds", "weatherOptions.storms.stormVariation",
+                "weatherOptions.sky.skyStyle", "fogOptions.enableGroundFog"), List.copyOf(preset.values().keySet()));
+        var config = new Configuration();
+        assertEquals(List.of(), preset.apply(config));
+        assertFalse(config.weatherOptions.sky.enableDynamicClouds);
+        assertEquals(10, config.weatherOptions.storms.stormVariation);
+        assertEquals(SkyStyle.REALISTIC, config.weatherOptions.sky.skyStyle);
+        assertFalse(config.fogOptions.enableGroundFog);
+        // Each move is logged, for the pack's author
+        assertEquals(4, problems.size(), problems.toString());
+        assertTrue(problems.stream().allMatch(p -> p.contains("has moved to")), problems.toString());
+    }
+
+    @Test
+    void aMovedPathStillCannotReachScaryContent() {
+        var problems = new ArrayList<String>();
+        var presets = PresetLoader.load(new Configuration(), List.of(file("apack", """
+                [{"id": "spooky", "values": {"soundOptions.allowScarySounds": true}}]""")), problems::add);
+
+        assertEquals(List.of(), List.copyOf(presets.getFirst().values().keySet()));
+        assertEquals(1, problems.size(), problems.toString());
+        assertTrue(problems.getFirst().contains("presets can't change it"), problems.toString());
     }
 }

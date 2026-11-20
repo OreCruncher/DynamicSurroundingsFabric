@@ -340,7 +340,9 @@ is known of 26.4.
   `JarContents`. Don't open mod jars as zip file systems: kept open, they cost about 300 bytes of heap a file in them
   (36 MB for a pack of 120 mods).
 - Config: moving a property between groups → annotate the new field `@MovedFrom({"newest.old.path", "older.path"})`;
-  old values carry over on load (also rename the path in `dsconfigs/presets.json`). Translation keys follow
+  old values carry over on load (also rename the path in `dsconfigs/presets.json`). Presets naming an old path (a
+  modpack's) are followed there too, values paired the same way, and the move is logged for the pack's author
+  (`ConfigPreset.validated`, `MovedProperties.movesFrom`). Translation keys follow
   `dsurround.config.<group>.<field>[.tooltip]`.
 - Presets (`dsconfigs/presets.json`, `lib/config/ConfigPreset`, loaded on reload by `config/PresetLoader` into
   `ConfigurationData.setPresets`; a row of buttons from `compat/PresetButtonsEntry` per `group`, 5 a row: features (the

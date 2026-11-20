@@ -7,7 +7,7 @@ import org.orecruncher.dsurround.lib.config.ITranslatedEnum;
 
 /**
  * How finely the ground fog is drawn, named as vanilla's graphics settings are (and shown with their translations):
- * how closely its lines of sight are followed (whether it is drawn at all is {@code weatherOptions.enableGroundFog}).
+ * how closely its lines of sight are followed (whether it is drawn at all is {@code fogOptions.enableGroundFog}).
  * The march (see {@link org.orecruncher.dsurround.effects.groundfog.GroundFogVolume}) is the costly part: it is drawn
  * at a share of the screen's size, a pixel for each {@code scale} by {@code scale} of the screen's, taking at most
  * {@code maxSteps} along each line of sight.

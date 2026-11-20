@@ -80,7 +80,7 @@ public class MixinClientLevel {
      */
     @Inject(method = "playLocalSound(DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V", at = @At("HEAD"), cancellable = true, require = 0)
     private void dsurround$rainSound(double x, double y, double z, SoundEvent sound, SoundSource source, float volume, float pitch, boolean distanceDelay, CallbackInfo ci) {
-        if (!MixinHelpers.inRainTick() || !MixinHelpers.weatherOptions.enableStormSounds)
+        if (!MixinHelpers.inRainTick() || !MixinHelpers.weatherOptions.storms.enableStormSounds)
             return;
         var level = (ClientLevel) (Object) this;
         // Out of the rain tick meanwhile: the world's own rain level is read, and the sounds played here come back

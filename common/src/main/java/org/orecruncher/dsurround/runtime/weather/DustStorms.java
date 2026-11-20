@@ -44,7 +44,7 @@ public final class DustStorms {
     }
 
     static boolean enabled(Configuration.WeatherOptions options, boolean weatherModInstalled) {
-        return options.enableParticlePrecipitation && options.enableDustStorms && !weatherModInstalled;
+        return options.precipitation.enableParticlePrecipitation && options.precipitation.enableDustStorms && !weatherModInstalled;
     }
 
     /**

@@ -26,10 +26,10 @@ public class WeatherCommandHandlerTests {
 
     private static WeatherSimulationAccess simulation(boolean enabled) {
         var options = new Configuration.WeatherOptions();
-        options.enableStormSimulation = enabled;
-        options.minStormIntensity = 40;
-        options.maxStormIntensity = 40;
-        options.stormVariation = 0;
+        options.storms.enableStormSimulation = enabled;
+        options.storms.minStormIntensity = 40;
+        options.storms.maxStormIntensity = 40;
+        options.storms.stormVariation = 0;
         return new WeatherSimulationAccess(options);
     }
 

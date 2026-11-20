@@ -164,7 +164,7 @@ public final class Landings {
         if (face < 0)
             return;
         // Only on top of things, unless snow is to stick to the sides of them too
-        if (face != SnowFlecks.FACE_TOP && !this.options.enableSnowOnSides)
+        if (face != SnowFlecks.FACE_TOP && !this.options.precipitation.enableSnowOnSides)
             return;
         var pos = hit.getBlockPos();
         var state = level.getBlockState(pos);
@@ -197,7 +197,7 @@ public final class Landings {
                 level.addParticle(ParticleTypes.RAIN, at.x, at.y, at.z, 0D, 0D, 0D);
             return;
         }
-        if (!this.options.enableWindowStreaks || !hit.getDirection().getAxis().isHorizontal())
+        if (!this.options.precipitation.enableWindowStreaks || !hit.getDirection().getAxis().isHorizontal())
             return;
         var state = level.getBlockState(hit.getBlockPos());
         if (!this.tagLibrary.is(BlockEffectTags.WINDOWS, state))
@@ -215,7 +215,7 @@ public final class Landings {
      */
     public void seedWindows(ClientLevel level, IColumnSource columns, double cameraX, double cameraY, double cameraZ, float rainLevel,
                             Wind wind, WindowStreaks streaks, RandomSource random) {
-        if (!this.options.enableWindowStreaks || rainLevel <= 0F)
+        if (!this.options.precipitation.enableWindowStreaks || rainLevel <= 0F)
             return;
         float windShare = Mth.clamp(wind.speed() / Wind.speedOfPercent(100), 0F, 1F);
         float wanted = WINDOW_SEED_TRIES * Math.min(rainLevel, 1F) * Mth.lerp(windShare, WINDOW_SEED_CALM_SHARE, 1F);
@@ -385,7 +385,7 @@ public final class Landings {
      */
     public void dustSound(ClientLevel level, PrecipitationField field, IColumnSource columns, double cameraX, double cameraZ,
                           float rainLevel, RandomSource random) {
-        if (!this.options.enableStormSounds || field.dustCount() == 0)
+        if (!this.options.storms.enableStormSounds || field.dustCount() == 0)
             return;
         if (!StormSounds.isTimeForSound(random.nextInt(StormSounds.SOUND_CHANCE), this.dustSoundTime++))
             return;

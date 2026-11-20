@@ -23,7 +23,7 @@ import java.util.function.Function;
  * {@code jdk.jfr}.
  *
  * @param kind  {@link #HOOK}, {@link #CONFLICT} or {@link #SETTING}
- * @param name  the hook's or feature's name, or the setting's path in the config ({@code weatherOptions.enableDustStorms})
+ * @param name  the hook's or feature's name, or the setting's path in the config ({@code weatherOptions.precipitation.enableDustStorms})
  * @param state what it is: the hook's status, "on" or "off (mod installed)", or the setting's value
  * @param usual whether it is as it is out of the box: the hook applied, the feature not standing aside, the setting at
  *              its default

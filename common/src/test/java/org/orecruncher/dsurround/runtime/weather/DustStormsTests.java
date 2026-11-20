@@ -72,8 +72,8 @@ public class DustStormsTests {
     @Test
     void dustStormsStandAsideForTheParticleRainMod() {
         var options = new Configuration.WeatherOptions();
-        options.enableParticlePrecipitation = true;
-        options.enableDustStorms = true;
+        options.precipitation.enableParticlePrecipitation = true;
+        options.precipitation.enableDustStorms = true;
         assertTrue(DustStorms.enabled(options, false));
         assertFalse(DustStorms.enabled(options, true));
     }
@@ -81,14 +81,14 @@ public class DustStormsTests {
     @Test
     void dustStormsNeedParticleRainOn() {
         var options = new Configuration.WeatherOptions();
-        options.enableDustStorms = true;
-        options.enableParticlePrecipitation = false;
+        options.precipitation.enableDustStorms = true;
+        options.precipitation.enableParticlePrecipitation = false;
         assertFalse(DustStorms.enabled(options, false));
 
-        options.enableParticlePrecipitation = true;
+        options.precipitation.enableParticlePrecipitation = true;
         assertTrue(DustStorms.enabled(options, false));
 
-        options.enableDustStorms = false;
+        options.precipitation.enableDustStorms = false;
         assertFalse(DustStorms.enabled(options, false));
     }
 }

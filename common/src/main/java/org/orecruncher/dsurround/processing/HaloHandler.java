@@ -10,7 +10,7 @@ import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.material.FogType;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Configuration;
-import org.orecruncher.dsurround.config.RainbowStyle;
+import org.orecruncher.dsurround.config.SkyStyle;
 import org.orecruncher.dsurround.effects.halo.HaloConditions;
 import org.orecruncher.dsurround.effects.halo.HaloRenderer;
 import org.orecruncher.dsurround.effects.rainbow.RainbowConditions;
@@ -28,7 +28,7 @@ import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
  * snowing, under a clear sky (with the mod's clouds drawn, fading as they spread), on some stretches of the day. In the
  * Overworld (any dimension with its sky); drawn as part of the sky
  * ({@link HaloRenderer}), so the world and the clouds hide it, and dimmed by fog as the aurora is. Drawn in blocks with
- * the rainbow's Blocky style. Not while an Iris shader pack is in use.
+ * Sky style Blocky. Not while an Iris shader pack is in use.
  */
 public class HaloHandler extends AbstractClientHandler {
 
@@ -68,7 +68,7 @@ public class HaloHandler extends AbstractClientHandler {
         var options = this.config.weatherOptions;
         float target = 0F;
         float dogsTarget = 0F;
-        if (!options.enableHalos) {
+        if (!options.sky.enableHalos) {
             this.status = "disabled";
         } else if (!HaloRenderer.isAvailable()) {
             this.status = "shader unavailable or failed";
@@ -80,7 +80,7 @@ public class HaloHandler extends AbstractClientHandler {
             this.status = "not a cold biome";
         } else if (this.weatherSimulation.intensity() > 0F) {
             this.status = "snowing";
-        } else if (!HaloConditions.slotHasHalo(level.getGameTime(), options.haloChance / 100F)) {
+        } else if (!HaloConditions.slotHasHalo(level.getGameTime(), options.sky.haloChance / 100F)) {
             this.status = "none this time";
         } else {
             var elevation = RainbowConditions.sunElevation(this.levelOracle.currentCelestialAngle());
@@ -126,7 +126,7 @@ public class HaloHandler extends AbstractClientHandler {
             return;
 
         var sunDogs = Mth.lerp(partialTick, this.prevSunDogs, this.sunDogs);
-        var blocky = this.config.weatherOptions.rainbowStyle == RainbowStyle.BLOCKY;
+        var blocky = this.config.weatherOptions.sky.skyStyle == SkyStyle.BLOCKY;
         HaloRenderer.render(this.levelOracle.currentCelestialAngle(), alpha, sunDogs, viewMatrix, blocky);
     }
 

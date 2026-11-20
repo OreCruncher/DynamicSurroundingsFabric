@@ -26,9 +26,9 @@
   "runs": [
     {"label": "default", "scene": "dust"},
     {"label": "low", "scene": "dust", "settings": {
-      "weatherOptions.precipitationDensity": 50,
-      "weatherOptions.precipitationRange": 10,
-      "weatherOptions.enableDynamicClouds": false
+      "weatherOptions.precipitation.precipitationDensity": 50,
+      "weatherOptions.precipitation.precipitationRange": 10,
+      "weatherOptions.sky.enableDynamicClouds": false
     }}
   ]
 }

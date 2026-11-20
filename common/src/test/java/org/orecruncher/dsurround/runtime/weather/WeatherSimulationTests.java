@@ -19,11 +19,11 @@ public class WeatherSimulationTests {
 
     private static WeatherSimulation simulation(boolean enabled, int min, int max) {
         var options = new Configuration.WeatherOptions();
-        options.enableStormSimulation = enabled;
-        options.minStormIntensity = min;
-        options.maxStormIntensity = max;
+        options.storms.enableStormSimulation = enabled;
+        options.storms.minStormIntensity = min;
+        options.storms.maxStormIntensity = max;
         // Held steady at its maximum: the surges are tested on their own
-        options.stormVariation = 0;
+        options.storms.stormVariation = 0;
         return new WeatherSimulation(options);
     }
 
@@ -196,9 +196,9 @@ public class WeatherSimulationTests {
     @Test
     void theSurgeCapsTheRainBelowTheStormsMaximum() {
         var options = new Configuration.WeatherOptions();
-        options.minStormIntensity = 80;
-        options.maxStormIntensity = 80;
-        options.stormVariation = 50;
+        options.storms.minStormIntensity = 80;
+        options.storms.maxStormIntensity = 80;
+        options.storms.stormVariation = 50;
         var sim = new WeatherSimulation(options);
         for (long t = 0; t < 20_000; t += 50) {
             sim.update(1F, 3, t);
@@ -210,9 +210,9 @@ public class WeatherSimulationTests {
     @Test
     void onceItsThunderEndsAStormOnlyWindsDown() {
         var options = new Configuration.WeatherOptions();
-        options.minStormIntensity = 80;
-        options.maxStormIntensity = 80;
-        options.stormVariation = 50;
+        options.storms.minStormIntensity = 80;
+        options.storms.maxStormIntensity = 80;
+        options.storms.stormVariation = 50;
         var sim = new WeatherSimulation(options);
         // Thundering: it surges up and down as before
         for (long t = 0; t < 6000; t += 50) {
@@ -243,9 +243,9 @@ public class WeatherSimulationTests {
     @Test
     void rainWithoutThunderKeepsSurging() {
         var options = new Configuration.WeatherOptions();
-        options.minStormIntensity = 80;
-        options.maxStormIntensity = 80;
-        options.stormVariation = 50;
+        options.storms.minStormIntensity = 80;
+        options.storms.maxStormIntensity = 80;
+        options.storms.stormVariation = 50;
         var sim = new WeatherSimulation(options);
         for (long t = 0; t < 20_000; t += 50) {
             sim.update(1F, 0F, 3, t);
@@ -257,7 +257,7 @@ public class WeatherSimulationTests {
     @Test
     void aSetStrengthDoesNotSurge() {
         var options = new Configuration.WeatherOptions();
-        options.stormVariation = 100;
+        options.storms.stormVariation = 100;
         var sim = new WeatherSimulation(options);
         sim.setStrength(0.6F);
         for (long t = 0; t < 5000; t += 50) {

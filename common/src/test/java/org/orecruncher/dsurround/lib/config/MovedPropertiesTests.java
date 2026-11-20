@@ -14,6 +14,7 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
+import org.orecruncher.dsurround.config.SkyStyle;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -285,24 +286,44 @@ public class MovedPropertiesTests {
     void theGroundFogQualitysNoneBecomesItsSwitch() throws IOException {
         // 0.4.8 kept the switch as the quality's NONE: off, at the default quality
         var off = loadModConfig("{\"weatherOptions\": {\"groundFogQuality\": \"NONE\"}}");
-        assertFalse(off.weatherOptions.enableGroundFog);
-        assertEquals(GroundFogQuality.FANCY, off.weatherOptions.groundFogQuality);
-        var weather = written("dsurround.json").getAsJsonObject("weatherOptions");
-        assertFalse(weather.get("enableGroundFog").getAsBoolean());
-        assertEquals("FANCY", weather.get("groundFogQuality").getAsString());
+        assertFalse(off.fogOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FANCY, off.fogOptions.groundFogQuality);
+        var fog = written("dsurround.json").getAsJsonObject("fogOptions");
+        assertFalse(fog.get("enableGroundFog").getAsBoolean());
+        assertEquals("FANCY", fog.get("groundFogQuality").getAsString());
 
         // Any other quality is on, at that quality
         var fast = loadModConfig("{\"weatherOptions\": {\"groundFogQuality\": \"FAST\"}}");
-        assertTrue(fast.weatherOptions.enableGroundFog);
-        assertEquals(GroundFogQuality.FAST, fast.weatherOptions.groundFogQuality);
+        assertTrue(fast.fogOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FAST, fast.fogOptions.groundFogQuality);
     }
 
     @Test
     void theGroundFogSwitchFromBefore048IsReadAsItIs() throws IOException {
-        // Before 0.4.8 the switch had this name: it reads straight into it again
+        // Before 0.4.8 the switch had this name, and from 0.4.9 to 5.2.0 again, in the weather options
         var config = loadModConfig("{\"weatherOptions\": {\"enableGroundFog\": false}}");
-        assertFalse(config.weatherOptions.enableGroundFog);
-        assertEquals(GroundFogQuality.FANCY, config.weatherOptions.groundFogQuality);
+        assertFalse(config.fogOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FANCY, config.fogOptions.groundFogQuality);
+    }
+
+    @Test
+    void theWeatherOptionsMoveIntoTheirGroups() throws IOException {
+        // 5.3.0 grouped the weather options, and moved the ground fog to the fog options
+        var config = loadModConfig("""
+                {"weatherOptions": {"minStormIntensity": 30, "rainTint": 50, "enableDynamicClouds": false,
+                 "rainbowStyle": "REALISTIC", "haloChance": 5, "enableGroundFog": true, "groundFogQuality": "FAST"}}
+                """);
+        assertEquals(30, config.weatherOptions.storms.minStormIntensity);
+        assertEquals(50, config.weatherOptions.precipitation.rainTint);
+        assertFalse(config.weatherOptions.sky.enableDynamicClouds);
+        assertEquals(SkyStyle.REALISTIC, config.weatherOptions.sky.skyStyle);
+        assertEquals(5, config.weatherOptions.sky.haloChance);
+        assertTrue(config.fogOptions.enableGroundFog);
+        assertEquals(GroundFogQuality.FAST, config.fogOptions.groundFogQuality);
+        var weather = written("dsurround.json").getAsJsonObject("weatherOptions");
+        assertFalse(weather.has("minStormIntensity"), "written in its new place only");
+        assertFalse(weather.has("groundFogQuality"));
+        assertEquals(30, weather.getAsJsonObject("storms").get("minStormIntensity").getAsInt());
     }
 
     @Test

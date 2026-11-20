@@ -17,7 +17,7 @@
   "repeats": 2,
   "settingSets": {
     "base": {"scaryContent.enableLightning": false},
-    "vanilla": {"weatherOptions.enableDynamicClouds": false}
+    "vanilla": {"weatherOptions.sky.enableDynamicClouds": false}
   },
   // A beach (open, flat, and it rains there), which no other scenario builds on: plains has burning-lights.json's
   // zombies and precipitation.json's glass

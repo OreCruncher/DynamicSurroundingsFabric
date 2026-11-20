@@ -21,11 +21,11 @@ import java.util.function.Predicate;
  */
 public enum ShaderPackFeature {
     AURORAS(config -> config.auroraOptions.enableAuroras),
-    RAINBOWS(config -> config.weatherOptions.enableRainbows),
-    HALOS(config -> config.weatherOptions.enableHalos),
-    GROUND_FOG(config -> config.weatherOptions.enableGroundFog),
-    DYNAMIC_CLOUDS(config -> config.weatherOptions.enableDynamicClouds),
-    PARTICLE_WEATHER(config -> config.weatherOptions.enableParticlePrecipitation),
+    RAINBOWS(config -> config.weatherOptions.sky.enableRainbows),
+    HALOS(config -> config.weatherOptions.sky.enableHalos),
+    GROUND_FOG(config -> config.fogOptions.enableGroundFog),
+    DYNAMIC_CLOUDS(config -> config.weatherOptions.sky.enableDynamicClouds),
+    PARTICLE_WEATHER(config -> config.weatherOptions.precipitation.enableParticlePrecipitation),
     WINDOW_FROST(config -> config.weatherOptions.enableWindowFrost),
     LIGHTS(config -> config.fireflyOptions.enableLight || config.flameJetOptions.enableLight),
     SOFT_PARTICLES(config -> true),

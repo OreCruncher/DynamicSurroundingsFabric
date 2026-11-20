@@ -19,7 +19,7 @@ layout(std140) uniform RainbowInfo {
     // rgb: the sunlight's color, as bright as the brightest of the bow is added to the sky; a: how strongly the
     // secondary bow shows, 0 to 1
     vec4 Sunlight;
-    // x: where the patches are, the same for everyone seeing this rainbow; y: 1 for flat stripes in blocks (Rainbow
+    // x: where the patches are, the same for everyone seeing this rainbow; y: 1 for flat stripes in blocks (Sky
     // style Blocky), 0 for its real colors; z: how far its colors are paled toward gray, a moonbow's; w unused
     vec4 Patches;
 };

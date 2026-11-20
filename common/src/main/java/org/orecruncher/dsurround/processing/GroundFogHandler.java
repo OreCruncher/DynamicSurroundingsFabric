@@ -114,7 +114,7 @@ public class GroundFogHandler extends AbstractClientHandler {
      * Whether the mist is drawn
      */
     public boolean isActive() {
-        return this.config.weatherOptions.enableGroundFog && !FeatureConflict.GROUND_FOG.isBlocked() && this.shaderUsable()
+        return this.config.fogOptions.enableGroundFog && !FeatureConflict.GROUND_FOG.isBlocked() && this.shaderUsable()
                 && GameUtils.isInGame() && this.dimensionInformation.groundFog();
     }
 
@@ -183,7 +183,7 @@ public class GroundFogHandler extends AbstractClientHandler {
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         float seconds = ((this.ticks % 72000) + partialTick) / 20F;
         GroundFogVolume.render(this.field, camera, minecraft.gameRenderer.mainRenderTarget(),
-                this.config.weatherOptions.groundFogQuality, this.strength, this.driftX, this.driftZ, seconds);
+                this.config.fogOptions.groundFogQuality, this.strength, this.driftX, this.driftZ, seconds);
     }
 
     /**
@@ -213,8 +213,8 @@ public class GroundFogHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         String text;
-        var quality = this.config.weatherOptions.groundFogQuality;
-        if (!this.config.weatherOptions.enableGroundFog)
+        var quality = this.config.fogOptions.groundFogQuality;
+        if (!this.config.fogOptions.enableGroundFog)
             text = "Ground fog: off";
         else if (FeatureConflict.GROUND_FOG.isBlocked())
             text = "Ground fog: another mod's (" + FeatureConflict.GROUND_FOG.blockingMod().orElseThrow().ids().getFirst() + ")";

@@ -152,7 +152,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
      * Whether the drops are drawn in place of vanilla's weather
      */
     public boolean isActive() {
-        return isEnabled(this.config.weatherOptions.enableParticlePrecipitation, FeatureConflict.PARTICLE_WEATHER.isBlocked())
+        return isEnabled(this.config.weatherOptions.precipitation.enableParticlePrecipitation, FeatureConflict.PARTICLE_WEATHER.isBlocked())
                 && PrecipitationShaders.isAvailable()
                 && OptionalHook.PRECIPITATION.status() != OptionalHook.Status.MISSING
                 // Drawn from the world effects hook: without it vanilla's stays, or there would be none at all
@@ -188,7 +188,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
         this.columns.setLevel(level);
         // Vanilla's own particles: they need no drops drawn, so drip even when the drops are off
-        if (this.config.weatherOptions.enableAfterRainDrips)
+        if (this.config.weatherOptions.precipitation.enableAfterRainDrips)
             this.drips.tick(level, this.columns, pos.x, pos.y, pos.z, rainLevel, Randomizer.forThisThread());
         else
             this.drips.clear();
@@ -205,7 +205,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             return;
         }
         var particles = GameUtils.getGameSettings().particles().get();
-        this.fitRange(this.config.weatherOptions.precipitationRange);
+        this.fitRange(this.config.weatherOptions.precipitation.precipitationRange);
         // The drops' last tick, made while the frames since were drawn: its drops are drawn from now on, and its
         // landings splash. The drops run a tick behind the world, which nobody sees.
         this.field.finish(this.columns);
@@ -215,7 +215,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             this.landings.seedWindows(level, this.columns, pos.x, pos.y, pos.z, rainLevel, this.windService.wind(), this.windowStreaks, random);
         this.landings.dustSound(level, this.field, this.columns, pos.x, pos.z, rainLevel, random);
         // Last: once started, the drops being stepped are the step's until the next tick
-        this.field.start(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitationDensity, particles),
+        this.field.start(this.columns, pos.x, pos.y, pos.z, rainLevel, density(this.config.weatherOptions.precipitation.precipitationDensity, particles),
                 this.windService.wind(), this.stepRandom, this.stepper);
     }
 
@@ -298,8 +298,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private DropMeshes.Style style() {
         var options = this.config.weatherOptions;
         return new DropMeshes.Style(this.snowflakes.flakes(GameUtils.getResourceManager()), this.snowflakes.largest(),
-                DSurroundParticleSprites.DUST.sprites(), new DropScales(options.rainDropScale / 100F, options.snowflakeScale / 100F),
-                RainColor.ofTint(options.rainTint), DSurroundParticleSprites.DAMP_SPOT.get(0, 1));
+                DSurroundParticleSprites.DUST.sprites(), new DropScales(options.precipitation.rainDropScale / 100F, options.precipitation.snowflakeScale / 100F),
+                RainColor.ofTint(options.precipitation.rainTint), DSurroundParticleSprites.DAMP_SPOT.get(0, 1));
     }
 
     /**
@@ -413,7 +413,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         String text;
-        if (!this.config.weatherOptions.enableParticlePrecipitation)
+        if (!this.config.weatherOptions.precipitation.enableParticlePrecipitation)
             text = "Precipitation: vanilla";
         else if (FeatureConflict.PARTICLE_WEATHER.isBlocked())
             text = "Precipitation: off (%s installed)".formatted(FeatureConflict.PARTICLE_WEATHER.blockingMod().orElseThrow().installedId().orElseThrow());
@@ -427,7 +427,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         float ahead = this.meshes.aheadShare();
         if (!Float.isNaN(ahead))
             text += String.format(Locale.ROOT, ", built ahead %.0f%%", ahead * 100F);
-        if (this.config.weatherOptions.enableAfterRainDrips && this.drips.strength() > 0F)
+        if (this.config.weatherOptions.precipitation.enableAfterRainDrips && this.drips.strength() > 0F)
             text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
     }

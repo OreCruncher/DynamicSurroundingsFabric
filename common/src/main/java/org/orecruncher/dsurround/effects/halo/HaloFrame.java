@@ -42,7 +42,7 @@ public record HaloFrame(Matrix4fc invViewProj, float[] vec4s) {
      * @param sunDogs        how strongly the sun dogs show, 0 to 1
      * @param projection     the frame's projection (see {@code LevelProjection})
      * @param viewMatrix     the camera's rotation, from the sky rendering
-     * @param blocky         whether it is drawn in blocks, as the rainbow's Blocky style
+     * @param blocky         whether it is drawn in blocks (Sky style Blocky)
      */
     public static HaloFrame of(float celestialAngle, float strength, float sunDogs, Matrix4fc projection, Matrix4fc viewMatrix,
                                boolean blocky) {

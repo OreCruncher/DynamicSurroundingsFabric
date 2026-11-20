@@ -88,7 +88,7 @@ public final class HaloRenderer {
      * @param strength       how strongly the halo shows, 0 to 1
      * @param sunDogs        how strongly the sun dogs show, 0 to 1
      * @param viewMatrix     the camera's rotation, from the sky rendering
-     * @param blocky         whether it is drawn in blocks, as the rainbow's Blocky style
+     * @param blocky         whether it is drawn in blocks (Sky style Blocky)
      */
     public static void render(float celestialAngle, float strength, float sunDogs, Matrix4f viewMatrix, boolean blocky) {
         if (strength <= 0F || !isAvailable())

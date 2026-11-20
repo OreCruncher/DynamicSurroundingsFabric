@@ -178,7 +178,7 @@
       "label": "dust-range20",
       "scene": "dust",
       "settings": {
-        "weatherOptions.precipitationRange": 20
+        "weatherOptions.precipitation.precipitationRange": 20
       }
     }
   ]

@@ -40,7 +40,7 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
     }
   },
   "runs": [
-    {"label": "fancy", "scene": "swamp", "settings": {"weatherOptions.groundFogQuality": "FANCY"}}
+    {"label": "fancy", "scene": "swamp", "settings": {"fogOptions.groundFogQuality": "FANCY"}}
   ]
 }
 ```

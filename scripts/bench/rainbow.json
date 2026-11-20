@@ -17,8 +17,8 @@
   "record": 60,
   "repeats": 2,
   "settingSets": {
-    "off": {"weatherOptions.enableRainbows": false},
-    "realistic": {"weatherOptions.rainbowStyle": "REALISTIC"}
+    "off": {"weatherOptions.sky.enableRainbows": false},
+    "realistic": {"weatherOptions.sky.skyStyle": "REALISTIC"}
   },
   // A beach (open and flat), which no other scenario builds on. Late afternoon, the sun 20 degrees up in the west
   // (time 11500): the point opposite it is 20 degrees below the horizon in the east, and the primary bow's top 22
@@ -43,7 +43,7 @@
   "runs": [
     {"label": "rainbow-both", "scene": "both", "use": "realistic"},
     {"label": "rainbow-primary", "scene": "primary", "use": "realistic"},
-    {"label": "rainbow-blocky", "scene": "both", "settings": {"weatherOptions.rainbowStyle": "BLOCKY"}},
+    {"label": "rainbow-blocky", "scene": "both", "settings": {"weatherOptions.sky.skyStyle": "BLOCKY"}},
     {"label": "rainbow-off", "scene": "both", "use": "off"}
   ]
 }

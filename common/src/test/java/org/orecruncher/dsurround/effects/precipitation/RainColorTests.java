@@ -27,7 +27,7 @@ public class RainColorTests {
         assertEquals(0.78F, usual.green(), 1e-5F);
         assertEquals(0.88F, usual.blue(), 1e-5F);
         assertEquals(usual, RainColor.USUAL);
-        assertEquals(RainColor.DEFAULT_TINT, new Configuration.WeatherOptions().rainTint, "the option's default");
+        assertEquals(RainColor.DEFAULT_TINT, new Configuration.Precipitation().rainTint, "the option's default");
     }
 
     @Test

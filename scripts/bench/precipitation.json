@@ -59,20 +59,20 @@
   },
   "runs": [
     {"label": "rain-low", "scene": "rain", "settings": {
-      "weatherOptions.precipitationDensity": 50,
-      "weatherOptions.precipitationRange": 10
+      "weatherOptions.precipitation.precipitationDensity": 50,
+      "weatherOptions.precipitation.precipitationRange": 10
     }},
     {"label": "rain-medium", "scene": "rain"},
     {"label": "rain-high", "scene": "rain", "settings": {
-      "weatherOptions.precipitationRange": 20
+      "weatherOptions.precipitation.precipitationRange": 20
     }},
     {"label": "snow-low", "scene": "snow", "settings": {
-      "weatherOptions.precipitationDensity": 50,
-      "weatherOptions.precipitationRange": 10
+      "weatherOptions.precipitation.precipitationDensity": 50,
+      "weatherOptions.precipitation.precipitationRange": 10
     }},
     {"label": "snow-medium", "scene": "snow"},
     {"label": "snow-high", "scene": "snow", "settings": {
-      "weatherOptions.precipitationRange": 20
+      "weatherOptions.precipitation.precipitationRange": 20
     }}
   ]
 }

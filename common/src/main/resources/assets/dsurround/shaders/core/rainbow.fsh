@@ -13,7 +13,7 @@
 // Its light doesn't only add to the sky: it covers part of what is behind it (COVER), as much as it is bright. Added
 // alone onto a bright blue sky, whose blue is already near full, every color of the bow came out nearly white.
 //
-// Rainbow style Blocky (Patches.y) draws it to suit the game instead: the sky in blocks fixed around the point opposite
+// Sky style Blocky (Patches.y) draws it to suit the game instead: the sky in blocks fixed around the point opposite
 // the sun, each block one flat color by the ring of the bow it falls in, six stripes a block wide, red to violet.
 //
 // A moonbow is the same opposite the moon, in moonlight (Sunlight, dimmed), its colors paled (Patches.z).
@@ -33,7 +33,7 @@ const float OUTERMOST = 0.5592;
 // How much of the sky behind the bow its light covers, for each of its brightest channel
 const float COVER = 0.75;
 
-// Rainbow style Blocky: the sky laid out in blocks this size, in degrees, about a texel of the sun's, and each block
+// Sky style Blocky: the sky laid out in blocks this size, in degrees, about a texel of the sun's, and each block
 // one flat color by the ring of the bow its middle falls in, a block wide each
 const float BLOCK = 0.5;
 // The primary's outer edge, red, as the real bow's; the secondary's inner edge, red too, its colors reversed

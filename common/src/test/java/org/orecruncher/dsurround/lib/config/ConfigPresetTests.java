@@ -4,10 +4,12 @@
 package org.orecruncher.dsurround.lib.config;
 
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,6 +46,43 @@ public class ConfigPresetTests {
 
         @Property
         public boolean top = true;
+    }
+
+    public static class MovedConfig extends ConfigurationData {
+
+        public enum Quality {LOW, HIGH}
+
+        public static class Settings {
+            @Property
+            @MovedFrom("oldSwitch")
+            public boolean enabled = true;
+
+            // A switch once kept as the quality's NONE, now a property of its own, as ground fog's was
+            @Property
+            @MovedFrom(value = "oldQuality", values = {"NONE=false"})
+            public boolean shown = true;
+
+            @Property
+            @MovedFrom("oldQuality")
+            public Quality quality = Quality.HIGH;
+
+            @Property
+            @IntegerRange(min = 0, max = 10)
+            @MovedFrom("oldCount")
+            public int count = 5;
+        }
+
+        public static class Renamed {
+            @Property
+            public boolean inside = true;
+        }
+
+        @Property
+        public final Settings settings = new Settings();
+
+        @Property
+        @MovedFrom("formerName")
+        public final Renamed renamed = new Renamed();
     }
 
     private static List<ConfigPreset> parse(String json, List<String> problems) {
@@ -287,5 +326,64 @@ public class ConfigPresetTests {
         var map = preset("{\"top\": false, \"group.count\": 1}").values();
         assertEquals("top", map.keySet().iterator().next());
         assertThrows(UnsupportedOperationException.class, () -> map.put("x", null));
+    }
+
+    @Test
+    void anOldPathIsFollowedToWhereItMoved() {
+        var problems = new ArrayList<String>();
+        var validated = preset("{\"oldSwitch\": false, \"formerName.inside\": false}")
+                .validated(new MovedConfig(), path -> true, problems::add);
+
+        assertEquals(List.of("settings.enabled", "renamed.inside"), List.copyOf(validated.values().keySet()));
+        var config = new MovedConfig();
+        assertEquals(List.of(), validated.apply(config));
+        assertFalse(config.settings.enabled);
+        assertFalse(config.renamed.inside);
+        // Each move is described, for the preset's author
+        assertEquals(2, problems.size(), problems.toString());
+        assertTrue(problems.getFirst().contains("oldSwitch: has moved to settings.enabled"), problems.toString());
+    }
+
+    @Test
+    void anOldValueIsPairedAsAConfigFilesIs() {
+        var problems = new ArrayList<String>();
+        // NONE turns the switch off, and the quality, which has no NONE, is left alone without complaint
+        var off = preset("{\"oldQuality\": \"NONE\"}").validated(new MovedConfig(), path -> true, problems::add);
+        assertEquals(Map.of("settings.shown", new JsonPrimitive(false)), off.values());
+        assertEquals(1, problems.size(), problems.toString());
+
+        // LOW has no pair for the switch, and goes to the quality as it is
+        var low = preset("{\"oldQuality\": \"LOW\"}").validated(new MovedConfig(), path -> true, p -> {});
+        var config = new MovedConfig();
+        low.apply(config);
+        assertEquals(MovedConfig.Quality.LOW, config.settings.quality);
+        assertTrue(config.settings.shown);
+    }
+
+    @Test
+    void theNewPathWinsOverTheOld() {
+        var validated = preset("{\"oldSwitch\": false, \"settings.enabled\": true}")
+                .validated(new MovedConfig(), path -> true, p -> {});
+        assertEquals(Map.of("settings.enabled", new JsonPrimitive(true)), validated.values());
+    }
+
+    @Test
+    void aMovedValueIsCheckedAtItsNewPlace() {
+        var problems = new ArrayList<String>();
+        var validated = preset("{\"oldCount\": 50, \"oldSwitch\": false}")
+                .validated(new MovedConfig(), path -> !path.equals("settings.enabled"), problems::add);
+
+        assertEquals(Map.of(), validated.values());
+        assertEquals(2, problems.size(), problems.toString());
+        assertTrue(problems.stream().anyMatch(p -> p.contains("oldCount: moved to settings.count: 50 is outside its range")), problems.toString());
+        assertTrue(problems.stream().anyMatch(p -> p.contains("oldSwitch: moved to settings.enabled: presets can't change it")), problems.toString());
+    }
+
+    @Test
+    void aPathNothingMovedFromIsStillUnknown() {
+        var problems = new ArrayList<String>();
+        var validated = preset("{\"neverWas\": true}").validated(new MovedConfig(), path -> true, problems::add);
+        assertEquals(Map.of(), validated.values());
+        assertEquals(List.of("preset 'p', neverWas: no such property"), problems);
     }
 }

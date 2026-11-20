@@ -24,9 +24,9 @@
     }
   },
   "runs": [
-    {"label": "off", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": false}},
-    {"label": "fast", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": true, "weatherOptions.groundFogQuality": "FAST"}},
-    {"label": "fancy", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": true, "weatherOptions.groundFogQuality": "FANCY"}},
-    {"label": "fabulous", "scene": "swamp", "settings": {"weatherOptions.enableGroundFog": true, "weatherOptions.groundFogQuality": "FABULOUS"}}
+    {"label": "off", "scene": "swamp", "settings": {"fogOptions.enableGroundFog": false}},
+    {"label": "fast", "scene": "swamp", "settings": {"fogOptions.enableGroundFog": true, "fogOptions.groundFogQuality": "FAST"}},
+    {"label": "fancy", "scene": "swamp", "settings": {"fogOptions.enableGroundFog": true, "fogOptions.groundFogQuality": "FANCY"}},
+    {"label": "fabulous", "scene": "swamp", "settings": {"fogOptions.enableGroundFog": true, "fogOptions.groundFogQuality": "FABULOUS"}}
   ]
 }

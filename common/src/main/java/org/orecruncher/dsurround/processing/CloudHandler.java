@@ -140,7 +140,7 @@ public class CloudHandler extends AbstractClientHandler {
      */
     public boolean isActive() {
         // Drawn from the world effects hook: without it vanilla's stay, or there would be none at all
-        return this.config.weatherOptions.enableDynamicClouds && !FeatureConflict.DYNAMIC_CLOUDS.isBlocked()
+        return this.config.weatherOptions.sky.enableDynamicClouds && !FeatureConflict.DYNAMIC_CLOUDS.isBlocked()
                 && CloudRenderer.isUsable() && OptionalHook.WORLD_EFFECTS.status() != OptionalHook.Status.MISSING
                 && GameUtils.isInGame()
                 && GameUtils.getMC().options.cloudStatus().get() != CloudStatus.OFF && this.dimensionInformation.dynamicClouds();
@@ -357,7 +357,7 @@ public class CloudHandler extends AbstractClientHandler {
     @Override
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         String text;
-        if (!this.config.weatherOptions.enableDynamicClouds)
+        if (!this.config.weatherOptions.sky.enableDynamicClouds)
             text = "Clouds: vanilla's";
         else if (FeatureConflict.DYNAMIC_CLOUDS.isBlocked())
             text = "Clouds: another mod's (" + FeatureConflict.DYNAMIC_CLOUDS.blockingMod().orElseThrow().ids().getFirst() + ")";

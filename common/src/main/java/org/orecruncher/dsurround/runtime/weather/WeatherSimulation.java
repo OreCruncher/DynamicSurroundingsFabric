@@ -65,7 +65,7 @@ public final class WeatherSimulation implements IWeatherSimulation {
         // A strength set by command applies at once, not from the next tick
         if (!Float.isNaN(this.strengthSet))
             return Math.min(vanillaLevel, this.strengthSet);
-        return this.options.enableStormSimulation ? Math.min(vanillaLevel, this.cap) : vanillaLevel;
+        return this.options.storms.enableStormSimulation ? Math.min(vanillaLevel, this.cap) : vanillaLevel;
     }
 
     @Override
@@ -90,7 +90,7 @@ public final class WeatherSimulation implements IWeatherSimulation {
 
     @Override
     public boolean isSimulating() {
-        return this.options.enableStormSimulation;
+        return this.options.storms.enableStormSimulation;
     }
 
     @Override
@@ -153,10 +153,10 @@ public final class WeatherSimulation implements IWeatherSimulation {
             this.waning = true;
 
         if (this.pickedMaximum == 0F)
-            this.pickedMaximum = stormMaximum(day, this.options.minStormIntensity, this.options.maxStormIntensity);
+            this.pickedMaximum = stormMaximum(day, this.options.storms.minStormIntensity, this.options.storms.maxStormIntensity);
         if (Float.isNaN(this.strengthSet)) {
             this.maxIntensity = this.pickedMaximum;
-            float surged = this.pickedMaximum * surge(gameTime, this.options.stormVariation);
+            float surged = this.pickedMaximum * surge(gameTime, this.options.storms.stormVariation);
             this.cap = this.waning ? Math.min(this.cap, surged) : surged;
         } else {
             // A strength set by command holds steady
@@ -211,7 +211,7 @@ public final class WeatherSimulation implements IWeatherSimulation {
     String diagnosticText() {
         String text;
         var set = !Float.isNaN(this.strengthSet);
-        if (!this.options.enableStormSimulation && !set)
+        if (!this.options.storms.enableStormSimulation && !set)
             text = "Storm: simulation disabled";
         else if (this.vanillaLevel == 0F)
             text = "Storm: none";

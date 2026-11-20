@@ -8,7 +8,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /**
@@ -56,6 +58,44 @@ final class MovedProperties {
                 moved += apply(root, group.getChildren(), path + ".", onMove);
         }
         return moved;
+    }
+
+    /**
+     * Where a value at an old path has moved to (see {@link MovedFrom}), for a dotted path written before a move, as
+     * a preset's are.
+     *
+     * @param path   the new place
+     * @param values the old value's pairs with new ones, for {@link #convert}
+     */
+    record Move(String path, String[] values) {
+    }
+
+    /**
+     * Each place a value at {@code oldPath} has moved to: every property naming that path in its {@link MovedFrom}
+     * (one old place can feed several, as a switch folded into a style once did), or else the path under a group
+     * that has moved, with the rest of it unchanged. Empty if nothing has moved from there.
+     */
+    static List<Move> movesFrom(Collection<ConfigElement<?>> specification, String oldPath) {
+        var moves = new ArrayList<Move>();
+        movesFrom(specification, "", oldPath, moves);
+        return moves;
+    }
+
+    private static void movesFrom(Collection<ConfigElement<?>> elements, String prefix, String oldPath, List<Move> moves) {
+        for (var element : elements) {
+            var path = prefix + element.fieldName();
+            var movedFrom = element.getAnnotation(MovedFrom.class);
+            if (movedFrom.isPresent()) {
+                for (var from : movedFrom.get().value()) {
+                    if (from.equals(oldPath))
+                        moves.add(new Move(path, movedFrom.get().values()));
+                    else if (element instanceof ConfigElement.PropertyGroup && oldPath.startsWith(from + "."))
+                        moves.add(new Move(path + oldPath.substring(from.length()), new String[0]));
+                }
+            }
+            if (element instanceof ConfigElement.PropertyGroup group)
+                movesFrom(group.getChildren(), path + ".", oldPath, moves);
+        }
     }
 
     /**

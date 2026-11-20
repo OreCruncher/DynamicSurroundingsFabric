@@ -11,7 +11,7 @@
 // sun on the horizon, further as it climbs (HaloConditions.sunDogAzimuth, for each color). Each has the same sharp red
 // edge toward the sun and a white tail away from it.
 //
-// Rainbow style Blocky (Style.x) lays the sky in blocks fixed around the sun, as the rainbow's, each block one flat
+// Sky style Blocky (Style.x) lays the sky in blocks fixed around the sun, as the rainbow's, each block one flat
 // color: red, orange, then pale stepping down.
 
 #include <dsurround:halo.glsl>

@@ -6,15 +6,16 @@ package org.orecruncher.dsurround.config;
 import org.orecruncher.dsurround.lib.config.ITranslatedEnum;
 
 /**
- * How rainbows look: colors worked out from sunlight through raindrops, or flat stripes in blocks, to suit the game.
+ * How rainbows, moonbows and halos look: flat stripes in blocks, to suit the game, or colors worked out from how light
+ * passes through raindrops and ice.
  */
-public enum RainbowStyle implements ITranslatedEnum {
-    REALISTIC("dsurround.config.rainbowStyle.realistic"),
-    BLOCKY("dsurround.config.rainbowStyle.blocky");
+public enum SkyStyle implements ITranslatedEnum {
+    BLOCKY("dsurround.config.skyStyle.blocky"),
+    REALISTIC("dsurround.config.skyStyle.realistic");
 
     private final String translationKey;
 
-    RainbowStyle(String translationKey) {
+    SkyStyle(String translationKey) {
         this.translationKey = translationKey;
     }
 
