@@ -69,6 +69,7 @@ public class Handlers {
         this.register(FogHandler.class);
         this.register(AuroraHandler.class);
         this.register(RainbowHandler.class);
+        this.register(HaloHandler.class);
         this.register(PrecipitationHandler.class);
         this.register(LightningHandler.class);
         this.register(GroundFogHandler.class);

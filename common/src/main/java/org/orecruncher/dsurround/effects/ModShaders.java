@@ -9,6 +9,7 @@ import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
+import org.orecruncher.dsurround.effects.halo.HaloRenderer;
 import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
 import org.orecruncher.dsurround.effects.particles.PointLights;
 import org.orecruncher.dsurround.effects.particles.SoftParticles;
@@ -30,7 +31,7 @@ public final class ModShaders {
                     SoftParticles.EYE_FLAME_SHADER,
                     AuroraRenderer.SHADER,
                     PointLights.SHADER),
-            Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS, RealisticAuroraRenderer.SHADERS, RainbowRenderer.SHADERS,
+            Stream.of(PrecipitationShaders.SHADERS, FrostRenderer.SHADERS, GroundFogVolume.SHADERS, RealisticAuroraRenderer.SHADERS, RainbowRenderer.SHADERS, HaloRenderer.SHADERS,
                     LightningRenderer.SHADERS, CloudRenderer.SHADERS, ApparitionRenderer.SHADERS, SoftParticles.oitShaders()).flatMap(List::stream)).toList();
 
     private ModShaders() {

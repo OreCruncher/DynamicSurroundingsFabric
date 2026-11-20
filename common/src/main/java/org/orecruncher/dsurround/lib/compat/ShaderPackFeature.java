@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 public enum ShaderPackFeature {
     AURORAS(config -> config.auroraOptions.enableAuroras),
     RAINBOWS(config -> config.weatherOptions.enableRainbows),
+    HALOS(config -> config.weatherOptions.enableHalos),
     GROUND_FOG(config -> config.weatherOptions.enableGroundFog),
     DYNAMIC_CLOUDS(config -> config.weatherOptions.enableDynamicClouds),
     PARTICLE_WEATHER(config -> config.weatherOptions.enableParticlePrecipitation),

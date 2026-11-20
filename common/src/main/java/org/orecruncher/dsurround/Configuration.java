@@ -630,6 +630,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableDynamicClouds = true;
 
         @Property
+        @Experimental
         @Comment("As rain eases off with the sun low, a rainbow can show in the sky opposite the sun; after a strong storm, a fainter second bow outside it. By a full moon, a pale moonbow")
         public boolean enableRainbows = true;
 
@@ -641,6 +642,16 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("How rainbows look: REALISTIC, their colors worked out from sunlight through raindrops, or BLOCKY, flat stripes stepping in blocks around the bow")
         public RainbowStyle rainbowStyle = RainbowStyle.BLOCKY;
+
+        @Property
+        @Experimental
+        @Comment("In cold biomes, under a clear sky, ice in the air can ring the sun with a halo, with a bright sun dog either side of it. Drawn in blocks with Rainbow style BLOCKY")
+        public boolean enableHalos = true;
+
+        @Property
+        @Slider(min = 0, max = 100)
+        @Comment("How likely a quarter of a day of cold fair weather is to have a halo, as a percent")
+        public int haloChance = 25;
     }
 
     public static class FogOptions {

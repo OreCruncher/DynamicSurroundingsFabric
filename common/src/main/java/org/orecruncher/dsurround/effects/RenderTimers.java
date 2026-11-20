@@ -8,6 +8,7 @@ import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
+import org.orecruncher.dsurround.effects.halo.HaloRenderer;
 import org.orecruncher.dsurround.effects.lightning.LightningRenderer;
 import org.orecruncher.dsurround.effects.particles.ParticleLayerTimers;
 import org.orecruncher.dsurround.effects.particles.PointLights;
@@ -30,6 +31,7 @@ public final class RenderTimers {
             AuroraRenderer.RENDER_TIMER,
             RealisticAuroraRenderer.RENDER_TIMER,
             RainbowRenderer.RENDER_TIMER,
+            HaloRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
             PrecipitationShaders.WAIT_TIMER,
             PrecipitationShaders.DAMP_SPOTS_TIMER,
