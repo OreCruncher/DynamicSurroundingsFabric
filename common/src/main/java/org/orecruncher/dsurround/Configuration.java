@@ -13,6 +13,7 @@ import org.orecruncher.dsurround.config.LightLevelColors;
 import org.orecruncher.dsurround.config.LightLevelMode;
 import org.orecruncher.dsurround.config.MarginPosition;
 import org.orecruncher.dsurround.config.PocketWatchStyle;
+import org.orecruncher.dsurround.config.RainbowStyle;
 import org.orecruncher.dsurround.config.WaterRippleStyle;
 import org.orecruncher.dsurround.lib.config.Comment;
 import org.orecruncher.dsurround.lib.config.ConfigPlacement;
@@ -636,6 +637,10 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("How likely rain clearing with the sun low is to leave a rainbow, as a percent")
         public int rainbowChance = 50;
+
+        @Property
+        @Comment("How rainbows look: REALISTIC, their colors worked out from sunlight through raindrops, or BLOCKY, flat stripes stepping in blocks around the bow")
+        public RainbowStyle rainbowStyle = RainbowStyle.BLOCKY;
     }
 
     public static class FogOptions {

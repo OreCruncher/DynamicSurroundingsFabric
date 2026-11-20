@@ -1198,6 +1198,11 @@ The pass costs the same with or without the secondary bow: a pixel reads both ro
 the ones further than 56 degrees from the point opposite the sun stop after one dot product. About the classic
 aurora's cost; it draws only with a low sun as rain clears, and is skipped entirely otherwise.
 
+**Rainbow style Blocky (same day, Fabric, a look check):** one repeat of 3-second recordings in three views (the
+scene above, looking up at the top of the bow, and at sunset, time 12300): Rainbow GPU 0.035-0.046 ms Blocky against
+0.027-0.034 Realistic. A little more (the grid and the stripes' lookup), still small. `rainbow.json` now has a Blocky
+run for the full measure.
+
 ## Results, 2026-11-19: Fabric chain (5.3.0)
 
 5.3.0 on Fabric, OpenGL, the machine above (Minecraft 26.3), commit `c2276834` on `OreCruncher/26.3-5.3.0` (the

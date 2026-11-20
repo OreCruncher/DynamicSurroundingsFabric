@@ -112,8 +112,10 @@ public final class RainbowRenderer {
      * @param viewMatrix     the camera's rotation, from the sky rendering
      * @param time           seconds, for the drifting of its patches
      * @param seed           where its patches are
+     * @param blocky         whether it is drawn as flat stripes in blocks rather than its real colors
      */
-    public static void render(float celestialAngle, float strength, float secondary, Matrix4f viewMatrix, float time, float seed) {
+    public static void render(float celestialAngle, float strength, float secondary, Matrix4f viewMatrix, float time, float seed,
+                              boolean blocky) {
         if (strength <= 0F || !isAvailable())
             return;
         prepare();
@@ -122,15 +124,15 @@ public final class RainbowRenderer {
             return;
         RENDER_TIMER.begin();
         try {
-            SHADER.run(() -> draw(colors, celestialAngle, strength, secondary, viewMatrix, time, seed), () -> {});
+            SHADER.run(() -> draw(colors, celestialAngle, strength, secondary, viewMatrix, time, seed, blocky), () -> {});
         } finally {
             RENDER_TIMER.end();
         }
     }
 
     private static void draw(RainbowSpectrum colors, float celestialAngle, float strength, float secondary, Matrix4f viewMatrix,
-                             float time, float seed) {
-        var frame = RainbowFrame.of(celestialAngle, strength, secondary, LevelProjection.get(), viewMatrix, time, seed);
+                             float time, float seed, boolean blocky) {
+        var frame = RainbowFrame.of(celestialAngle, strength, secondary, LevelProjection.get(), viewMatrix, time, seed, blocky);
         pack(frame);
         // Made the first time it is used, which can't be while a render pass is open
         var view = texture(colors).getTextureView();

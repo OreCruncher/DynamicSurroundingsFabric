@@ -27,6 +27,7 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
     static final int STRENGTH = 3;
     static final int ACROSS = 4;
     static final int SECONDARY = 11;
+    static final int BLOCKY = 13;
 
     /**
      * How bright the brightest of the bow is added to the sky, at full strength, before the sun's color
@@ -41,9 +42,10 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
      * @param viewMatrix     the camera's rotation, from the sky rendering
      * @param time           seconds, for the drifting of the patches
      * @param seed           where the bow's patches are, the same for everyone seeing it
+     * @param blocky         whether it is drawn as flat stripes in blocks rather than its real colors
      */
     public static RainbowFrame of(float celestialAngle, float strength, float secondary, Matrix4fc projection,
-                                  Matrix4fc viewMatrix, float time, float seed) {
+                                  Matrix4fc viewMatrix, float time, float seed, boolean blocky) {
         var invViewProj = new Matrix4f(projection).mul(viewMatrix).invert();
         var antisolar = antisolar(celestialAngle);
         var across = across(antisolar);
@@ -53,7 +55,7 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
         put(v, 0, antisolar.x, antisolar.y, antisolar.z, Math.clamp(strength, 0F, 1F));
         put(v, 1, across.x, across.y, across.z, time);
         put(v, 2, tint.x * BRIGHTNESS, tint.y * BRIGHTNESS, tint.z * BRIGHTNESS, Math.clamp(secondary, 0F, 1F));
-        put(v, 3, seed, 0F, 0F, 0F);
+        put(v, 3, seed, blocky ? 1F : 0F, 0F, 0F);
         return new RainbowFrame(invViewProj, v);
     }
 

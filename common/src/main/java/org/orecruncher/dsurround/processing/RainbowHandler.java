@@ -11,6 +11,7 @@ import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.RainbowStyle;
 import org.orecruncher.dsurround.effects.rainbow.RainbowConditions;
 import org.orecruncher.dsurround.effects.rainbow.RainbowRenderer;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
@@ -154,7 +155,8 @@ public class RainbowHandler extends AbstractClientHandler {
         var secondary = Mth.lerp(partialTick, this.prevSecondary, this.secondary);
         var celestialAngle = DayCycle.getCelestialAngle(level, camera.position());
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
-        RainbowRenderer.render(celestialAngle, alpha, secondary, viewMatrix, time, this.conditions.seed());
+        var blocky = this.config.weatherOptions.rainbowStyle == RainbowStyle.BLOCKY;
+        RainbowRenderer.render(celestialAngle, alpha, secondary, viewMatrix, time, this.conditions.seed(), blocky);
     }
 
     // ---- /dsweather rainbow

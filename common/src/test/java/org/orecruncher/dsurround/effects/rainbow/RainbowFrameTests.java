@@ -64,7 +64,7 @@ public class RainbowFrameTests {
 
     @Test
     void valuesSitWhereTheBlockHasThem() {
-        var frame = RainbowFrame.of(70F, 1.5F, 0.25F, new Matrix4f().perspective(1.2F, 1.7F, 0.05F, 1000F), new Matrix4f(), 12F, 7F);
+        var frame = RainbowFrame.of(70F, 1.5F, 0.25F, new Matrix4f().perspective(1.2F, 1.7F, 0.05F, 1000F), new Matrix4f(), 12F, 7F, true);
         var v = frame.vec4s();
         assertEquals(RainbowFrame.VECTORS * 4, v.length);
         var antisolar = RainbowFrame.antisolar(70F);
@@ -73,5 +73,8 @@ public class RainbowFrameTests {
         assertEquals(RainbowFrame.across(antisolar).y, v[RainbowFrame.ACROSS + 1], EPSILON);
         assertEquals(0.25F, v[RainbowFrame.SECONDARY]);
         assertEquals(7F, v[12]);
+        assertEquals(1F, v[RainbowFrame.BLOCKY]);
+        var realistic = RainbowFrame.of(70F, 1F, 0F, new Matrix4f(), new Matrix4f(), 0F, 0F, false);
+        assertEquals(0F, realistic.vec4s()[RainbowFrame.BLOCKY]);
     }
 }

@@ -12,6 +12,9 @@
 //
 // Its light doesn't only add to the sky: it covers part of what is behind it (COVER), as much as it is bright. Added
 // alone onto a bright blue sky, whose blue is already near full, every color of the bow came out nearly white.
+//
+// Rainbow style Blocky (Patches.y) draws it to suit the game instead: the sky in blocks fixed around the point opposite
+// the sun, each block one flat color by the ring of the bow it falls in, six stripes a block wide, red to violet.
 
 #include <dsurround:rainbow.glsl>
 
@@ -27,6 +30,27 @@ layout(location = 0) out vec4 fragColor;
 const float OUTERMOST = 0.5592;
 // How much of the sky behind the bow its light covers, for each of its brightest channel
 const float COVER = 0.75;
+
+// Rainbow style Blocky: the sky laid out in blocks this size, in degrees, about a texel of the sun's, and each block
+// one flat color by the ring of the bow its middle falls in, a block wide each
+const float BLOCK = 0.5;
+// The primary's outer edge, red, as the real bow's; the secondary's inner edge, red too, its colors reversed
+const float PRIMARY_EDGE = 42.4;
+const float SECONDARY_EDGE = 50.4;
+// How bright the secondary is, next to the primary, and the sky inside the primary
+const float BLOCKY_SECONDARY = 0.3;
+const float BLOCKY_INSIDE = 0.1;
+// How much of the sky behind the stripes they cover, for each of their brightest channel: more than the real bow's, so
+// they show as solid colors and not pale ones
+const float BLOCKY_COVER = 1.0;
+const vec3 STRIPES[6] = vec3[6](
+    vec3(1.0, 0.1, 0.06),    // red
+    vec3(1.0, 0.45, 0.04),   // orange
+    vec3(1.0, 0.9, 0.08),    // yellow
+    vec3(0.15, 0.8, 0.15),   // green
+    vec3(0.1, 0.35, 1.0),    // blue
+    vec3(0.5, 0.15, 0.9)     // violet
+);
 
 float hash(float n) {
     return fract(sin(n) * 43758.5453);
@@ -51,20 +75,52 @@ void main() {
     }
 
     float angle = degrees(acos(min(toward, 1.0)));
-    float u = angle / MAX_DEGREES;
-    vec3 primary = texture(SpectrumSampler, vec2(u, 0.25)).rgb;
-    vec3 secondary = texture(SpectrumSampler, vec2(u, 0.75)).rgb;
-    vec3 light = primary * primary + secondary * secondary * Sunlight.a;
-
-    // Where around the bow the pixel is, 0 at its top, and how much rain there is there
+    // Where around the bow the pixel is, 0 at its top
     vec3 side = cross(Antisolar.xyz, Across.xyz);
     float around = atan(dot(view, side), dot(view, Across.xyz));
+    bool blocky = Patches.y > 0.5;
+
+    vec3 light;
+    if (blocky) {
+        // Blocks fixed in the sky: a square grid laid flat around the point opposite the sun, true to the angle out
+        // from it and around it, each block taken as its middle, so the bow steps around in blocks
+        vec2 grid = angle * vec2(sin(around), cos(around));
+        vec2 middle = (floor(grid / BLOCK) + 0.5) * BLOCK;
+        angle = length(middle);
+        around = atan(middle.x, middle.y);
+        float a = radians(angle);
+        view = cos(a) * Antisolar.xyz + sin(a) * (cos(around) * Across.xyz + sin(around) * side);
+
+        light = vec3(0.0);
+        float inPrimary = (PRIMARY_EDGE - angle) / BLOCK;
+        float inSecondary = (angle - SECONDARY_EDGE) / BLOCK;
+        if (inPrimary >= 0.0 && inPrimary < 6.0)
+            light = STRIPES[int(inPrimary)];
+        else if (inPrimary >= 6.0)
+            // The brighter sky inside the bow, stepping down toward its middle
+            light = vec3(BLOCKY_INSIDE * max(0.0, 1.0 - floor((inPrimary - 6.0) / 4.0) * 0.25));
+        else if (inSecondary >= 0.0 && inSecondary < 6.0)
+            light = STRIPES[int(inSecondary)] * (BLOCKY_SECONDARY * Sunlight.a);
+    } else {
+        float u = angle / MAX_DEGREES;
+        vec3 primary = texture(SpectrumSampler, vec2(u, 0.25)).rgb;
+        vec3 secondary = texture(SpectrumSampler, vec2(u, 0.75)).rgb;
+        light = primary * primary + secondary * secondary * Sunlight.a;
+    }
+
+    // How much rain there is around the bow
     float drift = Across.w * 0.01;
     // Gently and broadly: stronger or finer patches show as streaks across the bright sky inside the bow
     float clump = noise(around * 2.0 + Patches.x + drift) * 0.75 + noise(around * 4.0 - Patches.x * 1.7 - drift * 1.7) * 0.25;
     float showing = mix(0.55, 1.0, smoothstep(0.2, 0.75, clump));
     float foot = smoothstep(-0.05, 0.03, view.y);
+    if (blocky) {
+        // In steps, as the blocks are
+        showing = floor(showing * 4.0 + 0.5) / 4.0;
+        foot = floor(foot * 4.0 + 0.5) / 4.0;
+    }
 
     vec3 color = light * Sunlight.rgb * (Antisolar.w * showing * foot);
-    fragColor = vec4(color, min(max(color.r, max(color.g, color.b)) * COVER, 1.0));
+    float cover = blocky ? BLOCKY_COVER : COVER;
+    fragColor = vec4(color, min(max(color.r, max(color.g, color.b)) * cover, 1.0));
 }
