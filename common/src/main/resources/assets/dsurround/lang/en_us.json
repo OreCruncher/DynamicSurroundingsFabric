@@ -581,7 +581,7 @@
   "dsurround.config.weatherOptions.sky.rainbowChance": "Rainbow chance",
   "dsurround.config.weatherOptions.sky.rainbowChance.tooltip": "How likely rain clearing with the sun low is to leave a rainbow, as a percent. Every player in a world sees the same rainbows.",
   "dsurround.config.weatherOptions.sky.enableHalos": "Halos and sun dogs",
-  "dsurround.config.weatherOptions.sky.enableHalos.tooltip": "In cold biomes, under a clear sky, ice crystals in the air can ring the sun with a halo, 22 degrees out, red on its inner edge, with a bright sun dog level with the sun either side of it, which moves further out and fades as the sun climbs. Sky style sets how they look. Every player in a world sees the same halos. Not drawn while a shader pack is in use.",
+  "dsurround.config.weatherOptions.sky.enableHalos.tooltip": "In cold biomes, under a clear sky, ice crystals in the air can ring the sun with a halo, 22 degrees out, white with a faintly red inner edge, with a bright sun dog level with the sun either side of it, which moves further out and fades as the sun climbs. Sky style sets how they look. Every player in a world sees the same halos. Not drawn while a shader pack is in use.",
   "dsurround.config.weatherOptions.sky.haloChance": "Halo chance",
   "dsurround.config.weatherOptions.sky.haloChance.tooltip": "How likely each quarter of a day of cold fair weather is to have a halo, as a percent.",
   "dsurround.config.skyStyle.blocky": "Blocky",

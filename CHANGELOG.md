@@ -27,7 +27,7 @@ This release brings rainbows after the rain, and armor that sounds like what it'
   * Sky style: Blocky by default, flat stripes stepping in blocks around the bow to suit the game, or Realistic, with the colors worked out from the raindrops
   * `/dsweather rainbow 0-100 [primary]` shows one whatever the weather, and `/dsweather rainbow clear` goes back to the weather's
   * Scripts can ask `weather.isRainbow()`
-* Halos and sun dogs (experimental). In cold biomes under a clear sky, ice crystals in the air can ring the sun with a halo 22 degrees out, red on its inner edge, with a sun dog level with the sun either side, moving out and fading as the sun climbs. Sky style sets how they look; every player in a world sees the same
+* Halos and sun dogs (experimental). In cold biomes under a clear sky, ice crystals in the air can ring the sun with a halo 22 degrees out, white with a faintly red inner edge, with a sun dog level with the sun either side, moving out and fading as the sun climbs. Sky style sets how they look; every player in a world sees the same
   * Halos and sun dogs and Halo chance (25% by default) are in the Weather options, under Sky
 * Armor sounds by what it's made of. Each piece of armor belongs to a family (leather, chain, plate, crystal or heavy), which gives its footstep accent, its hotbar sound and its swing sound. Modded armor is sorted by its tag, or else by the equip sound it uses, so most needs no tagging. The families use the game's sounds for now
 

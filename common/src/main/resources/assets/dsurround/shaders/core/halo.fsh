@@ -6,13 +6,16 @@
 // Dynamic Surroundings halo and sun dogs (HaloRenderer), drawn over the sky with their light added to it.
 //
 // The halo is a ring 22 degrees from the sun: tumbling ice crystals bend no light less than that, and most just past
-// it, so the ring has a sharp inner edge, red (red light is bent least), and fades outward to white. The sun dogs are
+// it, so the ring has a sharp inner edge, faintly red (red light is bent least), and is white beyond it: the crystals
+// tumble every way, so the colors overlap all but at the edge, and a halo looks white with a warm rim, not a rainbow
+// (the rainbow-colored rings close round the sun are a corona, from water droplets). The sun dogs are
 // spots level with the sun either side, where flat crystals drifting level send the light: 22 degrees out with the
 // sun on the horizon, further as it climbs (HaloConditions.sunDogAzimuth, for each color). Each has the same sharp red
 // edge toward the sun and a white tail away from it.
 //
 // Sky style Blocky (Style.x) lays the sky in blocks fixed around the sun, as the rainbow's, each block one flat
-// color: red, orange, then pale stepping down.
+// color. The ring: a warm block at its edge, then white. The sun dogs, made by crystals that don't tumble, keep their
+// colors: red, orange, then pale stepping down.
 
 #include <dsurround:halo.glsl>
 
@@ -26,6 +29,9 @@ const float OUTERMOST = 0.5;
 // The halo's inner edge for red, green and blue light, in degrees, and how far out it fades
 const vec3 HALO_EDGE = vec3(21.6, 22.0, 22.5);
 const float HALO_FADE = 2.0;
+// How much of its colors the ring keeps: the edges' colors overlap in the eye as much as in the crystals, so a real
+// halo's rim is only faintly warm
+const float HALO_SATURATION = 0.3;
 // How bright the halo is next to the sun dogs, at their brightest
 const float HALO_BRIGHTNESS = 0.45;
 // How bright the sun dogs are at their brightest: a little more than the ring, as they gather the light of two
@@ -42,6 +48,9 @@ const float BLOCK = 0.5;
 const vec3 RED = vec3(1.0, 0.25, 0.12);
 const vec3 ORANGE = vec3(1.0, 0.6, 0.2);
 const vec3 PALE = vec3(1.0, 0.92, 0.65);
+// Blocky: the ring's warm edge, and the white beyond it
+const vec3 HALO_RIM = vec3(1.0, 0.72, 0.55);
+const vec3 HALO_WHITE = vec3(1.0, 0.97, 0.93);
 
 void main() {
     // The pixel's direction: from one point along its line of sight to another further along it, so view bobbing
@@ -78,12 +87,11 @@ void main() {
 
     vec3 light;
     if (blocky) {
-        // The ring: red, orange, then a faint pale block, a block each: the real ring's color is all in its first
-        // degree or so
+        // The ring: a warm block at its edge, then white fading, a block each
         float ring = floor((angle - HALO_EDGE.r) / BLOCK);
         vec3 halo = vec3(0.0);
         if (ring >= 0.0 && ring < 3.0)
-            halo = (ring < 1.0 ? RED : ring < 2.0 ? ORANGE * 0.85 : PALE * 0.45) * HALO_BRIGHTNESS;
+            halo = (ring < 1.0 ? HALO_RIM * 0.8 : ring < 2.0 ? HALO_WHITE : HALO_WHITE * 0.5) * HALO_BRIGHTNESS;
         // The sun dogs: the same out along the level, four blocks tall
         float along = floor((aside - Dogs.g) / BLOCK + 0.5);
         vec3 dog = vec3(0.0);
@@ -91,9 +99,11 @@ void main() {
             dog = along < 1.0 ? RED : along < 2.0 ? ORANGE : PALE * (1.0 - (along - 2.0) * 0.2);
         light = max(halo, dog * (DOG_BRIGHTNESS * Sunlight.a));
     } else {
-        // Each color's sharp inner edge, then fading out
+        // Each color's sharp inner edge, then all of them fading out together from the last, so that past the rim
+        // the ring is white
         vec3 past = angle - HALO_EDGE;
-        vec3 halo = smoothstep(-0.4, 0.15, past) * exp(-max(past, 0.0) / HALO_FADE) * HALO_BRIGHTNESS;
+        vec3 halo = smoothstep(-0.4, 0.15, past) * exp(-max(angle - HALO_EDGE.b, 0.0) / HALO_FADE) * HALO_BRIGHTNESS;
+        halo = mix(vec3(dot(halo, vec3(1.0 / 3.0))), halo, HALO_SATURATION);
         vec3 beyond = aside - Dogs.xyz;
         vec3 dog = smoothstep(-0.35, 0.15, beyond) * exp(-max(beyond, 0.0) / DOG_TAIL)
                 * exp(-height * height / (2.0 * DOG_HEIGHT * DOG_HEIGHT));
