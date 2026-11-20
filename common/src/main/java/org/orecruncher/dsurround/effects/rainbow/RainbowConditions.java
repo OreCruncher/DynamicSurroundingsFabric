@@ -196,6 +196,19 @@ public final class RainbowConditions {
     }
 
     /**
+     * How much of a moonbow the moon's phase allows, 0 to 1: moonlight is bright enough only near full, so a full moon
+     * gives a whole one, a gibbous moon a fainter one, and any less none. With {@link #sunFactor} for the moon's height
+     * (the moon is opposite the sun), a moonbow follows the same rules as a rainbow.
+     *
+     * @param moonSize how full the moon is, 0 new to 1 full (see {@code ILevelOracle.currentMoonSize})
+     */
+    public static float moonFactor(float moonSize) {
+        if (moonSize >= 1F)
+            return 1F;
+        return moonSize >= 0.75F ? 0.5F : 0F;
+    }
+
+    /**
      * How high the sun is, in degrees, from the sun's celestial angle in degrees (noon 0, midnight 180)
      */
     public static float sunElevation(float celestialAngle) {

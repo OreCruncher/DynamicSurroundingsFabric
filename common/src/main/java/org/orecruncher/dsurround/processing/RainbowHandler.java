@@ -20,7 +20,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
-import org.orecruncher.dsurround.lib.time.DayCycle;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.RainbowState;
 
@@ -32,6 +32,9 @@ import java.util.Optional;
  * player is where it rains rather than snows; drawn as part of the sky ({@link RainbowRenderer}), so the world and the
  * clouds hide it, and dimmed by fog as the aurora is. Not while an Iris shader pack is in use, as the pack replaces the
  * sky rendering.
+ * <p>
+ * At night, with the moon full or nearly so and low, the same clearing leaves a moonbow opposite the moon: fainter, and
+ * pale, as eyes see one ({@link RainbowConditions#moonFactor}).
  * <p>
  * {@code /dsweather rainbow} holds one at a strength, with or without the secondary bow, whatever the weather, for
  * seeing it and for the bench; disconnecting lets it go.
@@ -46,6 +49,7 @@ public class RainbowHandler extends AbstractClientHandler {
     private final IWeatherSimulation weatherSimulation;
     private final ISeasonalInformation seasons;
     private final FogHandler fogHandler;
+    private final ILevelOracle levelOracle;
     private final RainbowState state;
     private final RainbowConditions conditions = new RainbowConditions();
 
@@ -53,18 +57,21 @@ public class RainbowHandler extends AbstractClientHandler {
     private float prevStrength;
     private float secondary;
     private float prevSecondary;
+    // Whether the bow showing, or fading, is a moonbow: changed only once the last has faded away
+    private boolean moonbow;
     // What /dsweather rainbow holds, if anything
     @Nullable
     private Float held;
     private boolean heldSecondary;
     private String status = "none";
 
-    public RainbowHandler(IWeatherSimulation weatherSimulation, ISeasonalInformation seasons, FogHandler fogHandler, RainbowState state,
-                          Configuration config, IModLog logger) {
+    public RainbowHandler(IWeatherSimulation weatherSimulation, ISeasonalInformation seasons, FogHandler fogHandler, ILevelOracle levelOracle,
+                          RainbowState state, Configuration config, IModLog logger) {
         super("Rainbow Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
         this.seasons = seasons;
         this.fogHandler = fogHandler;
+        this.levelOracle = levelOracle;
         this.state = state;
 
         ISkyRender.EVENT.register(this::renderSky);
@@ -93,6 +100,8 @@ public class RainbowHandler extends AbstractClientHandler {
         } else if (held != null) {
             this.status = "held";
             RainbowRenderer.prepare();
+            // A moonbow while the sun is down
+            this.moonbow = RainbowConditions.sunElevation(this.levelOracle.currentCelestialAngle()) < 0F;
             // At once, not faded: the bench records what it holds
             this.strength = this.prevStrength = held;
             this.secondary = this.prevSecondary = this.heldSecondary ? 1F : 0F;
@@ -100,20 +109,30 @@ public class RainbowHandler extends AbstractClientHandler {
             return;
         } else {
             RainbowRenderer.prepare();
-            var elevation = RainbowConditions.sunElevation(DayCycle.getCelestialAngle(level, player.position()));
+            var elevation = RainbowConditions.sunElevation(this.levelOracle.currentCelestialAngle());
             var sun = RainbowConditions.sunFactor(elevation, this.conditions.secondary());
+            // The moon is opposite the sun
+            var moon = RainbowConditions.sunFactor(-elevation, this.conditions.secondary())
+                    * RainbowConditions.moonFactor(this.levelOracle.currentMoonSize());
             if (this.seasons.getPrecipitationAt(player.blockPosition()) != Biome.Precipitation.RAIN) {
                 this.status = "not a rain biome";
             } else if (!this.conditions.isClearing()) {
                 this.status = "rain not clearing";
             } else if (!this.conditions.hasRainbow()) {
                 this.status = "none this time";
-            } else if (sun <= 0F) {
-                this.status = "sun down or too high";
+            } else if (sun <= 0F && moon <= 0F) {
+                this.status = elevation > 0F ? "sun too high" : "sun down, moon not full or not low";
             } else {
-                this.status = "showing";
-                target = this.conditions.strength(level.getGameTime()) * sun;
-                secondaryTarget = this.conditions.secondary() ? 1F : 0F;
+                boolean byMoon = sun <= 0F;
+                if (byMoon != this.moonbow && this.strength > 0F) {
+                    // The last one fades away before the other shows
+                    this.status = "changing to a " + (byMoon ? "moonbow" : "rainbow");
+                } else {
+                    this.moonbow = byMoon;
+                    this.status = byMoon ? "showing a moonbow" : "showing";
+                    target = this.conditions.strength(level.getGameTime()) * (byMoon ? moon : sun);
+                    secondaryTarget = this.conditions.secondary() ? 1F : 0F;
+                }
             }
         }
         this.strength = Mth.approach(this.strength, target, FADE_PER_TICK);
@@ -128,6 +147,7 @@ public class RainbowHandler extends AbstractClientHandler {
         this.heldSecondary = false;
         this.strength = this.prevStrength = 0F;
         this.secondary = this.prevSecondary = 0F;
+        this.moonbow = false;
         this.state.setShowing(false);
         this.status = "none";
     }
@@ -153,10 +173,10 @@ public class RainbowHandler extends AbstractClientHandler {
             return;
 
         var secondary = Mth.lerp(partialTick, this.prevSecondary, this.secondary);
-        var celestialAngle = DayCycle.getCelestialAngle(level, camera.position());
+        var celestialAngle = this.levelOracle.currentCelestialAngle();
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
         var blocky = this.config.weatherOptions.rainbowStyle == RainbowStyle.BLOCKY;
-        RainbowRenderer.render(celestialAngle, alpha, secondary, viewMatrix, time, this.conditions.seed(), blocky);
+        RainbowRenderer.render(celestialAngle, alpha, secondary, viewMatrix, time, this.conditions.seed(), blocky, this.moonbow);
     }
 
     // ---- /dsweather rainbow
@@ -205,7 +225,8 @@ public class RainbowHandler extends AbstractClientHandler {
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var text = "Rainbow: " + this.status;
         if (this.strength > 0F || this.conditions.isClearing())
-            text += ", strength %.2f, secondary %.2f, storm peak %.2f".formatted(this.strength, this.secondary, this.conditions.stormPeak());
+            text += ", strength %.2f, secondary %.2f, storm peak %.2f%s".formatted(this.strength, this.secondary,
+                    this.conditions.stormPeak(), this.moonbow ? ", moonbow" : "");
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
     }
 }

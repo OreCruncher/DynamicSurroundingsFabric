@@ -23,6 +23,7 @@ This release brings rainbows after the rain, and armor that sounds like what it'
 **What's New**
 * Rainbows. As rain eases to a drizzle or stops while the sun is low, a rainbow can show in the sky opposite the sun, fading as the shower moves on. Its colors come from how sunlight passes through raindrops: red outside, violet inside, with the sky brighter within the bow. After a strong storm, a fainter second bow shows outside it with its colors reversed and a darker band between the two. Only where it rains rather than snows, and every player in a world sees the same rainbows
   * Rainbows and Rainbow chance (50% by default) are in the Weather options
+  * Moonbows: at night, with the moon full or nearly so and low, a clearing can leave a faint, pale bow opposite the moon, as eyes see one
   * Rainbow style: Blocky by default, flat stripes stepping in blocks around the bow to suit the game, or Realistic, with the colors worked out from the raindrops
   * `/dsweather rainbow 0-100 [primary]` shows one whatever the weather, and `/dsweather rainbow clear` goes back to the weather's
   * Scripts can ask `weather.isRainbow()`

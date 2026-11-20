@@ -28,11 +28,22 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
     static final int ACROSS = 4;
     static final int SECONDARY = 11;
     static final int BLOCKY = 13;
+    static final int PALE = 14;
 
     /**
      * How bright the brightest of the bow is added to the sky, at full strength, before the sun's color
      */
     static final float BRIGHTNESS = 0.65F;
+    /**
+     * How bright a moonbow is next to a rainbow, and how pale: moonlight is far dimmer than sunlight, but the night sky
+     * behind it is dark, and at night eyes see little color, so one looks nearly white
+     */
+    static final float MOONBOW_BRIGHTNESS = 0.6F;
+    static final float MOONBOW_PALE = 0.75F;
+    /**
+     * Moonlight's color: sunlight off the moon, a little cooler to the eye at night
+     */
+    static final Vector3f MOONLIGHT = new Vector3f(0.8F, 0.87F, 1F);
 
     /**
      * @param celestialAngle the sun's celestial angle in degrees (noon 0, midnight 180)
@@ -43,19 +54,25 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
      * @param time           seconds, for the drifting of the patches
      * @param seed           where the bow's patches are, the same for everyone seeing it
      * @param blocky         whether it is drawn as flat stripes in blocks rather than its real colors
+     * @param moonbow        whether it is a moonbow, opposite the moon (which is opposite the sun), in moonlight
      */
     public static RainbowFrame of(float celestialAngle, float strength, float secondary, Matrix4fc projection,
-                                  Matrix4fc viewMatrix, float time, float seed, boolean blocky) {
+                                  Matrix4fc viewMatrix, float time, float seed, boolean blocky, boolean moonbow) {
         var invViewProj = new Matrix4f(projection).mul(viewMatrix).invert();
-        var antisolar = antisolar(celestialAngle);
+        // The light's own angle: the moon's is half a turn from the sun's
+        float lightAngle = moonbow ? celestialAngle + 180F : celestialAngle;
+        var antisolar = antisolar(lightAngle);
         var across = across(antisolar);
-        var tint = sunlight(RainbowConditions.sunElevation(celestialAngle));
+        // A low moon reddens as a low sun does
+        var tint = sunlight(RainbowConditions.sunElevation(lightAngle));
+        if (moonbow)
+            tint.mul(MOONLIGHT).mul(MOONBOW_BRIGHTNESS);
 
         var v = new float[VECTORS * 4];
         put(v, 0, antisolar.x, antisolar.y, antisolar.z, Math.clamp(strength, 0F, 1F));
         put(v, 1, across.x, across.y, across.z, time);
         put(v, 2, tint.x * BRIGHTNESS, tint.y * BRIGHTNESS, tint.z * BRIGHTNESS, Math.clamp(secondary, 0F, 1F));
-        put(v, 3, seed, blocky ? 1F : 0F, 0F, 0F);
+        put(v, 3, seed, blocky ? 1F : 0F, moonbow ? MOONBOW_PALE : 0F, 0F);
         return new RainbowFrame(invViewProj, v);
     }
 

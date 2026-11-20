@@ -15,6 +15,8 @@
 //
 // Rainbow style Blocky (Patches.y) draws it to suit the game instead: the sky in blocks fixed around the point opposite
 // the sun, each block one flat color by the ring of the bow it falls in, six stripes a block wide, red to violet.
+//
+// A moonbow is the same opposite the moon, in moonlight (Sunlight, dimmed), its colors paled (Patches.z).
 
 #include <dsurround:rainbow.glsl>
 
@@ -107,6 +109,8 @@ void main() {
         vec3 secondary = texture(SpectrumSampler, vec2(u, 0.75)).rgb;
         light = primary * primary + secondary * secondary * Sunlight.a;
     }
+    // A moonbow: at night eyes see little color, so it looks nearly white
+    light = mix(light, vec3(dot(light, vec3(0.2126, 0.7152, 0.0722))), Patches.z);
 
     // How much rain there is around the bow
     float drift = Across.w * 0.01;

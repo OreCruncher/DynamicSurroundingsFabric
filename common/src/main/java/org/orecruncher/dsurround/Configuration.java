@@ -630,7 +630,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableDynamicClouds = true;
 
         @Property
-        @Comment("As rain eases off with the sun low, a rainbow can show in the sky opposite the sun; after a strong storm, a fainter second bow outside it")
+        @Comment("As rain eases off with the sun low, a rainbow can show in the sky opposite the sun; after a strong storm, a fainter second bow outside it. By a full moon, a pale moonbow")
         public boolean enableRainbows = true;
 
         @Property

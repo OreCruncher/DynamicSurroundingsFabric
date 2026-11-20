@@ -183,4 +183,12 @@ public class RainbowConditionsTests {
         assertFalse(conditions.isClearing());
         assertEquals(0F, conditions.stormPeak());
     }
+
+    @Test
+    void aMoonbowNeedsTheMoonNearFull() {
+        assertEquals(1F, RainbowConditions.moonFactor(1F));
+        assertEquals(0.5F, RainbowConditions.moonFactor(0.75F));
+        assertEquals(0F, RainbowConditions.moonFactor(0.5F));
+        assertEquals(0F, RainbowConditions.moonFactor(0F));
+    }
 }

@@ -64,7 +64,7 @@ public class RainbowFrameTests {
 
     @Test
     void valuesSitWhereTheBlockHasThem() {
-        var frame = RainbowFrame.of(70F, 1.5F, 0.25F, new Matrix4f().perspective(1.2F, 1.7F, 0.05F, 1000F), new Matrix4f(), 12F, 7F, true);
+        var frame = RainbowFrame.of(70F, 1.5F, 0.25F, new Matrix4f().perspective(1.2F, 1.7F, 0.05F, 1000F), new Matrix4f(), 12F, 7F, true, false);
         var v = frame.vec4s();
         assertEquals(RainbowFrame.VECTORS * 4, v.length);
         var antisolar = RainbowFrame.antisolar(70F);
@@ -74,7 +74,25 @@ public class RainbowFrameTests {
         assertEquals(0.25F, v[RainbowFrame.SECONDARY]);
         assertEquals(7F, v[12]);
         assertEquals(1F, v[RainbowFrame.BLOCKY]);
-        var realistic = RainbowFrame.of(70F, 1F, 0F, new Matrix4f(), new Matrix4f(), 0F, 0F, false);
+        var realistic = RainbowFrame.of(70F, 1F, 0F, new Matrix4f(), new Matrix4f(), 0F, 0F, false, false);
         assertEquals(0F, realistic.vec4s()[RainbowFrame.BLOCKY]);
+        assertEquals(0F, realistic.vec4s()[RainbowFrame.PALE]);
+    }
+
+    @Test
+    void aMoonbowIsOppositeTheMoonInPaleDimLight() {
+        // Sun 20 degrees below the horizon in the west (celestial angle 110): the moon is 20 degrees up in the east, so
+        // the bow is where a rainbow is for a sun 20 degrees up in the east (celestial angle 290)
+        var moonbow = RainbowFrame.of(110F, 1F, 0F, new Matrix4f(), new Matrix4f(), 0F, 0F, false, true).vec4s();
+        var antimoon = RainbowFrame.antisolar(290F);
+        assertEquals(antimoon.x, moonbow[RainbowFrame.ANTISOLAR], EPSILON);
+        assertEquals(antimoon.y, moonbow[RainbowFrame.ANTISOLAR + 1], EPSILON);
+        assertEquals(RainbowFrame.MOONBOW_PALE, moonbow[RainbowFrame.PALE]);
+
+        var rainbow = RainbowFrame.of(290F, 1F, 0F, new Matrix4f(), new Matrix4f(), 0F, 0F, false, false).vec4s();
+        // The tint is the third vector: dimmer by the moonbow's brightness, and cooler
+        for (int c = 0; c < 3; c++)
+            assertTrue(moonbow[8 + c] < rainbow[8 + c] * RainbowFrame.MOONBOW_BRIGHTNESS + EPSILON);
+        assertTrue(moonbow[10] / moonbow[8] > rainbow[10] / rainbow[8]);
     }
 }
