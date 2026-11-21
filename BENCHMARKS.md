@@ -1412,6 +1412,14 @@ missing "- Drops on the GPU" timer showed it. One buffer a batch, both backends,
 - The frame rate about doubles at range 32, on both backends: the CPU build there took over a millisecond, nearly all of
   it waited on. The GPU's frame time falls too.
 
+The dust too (`gpu-dust.json`, `performance-rest.json`'s dust storm, ranges 14 and 20, both backends): drawn on the GPU
+in its own pass, soft as before, the screenshots the same. No measurable change either way. Building the dust on the
+CPU was already about 0.02 ms (a few thousand puffs), and the dust's GPU time is filling the screen with large soft
+puffs, which both ways draw alike: 0.45 to 0.95 ms a frame, varying as much between repeats of a label (CPU at range
+14 on OpenGL, 0.556 and 0.748) as between CPU and GPU. The GPU way sends every puff (2,041 at range 14, 4,165 at 20)
+where the CPU sent those in view (about half), and clipping the rest costs it nothing to speak of. Kept for one way of
+drawing drops, with no dust build left on the CPU.
+
 ## Rerunning
 
 - Run every scenario from a clean tree, the machine otherwise idle, and note the commit. On 26.3 `sound.json` once

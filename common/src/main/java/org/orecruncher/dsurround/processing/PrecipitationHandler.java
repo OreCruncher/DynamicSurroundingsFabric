@@ -119,8 +119,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final MeshDraw dropDraw = new MeshDraw("rain and snow");
     private final MeshDraw fleckDraw = new MeshDraw("snow flecks");
     private final MeshDraw streakDraw = new MeshDraw("window streaks");
-    // The rain and snow, when their quads are made on the GPU
-    private final GpuDrops gpuDrops = new GpuDrops();
+    // The rain and snow, and the dust, when their quads are made on the GPU
+    private final GpuDrops gpuDrops = new GpuDrops(GpuDrops.Part.DROPS);
+    private final GpuDrops gpuDust = new GpuDrops(GpuDrops.Part.DUST);
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
@@ -407,6 +408,25 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // Soft if it can be, reading the scene's depth, water included
         var soft = PrecipitationShaders.DUST;
         boolean isSoft = soft.isUsable() && SoftParticles.captureDepth(target);
+        if (style.gpuDrops()) {
+            // Soft if both the soft particles and the soft GPU pipeline can be; hard, from the GPU drops' pipeline,
+            // if not. If it fails, the CPU builds the dust from the next frame on.
+            var gpu = PrecipitationShaders.GPU_DROPS;
+            var gpuSoft = PrecipitationShaders.GPU_DUST;
+            boolean softGpu = isSoft && gpuSoft.isUsable();
+            var shader = softGpu ? gpuSoft : gpu;
+            PrecipitationShaders.GPU_DUST_TIMER.begin();
+            int before = this.dropsDrawn;
+            shader.run(() -> this.dropsDrawn += this.gpuDust.draw(this.field, shader.pipeline(), target, camera, partialTick, style, pass -> {
+                pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
+                pass.setUniform("Sampler2", lightmap, lightmapSampler);
+                if (softGpu)
+                    SoftParticles.bindSoftDepth(pass);
+            }), () -> {});
+            PrecipitationShaders.GPU_DUST_TIMER.count(this.dropsDrawn - before);
+            PrecipitationShaders.GPU_DUST_TIMER.end();
+            return;
+        }
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;
         this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DUST, sources, camera, partialTick, style,
                 quads -> this.dustDraw.draw(quads, dustPipeline, target, pass -> {
@@ -441,7 +461,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
         float ahead = this.meshes.aheadShare();
         if (!Float.isNaN(ahead))
             text += String.format(Locale.ROOT, ", built ahead %.0f%%", ahead * 100F);
-        // Where the rain and snow's quads are made (see GpuDrops)
+        // Where the rain, snow and dust's quads are made (see GpuDrops)
         if (this.config.weatherOptions.precipitation.gpuDrops && PrecipitationShaders.isAvailable())
             text += PrecipitationShaders.GPU_DROPS.isUsable() ? ", drops on the GPU" : ", GPU drops failed, built on the CPU";
         if (this.config.weatherOptions.precipitation.enableAfterRainDrips && this.drips.strength() > 0F)

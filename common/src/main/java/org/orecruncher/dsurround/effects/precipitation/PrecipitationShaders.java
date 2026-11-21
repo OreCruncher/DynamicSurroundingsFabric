@@ -62,12 +62,19 @@ public final class PrecipitationShaders {
             .withUniform(DROP_RECORDS, UniformType.TEXEL_BUFFER, GpuFormat.RGBA32_FLOAT)
             .build();
     private static final RenderPipeline GPU_DROPS_PIPELINE = gpuDrops("pipeline/precipitation_gpu").withDepthStencilState(TEST_ONLY).build();
-    public static final ModShader GPU_DROPS = new ModShader(GPU_DROPS_PIPELINE, "rain and snow built on the GPU", "their quads will be built on the CPU", Library.LOGGER);
+    // The dust made on the GPU, soft as the CPU's is (without it, the dust made on the GPU is drawn hard, with the above)
+    private static final RenderPipeline GPU_DUST_PIPELINE = gpuDrops("pipeline/precipitation_gpu_dust")
+            .withShaderDefine("SOFT_DISTANCE", DUST_SOFT_DISTANCE)
+            .withBindGroupLayout(SoftParticles.SOFT_DEPTH_LAYOUT)
+            .withDepthStencilState(TEST_ONLY)
+            .build();
+    public static final ModShader GPU_DROPS = new ModShader(GPU_DROPS_PIPELINE, "rain, snow and dust built on the GPU", "their quads will be built on the CPU", Library.LOGGER);
+    public static final ModShader GPU_DUST = new ModShader(GPU_DUST_PIPELINE, "soft dust built on the GPU", "dust built on the GPU will be drawn without it", Library.LOGGER);
 
     /**
      * All of them, for {@code ModShaders}
      */
-    public static final List<ModShader> SHADERS = List.of(DROPS, DUST, DAMP_SPOTS, GPU_DROPS);
+    public static final List<ModShader> SHADERS = List.of(DROPS, DUST, DAMP_SPOTS, GPU_DROPS, GPU_DUST);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
     // The weather's pass waiting for the quads built ahead (DropMeshes.await): a thread starved of the CPU shows here
@@ -79,6 +86,8 @@ public final class PrecipitationShaders {
     // The rain and snow made on the GPU (GpuDrops), drawn among the drops, so within their time too: present in a
     // recording only for frames drawn that way
     public static final RenderTimer GPU_DROPS_TIMER = new RenderTimer("- Drops on the GPU");
+    // The dust made on the GPU, likewise
+    public static final RenderTimer GPU_DUST_TIMER = new RenderTimer("- Dust on the GPU");
 
     private PrecipitationShaders() {
     }
@@ -124,8 +133,18 @@ public final class PrecipitationShaders {
                 .withPrimitiveTopology(PrimitiveTopology.QUADS)
                 .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
                 .withCull(false);
-        builder.withShaderDefine("MAX_FLAKES", Snowflakes.MAX_FLAKES)
+        builder.withShaderDefine("MAX_FLAKES", GpuDrops.MAX_LOOKS)
+                .withShaderDefine("KIND_RAIN", (float) PrecipitationField.RAIN)
                 .withShaderDefine("KIND_SNOW", (float) PrecipitationField.SNOW)
+                .withShaderDefine("KIND_DUST", (float) PrecipitationField.DUST)
+                .withShaderDefine("DUST_FADE", (float) PrecipitationField.DUST_FADE)
+                .withShaderDefine("DUST_COVER_TICKS", (float) PrecipitationField.DUST_COVER_TICKS)
+                .withShaderDefine("DUST_MIN_HALF_SIZE", PrecipitationRenderer.DUST_MIN_HALF_SIZE)
+                .withShaderDefine("DUST_HALF_SIZE_RANGE", PrecipitationRenderer.DUST_HALF_SIZE_RANGE)
+                .withShaderDefine("DUST_ALPHA", PrecipitationRenderer.DUST_ALPHA)
+                .withShaderDefine("DUST_PALENESS", PrecipitationRenderer.DUST_PALENESS)
+                .withShaderDefine("DUST_NEAR_HIDDEN", PrecipitationRenderer.DUST_NEAR_HIDDEN)
+                .withShaderDefine("DUST_NEAR_FADE", PrecipitationRenderer.DUST_NEAR_FADE)
                 .withShaderDefine("RAIN_FADE_IN", (float) PrecipitationField.RAIN_FADE_IN)
                 .withShaderDefine("SNOW_FADE_IN", (float) PrecipitationField.SNOW_FADE_IN)
                 .withShaderDefine("RAIN_COVER_TICKS", (float) PrecipitationField.RAIN_COVER_TICKS)

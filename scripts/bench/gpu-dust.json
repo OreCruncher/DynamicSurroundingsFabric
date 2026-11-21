@@ -1,0 +1,38 @@
+// A dust storm with its puffs built on the CPU against made on the GPU (weatherOptions.precipitation.gpuDrops), at the
+// default range (14) and High's (20). The scene is performance-rest.json's dust storm: a desert at noon in midsummer,
+// a full storm held by the weather profile. The rain and snow are tried in gpu-drops.json. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  // What the GPU draws scales with the pixels: the same size for every run to compare
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  "warmup": 20,
+  "record": 45,
+  "repeats": 2,
+  "scenes": {
+    "dust": {
+      "biome": "minecraft:desert",
+      "commands": [
+        "time set 6000",
+        "season set mid_summer"
+      ],
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "dust-14-cpu", "scene": "dust", "settings": {"weatherOptions.precipitation.gpuDrops": false}},
+    {"label": "dust-14-gpu", "scene": "dust", "settings": {"weatherOptions.precipitation.gpuDrops": true}},
+    {"label": "dust-20-cpu", "scene": "dust", "settings": {
+      "weatherOptions.precipitation.precipitationRange": 20, "weatherOptions.precipitation.gpuDrops": false
+    }},
+    {"label": "dust-20-gpu", "scene": "dust", "settings": {
+      "weatherOptions.precipitation.precipitationRange": 20, "weatherOptions.precipitation.gpuDrops": true
+    }}
+  ]
+}

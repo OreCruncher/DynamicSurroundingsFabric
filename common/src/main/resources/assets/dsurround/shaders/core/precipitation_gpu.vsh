@@ -3,13 +3,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
-// Particle rain and snow built on the GPU: each drop's quad made here from its packed record, rather than written by
+// Particle rain, snow and dust built on the GPU: each drop's quad made here from its packed record, rather than written by
 // the CPU every frame (PrecipitationRenderer.build, whose math this follows step for step). No vertex buffer: four
 // vertices a drop, drawn as quads, the drop from the vertex's index and the corner from its last two bits, as vanilla's
 // clouds read their faces. The records are PackedDrops', uploaded as they are into a texel buffer, five texels a drop.
-// Drawn in batches (GpuDrops.BATCH_DROPS), each binding its part of the buffer, so no texel buffer bound is larger than
-// every GPU must allow; the vertex index starts again at 0 in each. The snowflakes are in the uniform block. Hands the
-// fragment shader what precipitation.vsh does.
+// Drawn in batches (GpuDrops.BATCH_DROPS), each from a buffer of its own, so no texel buffer is larger than every GPU
+// must allow; the vertex index starts again at 0 in each. The rain and snow are one draw, the dust another (soft, with
+// the particle atlas): each has its own records and uniform block. The looks (snowflakes, or dust sprites) are in the
+// uniform block. Hands the fragment shader what precipitation.vsh does.
 //
 // The pipeline sets the constants (GpuDrops), so they stay those of PrecipitationRenderer and PrecipitationField.
 
@@ -27,10 +28,12 @@ layout(std140) uniform DropInfo {
     vec4 Up;
     // The rain's color; how big rain is drawn
     vec4 Rain;
-    // How far every flake has turned since its last tick, as a cos and sin; how many snowflakes there are; the largest's size
+    // How far every flake or puff has turned since its last tick, as a cos and sin; how many looks there are; the
+    // largest snowflake's size
     vec4 Turn;
-    // Each snowflake's texture rectangle (u0, v0, u1, v1), and their sizes in pixels, four to a vec4
-    vec4 FlakeRects[MAX_FLAKES];
+    // Each look's texture rectangle (u0, v0, u1, v1): the snowflakes, or the dust's sprites. The snowflakes' sizes in
+    // pixels, four to a vec4.
+    vec4 LookRects[MAX_FLAKES];
     vec4 FlakeSizes[MAX_FLAKES / 4];
 };
 
@@ -45,9 +48,11 @@ layout(location = 3) out vec4 vertexColor;
 // PrecipitationField.fade
 float drop_fade(float kind, float ticksOld, float lifetime, float covered, float partialTick) {
     float age = ticksOld + partialTick;
-    float fade = kind == KIND_SNOW ? min(1.0, age / SNOW_FADE_IN) : min(1.0, age / RAIN_FADE_IN);
+    float fade = kind == KIND_SNOW ? min(1.0, age / SNOW_FADE_IN)
+            : kind == KIND_DUST ? clamp(min(age, lifetime - age) / DUST_FADE, 0.0, 1.0)
+            : min(1.0, age / RAIN_FADE_IN);
     if (covered > 0.0) {
-        float lasts = kind == KIND_SNOW ? SNOW_COVER_TICKS : RAIN_COVER_TICKS;
+        float lasts = kind == KIND_SNOW ? SNOW_COVER_TICKS : kind == KIND_DUST ? DUST_COVER_TICKS : RAIN_COVER_TICKS;
         fade *= clamp(1.0 - (covered - 1.0 + partialTick) / lasts, 0.0, 1.0);
     }
     return fade;
@@ -72,7 +77,7 @@ void hide() {
 
 void main() {
     int corner = gl_VertexIndex & 3;
-    int flakes = int(Turn.z);
+    int looks = int(Turn.z);
     int at = (gl_VertexIndex >> 2) * 5;
     // prevX prevY prevZ moveX | moveY moveZ kind light | age covered lifetime thinning | size pick A B | C
     vec4 t0 = texelFetch(Drops, at);
@@ -86,9 +91,9 @@ void main() {
     vec3 p = t0.xyz + partialTick * vec3(t0.w, t1.x, t1.y) + Offset.xyz;
     float kind = t1.z;
     float outward = length(p.xz);
-    float fade = drop_fade(kind, t2.x, t2.z, t2.y, partialTick)
-            * clamp((radius - outward) / EDGE_FADE, 0.0, 1.0)
-            * thinned(t2.w, outward, radius);
+    float fade = drop_fade(kind, t2.x, t2.z, t2.y, partialTick) * clamp((radius - outward) / EDGE_FADE, 0.0, 1.0);
+    // Far rain and snow are thinned out; puffs of dust close by are not drawn (PrecipitationRenderer.dustNearFade)
+    fade *= kind == KIND_DUST ? clamp((length(p) - DUST_NEAR_HIDDEN) / DUST_NEAR_FADE, 0.0, 1.0) : thinned(t2.w, outward, radius);
     int light = floatBitsToInt(t1.w);
     float size = t3.x;
     vec3 left = Left.xyz;
@@ -97,15 +102,28 @@ void main() {
     vec3 pos;
     vec2 uv;
     vec4 color;
-    if (kind == KIND_SNOW) {
+    if (kind != KIND_RAIN) {
+        // Snowflakes and puffs of dust: squares facing the camera, turning
         float cosTurn = t3.z * Turn.x - t3.w * Turn.y;
         float sinTurn = t3.w * Turn.x + t3.z * Turn.y;
-        float halfSize = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * size) * Up.w;
         vec4 rect = vec4(NO_TEXTURE);
-        if (flakes > 0) {
-            int variant = clamp(int(t3.y * float(flakes)), 0, flakes - 1);
-            rect = FlakeRects[variant];
-            halfSize *= FlakeSizes[variant >> 2][variant & 3] / Turn.w;
+        int variant = clamp(int(t3.y * float(looks)), 0, max(looks - 1, 0));
+        if (looks > 0) {
+            rect = LookRects[variant];
+        }
+        float halfSize;
+        if (kind == KIND_DUST) {
+            halfSize = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * size;
+            // The color of the ground it was blown from, paler
+            int ground = floatBitsToInt(c);
+            vec3 tint = vec3(float((ground >> 16) & 0xFF), float((ground >> 8) & 0xFF), float(ground & 0xFF)) / 255.0;
+            color = vec4(mix(tint, vec3(1.0), DUST_PALENESS), DUST_ALPHA * fade);
+        } else {
+            halfSize = (SNOW_MIN_HALF_SIZE + SNOW_HALF_SIZE_RANGE * size) * Up.w;
+            if (looks > 0) {
+                halfSize *= FlakeSizes[variant >> 2][variant & 3] / Turn.w;
+            }
+            color = vec4(1.0, 1.0, 1.0, SNOW_ALPHA * fade);
         }
         // PrecipitationRenderer.billboard
         vec3 a = (left * cosTurn + up * sinTurn) * halfSize;
@@ -123,7 +141,6 @@ void main() {
             pos = p + a - b;
             uv = rect.xw;
         }
-        color = vec4(1.0, 1.0, 1.0, SNOW_ALPHA * fade);
     } else {
         float streakLength = (RAIN_MIN_LENGTH + RAIN_LENGTH_RANGE * size) * Rain.w;
         float halfWidth = (RAIN_MIN_HALF_WIDTH + RAIN_HALF_WIDTH_RANGE * size) * sqrt(max(Rain.w, 1.0));

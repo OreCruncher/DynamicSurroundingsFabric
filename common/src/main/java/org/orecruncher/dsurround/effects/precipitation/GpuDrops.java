@@ -25,11 +25,13 @@ import java.util.OptionalDouble;
 import java.util.function.Consumer;
 
 /**
- * The rain and snow with their quads made on the GPU ({@code weatherOptions.precipitation.gpuDrops}, on by default):
- * the drops packed once a tick ({@link PackedDrops}) are uploaded as they are into a texel buffer when they change, and
- * the vertex shader (shaders/core/precipitation_gpu.vsh) makes each drop's quad from its record, for the frame's camera
- * and partial tick, as {@link PrecipitationRenderer#build} does on the CPU. Nothing is built ahead or waited for, and
- * nothing is left out at the view's edges: the GPU clips what is off screen. The dust, snow flecks, window streaks and
+ * Rain and snow, or dust, with their quads made on the GPU ({@code weatherOptions.precipitation.gpuDrops}, on by
+ * default): the drops packed once a tick ({@link PackedDrops}) are uploaded as they are into texel buffers when they
+ * change, and the vertex shader (shaders/core/precipitation_gpu.vsh) makes each drop's quad from its record, for the
+ * frame's camera and partial tick, as {@link PrecipitationRenderer#build} does on the CPU. Nothing is built ahead or
+ * waited for, and nothing is left out at the view's edges: the GPU clips what is off screen. One of these draws the
+ * rain and snow ({@link Part#DROPS}), another the dust ({@link Part#DUST}), each with its own records and uniform block, as the
+ * two are drawn in passes of their own (the dust soft, from the particle atlas). The snow flecks, window streaks and
  * damp spots are still built on the CPU. Render thread only.
  * <p>
  * A GPU need only allow 65,536 texels in a texel buffer, and the game can't ask how many more it allows; the drops at
@@ -45,16 +47,33 @@ public final class GpuDrops implements AutoCloseable {
     static final int BATCH_DROPS = 12_800;
     static final int MAX_TEXELS = 65_536;
     static final long BATCH_BYTES = (long) BATCH_DROPS * PackedDrops.STRIDE * Float.BYTES;
+    // As many looks as there may be snowflakes: the dust has fewer sprites
+    static final int MAX_LOOKS = Snowflakes.MAX_FLAKES;
     private static final int INFO_SIZE;
 
     static {
         var size = new Std140SizeCalculator().putVec4().putVec4().putVec4().putVec4().putVec4();
-        // The snowflakes' rectangles, then their sizes four to a vec4
-        for (int i = 0; i < Snowflakes.MAX_FLAKES + Snowflakes.MAX_FLAKES / 4; i++)
+        // The looks' rectangles, then the snowflakes' sizes four to a vec4
+        for (int i = 0; i < MAX_LOOKS + MAX_LOOKS / 4; i++)
             size.putVec4();
         INFO_SIZE = size.get();
     }
 
+    /**
+     * Which drops one draws: the rain and snow, or the dust
+     */
+    public enum Part {
+        DROPS("rain and snow"),
+        DUST("dust");
+
+        final String description;
+
+        Part(String description) {
+            this.description = description;
+        }
+    }
+
+    private final Part part;
     // A buffer for each batch, made as the drops need them, each of BATCH_BYTES
     private final List<GpuBuffer> batches = new ArrayList<>();
     @Nullable
@@ -64,29 +83,35 @@ public final class GpuDrops implements AutoCloseable {
     // Which pack the GPU's copy holds
     private long uploadedVersion = -1L;
 
+    public GpuDrops(Part part) {
+        this.part = part;
+    }
+
     /**
-     * Draws the rain and snow of {@code field}, as the CPU's quads would be drawn
+     * Draws this one's part of {@code field}, as the CPU's quads would be drawn
      *
-     * @param bind binds the snow texture and the lightmap, as for the CPU's quads
+     * @param bind binds what the CPU's quads are drawn with: the snow texture or the particle atlas, the lightmap, and
+     *             the soft dust's depth
      * @return how many drops were drawn
      */
     public int draw(PrecipitationField field, RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick,
                     DropMeshes.Style style, Consumer<RenderPass> bind) {
-        if (!PrecipitationRenderer.hasAny(field, false))
+        boolean dust = this.part == Part.DUST;
+        if (!PrecipitationRenderer.hasAny(field, dust))
             return 0;
         var cam = camera.position();
         var packed = field.packed(cam.x, cam.y, cam.z);
         int drops;
         double anchorX, anchorY, anchorZ;
-        // A late build of the dust may be packing the same drops on the quads' thread
+        // A late build on the quads' thread may be packing the same drops
         synchronized (packed) {
-            drops = packed.solid;
+            drops = dust ? packed.dust : packed.solid;
             anchorX = packed.anchorX;
             anchorY = packed.anchorY;
             anchorZ = packed.anchorZ;
             if (drops == 0)
                 return 0;
-            this.upload(packed);
+            this.upload(packed, dust ? packed.solid : 0, drops);
         }
         this.pack((float) (anchorX - cam.x), (float) (anchorY - cam.y), (float) (anchorZ - cam.z), partialTick,
                 PrecipitationRenderer.View.of(camera), field.radius(), style);
@@ -96,7 +121,7 @@ public final class GpuDrops implements AutoCloseable {
         var indexBuffer = indices.getBuffer(Math.min(drops, BATCH_DROPS) * 6);
         var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
         var info = this.info;
-        try (RenderPass pass = device.createCommandEncoder().createRenderPass(() -> "Dynamic Surroundings rain and snow (GPU)",
+        try (RenderPass pass = device.createCommandEncoder().createRenderPass(() -> "Dynamic Surroundings " + this.part.description + " (GPU)",
                 target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
             pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
             RenderSystem.bindDefaultUniforms(pass);
@@ -113,11 +138,11 @@ public final class GpuDrops implements AutoCloseable {
         return drops;
     }
 
-    // The rain and snow's records into the batches' buffers, if they changed
-    private void upload(PackedDrops packed) {
+    // The part's records, from record {@code first}, into the batches' buffers, if they changed
+    private void upload(PackedDrops packed, int first, int count) {
         if (packed.version == this.uploadedVersion)
             return;
-        int floats = packed.solid * PackedDrops.STRIDE;
+        int floats = count * PackedDrops.STRIDE;
         if (this.staging == null || this.staging.capacity() < floats) {
             int capacity = floats;
             if (this.staging != null) {
@@ -127,7 +152,7 @@ public final class GpuDrops implements AutoCloseable {
             this.staging = MemoryUtil.memAllocFloat(capacity);
         }
         var buffer = this.staging.clear();
-        buffer.put(packed.data, 0, floats);
+        buffer.put(packed.data, first * PackedDrops.STRIDE, floats);
         buffer.flip();
 
         var device = RenderSystem.getDevice();
@@ -136,7 +161,7 @@ public final class GpuDrops implements AutoCloseable {
         for (int batch = 0; (long) batch * BATCH_BYTES < bytes.remaining(); batch++) {
             if (batch == this.batches.size()) {
                 int number = batch + 1;
-                this.batches.add(device.createBuffer(() -> "Dynamic Surroundings drops " + number,
+                this.batches.add(device.createBuffer(() -> "Dynamic Surroundings " + this.part.description + " " + number,
                         GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST, BATCH_BYTES));
             }
             int start = (int) (batch * BATCH_BYTES);
@@ -150,30 +175,40 @@ public final class GpuDrops implements AutoCloseable {
     private void pack(float offsetX, float offsetY, float offsetZ, float partialTick, PrecipitationRenderer.View view,
                       float radius, DropMeshes.Style style) {
         if (this.info == null)
-            this.info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings drops UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        float snowTurn = partialTick * PrecipitationField.SNOW_SWAY_RATE * PrecipitationRenderer.SNOW_SPIN;
+            this.info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings " + this.part.description + " UBO",
+                    GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
+        boolean dust = this.part == Part.DUST;
+        // How far every flake or puff has turned since its last tick (see PrecipitationRenderer.build)
+        float turn = dust ? partialTick * PrecipitationField.DUST_TURBULENCE_RATE * PrecipitationRenderer.DUST_SPIN
+                : partialTick * PrecipitationField.SNOW_SWAY_RATE * PrecipitationRenderer.SNOW_SPIN;
         var left = view.left();
         var up = view.up();
         var rain = style.rainColor();
         var flakes = style.snowflakes();
-        int count = Math.min(flakes.size(), Snowflakes.MAX_FLAKES);
+        var sprites = style.dust();
+        int count = Math.min(dust ? sprites.length : flakes.size(), MAX_LOOKS);
         try (var stack = MemoryStack.stackPush()) {
             var builder = Std140Builder.onStack(stack, INFO_SIZE)
                     .putVec4(offsetX, offsetY, offsetZ, partialTick)
                     .putVec4(left.x, left.y, left.z, radius)
                     .putVec4(up.x, up.y, up.z, style.scales().snow())
                     .putVec4(rain.red(), rain.green(), rain.blue(), style.scales().rain())
-                    .putVec4(Mth.cos(snowTurn), Mth.sin(snowTurn), count, Math.max(1, style.largest()));
-            for (int i = 0; i < Snowflakes.MAX_FLAKES; i++) {
-                if (i < count) {
+                    .putVec4(Mth.cos(turn), Mth.sin(turn), count, Math.max(1, style.largest()));
+            for (int i = 0; i < MAX_LOOKS; i++) {
+                if (i >= count) {
+                    builder.putVec4(0F, 0F, 0F, 0F);
+                } else if (dust) {
+                    var sprite = sprites[i];
+                    builder.putVec4(sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1());
+                } else {
                     var flake = flakes.get(i);
                     builder.putVec4(flake.u0(), flake.v0(), flake.u1(), flake.v1());
-                } else {
-                    builder.putVec4(0F, 0F, 0F, 0F);
                 }
             }
-            for (int i = 0; i < Snowflakes.MAX_FLAKES; i += 4)
-                builder.putVec4(size(flakes, count, i), size(flakes, count, i + 1), size(flakes, count, i + 2), size(flakes, count, i + 3));
+            int flakeCount = dust ? 0 : count;
+            for (int i = 0; i < MAX_LOOKS; i += 4)
+                builder.putVec4(size(flakes, flakeCount, i), size(flakes, flakeCount, i + 1), size(flakes, flakeCount, i + 2),
+                        size(flakes, flakeCount, i + 3));
             RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.info.slice(), builder.get());
         }
     }

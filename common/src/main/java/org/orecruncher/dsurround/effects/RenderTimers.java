@@ -40,6 +40,7 @@ public final class RenderTimers {
             PrecipitationShaders.DROPS_TIMER,
             PrecipitationShaders.STREAKS_TIMER,
             PrecipitationShaders.GPU_DROPS_TIMER,
+            PrecipitationShaders.GPU_DUST_TIMER,
             GroundFogVolume.RENDER_TIMER,
             GroundFogVolume.MARCH_TIMER,
             GroundFogVolume.SMOOTH_TIMER,
