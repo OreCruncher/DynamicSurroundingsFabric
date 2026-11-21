@@ -642,6 +642,10 @@ public class Configuration extends ConfigurationData {
         @MovedFrom("weatherOptions.enableWindowStreaks")
         @Comment("With particle rain on, rain drops run down the outside of windows in stick-and-slide streaks")
         public boolean enableWindowStreaks = true;
+
+        @Property
+        @Comment("Shape particle rain and snow on the graphics card each frame rather than on the CPU; turn off if they look wrong")
+        public boolean gpuDrops = true;
     }
 
     public static class Sky {

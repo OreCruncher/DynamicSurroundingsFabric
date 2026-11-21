@@ -4,6 +4,8 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
 import com.mojang.renderpearl.api.pipeline.ColorTargetState;
@@ -11,6 +13,7 @@ import com.mojang.renderpearl.api.pipeline.CompareOp;
 import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.renderer.BindGroupLayouts;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -50,10 +53,21 @@ public final class PrecipitationShaders {
     public static final ModShader DUST = new ModShader(DUST_PIPELINE, "soft dust", "dust will be drawn without it", Library.LOGGER);
     public static final ModShader DAMP_SPOTS = new ModShader(DAMP_SPOTS_PIPELINE, "damp spots", "rain will not leave damp spots", Library.LOGGER);
 
+    // The rain and snow with their quads made on the GPU from the packed drops (see GpuDrops): no vertex buffer, the
+    // drops in a texel buffer, the same fragment shader
+    static final String DROP_INFO = "DropInfo";
+    static final String DROP_RECORDS = "Drops";
+    private static final BindGroupLayout GPU_DROPS_LAYOUT = BindGroupLayout.builder()
+            .withUniform(DROP_INFO, UniformType.UNIFORM_BUFFER)
+            .withUniform(DROP_RECORDS, UniformType.TEXEL_BUFFER, GpuFormat.RGBA32_FLOAT)
+            .build();
+    private static final RenderPipeline GPU_DROPS_PIPELINE = gpuDrops("pipeline/precipitation_gpu").withDepthStencilState(TEST_ONLY).build();
+    public static final ModShader GPU_DROPS = new ModShader(GPU_DROPS_PIPELINE, "rain and snow built on the GPU", "their quads will be built on the CPU", Library.LOGGER);
+
     /**
      * All of them, for {@code ModShaders}
      */
-    public static final List<ModShader> SHADERS = List.of(DROPS, DUST, DAMP_SPOTS);
+    public static final List<ModShader> SHADERS = List.of(DROPS, DUST, DAMP_SPOTS, GPU_DROPS);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
     // The weather's pass waiting for the quads built ahead (DropMeshes.await): a thread starved of the CPU shows here
@@ -62,6 +76,9 @@ public final class PrecipitationShaders {
     public static final RenderTimer DROPS_TIMER = new RenderTimer("- Drops");
     // Drawn among the drops, so within their time too
     public static final RenderTimer STREAKS_TIMER = new RenderTimer("- Window Streaks");
+    // The rain and snow made on the GPU (GpuDrops), drawn among the drops, so within their time too: present in a
+    // recording only for frames drawn that way
+    public static final RenderTimer GPU_DROPS_TIMER = new RenderTimer("- Drops on the GPU");
 
     private PrecipitationShaders() {
     }
@@ -88,6 +105,46 @@ public final class PrecipitationShaders {
                 .withPrimitiveTopology(PrimitiveTopology.QUADS)
                 .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
                 .withCull(false);
+    }
+
+    /**
+     * The drops' pipeline with the quads made in the vertex shader, its constants those the CPU's build uses
+     */
+    private static RenderPipeline.Builder gpuDrops(String location) {
+        var builder = RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/precipitation_gpu"))
+                .withFragmentShader(Constants.asId("core/precipitation"))
+                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+                .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+                .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.FOG)
+                .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
+                .withBindGroupLayout(GPU_DROPS_LAYOUT)
+                .withPrimitiveTopology(PrimitiveTopology.QUADS)
+                .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                .withCull(false);
+        builder.withShaderDefine("MAX_FLAKES", Snowflakes.MAX_FLAKES)
+                .withShaderDefine("KIND_SNOW", (float) PrecipitationField.SNOW)
+                .withShaderDefine("RAIN_FADE_IN", (float) PrecipitationField.RAIN_FADE_IN)
+                .withShaderDefine("SNOW_FADE_IN", (float) PrecipitationField.SNOW_FADE_IN)
+                .withShaderDefine("RAIN_COVER_TICKS", (float) PrecipitationField.RAIN_COVER_TICKS)
+                .withShaderDefine("SNOW_COVER_TICKS", (float) PrecipitationField.SNOW_COVER_TICKS)
+                .withShaderDefine("THIN_FROM_SHARE", PrecipitationRenderer.THIN_FROM_SHARE)
+                .withShaderDefine("THIN_KEEP_AT_EDGE", PrecipitationRenderer.THIN_KEEP_AT_EDGE)
+                .withShaderDefine("THIN_FADE", PrecipitationRenderer.THIN_FADE)
+                .withShaderDefine("EDGE_FADE", PrecipitationRenderer.EDGE_FADE)
+                .withShaderDefine("NO_TEXTURE", PrecipitationRenderer.NO_TEXTURE)
+                .withShaderDefine("SNOW_MIN_HALF_SIZE", PrecipitationRenderer.SNOW_MIN_HALF_SIZE)
+                .withShaderDefine("SNOW_HALF_SIZE_RANGE", PrecipitationRenderer.SNOW_HALF_SIZE_RANGE)
+                .withShaderDefine("SNOW_ALPHA", PrecipitationRenderer.SNOW_ALPHA)
+                .withShaderDefine("RAIN_MIN_LENGTH", PrecipitationRenderer.RAIN_MIN_LENGTH)
+                .withShaderDefine("RAIN_LENGTH_RANGE", PrecipitationRenderer.RAIN_LENGTH_RANGE)
+                .withShaderDefine("RAIN_MIN_HALF_WIDTH", PrecipitationRenderer.RAIN_MIN_HALF_WIDTH)
+                .withShaderDefine("RAIN_HALF_WIDTH_RANGE", PrecipitationRenderer.RAIN_HALF_WIDTH_RANGE)
+                .withShaderDefine("RAIN_MIN_ALPHA", PrecipitationRenderer.RAIN_MIN_ALPHA)
+                .withShaderDefine("RAIN_ALPHA_RANGE", PrecipitationRenderer.RAIN_ALPHA_RANGE);
+        return builder;
     }
 
     private static RenderPipeline.Builder dust(String location) {

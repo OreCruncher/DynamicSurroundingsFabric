@@ -571,6 +571,8 @@
   "dsurround.config.weatherOptions.precipitation.enableSnowOnSides": "Snow sticks to sides",
   "dsurround.config.weatherOptions.precipitation.enableSnowOnSides.tooltip": "With particle snow on, snowflakes blown by the wind against the side of a wall, leaves or a tree trunk stick there for a moment before melting, as they do on the ground. Off, they only settle on top of things.",
   "dsurround.config.weatherOptions.precipitation.enableWindowStreaks": "Rain on windows",
+  "dsurround.config.weatherOptions.precipitation.gpuDrops": "Rain and snow on the GPU",
+  "dsurround.config.weatherOptions.precipitation.gpuDrops.tooltip": "Particle rain and snow are shaped on the graphics card each frame instead of by the CPU, which then only hands it the drops once a tick: the same look for less of the CPU's time. Dust, snow on the ground and rain on windows are still made by the CPU. Turn this off if rain or snow look wrong.",
   "dsurround.config.weatherOptions.precipitation.enableWindowStreaks.tooltip": "With particle rain on, rain drops on the outside of glass blocks and panes cling, then run down in short rushes, leaving a wet trail, as real drops do, and drip off a bottom edge over open air. Windows facing the wind and open to the sky get the most; windows indoors or under eaves stay dry.",
   "dsurround.config.weatherOptions.sky": "Sky",
   "dsurround.config.weatherOptions.sky.tooltip": "Clouds, and the light the weather plays in the sky: rainbows, moonbows and halos",

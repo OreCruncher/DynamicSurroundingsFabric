@@ -95,9 +95,10 @@ public final class DropMeshes implements AutoCloseable {
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's color, the drops on windows' too
      * @param spot       the damp spots' sprite, from the particle atlas
+     * @param gpuDrops   whether the rain and snow are made on the GPU (see {@link GpuDrops}), and not built here
      */
     public record Style(List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
-                        RainColor rainColor, TextureAtlasSprite spot) {
+                        RainColor rainColor, TextureAtlasSprite spot, boolean gpuDrops) {
 
         List<String> differences(Style other) {
             var changed = new ArrayList<String>();
@@ -113,6 +114,8 @@ public final class DropMeshes implements AutoCloseable {
                 changed.add("rain color %s to %s".formatted(this.rainColor, other.rainColor));
             if (this.spot != other.spot)
                 changed.add("damp spot sprite");
+            if (this.gpuDrops != other.gpuDrops)
+                changed.add("rain and snow made on the GPU");
             return changed;
         }
     }
@@ -250,8 +253,12 @@ public final class DropMeshes implements AutoCloseable {
 
     // On the executor's thread
     private void build(Request request) {
-        for (var kind : KINDS)
+        for (var kind : KINDS) {
+            // Made on the GPU instead
+            if (kind == Kind.DROPS && request.style().gpuDrops())
+                continue;
             build(kind, this.ahead[kind.ordinal()], request);
+        }
     }
 
     /**

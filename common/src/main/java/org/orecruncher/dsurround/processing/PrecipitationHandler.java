@@ -31,6 +31,7 @@ import org.orecruncher.dsurround.effects.precipitation.AfterRainDrips;
 import org.orecruncher.dsurround.effects.precipitation.DampSpots;
 import org.orecruncher.dsurround.effects.precipitation.DropMeshes;
 import org.orecruncher.dsurround.effects.precipitation.DropScales;
+import org.orecruncher.dsurround.effects.precipitation.GpuDrops;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.precipitation.Landings;
 import org.orecruncher.dsurround.effects.precipitation.LevelColumns;
@@ -118,6 +119,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final MeshDraw dropDraw = new MeshDraw("rain and snow");
     private final MeshDraw fleckDraw = new MeshDraw("snow flecks");
     private final MeshDraw streakDraw = new MeshDraw("window streaks");
+    // The rain and snow, when their quads are made on the GPU
+    private final GpuDrops gpuDrops = new GpuDrops();
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
@@ -299,7 +302,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var options = this.config.weatherOptions;
         return new DropMeshes.Style(this.snowflakes.flakes(GameUtils.getResourceManager()), this.snowflakes.largest(),
                 DSurroundParticleSprites.DUST.sprites(), new DropScales(options.precipitation.rainDropScale / 100F, options.precipitation.snowflakeScale / 100F),
-                RainColor.ofTint(options.precipitation.rainTint), DSurroundParticleSprites.DAMP_SPOT.get(0, 1));
+                RainColor.ofTint(options.precipitation.rainTint), DSurroundParticleSprites.DAMP_SPOT.get(0, 1),
+                options.precipitation.gpuDrops && PrecipitationShaders.GPU_DROPS.isUsable());
     }
 
     /**
@@ -372,8 +376,18 @@ public class PrecipitationHandler extends AbstractClientHandler {
             pass.setUniform("Sampler0", snow.getTextureView(), snow.getSampler());
             pass.setUniform("Sampler2", lightmap, lightmapSampler);
         };
-        this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, sources, camera, partialTick, style,
-                quads -> this.dropDraw.draw(quads, pipeline, target, bind));
+        if (style.gpuDrops()) {
+            // If it fails, the CPU builds them from the next frame on
+            var gpu = PrecipitationShaders.GPU_DROPS;
+            PrecipitationShaders.GPU_DROPS_TIMER.begin();
+            int before = this.dropsDrawn;
+            gpu.run(() -> this.dropsDrawn += this.gpuDrops.draw(this.field, gpu.pipeline(), target, camera, partialTick, style, bind), () -> {});
+            PrecipitationShaders.GPU_DROPS_TIMER.count(this.dropsDrawn - before);
+            PrecipitationShaders.GPU_DROPS_TIMER.end();
+        } else {
+            this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, sources, camera, partialTick, style,
+                    quads -> this.dropDraw.draw(quads, pipeline, target, bind));
+        }
         this.meshes.draw(DropMeshes.Kind.FLECKS, sources, camera, partialTick, style,
                 quads -> this.fleckDraw.draw(quads, pipeline, target, bind));
         if (this.windowStreaks.count() > 0) {
@@ -427,6 +441,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
         float ahead = this.meshes.aheadShare();
         if (!Float.isNaN(ahead))
             text += String.format(Locale.ROOT, ", built ahead %.0f%%", ahead * 100F);
+        // Where the rain and snow's quads are made (see GpuDrops)
+        if (this.config.weatherOptions.precipitation.gpuDrops && PrecipitationShaders.isAvailable())
+            text += PrecipitationShaders.GPU_DROPS.isUsable() ? ", drops on the GPU" : ", GPU drops failed, built on the CPU";
         if (this.config.weatherOptions.precipitation.enableAfterRainDrips && this.drips.strength() > 0F)
             text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);

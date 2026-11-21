@@ -42,6 +42,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Results, 2026-11-18: NeoForge chain (5.3.0)](#results-2026-11-18-neoforge-chain-530)
 - [Results, 2026-11-19: Fabric chain (5.3.0)](#results-2026-11-19-fabric-chain-530)
 - [Results, 2026-11-21: cinematic aurora (`aurora-cinematic.json`)](#results-2026-11-21-cinematic-aurora-aurora-cinematicjson)
+- [Results, 2026-11-21: rain and snow made on the GPU (`gpu-drops.json`)](#results-2026-11-21-rain-and-snow-made-on-the-gpu-gpu-dropsjson)
 - [Rerunning](#rerunning)
 
 ## Method
@@ -1354,6 +1355,62 @@ one 20-second run each (`cinematic-fancy` only), against a baseline run the same
 
   Half of the first full run's, Fancy and Fast. Fancy still twenty-five times the realistic one; Fast (half the size
   each way) about six times.
+
+## Results, 2026-11-21: rain and snow made on the GPU (`gpu-drops.json`)
+
+A spike, uncommitted: with `weatherOptions.precipitation.gpuDrops` on, the rain and snow are no longer written as quads
+by the CPU each frame. The drops packed once a tick (`PackedDrops`, padded to five texels of four floats) go into a
+texel buffer when they change, and the vertex shader (`precipitation_gpu.vsh`) makes each drop's quad from its record,
+as vanilla's clouds read their faces. Dust, snow flecks, window streaks and damp spots are still built on the CPU.
+`precipitation.json`'s scenes, NeoForge, OpenGL, 1920x1080, RX 7600, two repeats a label. The screenshots show the
+same rain and snow both ways.
+
+| Run | fps | Frame GPU ms | Frame CPU ms | Precipitation CPU ms | Waiting for Quads ms | Drops GPU ms |
+|---|---|---|---|---|---|---|
+| rain, Medium, CPU | 1337 | 0.405 | 0.455 | 0.181 | 0.115 | 0.013 |
+| rain, Medium, GPU | 1374 | 0.397 | 0.323 | 0.040 | 0.003 | 0.011 |
+| rain, High, CPU | 820 | 0.621 | 1.035 | 0.744 | 0.594 | 0.049 |
+| rain, High, GPU | 1214 | 0.470 | 0.489 | 0.174 | 0.079 | 0.026 |
+| snow, High, CPU | 780 | 0.827 | 0.958 | 0.456 | 0.338 | 0.023 |
+| snow, High, GPU | 829 | 0.805 | 0.538 | 0.050 | 0.002 | 0.015 |
+
+- The wait for the quads is nearly gone (rain High 0.594 to 0.079 ms; what is left is the flecks, streaks and spots
+  still built on the CPU), and the frame's CPU time halves at High. The quads' thread no longer builds the drops at all.
+- The GPU's own time for the drops fell too (rain High 0.049 to 0.026 ms): the vertex buffer uploaded each frame, four
+  vertices a drop, became an upload of the records once a tick.
+- Known limit: a texel buffer is only guaranteed 65,536 texels. Range 20 holds up to about 61,000; range 32 about
+  157,000. Desktop GPUs allow far more; not checked on Intel.
+
+The same on Vulkan (AMD driver 26.11.2, `-PgraphicsBackend=vulkan`, `earlyWindowControl = false` for the run): it draws
+the same, with no errors, and gains the same way.
+
+| Run | fps | Frame GPU ms | Frame CPU ms | Precipitation CPU ms | Waiting for Quads ms | Drops GPU ms |
+|---|---|---|---|---|---|---|
+| rain, Medium, CPU | 888 | 0.649 | 0.498 | 0.112 | 0.026 | 0.046 |
+| rain, Medium, GPU | 979 | 0.589 | 0.415 | 0.070 | 0.005 | 0.034 |
+| rain, High, CPU | 660 | 0.866 | 0.847 | 0.453 | 0.326 | 0.108 |
+| rain, High, GPU | 908 | 0.652 | 0.490 | 0.102 | 0.008 | 0.064 |
+| snow, High, CPU | 586 | 1.050 | 0.832 | 0.202 | 0.104 | 0.075 |
+| snow, High, GPU | 675 | 0.935 | 0.665 | 0.072 | 0.006 | 0.046 |
+
+At the widest range (32, `gpu-drops-wide.json`): about 31,000 drops, drawn on the GPU in three batches of 12,800, each
+from a buffer of its own. The first try bound parts of one buffer, which the game refuses ("Uniform texel buffers do
+not support a slice of a buffer, must be entire buffer"); every GPU run fell back to the CPU, and only the log and the
+missing "- Drops on the GPU" timer showed it. One buffer a batch, both backends, the screenshots the same:
+
+| Run | fps | Frame GPU ms | Frame CPU ms | Precipitation CPU ms | Waiting for Quads ms | Drops on the GPU, GPU ms |
+|---|---|---|---|---|---|---|
+| OpenGL, rain, CPU | 414 | 0.849 | 2.034 | 1.484 | 1.196 | - |
+| OpenGL, rain, GPU | 878 | 0.615 | 0.841 | 0.358 | 0.169 | 0.039 |
+| OpenGL, snow, CPU | 380 | 1.292 | 1.994 | 1.156 | 0.889 | - |
+| OpenGL, snow, GPU | 728 | 0.847 | 0.778 | 0.118 | 0.002 | 0.036 |
+| Vulkan, rain, CPU | 360 | 1.118 | 1.841 | 1.309 | 1.086 | - |
+| Vulkan, rain, GPU | 706 | 0.794 | 0.720 | 0.241 | 0.055 | 0.058 |
+| Vulkan, snow, CPU | 326 | 1.566 | 1.938 | 1.042 | 0.831 | - |
+| Vulkan, snow, GPU | 556 | 1.070 | 0.885 | 0.141 | 0.007 | 0.053 |
+
+- The frame rate about doubles at range 32, on both backends: the CPU build there took over a millisecond, nearly all of
+  it waited on. The GPU's frame time falls too.
 
 ## Rerunning
 

@@ -5,6 +5,8 @@ package org.orecruncher.dsurround.effects.precipitation;
 
 import net.minecraft.util.Mth;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * The drops drawn, packed for building their quads: one record of floats a drop, all a drop's values side by side, in
  * a single array. The field keeps its drops in an array a value ({@link PrecipitationField.Drops}), which suits the
@@ -38,13 +40,18 @@ final class PackedDrops {
     // Rain: the way it falls, a unit vector. Snow and dust: the cos and sin of its turn; dust: its color, as the float
     // with its bits.
     static final int A = 14, B = 15, C = 16;
-    static final int STRIDE = 17;
+    // 17 values, padded to 20: five texels of four floats each, as the GPU reads them (see GpuDrops)
+    static final int STRIDE = 20;
+    // Each pack's number, from one count across both sets of drops, so the GPU's copy is replaced when it changes
+    private static final AtomicLong PACKS = new AtomicLong();
 
     float[] data = new float[0];
     // Rain and snow are records [0, solid), dust [solid, solid + dust)
     int solid;
     int dust;
     double anchorX, anchorY, anchorZ;
+    // Which pack this is (see PACKS)
+    long version;
     private boolean stale = true;
 
     /**
@@ -77,6 +84,7 @@ final class PackedDrops {
                 at = this.pack(d, i, at);
         }
         this.dust = at / STRIDE - this.solid;
+        this.version = PACKS.incrementAndGet();
         this.stale = false;
     }
 
