@@ -41,6 +41,7 @@ runner, with the numbers the Performance presets (Low/Medium/High) were chosen f
 - [Field recordings](#field-recordings)
 - [Results, 2026-11-18: NeoForge chain (5.3.0)](#results-2026-11-18-neoforge-chain-530)
 - [Results, 2026-11-19: Fabric chain (5.3.0)](#results-2026-11-19-fabric-chain-530)
+- [Results, 2026-11-21: cinematic aurora (`aurora-cinematic.json`)](#results-2026-11-21-cinematic-aurora-aurora-cinematicjson)
 - [Rerunning](#rerunning)
 
 ## Method
@@ -1303,6 +1304,56 @@ yesterday's NeoForge chain too.
   0.232 ms GPU Fancy, 0.110 Fast, against 0.224 / 0.119 on 2026-11-04 (NeoForge; the bench's night differs from run
   to run). The two extra noise samples cost nothing measurable.
 - Dust's default runs are the widest apart again (1.100-1.225 and 0.914-1.167), as in earlier sessions.
+
+## Results, 2026-11-21: cinematic aurora (`aurora-cinematic.json`)
+
+The cinematic aurora (an experiment, uncommitted, not in any release), measured for the first time: the realistic
+style's scene from `aurora.json` (up above the ice spikes, time 18000, facing north 35 degrees up) and one looking
+nearly straight up. NeoForge, OpenGL, 1920x1080, RX 7600. Two repeats a label for the full runs; the experiments are
+one 20-second run each (`cinematic-fancy` only), against a baseline run the same way (10.9 ms, as the full runs).
+
+| Run | Frame GPU ms | Aurora GPU ms |
+|---|---|---|
+| realistic, Fancy | 0.388 | 0.228 |
+| cinematic, Fancy | 11.515 | 11.550 |
+| cinematic, Fast | 3.151 | 2.883 |
+| cinematic, Fancy, overhead | 11.047 | 11.073 |
+| cinematic, Fancy, curls off (a build with no curls) | 10.772 | 10.806 |
+| cinematic, Fast, curls off | 2.825 | 2.573 |
+| auroras off | 0.248 | - |
+
+- Fifty times the realistic aurora. Curls (a twist of the layer, steps near one cut into up to 24 pieces) add about
+  0.75 ms of it; the rest was there in the parked version, never measured before.
+- Where the time goes (single runs, each change alone, then undone): steps that go through only a ribbon's halo (six
+  times as wide as its sheet, its light 0.008 of the sheet's) ran the full lighting, rays, patches and curl and all:
+  without them 4.9 ms. Half the steps (10, not 20) with that: 2.8 ms, but the ripples the 20 steps were set to stop
+  came back on dim curtains.
+- Kept: the halo alone lit plainly (`halo_light`: its height and color, no noise), in steps and in pieces of steps
+  that hold no sheet: **5.9 ms**. Steps stay at 20. The screenshots show the same aurora.
+- Still about twenty-five times the realistic one at Fancy (whose Fast is 0.11 ms). What is left is the 20 steps a
+  ribbon, each working out the sheet and the halo with the error function, for up to four ribbons, at every pixel, and
+  the full lighting where there is sheet.
+- Then the rays' blur measured, not worked out (how fast the line of sight runs along the ribbon and across its sheet,
+  from the layer looked up a little further along it): fine arcs in curls seen from the ground were gone, for **6.1 ms**
+  (one run; about 0.2 more).
+- Then three cuts, each timed alone in one run: steps that stay on one side of a ribbon, past four of its halo's
+  widths, passed over, and a curl's twist skipped where it has faded (q > 16): -0.4 ms. The halo lit once a step
+  (plainly) where no curl is near, the pieces looking only at the sheet: -0.35 ms. Kept both. Tried and dropped:
+  pieces only as many as the step rises in 2 km (-0.1 ms). What the time is in, found by taking parts out: the 4
+  pieces of each lit step about 3 ms of it (with SUBSTEPS 1, 2.6 ms in all; curl pieces cut from 24 to 4 changed
+  nothing in this scene), the full lighting about 1.3 ms (the halo's plain light in its place).
+- The full scenario again with all of it:
+
+| Run | Frame GPU ms | Aurora GPU ms |
+|---|---|---|
+| realistic, Fancy | 0.376 | 0.229 |
+| cinematic, Fancy | 5.761 | 5.669 |
+| cinematic, Fast | 1.688 | 1.483 |
+| cinematic, Fancy, overhead | 6.166 | 6.082 |
+| auroras off | 0.198 | - |
+
+  Half of the first full run's, Fancy and Fast. Fancy still twenty-five times the realistic one; Fast (half the size
+  each way) about six times.
 
 ## Rerunning
 

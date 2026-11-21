@@ -2,7 +2,7 @@
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
 
-This release brings rainbows after the rain, and armor that sounds like what it's made of.
+This release brings rainbows after the rain, a cinematic aurora, and armor that sounds like what it's made of.
 
 **All Loaders**
 * JAVA 25+  
@@ -17,6 +17,7 @@ This release brings rainbows after the rain, and armor that sounds like what it'
 
 **AI Disclosure**
 * Built the rainbows, working their colors out from how sunlight passes through raindrops, and measured them with benchmark runs
+* Built the cinematic aurora, comparing it with photographs of real auroras, and halved its cost with benchmark runs
 * Built armor families and surveyed popular equipment mods to sort their armor and weapons
 * Made particle rain and snow cheaper to draw, measuring each change with benchmark runs
 
@@ -29,10 +30,14 @@ This release brings rainbows after the rain, and armor that sounds like what it'
   * Scripts can ask `weather.isRainbow()`
 * Halos and sun dogs (experimental). In cold biomes under a clear sky, ice crystals in the air can ring the sun with a halo 22 degrees out, white with a faintly red inner edge, with a sun dog level with the sun either side, moving out and fading as the sun climbs. Sky style sets how they look; every player in a world sees the same
   * Halos and sun dogs and Halo chance (25% by default) are in the Weather options, under Sky
+* Cinematic aurora, a third aurora style: the stylized ribbons of photographs and games. Wide, soft curtains of saturated green with a bright yellow-green lower edge and violet tops, folding in long S-curves, curling back into hooks, and free to sweep overhead from one horizon to the other. Brighter and dimmer stretches run along them, now and then one far brighter, and the sky around them is lifted to a faint teal. Active nights draw them in closer and make them brighter and livelier, with more violet. Every player in a world sees the same ribbons on the same night
+  * Chosen with Aurora style in the Aurora options. Its Quality is Fast by default, drawn at half the screen's size; Fancy draws it at full size for about four times the cost, and the High performance preset sets Fancy
+  * `/dsaurora` shows tonight's ribbons, and holds how active the night is and where in it, as it does for the realistic aurora
 * Armor sounds by what it's made of. Each piece of armor belongs to a family (leather, chain, plate, crystal or heavy), which gives its footstep accent, its hotbar sound and its swing sound. Modded armor is sorted by its tag, or else by the equip sound it uses, so most needs no tagging. The families use the game's sounds for now
 
 **Changes**
 * The Weather options are grouped into Storms, Precipitation and Sky, and Ground fog has moved to the Fog options. Settings players had carry over, and modpack presets naming a setting's old place still apply, with a log line saying where it moved
+* The realistic aurora's rays are finer and feathery, swaying with height, with no dark gaps between them. Its arcs fold and wave more, one night in four brings the nearest arc in closer, arcs stacked one behind another are softer, and pulsing patches dim rather than go out
 * Particle rain and snow take less time to draw. Drops past the edges of the view are left out, not only those behind it (42% fewer to draw), the drops are built 14-16% faster, and the building starts earlier in the frame
 * Tough As Nails' wool and leaf armor and Alex's Mobs' creature armor sound like leather, and Epic Knights' lances like spears
 * `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items

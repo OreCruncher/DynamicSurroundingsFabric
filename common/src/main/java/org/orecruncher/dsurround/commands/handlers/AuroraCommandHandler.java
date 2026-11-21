@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * /dsaurora: shows tonight's realistic aurora, and holds how active it is, where in its night it is and its color
- * character, for seeing each.
+ * /dsaurora: shows tonight's realistic or cinematic aurora, and holds how active it is, where in its night it is and
+ * (realistic only) its color character, for seeing each.
  */
 public class AuroraCommandHandler {
 
@@ -49,14 +49,23 @@ public class AuroraCommandHandler {
 
     static List<Component> status(AuroraHandler handler, AuroraStyle style) {
         var lines = new ArrayList<Component>();
-        if (style != AuroraStyle.REALISTIC) {
+        if (style == AuroraStyle.CLASSIC) {
             lines.add(Component.translatable(KEY + "status.classic"));
             return lines;
         }
 
         var aurora = handler.realistic();
         var moment = handler.moment();
-        if (aurora.isPresent() && moment.isPresent()) {
+        var cinematic = handler.cinematic();
+        if (style == AuroraStyle.CINEMATIC) {
+            // Its ribbons, and how active its night is (its colors are its own: /dsaurora color is for the realistic one)
+            if (cinematic.isPresent() && aurora.isPresent() && moment.isPresent()) {
+                lines.add(Component.translatable(KEY + "status.cinematic", name(aurora.get().activity()), name(moment.get().phase()),
+                        cinematic.get().ribbons().size(), name(cinematic.get().layout())));
+            } else {
+                lines.add(Component.translatable(KEY + "status.none.cinematic", handler.status()));
+            }
+        } else if (aurora.isPresent() && moment.isPresent()) {
             var nearest = aurora.get().arcs().getFirst().distance() - moment.get().approach();
             lines.add(Component.translatable(KEY + "status", name(aurora.get().activity()), name(moment.get().phase()),
                     name(aurora.get().color()), aurora.get().arcs().size(), Math.round(nearest)));

@@ -2,11 +2,31 @@
 // Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 /**
- * The aurora, in two styles ({@code auroraOptions.style}): the classic one,
- * {@link org.orecruncher.dsurround.effects.aurora.AuroraRenderer}'s mesh of bands, and the realistic one, the default,
- * modeled on real auroras. {@code maxBands} is under
+ * The aurora, in three styles ({@code auroraOptions.style}): the classic one,
+ * {@link org.orecruncher.dsurround.effects.aurora.AuroraRenderer}'s mesh of bands; the realistic one, the default,
+ * modeled on real auroras; and the cinematic one, stylized ribbons. {@code maxBands} is under
  * {@code auroraOptions.classic}; {@code stormChance}, {@code quality} and {@code moonWashout} under
- * {@code auroraOptions.realistic}. Both draw at {@code ISkyRender}, once the sky's pass is closed. The realistic one:
+ * {@code auroraOptions.realistic}; the cinematic one's {@code quality} under {@code auroraOptions.cinematic} (it also
+ * follows {@code stormChance}, through the realistic night it takes its activity from). All draw at {@code ISkyRender},
+ * once the sky's pass is closed. The cinematic one:
+ * <ul>
+ *     <li>{@link org.orecruncher.dsurround.effects.aurora.CinematicAurora} is the model: one night's ribbons (a layout
+ *     of waves or a horseshoe overhead, any heading), each a curtain hanging from a folded, bowed line about 100 km
+ *     up, most curled into a spiral or hook by a twist of the layer (an offset alone can't double back). How active
+ *     it is comes from the same night's {@code RealisticAurora}, which {@code AuroraHandler} keeps but doesn't draw:
+ *     its {@code Moment}'s gain, speed, ray contrast and surge (a breakup draws the ribbons in toward
+ *     overhead, lowers their edge, adds violet). One fixed palette, in the shader.</li>
+ *     <li>{@link org.orecruncher.dsurround.effects.aurora.CinematicAuroraMotion}: folds, waves and rays moved frame
+ *     by frame, as the realistic one's are.</li>
+ *     <li>{@link org.orecruncher.dsurround.effects.aurora.CinematicAuroraRenderer} and
+ *     {@code shaders/core/aurora_cinematic.*}: one screen pass, adding light. Each ribbon is a soft sheet (a bell curve
+ *     across it); the shader steps along the line of sight through the band it can be in and adds, a step at a time,
+ *     how much of the sheet the line goes through, worked out with the error function, so nothing is missed between
+ *     steps and edge on is brighter of itself. Color by height (yellow-green edge, emerald, violet top), rays,
+ *     patches and a violet halo, as real photographs show them. {@code FAST} draws at half size and lays it over
+ *     with the realistic one's composite shader.</li>
+ * </ul>
+ * The realistic one:
  * <ul>
  *     <li>{@link org.orecruncher.dsurround.effects.aurora.RealisticAurora} is the model: one night's arcs, in
  *     kilometers around a viewer on a round Earth, from the night's number. Arcs run along magnetic east-west
@@ -33,6 +53,6 @@
  *     projection moves the camera too.</li>
  * </ul>
  * {@code /dsaurora} shows tonight's aurora; {@code activity}, {@code phase} and {@code colour} hold one until
- * {@code clear} or disconnecting.
+ * {@code clear} or disconnecting ({@code colour} is the realistic one's alone).
  */
 package org.orecruncher.dsurround.effects.aurora;

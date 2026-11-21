@@ -6,11 +6,13 @@ package org.orecruncher.dsurround.config;
 import org.orecruncher.dsurround.lib.config.ITranslatedEnum;
 
 /**
- * How auroras look: the original Dynamic Surroundings curtains, or one modelled on the real thing.
+ * How auroras look: the original Dynamic Surroundings curtains, one modeled on the real thing, or the stylized ribbons
+ * of photographs and games.
  */
 public enum AuroraStyle implements ITranslatedEnum {
     CLASSIC("dsurround.config.auroraStyle.classic"),
-    REALISTIC("dsurround.config.auroraStyle.realistic");
+    REALISTIC("dsurround.config.auroraStyle.realistic"),
+    CINEMATIC("dsurround.config.auroraStyle.cinematic");
 
     private final String translationKey;
 

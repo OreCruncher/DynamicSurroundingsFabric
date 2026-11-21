@@ -235,6 +235,7 @@
       // Fast cost a quarter to a third of Fancy at each size measured (bench, a held storm: 2.4 ms of GPU a frame against 0.65
       // at 3840x2160)
       "auroraOptions.realistic.quality": "FAST",
+      "auroraOptions.cinematic.quality": "FAST",
       "weatherOptions.precipitation.precipitationDensity": 50,
       "weatherOptions.precipitation.precipitationRange": 10,
       "blockEffects.blockEffectRange": 32,
@@ -254,6 +255,7 @@
     "values": {
       "fogOptions.groundFogQuality": "FANCY",
       "auroraOptions.realistic.quality": "FANCY",
+      "auroraOptions.cinematic.quality": "FAST",
       "weatherOptions.precipitation.precipitationDensity": 100,
       "weatherOptions.precipitation.precipitationRange": 14,
       "blockEffects.blockEffectRange": 40,
@@ -276,6 +278,7 @@
       // want it choose it themselves.
       "fogOptions.groundFogQuality": "FANCY",
       "auroraOptions.realistic.quality": "FANCY",
+      "auroraOptions.cinematic.quality": "FANCY",
       "weatherOptions.precipitation.precipitationDensity": 100,
       "weatherOptions.precipitation.precipitationRange": 20,
       "blockEffects.blockEffectRange": 64,

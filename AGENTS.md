@@ -278,7 +278,7 @@ is known of 26.4.
 - `ConfigServices` is handed by `BlockLibrary`/`BiomeLibrary` to the `BlockInfo`/`BiomeInfo` they build.
   `BiomeLibrary` resolves the condition evaluator lazily: evaluator → `BiomeVariables` → biome library is a cycle.
 - Shaders: one `effects/ModShader` per `RenderPipeline` (`SoftParticles.SHADER` and `FLAME_SHADER`,
-  `AuroraRenderer.SHADER`, `RealisticAuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
+  `AuroraRenderer.SHADER`, `RealisticAuroraRenderer.SHADER`, `CinematicAuroraRenderer.SHADER`, `PointLights.SHADER`, `PrecipitationShaders.SHADERS`, `FrostRenderer.SHADERS`,
   `GroundFogVolume.SHADERS`), listed in `ModShaders.SHADERS`. Not added to vanilla's `RenderPipelines` (a failure there
   rejects the reload); `MixinShaderManager` compiles them after each shader reload. Drawing goes through
   `ModShader.run` / `RenderFailSafe`: a failure is logged once and the effect turned off until resources reload.

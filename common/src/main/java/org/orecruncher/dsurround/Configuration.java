@@ -725,7 +725,7 @@ public class Configuration extends ConfigurationData {
         public int chance = 33;
 
         @Property
-        @Comment("How auroras look: REALISTIC, modelled on real auroras, or CLASSIC, the original Dynamic Surroundings curtains")
+        @Comment("How auroras look: REALISTIC, modeled on real auroras; CINEMATIC, stylized ribbons as in photographs and games; or CLASSIC, the original Dynamic Surroundings curtains")
         public AuroraStyle style = AuroraStyle.REALISTIC;
 
         @Property
@@ -735,6 +735,10 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("Settings for the realistic aurora")
         public final RealisticAurora realistic = new RealisticAurora();
+
+        @Property
+        @Comment("Settings for the cinematic aurora")
+        public final CinematicAurora cinematic = new CinematicAurora();
     }
 
     public static class ClassicAurora {
@@ -758,6 +762,12 @@ public class Configuration extends ConfigurationData {
         @Property
         @Comment("A bright moon washes out faint auroras, as it does the real ones")
         public boolean moonWashout = true;
+    }
+
+    public static class CinematicAurora {
+        @Property
+        @Comment("How finely the cinematic aurora is drawn: FAST at half the screen's size (the default: a quarter of the cost, its rays a little softer), FANCY at the screen's size")
+        public AuroraQuality quality = AuroraQuality.FAST;
     }
 
     public static class WorldActorOptions {

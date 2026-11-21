@@ -19,6 +19,9 @@ import org.orecruncher.dsurround.effects.aurora.AuroraActivity;
 import org.orecruncher.dsurround.effects.aurora.AuroraColor;
 import org.orecruncher.dsurround.effects.aurora.AuroraPalette;
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.aurora.CinematicAurora;
+import org.orecruncher.dsurround.effects.aurora.CinematicAuroraMotion;
+import org.orecruncher.dsurround.effects.aurora.CinematicAuroraRenderer;
 import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import org.orecruncher.dsurround.effects.aurora.RealisticAuroraMotion;
 import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
@@ -35,8 +38,8 @@ import java.util.Optional;
 
 /**
  * Auroras: on some nights, over cold places, curtains of light in the sky. Drawn in the style chosen: the classic
- * curtains ({@link Aurora}) or arcs modelled on real auroras ({@link RealisticAurora}). A change of style fades the
- * one showing out before the other fades in.
+ * curtains ({@link Aurora}), arcs modeled on real auroras ({@link RealisticAurora}), or stylized ribbons
+ * ({@link CinematicAurora}). A change of style fades the one showing out before the other fades in.
  * <p>
  * Whether a night has one, and what it looks like, comes from the night's number, so everyone in a world sees the
  * same aurora. It shows in the Overworld from sunset through the night, while the player is in a cold biome, and
@@ -45,7 +48,8 @@ import java.util.Optional;
  * pack is in use, as the pack replaces the sky rendering.
  * <p>
  * A realistic aurora changes through the night (see {@link RealisticAurora#at}), following how far through it the
- * night is. {@code /dsaurora} can hold how active it is, and where in its night it is, to see each; disconnecting lets
+ * night is. A cinematic one follows the same: tonight's realistic aurora is kept for it, not drawn, and says how active
+ * its ribbons are. {@code /dsaurora} can hold how active it is, and where in its night it is, to see each; disconnecting lets
  * them go.
  */
 public class AuroraHandler extends AbstractClientHandler {
@@ -64,11 +68,16 @@ public class AuroraHandler extends AbstractClientHandler {
     private final IWeatherSimulation weatherSimulation;
     private final FogHandler fogHandler;
 
-    // Tonight's aurora, in the style it was started in: one of the two, or neither
+    // Tonight's aurora, in the style it was started in: classic, realistic, or cinematic (its ribbons and, for how
+    // active it is, tonight's realistic aurora), or none
     @Nullable
     private Aurora aurora;
     @Nullable
     private RealisticAurora realistic;
+    @Nullable
+    private CinematicAurora cinematic;
+    // Where a cinematic aurora's folds, waves and rays have moved to
+    private final CinematicAuroraMotion cinematicMotion = new CinematicAuroraMotion();
     // Where a realistic aurora's waves, curls and rays have moved to
     private final RealisticAuroraMotion motion = new RealisticAuroraMotion();
     // How far through the night it is, now and last tick
@@ -109,7 +118,8 @@ public class AuroraHandler extends AbstractClientHandler {
         var options = this.config.auroraOptions;
         if (this.strength <= 0F) {
             this.aurora = wanted && options.style == AuroraStyle.CLASSIC ? Aurora.create(night, options.classic.maxBands) : null;
-            this.realistic = wanted && options.style == AuroraStyle.REALISTIC ? this.createRealistic(night) : null;
+            this.realistic = wanted && options.style != AuroraStyle.CLASSIC ? this.createRealistic(night) : null;
+            this.cinematic = wanted && options.style == AuroraStyle.CINEMATIC ? CinematicAurora.create(night) : null;
         }
         // How active it is follows /dsaurora at once: the same arcs, more or less active
         var held = this.heldActivity;
@@ -124,10 +134,24 @@ public class AuroraHandler extends AbstractClientHandler {
         // out before the next can begin
         var classic = this.aurora;
         var realistic = this.realistic;
-        var stale = classic != null && (options.style != AuroraStyle.CLASSIC || classic.night() != night || classic.bands() > options.classic.maxBands)
-                || realistic != null && (options.style != AuroraStyle.REALISTIC || realistic.night() != night);
-        var target = (classic != null || realistic != null) && wanted && !stale ? 1F : 0F;
+        var showing = this.showing();
+        var stale = showing != null && (showing != options.style
+                || classic != null && (classic.night() != night || classic.bands() > options.classic.maxBands)
+                || realistic != null && realistic.night() != night);
+        var target = showing != null && wanted && !stale ? 1F : 0F;
         this.strength = Mth.approach(this.strength, target, FADE_PER_TICK);
+    }
+
+    /**
+     * The style of the aurora started tonight, if one was
+     */
+    @Nullable
+    private AuroraStyle showing() {
+        if (this.aurora != null)
+            return AuroraStyle.CLASSIC;
+        if (this.cinematic != null)
+            return AuroraStyle.CINEMATIC;
+        return this.realistic != null ? AuroraStyle.REALISTIC : null;
     }
 
     private RealisticAurora createRealistic(long night) {
@@ -143,6 +167,7 @@ public class AuroraHandler extends AbstractClientHandler {
     public void onDisconnect() {
         this.aurora = null;
         this.realistic = null;
+        this.cinematic = null;
         this.heldActivity = null;
         this.heldPhase = null;
         this.heldColor = null;
@@ -159,7 +184,7 @@ public class AuroraHandler extends AbstractClientHandler {
         var level = player.level();
         if (!options.enableAuroras) {
             this.status = "disabled";
-        } else if (options.style == AuroraStyle.CLASSIC ? !AuroraRenderer.isAvailable() : !RealisticAuroraRenderer.isAvailable()) {
+        } else if (!isAvailable(options.style)) {
             this.status = "shader unavailable or failed";
         } else if (IrisCompat.isShaderPackInUse()) {
             this.status = "shader pack in use";
@@ -167,7 +192,7 @@ public class AuroraHandler extends AbstractClientHandler {
             this.status = "not the Overworld";
         } else if (!isDark(player)) {
             this.status = "daytime";
-        } else if (!Aurora.appears(night, options.chance) && !(this.heldActivity != null && options.style == AuroraStyle.REALISTIC)) {
+        } else if (!Aurora.appears(night, options.chance) && !(this.heldActivity != null && options.style != AuroraStyle.CLASSIC)) {
             this.status = "none tonight";
         } else if (!this.isCold(player)) {
             this.status = "not a cold biome";
@@ -176,6 +201,14 @@ public class AuroraHandler extends AbstractClientHandler {
             return true;
         }
         return false;
+    }
+
+    private static boolean isAvailable(AuroraStyle style) {
+        return switch (style) {
+            case CLASSIC -> AuroraRenderer.isAvailable();
+            case REALISTIC -> RealisticAuroraRenderer.isAvailable();
+            case CINEMATIC -> CinematicAuroraRenderer.isAvailable();
+        };
     }
 
     private static boolean isDark(Player player) {
@@ -219,6 +252,12 @@ public class AuroraHandler extends AbstractClientHandler {
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
         if (classic != null) {
             AuroraRenderer.render(classic, alpha, viewMatrix, time);
+        } else if (this.cinematic != null) {
+            var cinematic = this.cinematic;
+            var moment = realistic.at(this.progressOf(realistic, partialTick));
+            this.cinematicMotion.advance(cinematic, moment.speed(), time);
+            CinematicAuroraRenderer.render(cinematic, moment, this.cinematicMotion, this.config.auroraOptions.cinematic.quality,
+                    alpha, viewMatrix, time);
         } else {
             var moment = realistic.at(this.progressOf(realistic, partialTick));
             this.motion.advance(realistic, moment.speed(), time);
@@ -250,7 +289,14 @@ public class AuroraHandler extends AbstractClientHandler {
     }
 
     /**
-     * How tonight's realistic aurora is now, if one is showing
+     * Tonight's cinematic aurora, if one is showing
+     */
+    public Optional<CinematicAurora> cinematic() {
+        return Optional.ofNullable(this.cinematic);
+    }
+
+    /**
+     * How tonight's realistic aurora is now, if one is showing (for a cinematic one, how active its night is)
      */
     public Optional<RealisticAurora.Moment> moment() {
         var current = this.realistic;
@@ -333,9 +379,17 @@ public class AuroraHandler extends AbstractClientHandler {
         var text = "Aurora: " + this.status;
         var classic = this.aurora;
         var realistic = this.realistic;
+        var cinematic = this.cinematic;
         if (classic != null) {
             text += ", classic, palette %d, %d band(s), strength %.2f".formatted(
                     AuroraPalette.PALETTES.indexOf(classic.palette()), classic.bands(), this.strength);
+        } else if (cinematic != null && realistic != null) {
+            var moment = realistic.at(this.progressOf(realistic, 1F));
+            text += ", cinematic (%s), %s, %s, %s, %d ribbon(s), strength %.2f%s".formatted(
+                    this.config.auroraOptions.cinematic.quality.name().toLowerCase(Locale.ROOT),
+                    realistic.activity().name().toLowerCase(Locale.ROOT), moment.phase().name().toLowerCase(Locale.ROOT),
+                    cinematic.layout().name().toLowerCase(Locale.ROOT), cinematic.ribbons().size(), this.strength,
+                    this.heldActivity != null || this.heldPhase != null ? " (held)" : "");
         } else if (realistic != null) {
             var moment = realistic.at(this.progressOf(realistic, 1F));
             var nearest = realistic.arcs().getFirst().distance() - moment.approach();

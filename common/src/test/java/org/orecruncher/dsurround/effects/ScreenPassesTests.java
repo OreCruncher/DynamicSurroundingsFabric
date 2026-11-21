@@ -8,6 +8,7 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.effects.aurora.CinematicAuroraRenderer;
 import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.groundfog.GroundFogVolume;
 
@@ -48,6 +49,7 @@ public class ScreenPassesTests {
         List<RenderPipeline> pipelines = new ArrayList<>();
         GroundFogVolume.SHADERS.forEach(shader -> pipelines.add(shader.pipeline()));
         RealisticAuroraRenderer.SHADERS.forEach(shader -> pipelines.add(shader.pipeline()));
+        CinematicAuroraRenderer.SHADERS.forEach(shader -> pipelines.add(shader.pipeline()));
         assertFalse(pipelines.isEmpty());
         for (var pipeline : pipelines) {
             assertEquals(PrimitiveTopology.TRIANGLES, pipeline.getPrimitiveTopology(), pipeline.getLocation().toString());

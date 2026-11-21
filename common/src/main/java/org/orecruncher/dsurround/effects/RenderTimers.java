@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.effects;
 
 import org.orecruncher.dsurround.effects.aurora.AuroraRenderer;
+import org.orecruncher.dsurround.effects.aurora.CinematicAuroraRenderer;
 import org.orecruncher.dsurround.effects.aurora.RealisticAuroraRenderer;
 import org.orecruncher.dsurround.effects.clouds.CloudRenderer;
 import org.orecruncher.dsurround.effects.frost.FrostRenderer;
@@ -30,6 +31,7 @@ public final class RenderTimers {
     public static final List<RenderTimer> ALL = List.of(
             AuroraRenderer.RENDER_TIMER,
             RealisticAuroraRenderer.RENDER_TIMER,
+            CinematicAuroraRenderer.RENDER_TIMER,
             RainbowRenderer.RENDER_TIMER,
             HaloRenderer.RENDER_TIMER,
             PrecipitationShaders.RENDER_TIMER,
