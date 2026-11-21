@@ -1420,6 +1420,26 @@ puffs, which both ways draw alike: 0.45 to 0.95 ms a frame, varying as much betw
 where the CPU sent those in view (about half), and clipping the rest costs it nothing to speak of. Kept for one way of
 drawing drops, with no dust build left on the CPU.
 
+Then what the drops leave (snow flecks, window streaks, damp spots) on the GPU as well, packed once a tick (`PackedMarks`)
+and shaped by `precipitation_marks.vsh`, and the packing moved to the quads' thread (each frame's build only packs what
+changed since the tick; the render thread only uploads). `gpu-drops-wide.json` again, range 32, the screenshots the same
+(beads and trails on the glass, damp patches on the grass, flecks on the snow):
+
+| Run | fps | Frame GPU ms | Frame CPU ms | Precipitation CPU ms | Waiting for Quads ms | Damp Spots GPU ms |
+|---|---|---|---|---|---|---|
+| OpenGL, rain, CPU | 371 | 0.852 | 2.224 | 1.734 | 1.453 | 0.083 |
+| OpenGL, rain, GPU | 1161 | 0.486 | 0.435 | 0.057 | 0.005 | 0.042 |
+| OpenGL, snow, CPU | 338 | 1.278 | 2.225 | 1.383 | 1.123 | - |
+| OpenGL, snow, GPU | 780 | 0.810 | 0.686 | 0.065 | 0.002 | - |
+| Vulkan, rain, CPU | 388 | 1.086 | 1.800 | 1.346 | 1.165 | 0.134 |
+| Vulkan, rain, GPU | 944 | 0.631 | 0.464 | 0.084 | 0.010 | 0.050 |
+| Vulkan, snow, CPU | 350 | 1.515 | 1.871 | 1.087 | 0.920 | - |
+| Vulkan, snow, GPU | 679 | 0.946 | 0.649 | 0.075 | 0.005 | - |
+
+- The wait is gone (OpenGL rain 0.169 ms with only the drops on the GPU, now 0.005), and rain at range 32 runs at
+  three times the CPU way's frame rate on OpenGL (878 with only the drops on the GPU). The damp spots' GPU time halved:
+  a vertex buffer a frame became records a tick.
+
 ## Rerunning
 
 - Run every scenario from a clean tree, the machine otherwise idle, and note the commit. On 26.3 `sound.json` once

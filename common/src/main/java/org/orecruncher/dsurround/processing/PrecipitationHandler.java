@@ -32,6 +32,7 @@ import org.orecruncher.dsurround.effects.precipitation.DampSpots;
 import org.orecruncher.dsurround.effects.precipitation.DropMeshes;
 import org.orecruncher.dsurround.effects.precipitation.DropScales;
 import org.orecruncher.dsurround.effects.precipitation.GpuDrops;
+import org.orecruncher.dsurround.effects.precipitation.GpuMarks;
 import org.orecruncher.dsurround.effects.precipitation.IColumnSource;
 import org.orecruncher.dsurround.effects.precipitation.Landings;
 import org.orecruncher.dsurround.effects.precipitation.LevelColumns;
@@ -122,6 +123,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
     // The rain and snow, and the dust, when their quads are made on the GPU
     private final GpuDrops gpuDrops = new GpuDrops(GpuDrops.Part.DROPS);
     private final GpuDrops gpuDust = new GpuDrops(GpuDrops.Part.DUST);
+    // What the drops left, likewise
+    private final GpuMarks gpuFlecks = new GpuMarks(GpuMarks.Kind.FLECKS);
+    private final GpuMarks gpuStreaks = new GpuMarks(GpuMarks.Kind.STREAKS);
+    private final GpuMarks gpuSpots = new GpuMarks(GpuMarks.Kind.SPOTS);
     // The drops' ticks run here, while frames are drawn: started each tick and finished at the next (see
     // PrecipitationField.start); one thread, so a step never overlaps the next, and only it uses its random numbers
     private final Executor stepper = Executors.newSingleThreadExecutor(Worker.threadFactory("Precipitation"));
@@ -174,8 +179,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     @Override
     public void process(final Player player) {
-        // The drops drawn, and what they left, change below: nothing may still be building from them
+        // The drops drawn, and what they left, change below: nothing may still be building from them, and what they
+        // left is packed again for the GPU by the next build, which can't start before this tick is done
         this.meshes.discard();
+        this.sources().marksChanged();
         var active = this.isActive();
         if (!active) {
             this.field.clear();
@@ -304,7 +311,16 @@ public class PrecipitationHandler extends AbstractClientHandler {
         return new DropMeshes.Style(this.snowflakes.flakes(GameUtils.getResourceManager()), this.snowflakes.largest(),
                 DSurroundParticleSprites.DUST.sprites(), new DropScales(options.precipitation.rainDropScale / 100F, options.precipitation.snowflakeScale / 100F),
                 RainColor.ofTint(options.precipitation.rainTint), DSurroundParticleSprites.DAMP_SPOT.get(0, 1),
-                options.precipitation.gpuDrops && PrecipitationShaders.GPU_DROPS.isUsable());
+                options.precipitation.gpuDrops && gpuUsable());
+    }
+
+    /**
+     * Whether everything that can be made on the GPU can be: if any of it can't, all of it is built on the CPU, as the
+     * quads built ahead are all built one way or the other
+     */
+    private static boolean gpuUsable() {
+        return PrecipitationShaders.GPU_DROPS.isUsable() && PrecipitationShaders.GPU_MARKS.isUsable()
+                && PrecipitationShaders.GPU_SPOTS.isUsable();
     }
 
     /**
@@ -389,13 +405,22 @@ public class PrecipitationHandler extends AbstractClientHandler {
             this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, sources, camera, partialTick, style,
                     quads -> this.dropDraw.draw(quads, pipeline, target, bind));
         }
-        this.meshes.draw(DropMeshes.Kind.FLECKS, sources, camera, partialTick, style,
-                quads -> this.fleckDraw.draw(quads, pipeline, target, bind));
+        var marks = PrecipitationShaders.GPU_MARKS;
+        if (this.snowFlecks.count() > 0) {
+            if (style.gpuDrops())
+                marks.run(() -> this.gpuFlecks.draw(this.snowFlecks, marks.pipeline(), target, camera, partialTick, style, bind), () -> {});
+            else
+                this.meshes.draw(DropMeshes.Kind.FLECKS, sources, camera, partialTick, style,
+                        quads -> this.fleckDraw.draw(quads, pipeline, target, bind));
+        }
         if (this.windowStreaks.count() > 0) {
             PrecipitationShaders.STREAKS_TIMER.begin();
             PrecipitationShaders.STREAKS_TIMER.count(this.windowStreaks.count());
-            this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
-                    quads -> this.streakDraw.draw(quads, pipeline, target, bind));
+            if (style.gpuDrops())
+                marks.run(() -> this.gpuStreaks.draw(this.windowStreaks, marks.pipeline(), target, camera, partialTick, style, bind), () -> {});
+            else
+                this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
+                        quads -> this.streakDraw.draw(quads, pipeline, target, bind));
             PrecipitationShaders.STREAKS_TIMER.end();
         }
     }
@@ -439,9 +464,15 @@ public class PrecipitationHandler extends AbstractClientHandler {
 
     private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick) {
         var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
-        this.meshes.draw(DropMeshes.Kind.SPOTS, this.sources(), camera, partialTick, this.style(),
-                quads -> this.dampSpotDraw.draw(quads, pipeline, target,
-                        pass -> pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler())));
+        Consumer<RenderPass> bind = pass -> pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
+        var style = this.style();
+        if (style.gpuDrops()) {
+            var gpu = PrecipitationShaders.GPU_SPOTS;
+            gpu.run(() -> this.gpuSpots.draw(this.dampSpots, gpu.pipeline(), target, camera, partialTick, style, bind), () -> {});
+            return;
+        }
+        this.meshes.draw(DropMeshes.Kind.SPOTS, this.sources(), camera, partialTick, style,
+                quads -> this.dampSpotDraw.draw(quads, pipeline, target, bind));
     }
 
     @Override

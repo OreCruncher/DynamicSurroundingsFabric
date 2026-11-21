@@ -644,7 +644,7 @@ public class Configuration extends ConfigurationData {
         public boolean enableWindowStreaks = true;
 
         @Property
-        @Comment("Shape particle rain, snow and dust on the graphics card each frame rather than on the CPU; turn off if they look wrong")
+        @Comment("Shape particle rain, snow and dust, and what they leave behind, on the graphics card each frame rather than on the CPU; turn off if they look wrong")
         public boolean gpuDrops = true;
     }
 

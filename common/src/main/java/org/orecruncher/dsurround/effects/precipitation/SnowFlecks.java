@@ -12,7 +12,7 @@ import net.minecraft.util.RandomSource;
  * drawn with the falling snow, their quads built ahead with its (see {@link DropMeshes}); flecks added when it is full
  * are left out. Changed on the client thread only, which in Minecraft is also the render thread.
  */
-public final class SnowFlecks {
+public final class SnowFlecks implements PackedMarks.Source {
 
     /**
      * Which face of a block a fleck lies on: the top, or a side, named by the way the face looks (west looks toward
@@ -45,6 +45,8 @@ public final class SnowFlecks {
     // The face it lies on (see FACE_TOP)
     final byte[] face;
     int count;
+    // Packed for the GPU, once a tick
+    final PackedMarks packed = new PackedMarks();
 
     public SnowFlecks(int capacity) {
         this.capacity = capacity;
@@ -165,5 +167,32 @@ public final class SnowFlecks {
      */
     static float sizeFor(float remaining) {
         return Mth.lerp(remaining, MELTED_SIZE, 1F);
+    }
+
+    /**
+     * The flecks packed for the GPU (see {@link PackedMarks}): packed now if they changed since
+     */
+    PackedMarks packed(double cameraX, double cameraY, double cameraZ) {
+        this.packed.packIfStale(this, cameraX, cameraY, cameraZ);
+        return this.packed;
+    }
+
+    /**
+     * A fleck's record: x y z face | age lifetime size variant | turnCos turnSin light -
+     */
+    @Override
+    public void pack(int i, float[] r, int at, double anchorX, double anchorY, double anchorZ) {
+        r[at] = (float) (this.x[i] - anchorX);
+        r[at + 1] = (float) (this.y[i] - anchorY);
+        r[at + 2] = (float) (this.z[i] - anchorZ);
+        r[at + 3] = this.face[i];
+        r[at + 4] = this.age[i];
+        r[at + 5] = this.lifetime[i];
+        r[at + 6] = this.size[i];
+        r[at + 7] = this.variant[i];
+        r[at + 8] = this.turnCos[i];
+        r[at + 9] = this.turnSin[i];
+        r[at + 10] = Float.intBitsToFloat(this.light[i]);
+        r[at + 11] = 0F;
     }
 }

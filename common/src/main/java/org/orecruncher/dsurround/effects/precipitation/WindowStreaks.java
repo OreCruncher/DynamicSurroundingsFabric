@@ -15,7 +15,7 @@ import net.minecraft.util.RandomSource;
  * Minecraft is also the render thread.
  */
 
-public final class WindowStreaks {
+public final class WindowStreaks implements PackedMarks.Source {
 
     /**
      * Told where a drop runs off the bottom edge of a window over open air, to hang a drip there
@@ -62,6 +62,8 @@ public final class WindowStreaks {
     // Whether there is open air under the glass's bottom edge, so it drips off there
     final boolean[] dripsOff;
     int count;
+    // Packed for the GPU, once a tick
+    final PackedMarks packed = new PackedMarks();
 
     public WindowStreaks(int capacity) {
         this.capacity = capacity;
@@ -193,5 +195,32 @@ public final class WindowStreaks {
 
     static float fadeFor(float age, int lifetime) {
         return Mth.clamp(Math.min(age / FADE_IN, (lifetime - age) / FADE_OUT), 0F, 1F);
+    }
+
+    /**
+     * The streaks packed for the GPU (see {@link PackedMarks}): packed now if they changed since
+     */
+    PackedMarks packed(double cameraX, double cameraY, double cameraZ) {
+        this.packed.packIfStale(this, cameraX, cameraY, cameraZ);
+        return this.packed;
+    }
+
+    /**
+     * A streak's record: x prevY z face | age lifetime size y | prevTrailTop trailTop light -
+     */
+    @Override
+    public void pack(int i, float[] r, int at, double anchorX, double anchorY, double anchorZ) {
+        r[at] = (float) (this.x[i] - anchorX);
+        r[at + 1] = (float) (this.prevY[i] - anchorY);
+        r[at + 2] = (float) (this.z[i] - anchorZ);
+        r[at + 3] = this.face[i];
+        r[at + 4] = this.age[i];
+        r[at + 5] = this.lifetime[i];
+        r[at + 6] = this.size[i];
+        r[at + 7] = (float) (this.y[i] - anchorY);
+        r[at + 8] = (float) (this.prevTrailTop[i] - anchorY);
+        r[at + 9] = (float) (this.trailTop[i] - anchorY);
+        r[at + 10] = Float.intBitsToFloat(this.light[i]);
+        r[at + 11] = 0F;
     }
 }

@@ -79,6 +79,16 @@ public final class DropMeshes implements AutoCloseable {
         }
 
         /**
+         * Says the snow flecks, window streaks and damp spots changed, so the next build packs them again for the GPU (see
+         * {@link PackedMarks}): once a tick, by the client tick, after it has changed them. The drops say so themselves.
+         */
+        public void marksChanged() {
+            this.flecks.packed.invalidate();
+            this.streaks.packed.invalidate();
+            this.spots.packed.invalidate();
+        }
+
+        /**
          * Whether there is nothing of any kind to draw
          */
         public boolean isEmpty() {
@@ -95,7 +105,8 @@ public final class DropMeshes implements AutoCloseable {
      * @param scales     how big rain and snow are drawn
      * @param rainColor  the rain's color, the drops on windows' too
      * @param spot       the damp spots' sprite, from the particle atlas
-     * @param gpuDrops   whether the rain, snow and dust are made on the GPU (see {@link GpuDrops}), and not built here
+     * @param gpuDrops   whether the drops and what they left are made on the GPU (see {@link GpuDrops} and
+     *                   {@link GpuMarks}), and not built here
      */
     public record Style(List<Snowflakes.Flake> snowflakes, int largest, TextureAtlasSprite[] dust, DropScales scales,
                         RainColor rainColor, TextureAtlasSprite spot, boolean gpuDrops) {
@@ -253,12 +264,27 @@ public final class DropMeshes implements AutoCloseable {
 
     // On the executor's thread
     private void build(Request request) {
-        for (var kind : KINDS) {
-            // Made on the GPU instead
-            if ((kind == Kind.DROPS || kind == Kind.DUST) && request.style().gpuDrops())
-                continue;
-            build(kind, this.ahead[kind.ordinal()], request);
+        if (request.style().gpuDrops()) {
+            // All made on the GPU: what is left here is packing what changed since the last tick, so the render thread
+            // only uploads it
+            pack(request);
+            return;
         }
+        for (var kind : KINDS)
+            build(kind, this.ahead[kind.ordinal()], request);
+    }
+
+    /**
+     * Packs the drops and what they left, if they changed since they were last, for the GPU (see {@link GpuDrops},
+     * {@link GpuMarks}), around the request's camera
+     */
+    static void pack(Request request) {
+        var sources = request.sources();
+        var cam = request.view().position();
+        sources.field().packed(cam.x, cam.y, cam.z);
+        sources.flecks().packed(cam.x, cam.y, cam.z);
+        sources.streaks().packed(cam.x, cam.y, cam.z);
+        sources.spots().packed(cam.x, cam.y, cam.z);
     }
 
     /**

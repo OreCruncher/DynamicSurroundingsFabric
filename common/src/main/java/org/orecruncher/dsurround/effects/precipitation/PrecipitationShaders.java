@@ -15,6 +15,7 @@ import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.UniformType;
 import net.minecraft.client.renderer.BindGroupLayouts;
+import net.minecraft.util.Mth;
 import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
@@ -71,10 +72,32 @@ public final class PrecipitationShaders {
     public static final ModShader GPU_DROPS = new ModShader(GPU_DROPS_PIPELINE, "rain, snow and dust built on the GPU", "their quads will be built on the CPU", Library.LOGGER);
     public static final ModShader GPU_DUST = new ModShader(GPU_DUST_PIPELINE, "soft dust built on the GPU", "dust built on the GPU will be drawn without it", Library.LOGGER);
 
+    // What the drops leave where they land, made on the GPU (see GpuMarks): the snow flecks and window streaks as the
+    // drops are drawn, the damp spots darkening the ground
+    static final String MARK_INFO = "MarkInfo";
+    static final String MARK_RECORDS = "Marks";
+    private static final BindGroupLayout GPU_MARKS_LAYOUT = BindGroupLayout.builder()
+            .withUniform(MARK_INFO, UniformType.UNIFORM_BUFFER)
+            .withUniform(MARK_RECORDS, UniformType.TEXEL_BUFFER, GpuFormat.RGBA32_FLOAT)
+            .build();
+    private static final RenderPipeline GPU_MARKS_PIPELINE = gpuMarks("pipeline/precipitation_marks", "core/precipitation")
+            .withBindGroupLayout(BindGroupLayouts.SAMPLER0_SAMPLER2)
+            .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+            .withDepthStencilState(TEST_ONLY)
+            .build();
+    private static final RenderPipeline GPU_SPOTS_PIPELINE = gpuMarks("pipeline/precipitation_marks_spots", "core/damp_spot")
+            .withShaderDefine("SPOTS")
+            .withBindGroupLayout(BindGroupLayouts.SAMPLER0)
+            .withColorTargetState(new ColorTargetState(DARKEN))
+            .withDepthStencilState(TEST_ONLY)
+            .build();
+    public static final ModShader GPU_MARKS = new ModShader(GPU_MARKS_PIPELINE, "snow flecks and window streaks built on the GPU", "they will be built on the CPU", Library.LOGGER);
+    public static final ModShader GPU_SPOTS = new ModShader(GPU_SPOTS_PIPELINE, "damp spots built on the GPU", "they will be built on the CPU", Library.LOGGER);
+
     /**
      * All of them, for {@code ModShaders}
      */
-    public static final List<ModShader> SHADERS = List.of(DROPS, DUST, DAMP_SPOTS, GPU_DROPS, GPU_DUST);
+    public static final List<ModShader> SHADERS = List.of(DROPS, DUST, DAMP_SPOTS, GPU_DROPS, GPU_DUST, GPU_MARKS, GPU_SPOTS);
 
     public static final RenderTimer RENDER_TIMER = new RenderTimer("Precipitation");
     // The weather's pass waiting for the quads built ahead (DropMeshes.await): a thread starved of the CPU shows here
@@ -164,6 +187,46 @@ public final class PrecipitationShaders {
                 .withShaderDefine("RAIN_MIN_ALPHA", PrecipitationRenderer.RAIN_MIN_ALPHA)
                 .withShaderDefine("RAIN_ALPHA_RANGE", PrecipitationRenderer.RAIN_ALPHA_RANGE);
         return builder;
+    }
+
+    /**
+     * The marks' pipeline with their quads made in the vertex shader, its constants those the CPU's builds use; the
+     * caller adds the textures, the blend and the depth
+     */
+    private static RenderPipeline.Builder gpuMarks(String location, String fragmentShader) {
+        return RenderPipeline.builder()
+                .withLocation(Constants.asId(location))
+                .withVertexShader(Constants.asId("core/precipitation_marks"))
+                .withFragmentShader(Constants.asId(fragmentShader))
+                .withBindGroupLayout(BindGroupLayouts.GLOBALS)
+                .withBindGroupLayout(BindGroupLayouts.DYNAMIC_TRANSFORMS)
+                .withBindGroupLayout(BindGroupLayouts.PROJECTION)
+                .withBindGroupLayout(BindGroupLayouts.FOG)
+                .withBindGroupLayout(GPU_MARKS_LAYOUT)
+                .withPrimitiveTopology(PrimitiveTopology.QUADS)
+                .withCull(false)
+                .withShaderDefine("MAX_FLAKES", GpuDrops.MAX_LOOKS)
+                .withShaderDefine("MARK_STREAKS", (float) GpuMarks.Kind.STREAKS.id)
+                .withShaderDefine("FACE_WEST", (float) SnowFlecks.FACE_WEST)
+                .withShaderDefine("FACE_EAST", (float) SnowFlecks.FACE_EAST)
+                .withShaderDefine("FACE_NORTH", (float) SnowFlecks.FACE_NORTH)
+                .withShaderDefine("FACE_SOUTH", (float) SnowFlecks.FACE_SOUTH)
+                .withShaderDefine("NO_TEXTURE", PrecipitationRenderer.NO_TEXTURE)
+                .withShaderDefine("SQRT_OF_TWO", Mth.SQRT_OF_TWO)
+                .withShaderDefine("SNOW_MIN_HALF_SIZE", PrecipitationRenderer.SNOW_MIN_HALF_SIZE)
+                .withShaderDefine("SNOW_HALF_SIZE_RANGE", PrecipitationRenderer.SNOW_HALF_SIZE_RANGE)
+                .withShaderDefine("SNOW_ALPHA", PrecipitationRenderer.SNOW_ALPHA)
+                .withShaderDefine("WHOLE_SHARE", SnowFlecks.WHOLE_SHARE)
+                .withShaderDefine("MELTED_SIZE", SnowFlecks.MELTED_SIZE)
+                .withShaderDefine("STREAK_FADE_IN", (float) WindowStreaks.FADE_IN)
+                .withShaderDefine("STREAK_FADE_OUT", (float) WindowStreaks.FADE_OUT)
+                .withShaderDefine("STREAK_BEAD_MIN_HALF_SIZE", PrecipitationRenderer.STREAK_BEAD_MIN_HALF_SIZE)
+                .withShaderDefine("STREAK_BEAD_HALF_SIZE_RANGE", PrecipitationRenderer.STREAK_BEAD_HALF_SIZE_RANGE)
+                .withShaderDefine("STREAK_BEAD_ALPHA", PrecipitationRenderer.STREAK_BEAD_ALPHA)
+                .withShaderDefine("STREAK_TRAIL_WIDTH", PrecipitationRenderer.STREAK_TRAIL_WIDTH)
+                .withShaderDefine("STREAK_TRAIL_ALPHA", PrecipitationRenderer.STREAK_TRAIL_ALPHA)
+                .withShaderDefine("PEAK_DARKNESS", DampSpots.PEAK_DARKNESS)
+                .withShaderDefine("DARKEN_TICKS", (float) DampSpots.DARKEN_TICKS);
     }
 
     private static RenderPipeline.Builder dust(String location) {

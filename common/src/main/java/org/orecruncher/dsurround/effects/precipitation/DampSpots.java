@@ -14,7 +14,7 @@ import net.minecraft.util.RandomSource;
  * thread.
  */
 
-public final class DampSpots {
+public final class DampSpots implements PackedMarks.Source {
 
     /**
      * How dark the spot of the largest drop gets; the smallest drop's is {@link #SMALL_DROP_DARKNESS} of that
@@ -45,6 +45,8 @@ public final class DampSpots {
     // How dark the spot gets, 0 to 1
     final float[] peak;
     int count;
+    // Packed for the GPU, once a tick
+    final PackedMarks packed = new PackedMarks();
 
     public DampSpots(int capacity) {
         this.capacity = capacity;
@@ -129,5 +131,32 @@ public final class DampSpots {
         var darken = Math.min(1F, age / DARKEN_TICKS);
         var remaining = 1F - age / lifetime;
         return PEAK_DARKNESS * darken * remaining * remaining;
+    }
+
+    /**
+     * The spots packed for the GPU (see {@link PackedMarks}): packed now if they changed since
+     */
+    PackedMarks packed(double cameraX, double cameraY, double cameraZ) {
+        this.packed.packIfStale(this, cameraX, cameraY, cameraZ);
+        return this.packed;
+    }
+
+    /**
+     * A spot's record: x y z peak | age lifetime cornerX cornerZ | - - - -
+     */
+    @Override
+    public void pack(int i, float[] r, int at, double anchorX, double anchorY, double anchorZ) {
+        r[at] = (float) (this.x[i] - anchorX);
+        r[at + 1] = (float) (this.y[i] - anchorY);
+        r[at + 2] = (float) (this.z[i] - anchorZ);
+        r[at + 3] = this.peak[i];
+        r[at + 4] = this.age[i];
+        r[at + 5] = this.lifetime[i];
+        r[at + 6] = this.cornerX[i];
+        r[at + 7] = this.cornerZ[i];
+        r[at + 8] = 0F;
+        r[at + 9] = 0F;
+        r[at + 10] = 0F;
+        r[at + 11] = 0F;
     }
 }

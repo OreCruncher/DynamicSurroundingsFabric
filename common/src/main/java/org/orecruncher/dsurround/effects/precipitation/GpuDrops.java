@@ -15,10 +15,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -45,7 +42,7 @@ public final class GpuDrops implements AutoCloseable {
      * Drops drawn a batch, from a buffer of their own: five texels each, within the {@link #MAX_TEXELS} every GPU allows
      */
     static final int BATCH_DROPS = 12_800;
-    static final int MAX_TEXELS = 65_536;
+    static final int MAX_TEXELS = TexelBatches.MAX_TEXELS;
     static final long BATCH_BYTES = (long) BATCH_DROPS * PackedDrops.STRIDE * Float.BYTES;
     // As many looks as there may be snowflakes: the dust has fewer sprites
     static final int MAX_LOOKS = Snowflakes.MAX_FLAKES;
@@ -74,17 +71,16 @@ public final class GpuDrops implements AutoCloseable {
     }
 
     private final Part part;
-    // A buffer for each batch, made as the drops need them, each of BATCH_BYTES
-    private final List<GpuBuffer> batches = new ArrayList<>();
+    // The records, a buffer for each batch
+    private final TexelBatches records;
     @Nullable
     private GpuBuffer info;
-    @Nullable
-    private FloatBuffer staging;
     // Which pack the GPU's copy holds
     private long uploadedVersion = -1L;
 
     public GpuDrops(Part part) {
         this.part = part;
+        this.records = new TexelBatches(part.description, PackedDrops.STRIDE, BATCH_DROPS);
     }
 
     /**
@@ -131,7 +127,7 @@ public final class GpuDrops implements AutoCloseable {
             pass.setIndexBuffer(indexBuffer, indices.type());
             // Each batch from its own buffer, its vertex index starting again at 0
             for (int first = 0, batch = 0; first < drops; first += BATCH_DROPS, batch++) {
-                pass.setUniform(PrecipitationShaders.DROP_RECORDS, this.batches.get(batch));
+                pass.setUniform(PrecipitationShaders.DROP_RECORDS, this.records.batch(batch));
                 pass.drawIndexed(Math.min(BATCH_DROPS, drops - first) * 6, 1, 0, 0, 0);
             }
         }
@@ -142,32 +138,7 @@ public final class GpuDrops implements AutoCloseable {
     private void upload(PackedDrops packed, int first, int count) {
         if (packed.version == this.uploadedVersion)
             return;
-        int floats = count * PackedDrops.STRIDE;
-        if (this.staging == null || this.staging.capacity() < floats) {
-            int capacity = floats;
-            if (this.staging != null) {
-                capacity = Math.max(capacity, this.staging.capacity() * 3 / 2);
-                MemoryUtil.memFree(this.staging);
-            }
-            this.staging = MemoryUtil.memAllocFloat(capacity);
-        }
-        var buffer = this.staging.clear();
-        buffer.put(packed.data, first * PackedDrops.STRIDE, floats);
-        buffer.flip();
-
-        var device = RenderSystem.getDevice();
-        var encoder = device.createCommandEncoder();
-        var bytes = MemoryUtil.memByteBuffer(buffer);
-        for (int batch = 0; (long) batch * BATCH_BYTES < bytes.remaining(); batch++) {
-            if (batch == this.batches.size()) {
-                int number = batch + 1;
-                this.batches.add(device.createBuffer(() -> "Dynamic Surroundings " + this.part.description + " " + number,
-                        GpuBuffer.USAGE_UNIFORM_TEXEL_BUFFER | GpuBuffer.USAGE_COPY_DST, BATCH_BYTES));
-            }
-            int start = (int) (batch * BATCH_BYTES);
-            int length = (int) Math.min(BATCH_BYTES, bytes.remaining() - start);
-            encoder.writeToBuffer(this.batches.get(batch).slice(0, length), bytes.slice(start, length));
-        }
+        this.records.upload(packed.data, first, count);
         this.uploadedVersion = packed.version;
     }
 
@@ -219,16 +190,10 @@ public final class GpuDrops implements AutoCloseable {
 
     @Override
     public void close() {
-        for (var batch : this.batches)
-            batch.close();
-        this.batches.clear();
+        this.records.close();
         if (this.info != null) {
             this.info.close();
             this.info = null;
-        }
-        if (this.staging != null) {
-            MemoryUtil.memFree(this.staging);
-            this.staging = null;
         }
         this.uploadedVersion = -1L;
     }
