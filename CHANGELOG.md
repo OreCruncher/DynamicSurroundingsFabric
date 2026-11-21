@@ -22,10 +22,10 @@ This release brings rainbows after the rain, a cinematic aurora, and armor that 
 * Made particle rain and snow cheaper to draw, measuring each change with benchmark runs
 
 **What's New**
-* Rainbows (experimental). As rain eases to a drizzle or stops while the sun is low, a rainbow can show in the sky opposite the sun, fading as the shower moves on. Its colors come from how sunlight passes through raindrops: red outside, violet inside, with the sky brighter within the bow. After a strong storm, a fainter second bow shows outside it with its colors reversed and a darker band between the two. Only where it rains rather than snows, and every player in a world sees the same rainbows
+* Rainbows (experimental). As rain eases to a drizzle or stops while the sun is low, a rainbow can show in the sky opposite the sun, fading as the shower moves on, red outside and violet inside. After a strong storm, a fainter second bow shows outside it with its colors reversed. Only where it rains rather than snows, and every player in a world sees the same rainbows
   * Rainbows and Rainbow chance (50% by default) are in the Weather options, under Sky
   * Moonbows: at night, with the moon full or nearly so and low, a clearing can leave a faint, pale bow opposite the moon, as eyes see one
-  * Sky style: Blocky by default, flat stripes stepping in blocks around the bow to suit the game, or Realistic, with the colors worked out from the raindrops
+  * Sky style: Blocky by default, flat stripes stepping in blocks around the bow to suit the game, or Realistic, with the colors worked out from how sunlight passes through raindrops, the sky brighter within the bow and a darker band between the two
   * `/dsweather rainbow 0-100 [primary]` shows one whatever the weather, and `/dsweather rainbow clear` goes back to the weather's
   * Scripts can ask `weather.isRainbow()`
 * Halos and sun dogs (experimental). In cold biomes under a clear sky, ice crystals in the air can ring the sun with a halo 22 degrees out, white with a faintly red inner edge, with a sun dog level with the sun either side, moving out and fading as the sun climbs. Sky style sets how they look; every player in a world sees the same
