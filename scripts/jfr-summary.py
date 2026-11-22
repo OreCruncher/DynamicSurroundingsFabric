@@ -47,7 +47,10 @@ from collections import Counter, defaultdict
 PLATFORM = ("java.", "jdk.", "sun.", "com.sun.", "net.minecraft.", "com.mojang.", "org.lwjgl.", "it.unimi.",
             "com.google.", "io.netty.", "org.slf4j.", "org.apache.", "net.neoforged.", "net.fabricmc.",
             "cpw.mods.", "org.spongepowered.", "org.objectweb.", "kotlin.", "kotlinx.", "javax.",
-            "com.llamalad7.mixinextras.", "dev.architectury.transformer.", "org.joml.", "com.ibm.icu.")
+            "com.llamalad7.mixinextras.", "dev.architectury.transformer.", "org.joml.", "com.ibm.icu.",
+            # Launchers' entry points and shims, the outermost frames of every stack: Prism's and MultiMC's, and ForgeWrapper,
+            # which they start NeoForge through
+            "io.github.zekerzhayard.forgewrapper.", "org.prismlauncher.", "org.multimc.")
 # A mixin's method merged into its target class, named for its mod on both loaders: handler$zjn000$dsurround$render,
 # wrapOperation$zdh000$dsurround$timeFrame. Its frame has the target's class, so the package says nothing of the mod.
 MIXIN_FRAME = re.compile(r"\.\w+\$z[0-9a-z]+\$(\w+?)\$\w+$")
