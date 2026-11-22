@@ -3,8 +3,8 @@
 # Copyright (c) 2023-2026 OreCruncher - https://github.com/OreCruncher/DynamicSurroundingsFabric
 
 """
-Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (and
-the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and
+Summarizes a `/dsprofile` recording (config/dsurround/profiles/*.zip or the .jfr inside): what it was made on (the
+installed mods' count and the loader's version, the optional hooks, conflicts and settings that aren't as they are out of the box), the frames (how long they took, and
 drawing one on the GPU and CPU), the mod's render timers (each as a share of drawing a frame), the
 client tick's handlers (and what running them in parallel could gain), the classic aurora's shape and how much of the
 screen it covered (against its GPU time), the realistic aurora's night, quality and the pixels its shader marched
@@ -12,9 +12,10 @@ screen it covered (against its GPU time), the realistic aurora's night, quality 
 drawing, what random block effects did by distance (each
 rate against what the sampler means it to be), what enhanced sound processing did (calculations as sounds start, on
 the sound engine's thread, and the worker's updates and passes), where each busy thread spends its time (by
-method and by mod package), what allocates, and GC.
+method and by mod package, a mixin's methods by its mod), what allocates, and GC.
 
   jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS] [--shell-width N]
+                 [--mods]
 
   --thread   only this thread's samples for the method tables (default: the busiest few threads)
   --top      rows per table (default 15)
@@ -25,6 +26,7 @@ method and by mod package), what allocates, and GC.
              tick, in microseconds (default 50); measure it on the machine to trust the gain
   --worth-ms the gain a tick must have for running the handlers in parallel to be worth it (default 0.5)
   --shell-width  blocks of distance to a row for random block effects (default 2)
+  --mods     list every installed mod and its version (recordings from 5.3.0 on)
 
 Reads `jfr print` text output, which is far smaller than its JSON. A zip is unpacked next to itself.
 """
@@ -43,7 +45,15 @@ from collections import Counter, defaultdict
 # Frames that are nobody's mod: the JDK, the game, its libraries, the loaders
 PLATFORM = ("java.", "jdk.", "sun.", "com.sun.", "net.minecraft.", "com.mojang.", "org.lwjgl.", "it.unimi.",
             "com.google.", "io.netty.", "org.slf4j.", "org.apache.", "net.neoforged.", "net.fabricmc.",
-            "cpw.mods.", "org.spongepowered.", "org.objectweb.", "kotlin.", "kotlinx.", "javax.")
+            "cpw.mods.", "org.spongepowered.", "org.objectweb.", "kotlin.", "kotlinx.", "javax.",
+            "com.llamalad7.mixinextras.", "dev.architectury.transformer.", "org.joml.", "com.ibm.icu.")
+# A mixin's method merged into its target class, named for its mod on both loaders: handler$zjn000$dsurround$render,
+# wrapOperation$zdh000$dsurround$timeFrame. Its frame has the target's class, so the package says nothing of the mod.
+MIXIN_FRAME = re.compile(r"\.\w+\$z[0-9a-z]+\$(\w+?)\$\w+$")
+# Frames of the call a wrapper hands on (MixinExtras' bridge, a @WrapMethod's renamed original): what runs under them
+# is the wrapped code, not the wrapper's
+WRAPPED_CALL = ("mixinextras$", "com.llamalad7.mixinextras.")
+OUR_MOD_ID = "dsurround"
 FRAME = re.compile(r"^\s+([\w$.<>/]+)\.([\w$<>]+)\((.*?)\)(?: line: (\d+))?")
 FIELD = re.compile(r"^\s+(\w+) = (.*)$")
 
@@ -128,6 +138,43 @@ def owner(frame):
         return None
     parts = frame.split(".")
     return ".".join(parts[:3]) if len(parts) > 4 else ".".join(parts[:-2])
+
+
+def owned_frames(frames):
+    """
+    Yields (frame, owner) for each frame a mod owns, innermost first: by package, or for a mixin's method in a game
+    class, '<mod id> (mixin)'. A wrapper whose wrapped call is still under way is passed over (a timing wrapper around
+    Minecraft.render is in every render thread sample), so what runs beneath it is credited as it would be without it.
+    """
+    in_wrapped = False
+    for frame in frames:
+        if frame.startswith(CLIENT_CHUNK_READ):
+            continue
+        mixin = MIXIN_FRAME.search(frame)
+        if mixin:
+            if not in_wrapped:
+                yield frame, f"{mixin.group(1)} (mixin)"
+            in_wrapped = False
+            continue
+        if any(w in frame for w in WRAPPED_CALL):
+            in_wrapped = True
+            continue
+        mod = owner(frame)
+        if mod:
+            in_wrapped = False
+            yield frame, mod
+
+
+def first_owner(frames):
+    return next((mod for _, mod in owned_frames(frames)), "(game / JDK)")
+
+
+def is_ours(frame, mod):
+    return "orecruncher" in frame or mod == f"{OUR_MOD_ID} (mixin)"
+
+
+def first_ours(frames):
+    return next((frame for frame, mod in owned_frames(frames) if is_ours(frame, mod)), None)
 
 
 def number(value):
@@ -505,8 +552,8 @@ def callers(jfr, recording, args):
         total += 1
         above = frames[index + 1:]
         nearest[next((f for f in above if args.callers not in f), "(none)")] += 1
-        mods[next((f for f in above if owner(f)), "(game / JDK)")] += 1
-        mine = next((f for f in above if "orecruncher" in f), None)
+        mods[next((f for f, _ in owned_frames(above)), "(game / JDK)")] += 1
+        mine = first_ours(above)
         if mine:
             ours[mine] += 1
     print(f"== {total} samples in {args.callers}" + (f" on {args.thread}" if args.thread else ""))
@@ -573,6 +620,7 @@ def main():
     parser.add_argument("--dispatch-us", type=float, default=50.0)
     parser.add_argument("--worth-ms", type=float, default=0.5)
     parser.add_argument("--shell-width", type=int, default=2)
+    parser.add_argument("--mods", action="store_true", help="list every installed mod and its version")
     args = parser.parse_args()
     jfr = find_jfr(args.jfr)
     recording = unpack(args.recording)
@@ -585,6 +633,18 @@ def main():
         for key, value in fields.items():
             if key not in ("startTime", "eventThread"):
                 print(f"  {key}: {value}")
+    # Installed mods (recordings from 5.3.0 on), the loader and Minecraft among them; a development run also lists the
+    # generated_* mod Architectury's transformer makes
+    mods = {f.get("id", "?").strip('"'): f.get("version", "?").strip('"')
+            for _, f, _ in events(jfr, recording, ["dsurround.Mod"], 1)}
+    if mods:
+        platform = [f"{name} {mods[mod]}" for mod, name in (("minecraft", "Minecraft"), ("neoforge", "NeoForge"),
+                    ("fabricloader", "Fabric Loader"), ("fabric-api", "Fabric API"), ("architectury", "Architectury"))
+                    if mod in mods]
+        print(f"  mod list: {len(mods)} ({', '.join(platform)})" + ("" if args.mods else "; --mods lists them"))
+        if args.mods:
+            for mod, version in sorted(mods.items()):
+                print(f"    {mod} {version}")
     features = defaultdict(list)
     for _, fields, _ in events(jfr, recording, ["dsurround.Feature"], 1):
         features[fields.get("kind", "?").strip('"')].append(fields)
@@ -657,9 +717,8 @@ def main():
         by_thread[thread] += 1
         if frames:
             methods[thread][frames[0]] += 1
-        mod = next((o for o in map(owner, frames) if o), "(game / JDK)")
-        mods[thread][mod] += 1
-        mine = next((f for f in frames if "orecruncher" in f), None)
+        mods[thread][first_owner(frames)] += 1
+        mine = first_ours(frames)
         if mine:
             ours[thread][mine] += 1
     total = sum(by_thread.values())
@@ -668,7 +727,7 @@ def main():
     for thread in threads:
         count = by_thread[thread]
         table(f"== {thread}: innermost method", methods[thread], count, args.top)
-        table(f"== {thread}: innermost mod package (first non-platform frame)", mods[thread], count, args.top)
+        table(f"== {thread}: innermost mod package (first non-platform frame, a mixin's method by its mod)", mods[thread], count, args.top)
         if ours[thread]:
             share = sum(ours[thread].values())
             table(f"== {thread}: Dynamic Surroundings, innermost of its frames ({share} samples, "
@@ -695,8 +754,8 @@ def main():
             continue
         classes[fields.get("objectClass", "?").split(" ")[0]] += weight
         if frames:
-            sites[next((o for o in map(owner, frames) if o), "(game / JDK)")] += weight
-        mine = next((f for f in frames if "orecruncher" in f), None)
+            sites[first_owner(frames)] += weight
+        mine = first_ours(frames)
         if mine:
             ours_alloc[mine] += weight
     allocated = sum(classes.values())

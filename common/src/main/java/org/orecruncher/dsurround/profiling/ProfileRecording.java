@@ -25,7 +25,8 @@ import java.util.Set;
 /**
  * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, without
  * anything that could tell who or where the player is ({@link #PRIVATE}), with what it was made on written into it once
- * ({@link EnvironmentEvent}, and a {@link FeatureEvent} for each optional hook, conflict and setting), the mod's render
+ * ({@link EnvironmentEvent}, a {@link FeatureEvent} for each optional hook, conflict and setting, and a {@link ModEvent}
+ * for each installed mod), the mod's render
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
  * ({@link FramesEvent}), each client tick handler's time every tick
  * ({@link HandlerTickEvent}), what random block effects did by distance once a second
@@ -141,6 +142,7 @@ final class ProfileRecording {
                 SoundSamples.start();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
+                ModEvent.write(environment.modList());
                 Thread.sleep(length.toMillis());
                 HandlerTicks.stop();
                 FrameTimes.stop();
@@ -228,6 +230,7 @@ final class ProfileRecording {
     private static void register() {
         FlightRecorder.register(EnvironmentEvent.class);
         FlightRecorder.register(FeatureEvent.class);
+        FlightRecorder.register(ModEvent.class);
         FlightRecorder.register(HandlerTickEvent.class);
         FlightRecorder.register(RenderTimerEvent.class);
         FlightRecorder.register(FramesEvent.class);
@@ -243,6 +246,7 @@ final class ProfileRecording {
         recording.enable(FramesEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(EnvironmentEvent.class);
         recording.enable(FeatureEvent.class);
+        recording.enable(ModEvent.class);
         recording.enable(HandlerTickEvent.class);
         recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(AuroraEvent.class).withPeriod(Duration.ofSeconds(1));

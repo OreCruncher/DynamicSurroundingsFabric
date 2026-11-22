@@ -23,7 +23,7 @@ import java.util.Objects;
  * left out of recordings, for what else they carry; see {@link ProfileRecording#PRIVATE}). Uses nothing from
  * {@code jdk.jfr}.
  *
- * @param mod            the mod's version, with Minecraft's and the platform
+ * @param mod            the mod's version, with Minecraft's and the platform with its version
  * @param mods           how many mods are installed
  * @param gpu            the graphics card, as the driver names it
  * @param gpuVendor      the graphics card's vendor
@@ -43,10 +43,12 @@ import java.util.Objects;
  * @param java           Java's version and vendor
  * @param os             the operating system's name, version and architecture
  * @param features       the optional hooks, the features that stand aside for other mods, and the settings
+ * @param modList        every installed mod's id and version, sorted by id
  */
 record ProfileEnvironment(String mod, int mods, String gpu, String gpuVendor, String gpuType, String driver, String backend,
                           String graphics, boolean shaderPack, int renderDistance, int width, int height, int frameRateLimit,
-                          boolean vsync, String devRun, String java, String os, List<ProfileFeature> features) {
+                          boolean vsync, String devRun, String java, String os, List<ProfileFeature> features,
+                          List<ProfileMod> modList) {
 
     /**
      * The system property naming the development run config, if the game was started with one
@@ -62,8 +64,10 @@ record ProfileEnvironment(String mod, int mods, String gpu, String gpuVendor, St
         var window = mc.getWindow();
         var device = RenderSystem.getDevice().getDeviceInfo();
         var platform = Platform.isFabric() ? "Fabric" : "NeoForge";
+        var loader = Platform.getOptionalMod(Platform.isFabric() ? "fabricloader" : "neoforge")
+                .map(m -> platform + " " + ProfileMod.clean(m.getVersion())).orElse(platform);
         return new ProfileEnvironment(
-                "%s (%s)".formatted(ContainerManager.resolve(ModInformation.class).getBranding(), platform),
+                "%s (%s)".formatted(ContainerManager.resolve(ModInformation.class).getBranding(), loader),
                 Platform.getMods().size(),
                 device.name(),
                 device.vendorName(),
@@ -81,7 +85,8 @@ record ProfileEnvironment(String mod, int mods, String gpu, String gpuVendor, St
                 Objects.requireNonNullElse(System.getProperty(DEV_RUN_PROPERTY), ""),
                 javaRuntime(),
                 operatingSystem(),
-                ProfileFeature.capture(ContainerManager.resolve(Configuration.class)));
+                ProfileFeature.capture(ContainerManager.resolve(Configuration.class)),
+                ProfileMod.capture());
     }
 
     /**

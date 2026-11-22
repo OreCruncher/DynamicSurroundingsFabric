@@ -158,7 +158,8 @@ is known of 26.4.
   calculations as sounds start, on the sound engine's thread, which waits for them; the workers' updates and passes;
   uploads; each calculation traced (timed), shared, reused or skipped; whether it ran at all),
   what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
-  optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`); unzip
+  optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`) and each installed mod's id and
+  version, nothing else of it (`dsurround.Mod`, from `ProfileMod`, cleaned of anything path-like; `jfr-summary.py --mods`)); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (frames; timers: mean and end of the running averages, share of the frame, and peak (CPU peaks a JVM pause could explain left out: a GC pause inside a timed draw reads as its spike); for a
   timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what

@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -191,7 +192,40 @@ public class ProfilingTests {
                 "discrete", "4.6.0 Test Driver 1.2.3", "OpenGL", "fabulous, improved transparency on", false, 12,
                 3840, 2160, 260, false, "clientPotato", ProfileEnvironment.javaRuntime(), ProfileEnvironment.operatingSystem(),
                 List.of(new ProfileFeature(ProfileFeature.HOOK, "DYNAMIC_CLOUDS", "MISSING", false),
-                        new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.precipitation.enableDustStorms", "true", true)));
+                        new ProfileFeature(ProfileFeature.SETTING, "weatherOptions.precipitation.enableDustStorms", "true", true)),
+                ProfileMod.of(Map.of("dsurround", "26.2-0.4.7", "fabricloader", "0.18.4", "minecraft", "26.2")));
+    }
+
+    @Test
+    void modsAreSortedById() {
+        var mods = ProfileMod.of(Map.of("sodium", "0.7.0", "architectury", "22.0.5", "minecraft", "26.3"));
+        assertEquals(List.of(new ProfileMod("architectury", "22.0.5"), new ProfileMod("minecraft", "26.3"),
+                new ProfileMod("sodium", "0.7.0")), mods);
+    }
+
+    @Test
+    void aModsMetadataIsCleaned() {
+        // Versions are the mod's own text: nothing that could be a path, no control characters, nothing endless
+        assertEquals("1.0.0+mc26.3-beta.2", ProfileMod.clean("1.0.0+mc26.3-beta.2"));
+        assertEquals("C??Users?someone?mods", ProfileMod.clean("C:\\Users\\someone\\mods"));
+        assertEquals("?home?someone", ProfileMod.clean("/home/someone"));
+        assertEquals("1.0?2", ProfileMod.clean("1.0\n2"));
+        assertEquals("?", ProfileMod.clean(""));
+        assertEquals("?", ProfileMod.clean(null));
+        assertEquals(ProfileMod.MAX_LENGTH, ProfileMod.clean("9".repeat(500)).length());
+    }
+
+    @Test
+    void aRecordingNamesTheMods() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        var environment = environment();
+        ProfileRecording.record(file, Duration.ofSeconds(1), environment);
+
+        var mods = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.Mod"))
+                .map(e -> new ProfileMod(e.getString("id"), e.getString("version")))
+                .toList();
+        assertEquals(environment.modList(), mods);
     }
 
     private static List<ProfileFeature> features(Configuration config) {
@@ -833,7 +867,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("AuroraEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ParticlesEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RealisticAuroraEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("AuroraEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ModEvent.java", "ParticlesEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RealisticAuroraEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }
