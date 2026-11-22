@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "incendium:ash_barrens",
+      "required": false
+    },
+    {
+      "id": "incendium:infernal_dunes",
+      "required": false
+    },
+    {
+      "id": "incendium:quartz_flats",
+      "required": false
+    },
+    {
+      "id": "incendium:toxic_heap",
+      "required": false
+    },
+    {
+      "id": "incendium:volcanic_deltas",
+      "required": false
+    },
+    {
+      "id": "incendium:weeping_valley",
+      "required": false
+    }
+  ]
+}

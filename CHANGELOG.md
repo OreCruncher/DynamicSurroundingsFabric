@@ -45,6 +45,11 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 * Particle rain and snow take less time to draw. Drops past the edges of the view are left out, not only those behind it (42% fewer to draw), the drops are built 14-16% faster, and the building starts earlier in the frame
 * Particle rain, snow and dust, and the snow flecks, rain on windows and damp spots they leave, are shaped on the graphics card, which the CPU hands what changed once a tick, rather than built by the CPU every frame. In the bench's heavy rain at the High preset's range, the frame's CPU time halved and the frame rate rose from 820 to 1,214, and the graphics card does less as well. If rain, snow or dust look wrong, turn off Rain, snow and dust on the GPU in the Precipitation options
 * Tough As Nails' wool and leaf armor and Alex's Mobs' creature armor sound like leather, and Epic Knights' lances like spears
+* Solar Generation's solar helmets and Alaindustrial's jetpack and energy pack sound like plate armor; Plushables' and Fantasy Furniture's plushies, SecurityCraft's incognito mask and Reliquary's witch hat like leather. Wrenches (`#c:tools/wrench`) sound like tools
+* Rain on Factory Blocks' blocks rings like metal, and a block with a mod's own sound type that steps like one of the game's sounds to the rain like that one (Mini Mob Trophies' horses, like wool)
+* `/dsdump items` lists armor that has no equip sound among the items needing a look
+* Terralith's biomes its own tags leave unsettled are sorted: its cliffs are mountains, the skylands are Overworld forests, the glacial chasm is snowy plains, Yellowstone is a taiga, and the alpha islands and lush valley are forests
+* Incendium's biomes are sorted: its inverted and withered forests are Nether forests (biomes tagged `c:nether_forests` are now taken as Nether forests, whatever the mod), and the rest are wastelands
 * `/dsdump blocks` gives each block's sound type and what rain sounds like on it, with what decided it: a tag, its sound type, or neither
 * `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items
 * `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
@@ -52,6 +57,7 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 
 **Fixes**
 * Books in the hotbar play the book sound, and bookshelves no longer do
+* Fixed an error from a mod's item that can be worn but has no equip sound: selecting it in the hotbar, or `/dsdump items`, threw an exception
 
 > ### DynamicSurroundings-26.3-5.2.0
 

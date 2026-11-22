@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "terralith:gravel_desert",
+      "required": false
+    }
+  ]
+}

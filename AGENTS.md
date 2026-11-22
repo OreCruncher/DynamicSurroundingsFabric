@@ -161,9 +161,11 @@ is known of 26.4.
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`) and each installed mod's id and
   version, nothing else of it (`dsurround.Mod`, from `ProfileMod`, cleaned of anything path-like; `jfr-summary.py --mods`), and what the mod's block and biome queries cost once a second
   (`dsurround.BlockQueries`, through `profiling/BlockQuerySamples`: the scanner's blocks (`SphereScanner.onTickWorked`), the blocks sound
-  rays tested (`RayWalk.Counts`, read around each calculation's traces), random block samples, and the level oracle's
-  biome, temperature and precipitation lookups, each timed; which kind is slow says what a pack hooks: shapes for rays,
-  level lookups for random samples, biomes for the oracle; the scanner only works while the player moves, and rays need
+  rays tested (`RayWalk.Counts`, read around each calculation's traces), random block samples, the level oracle's
+  biome, temperature and precipitation lookups, and the season provider's temperature and precipitation questions
+  (`AbstractSeasonProvider`, final methods over the providers' `temperatureAt`/`precipitationAt`/`precipitates`: Serene
+  Seasons answers past the oracle), each timed; which kind is slow says what a pack hooks: shapes for rays, level lookups
+  for random samples, biomes for the oracle, the seasons mod for the season questions; the scanner only works while the player moves, and rays need
   sounds, so compare recordings of alike scenes)); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (frames; timers: mean and end of the running averages, share of the frame, and peak (CPU peaks a JVM pause could explain left out: a GC pause inside a timed draw reads as its spike); for a
@@ -485,6 +487,9 @@ is known of 26.4.
   case, as every script name does. `ConfigFuzz` skips the file; `ScriptDefinitionsTests` fuzzes it.
 - Tags in `dsconfigs/tags/<registry>/...` are client-side tag definitions. Reference other tags with `#`
   (`#c:is_cold`); a plain `c:` entry is a mistake (a test checks).
+  Tagging a biome's kind stops `BiomeEffectsAnalyzer` (music, loops, grass) for it altogether, so whatever else that
+  guess gave goes too: compare the biome's traits in `/dsdump biomes` before and after, and tag what it should keep
+  (Incendium's weeping valley lost SPOOKY, Terralith's warped mesa SANDY, SPARSE_VEGETATION and WASTELAND).
 - Biome traits (`config/biome/biometraits`) hold tables of what vanilla has, so **on every Minecraft version upgrade
   bring them up to date** from the new game's data (`data/minecraft/worldgen/biome/*.json` in the game jar, and its
   biome tags): `VanillaBiomeAnalyzer` needs an entry for each new biome (and removed ones dropped);
