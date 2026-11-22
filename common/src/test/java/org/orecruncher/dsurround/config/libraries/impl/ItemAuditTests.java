@@ -85,6 +85,27 @@ public class ItemAuditTests {
     }
 
     @Test
+    void armorWithNoEquipSoundNeedsALook() {
+        // A mod's helmet whose equippable has no sound (Solar Generation's): silent until it is in a family
+        var silent = report("mymod:solar_helmet", Classification.NONE, null, Classification.NONE,
+                new FamilyResult(null, "equippable, but with no equip sound", null), true, List.of());
+        var concerns = ItemAudit.concerns(silent);
+        assertEquals(1, concerns.size());
+        assertTrue(concerns.getFirst().contains("no equip sound"), concerns.getFirst());
+        assertTrue(concerns.getFirst().contains("#dsurround:effects/is_plate_armor"), concerns.getFirst());
+
+        // Tagged into a family, it has the family's sounds
+        var tagged = report("mymod:solar_helmet", Classification.NONE, null, Classification.NONE,
+                new FamilyResult(ArmorFamily.PLATE, "tag #dsurround:effects/is_plate_armor", null), true, List.of());
+        assertTrue(ItemAudit.concerns(tagged).isEmpty());
+
+        // Not worn in an armor slot: nothing to say
+        var held = report("mymod:solar_lantern", Classification.NONE, null, Classification.NONE,
+                new FamilyResult(null, "equippable, but with no equip sound", null), false, List.of());
+        assertTrue(ItemAudit.concerns(held).isEmpty());
+    }
+
+    @Test
     void aConventionToolWithNoClassNeedsALook() {
         var shears = report("mymod:bronze_shears", Classification.NONE, null, Classification.NONE, NOT_WORN, false,
                 List.of(Identifier.parse("c:tools/shear")));

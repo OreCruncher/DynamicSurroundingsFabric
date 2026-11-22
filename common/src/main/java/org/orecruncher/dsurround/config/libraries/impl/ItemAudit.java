@@ -61,6 +61,9 @@ final class ItemAudit {
                 && equipSound != null && equipSound.getNamespace().equals(VANILLA) && !equipSound.equals(ELYTRA))
             result.add("worn as armor, but in no armor family (" + report.family().reason()
                     + "): tag it with one of " + familyTags());
+        // Worn, with no equip sound at all (Solar Generation's helmets): silent until a family gives it one
+        if (report.wornArmor() && report.family().family() == null && equipSound == null)
+            result.add("worn as armor, but with no equip sound, so it makes none: tag it with one of " + familyTags());
         if (report.classified().type() == ItemClassType.NONE && !report.toolTags().isEmpty())
             result.add("in " + report.toolTags().stream().map(t -> "#" + t).collect(Collectors.joining(", "))
                     + ", but has no class");

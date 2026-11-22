@@ -259,7 +259,7 @@ public class ItemLibrary implements IItemLibrary {
                 return new FamilyResult(family, "tag #" + family.tag().location(), equipSoundId(stack));
         var sound = getEquipableSoundEvent(stack);
         if (sound == null)
-            return new FamilyResult(null, "not worn", null);
+            return new FamilyResult(null, stack.has(DataComponents.EQUIPPABLE) ? "equippable, but with no equip sound" : "not worn", null);
         var family = ArmorFamily.byEquipSound(sound);
         if (family != null)
             return new FamilyResult(family, "equip sound " + sound.location(), sound.location());
@@ -286,10 +286,16 @@ public class ItemLibrary implements IItemLibrary {
         return sound == null ? null : sound.location();
     }
 
-    @Nullable
-    private static SoundEvent getEquipableSoundEvent(ItemStack stack) {
+    /**
+     * The equip sound of the stack's EQUIPPABLE component, or null for none: not equippable, or a component a mod made
+     * without an equip sound (null, as one in The Cozy Artificer has, 2026-11-22) or with one not bound
+     */
+    static @Nullable SoundEvent getEquipableSoundEvent(ItemStack stack) {
         var equipable = stack.getComponents().get(DataComponents.EQUIPPABLE);
-        return equipable == null ? null : equipable.equipSound().value();
+        if (equipable == null)
+            return null;
+        var sound = equipable.equipSound();
+        return sound != null && sound.isBound() ? sound.value() : null;
     }
 
     @Nullable
