@@ -1,0 +1,28 @@
+{
+  "name": "rain_metal",
+  "source": {
+    "title": "Medium rain on a tin roof",
+    "url": "https://freesound.org/people/Sassaby/sounds/771981/",
+    "author": "Sassaby",
+    "license": "CC0",
+    "file": "771981__sassaby__medium-rain-on-a-tin-roof.wav",
+    "notes": "48 kHz 16-bit stereo, 123 s of medium rain on a tin roof, mixed to mono: a dense, ringing wash with few drops standing out (under 1 a second 4 dB over the rest) and no events (sound-ambience.py). Chosen by the author over kyles' light tin roof (451152), cocaine's metal shed roof (611424) and mdsn's drops on a metal roof (322579) (see SOUND_REWORK.md). Stretches from its steady middle (35-120 s, within 3 dB), each level within 0.7 dB between halves (scratchpad pick_swells.py); its first 35 s build up and its last second ends."
+  },
+  "settings": {
+    "highpass": 120,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.6,
+    "fade_out": 0.5,
+    "target_rms": -46.0,
+    "limit": false,
+    "quality": 4
+  },
+  "clips": [
+    {"file": "ambient/weather/rain_metal1", "start": 40.0, "end": 42.0},
+    {"file": "ambient/weather/rain_metal2", "start": 54.4, "end": 56.4},
+    {"file": "ambient/weather/rain_metal3", "start": 76.8, "end": 78.8},
+    {"file": "ambient/weather/rain_metal4", "start": 98.8, "end": 100.8}
+  ],
+  "shape": "2 s swells (0.6 s in, 0.5 s out), as the calm and medium rain's, played with them where a rain sound lands on metal (RainSurface.METAL), in place of most of it (the filtered rain keeps 0.3). Cut at the calm rain's average level (RMS about -46 dB); how loud it plays against the rain is set in code."
+}

@@ -1,0 +1,28 @@
+{
+  "name": "rain_water",
+  "source": {
+    "title": "Kevyt sade veden pintaan / Light rain on surface of a lake water",
+    "url": "https://freesound.org/people/YleArkisto/sounds/248282/",
+    "author": "YleArkisto",
+    "license": "CC BY 4.0",
+    "file": "248282__ylearkisto__kevyt-sade-veden-pintaan-light-rain-on-surface-of-a-lake-water.wav",
+    "notes": "48 kHz 24-bit stereo, 213 s of light rain on a lake (the Finnish broadcaster Yle's archive), mixed to mono: drops plinking on the water, bright (most of it 1-6 kHz) with almost nothing under 200 Hz, steady within 3 dB (sound-ambience.py). Chosen by the author over TRP's (572429), Garuda1982's (636272), Mjeno's (399281) and klangfabrik's (157161) rain on water (see SOUND_REWORK.md). Stretches picked for the most drops (8.5-9 a second, 4 dB over their 1 s median, 0.8-6 kHz), none more than 9.2 dB over it, level steady within 0.9 dB between halves (scratchpad pick_swells.py); its plinks stand further out than leaves' drops, so the spike limit is 1 dB looser than theirs."
+  },
+  "settings": {
+    "highpass": 150,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.6,
+    "fade_out": 0.5,
+    "target_rms": -46.0,
+    "limit": false,
+    "quality": 4
+  },
+  "clips": [
+    {"file": "ambient/weather/rain_water1", "start": 24.4, "end": 26.4},
+    {"file": "ambient/weather/rain_water2", "start": 46.4, "end": 48.4},
+    {"file": "ambient/weather/rain_water3", "start": 70.3, "end": 72.3},
+    {"file": "ambient/weather/rain_water4", "start": 158.6, "end": 160.6}
+  ],
+  "shape": "2 s swells (0.6 s in, 0.5 s out), as the calm and medium rain's, played with them where a rain sound lands on water (RainSurface.WATER), in place of most of it (the filtered rain keeps 0.3). Cut at the calm rain's average level (RMS about -46 dB); how loud it plays against the rain is set in code."
+}

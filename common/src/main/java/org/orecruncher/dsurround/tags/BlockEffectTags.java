@@ -31,6 +31,12 @@ public class BlockEffectTags {
     public static final TagKey<Block> SKULL_FLAMES = of("skull_flames");
     public static final TagKey<Block> SOUL_SKULL_FLAMES = of("soul_skull_flames");
     public static final TagKey<Block> RAIN_ABSORBING = of("rain_absorbing");
+    // What rain sounds like it falls on, where the block's sound type says otherwise (see RainSurface); rain_absorbing
+    // is the soft ground
+    public static final TagKey<Block> RAIN_ON_METAL = of("rain_on_metal");
+    public static final TagKey<Block> RAIN_ON_GLASS = of("rain_on_glass");
+    public static final TagKey<Block> RAIN_ON_LEAVES = of("rain_on_leaves");
+    public static final TagKey<Block> RAIN_ON_WOOD = of("rain_on_wood");
     public static final TagKey<Block> DUST_SOURCES = of("dust_sources");
     // Dry plants a dust devil lifts and whirls about with it
     public static final TagKey<Block> DUST_DEVIL_DEBRIS = of("dust_devil_debris");

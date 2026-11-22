@@ -19,6 +19,11 @@ public final class StormSounds {
 
     public static final Identifier RAIN = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain");
     public static final Identifier RAIN_MEDIUM = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain.medium");
+    // Rain on a surface, in place of most of the rain where a rain sound lands on it (see RainSurface.layer)
+    public static final Identifier RAIN_LEAVES = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain.leaves");
+    public static final Identifier RAIN_METAL = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain.metal");
+    public static final Identifier RAIN_GLASS = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain.glass");
+    public static final Identifier RAIN_WATER = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.rain.water");
     public static final Identifier DUST = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "weather.dust");
 
     /**
@@ -37,6 +42,11 @@ public final class StormSounds {
     static final float MEDIUM_FROM = 0.2F;
     static final float MEDIUM_FULL = 0.5F;
     static final float MEDIUM_FADE = 0.7F;
+    /**
+     * A surface's own rain (leaves, a tin roof) takes this share of the rain where it lands, the rain keeping the rest:
+     * played on top of all of it, at 0.8 of the calm rain, it was lost in the wash (bench, 2026-11-21)
+     */
+    static final float LAYER_SHARE = 0.7F;
     /**
      * The dust sound's volume, as vanilla's rain is in the open, and how far its pitch varies either way, as it is a
      * single sound
@@ -76,6 +86,21 @@ public final class StormSounds {
     private static float smoothStep(float from, float to, float x) {
         var t = Mth.clamp((x - from) / (to - from), 0F, 1F);
         return t * t * (3F - 2F * t);
+    }
+
+    /**
+     * A surface's own rain at a storm's strength, as a share of vanilla's rain volume where it plays: its share of all
+     * the rain there (calm, medium and heavy), so it rises with the storm as they do
+     */
+    public static float layerShare(float rainLevel) {
+        return LAYER_SHARE * (calmShare(rainLevel) + mediumShare(rainLevel) + heavyShare(rainLevel));
+    }
+
+    /**
+     * What the rain keeps of its volume where a surface's own rain plays in place of part of it
+     */
+    public static float keptShare() {
+        return 1F - LAYER_SHARE;
     }
 
     /**

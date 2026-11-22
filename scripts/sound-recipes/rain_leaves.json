@@ -1,0 +1,28 @@
+{
+  "name": "rain_leaves",
+  "source": {
+    "title": "rain in the forest atmo field recording",
+    "url": "https://freesound.org/people/Garuda1982/sounds/536843/",
+    "author": "Garuda1982",
+    "license": "CC0",
+    "file": "536843__garuda1982__rain-in-the-forest-atmo-field-recording.wav",
+    "notes": "44.1 kHz 16-bit stereo, 603 s of steady rain in a forest (Sony PCM-D100), drops pattering on leaves close by, mixed to mono. Chosen by the author over newlocknew's drops on ferns (865323), nyoz's tropical leaves (615747) and yaya-dc's night leaves (667775) (see SOUND_REWORK.md). Stretches picked for the most close drops (about 6 a second, drops 4 dB over their 1 s median, 0.8-6 kHz), none more than 8.5 dB over it (no spikes), level steady within 0.5 dB between halves (scratchpad pick_swells.py); 94.3 s was passed over for one sharper drop (true peak 4 dB over the others). Its 27 bigger drops (8-13 dB over the rain, sound-ambience.py) are left out."
+  },
+  "settings": {
+    "highpass": 150,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.6,
+    "fade_out": 0.5,
+    "target_rms": -46.0,
+    "limit": false,
+    "quality": 4
+  },
+  "clips": [
+    {"file": "ambient/weather/rain_leaves1", "start": 569.7, "end": 571.7},
+    {"file": "ambient/weather/rain_leaves2", "start": 171.1, "end": 173.1},
+    {"file": "ambient/weather/rain_leaves3", "start": 339.2, "end": 341.2},
+    {"file": "ambient/weather/rain_leaves4", "start": 413.6, "end": 415.6}
+  ],
+  "shape": "2 s swells (0.6 s in, 0.5 s out), as the calm and medium rain's, played with them where a rain sound lands on leaves (RainSurface.LEAVES), in place of most of it (the filtered rain keeps 0.3). Cut at the calm rain's average level (RMS about -46 dB); how loud it plays against the rain is set in code."
+}

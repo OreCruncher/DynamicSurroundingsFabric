@@ -79,6 +79,21 @@ public final class Profiler {
         return state;
     }
 
+    // What is being recorded, in a few words, shown under the recording's line (ProfileOverlay): set by a bench run
+    @Nullable
+    private static volatile String caption;
+
+    /**
+     * What is being recorded, shown under the recording's line, or null for none
+     */
+    public static @Nullable String caption() {
+        return caption;
+    }
+
+    public static void setCaption(@Nullable String text) {
+        caption = text;
+    }
+
     /**
      * Seconds until it starts recording, while waiting, or until it is done, while recording
      */

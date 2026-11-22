@@ -33,6 +33,7 @@ public final class EnhancedSoundProcessor {
     private static final IModLog LOGGER = ContainerManager.memoize(IModLog.class);
     private static final int SOUND_PROCESS_ITERATION = 1000 / 20;   // Match MC client tick rate
     private static final LogThrottle<Object> TASK_ERRORS = LogThrottle.firstN(LOGGER, "enhanced sound task errors", null, 10);
+    private static final LogThrottle<Object> FIXED_FILTER_ERRORS = LogThrottle.firstN(LOGGER, "fixed filter errors", null, 10);
 
     static boolean isAvailable;
 
@@ -164,7 +165,25 @@ public final class EnhancedSoundProcessor {
      */
     public static void onSoundPlay(final SoundInstance sound, final ChannelAccess.ChannelHandle entry) {
 
-        if (!isAvailable() || shouldIgnoreSound(sound))
+        if (!isAvailable())
+            return;
+        // A sound with a fixed filter of its own (rain on a surface) gets that, set on the sound engine's thread as the
+        // sound starts, and nothing else. Queued after the game's own start, which plays it: within the same run of the
+        // queue, so before the mixer's next update
+        if (sound instanceof FixedFilter.Carrier carrier) {
+            var fixed = carrier.fixedFilter();
+            var effects = efx;
+            if (fixed != null && effects != null)
+                entry.execute(channel -> {
+                    try {
+                        effects.uploadFixed(channel.source, fixed);
+                    } catch (Throwable t) {
+                        FIXED_FILTER_ERRORS.error(t, "Unable to set a fixed filter on %s", sound.getIdentifier());
+                    }
+                });
+            return;
+        }
+        if (shouldIgnoreSound(sound))
             return;
 
         assert entry.channel != null;

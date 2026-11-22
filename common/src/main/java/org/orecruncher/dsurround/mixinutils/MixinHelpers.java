@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.processing.LightningHandler;
 import org.orecruncher.dsurround.processing.PrecipitationHandler;
 import org.orecruncher.dsurround.processing.WindowFrostHandler;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.RainSurfaceTally;
 
 /**
  * Static class definitions with mixins do not work well. Any statics have been placed
@@ -35,6 +36,8 @@ public class MixinHelpers {
     public static final Configuration.WeatherOptions weatherOptions = ContainerManager.resolve(Configuration.WeatherOptions.class);
     public static final Configuration.MusicManagerOptions musicOptions = ContainerManager.resolve(Configuration.MusicManagerOptions.class);
     public static final BiomeMusicSelector BIOME_MUSIC = new BiomeMusicSelector();
+    // What the last rain sounds fell on, shown by the precipitation handler's diagnostics
+    public static final RainSurfaceTally RAIN_SURFACES = ContainerManager.resolve(RainSurfaceTally.class);
 
     // Mixin bodies run every frame, tick or particle inside the game's own code: a failure is logged a few times and
     // the game's own behavior used in its place, rather than thrown into the game

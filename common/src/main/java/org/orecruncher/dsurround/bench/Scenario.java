@@ -41,11 +41,12 @@ import java.util.OptionalLong;
  * @param screenshot whether each run takes a screenshot as it starts recording
  * @param volume     the master volume to set for the session, 0 to 1, if given: a sound whose volume works out to 0 isn't
  *                   played at all, so isn't processed either
+ * @param musicVolume the music volume to set for the session, 0 to 1, if given (0 for a scenario listened to)
  * @param scenes     the scenes, by name
  * @param runs       the runs, in order
  */
 public record Scenario(String name, String world, OptionalLong seed, List<String> setup, int warmup, int record, int repeats,
-                       @Nullable Boolean vsync, @Nullable Boolean improvedTransparency, OptionalInt maxFps, OptionalInt width, OptionalInt height, boolean screenshot, OptionalDouble volume, Map<String, Scene> scenes, List<Run> runs) {
+                       @Nullable Boolean vsync, @Nullable Boolean improvedTransparency, OptionalInt maxFps, OptionalInt width, OptionalInt height, boolean screenshot, OptionalDouble volume, OptionalDouble musicVolume, Map<String, Scene> scenes, List<Run> runs) {
 
     /**
      * Where a run is recorded.
@@ -95,8 +96,9 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
      * @param scene    the scene's name
      * @param settings config values for it (dotted paths, as presets have): the setting sets it uses, in order, then its
      *                 own; every other run's are put back first
+     * @param caption  what it records, in a few words, shown under the recording's line on screen: its label if not given
      */
-    public record Run(String label, String scene, Map<String, JsonElement> settings) {
+    public record Run(String label, String scene, Map<String, JsonElement> settings, String caption) {
     }
 
     public static Scenario read(Path file) throws IOException {
@@ -159,7 +161,8 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                 if (r.has("settings"))
                     for (var setting : r.getAsJsonObject("settings").entrySet())
                         settings.put(setting.getKey(), setting.getValue());
-                runs.add(new Run(r.has("label") ? r.get("label").getAsString() : scene + "-" + runs.size(), scene, settings));
+                var label = r.has("label") ? r.get("label").getAsString() : scene + "-" + runs.size();
+                runs.add(new Run(label, scene, settings, r.has("caption") ? r.get("caption").getAsString() : label));
             }
         }
         if (runs.isEmpty())
@@ -180,6 +183,7 @@ public record Scenario(String name, String world, OptionalLong seed, List<String
                 video.has("height") ? OptionalInt.of(video.get("height").getAsInt()) : OptionalInt.empty(),
                 !json.has("screenshots") || json.get("screenshots").getAsBoolean(),
                 json.has("volume") ? OptionalDouble.of(json.get("volume").getAsDouble()) : OptionalDouble.empty(),
+                json.has("musicVolume") ? OptionalDouble.of(json.get("musicVolume").getAsDouble()) : OptionalDouble.empty(),
                 scenes, runs);
     }
 

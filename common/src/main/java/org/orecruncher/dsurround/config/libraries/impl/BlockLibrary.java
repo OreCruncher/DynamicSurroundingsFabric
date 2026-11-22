@@ -28,6 +28,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.ResourceUtilities;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
+import org.orecruncher.dsurround.runtime.weather.RainSurface;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -326,6 +327,8 @@ public class BlockLibrary implements IBlockLibrary {
         var info = getBlockInfo(block.defaultBlockState());
         builder.append("\nreflectance: ").append(info.getSoundReflectivity());
         builder.append("; occlusion: ").append(info.getSoundOcclusion());
+        builder.append("\nsound type: ").append(RainSurface.soundTypeName(block.defaultBlockState().getSoundType()));
+        builder.append("; rain: ").append(RainSurface.describe(block.defaultBlockState(), this.tagLibrary));
 
         if (!noStates) {
             builder.append("\nstates [\n");

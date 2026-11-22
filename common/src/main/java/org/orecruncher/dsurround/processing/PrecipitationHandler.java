@@ -55,6 +55,7 @@ import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
+import org.orecruncher.dsurround.runtime.weather.RainSurfaceTally;
 import org.orecruncher.dsurround.runtime.weather.WindService;
 
 import java.util.Locale;
@@ -102,6 +103,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
     static final double DRIP_BELOW_EDGE = 0.05D;
 
     private final IWeatherSimulation weatherSimulation;
+    private final RainSurfaceTally rainSurfaces;
     private final WindService windService;
     private final IDimensionOracle dimensionInformation;
     private final Landings landings;
@@ -138,9 +140,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private final IRandomizer stepRandom = Randomizer.create(System.nanoTime());
 
     public PrecipitationHandler(IWeatherSimulation weatherSimulation, WindService windService, ISoundLibrary soundLibrary, IDimensionOracle dimensionInformation, ISeasonalInformation seasonalInformation,
-                                ITagLibrary tagLibrary, IBiomeLibrary biomeLibrary, Configuration config, IModLog logger) {
+                                ITagLibrary tagLibrary, IBiomeLibrary biomeLibrary, RainSurfaceTally rainSurfaces, Configuration config, IModLog logger) {
         super("Precipitation Handler", config, logger);
         this.weatherSimulation = weatherSimulation;
+        this.rainSurfaces = rainSurfaces;
         this.windService = windService;
         this.dimensionInformation = dimensionInformation;
         this.columns = new LevelColumns(seasonalInformation, biomeLibrary, tagLibrary, config.weatherOptions);
@@ -498,5 +501,9 @@ public class PrecipitationHandler extends AbstractClientHandler {
         if (this.config.weatherOptions.precipitation.enableAfterRainDrips && this.drips.strength() > 0F)
             text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
+        // What the last rain sounds fell on (see RainSurface)
+        var surfaces = this.rainSurfaces.summary();
+        if (!surfaces.isEmpty())
+            event.add(CollectDiagnosticsEvent.Section.Systems, "Rain sounds on (last " + RainSurfaceTally.SIZE + "): " + surfaces);
     }
 }

@@ -2,7 +2,7 @@
 
 Documentation can be found at [ReadTheDocs](https://dynamic-surroundings.readthedocs.io/en/latest/index.html) website.
 
-This release brings rainbows after the rain, a cinematic aurora, and armor that sounds like what it's made of.
+This release brings rainbows after the rain, a cinematic aurora, rain that rings on tin roofs and patters on leaves, and armor that sounds like what it's made of.
 
 **All Loaders**
 * JAVA 25+  
@@ -20,6 +20,7 @@ This release brings rainbows after the rain, a cinematic aurora, and armor that 
 * Built the cinematic aurora, comparing it with photographs of real auroras, and halved its cost with benchmark runs
 * Built armor families and surveyed popular equipment mods to sort their armor and weapons
 * Made particle rain and snow cheaper to draw, measuring each change with benchmark runs
+* Built rain on surfaces, searched Freesound for recordings of rain on metal, leaves, glass and water, and cut them to match the rain
 
 **What's New**
 * Rainbows (experimental). As rain eases to a drizzle or stops while the sun is low, a rainbow can show in the sky opposite the sun, fading as the shower moves on, red outside and violet inside. After a strong storm, a fainter second bow shows outside it with its colors reversed. Only where it rains rather than snows, and every player in a world sees the same rainbows
@@ -34,6 +35,9 @@ This release brings rainbows after the rain, a cinematic aurora, and armor that 
   * Chosen with Aurora style in the Aurora options. Its Quality is Fast by default, drawn at half the screen's size; Fancy draws it at full size for about four times the cost, and the High performance preset sets Fancy
   * `/dsaurora` shows tonight's ribbons, and holds how active the night is and where in it, as it does for the realistic aurora
 * Armor sounds by what it's made of. Each piece of armor belongs to a family (leather, chain, plate, crystal or heavy), which gives its footstep accent, its hotbar sound and its swing sound. Modded armor is sorted by its tag, or else by the equip sound it uses, so most needs no tagging. The families use the game's sounds for now
+* Rain on surfaces: rain sounds like what it falls on. Rain on a tin roof rings, on a skylight it ticks, on leaves it patters and on a pond it plinks, from recordings of each played in place of most of the rain there; soft ground dulls it and wood makes it boxy. With Enhanced Sounds on, each surface's rain is filtered as well; with it off, its volume and pitch change instead. A mix of surfaces around the player sounds like the mix
+  * Rain on surfaces is in the Weather options, under Storms, and needs storm sounds
+  * Blocks are sorted by their sound type, so most modded blocks need nothing; packs can add blocks with the `rain_on_metal`, `rain_on_glass`, `rain_on_leaves` and `rain_on_wood` tags, and `rain_absorbing` for soft ground
 
 **Changes**
 * The Weather options are grouped into Storms, Precipitation and Sky, and Ground fog has moved to the Fog options. Settings players had carry over, and modpack presets naming a setting's old place still apply, with a log line saying where it moved
@@ -41,6 +45,7 @@ This release brings rainbows after the rain, a cinematic aurora, and armor that 
 * Particle rain and snow take less time to draw. Drops past the edges of the view are left out, not only those behind it (42% fewer to draw), the drops are built 14-16% faster, and the building starts earlier in the frame
 * Particle rain, snow and dust, and the snow flecks, rain on windows and damp spots they leave, are shaped on the graphics card, which the CPU hands what changed once a tick, rather than built by the CPU every frame. In the bench's heavy rain at the High preset's range, the frame's CPU time halved and the frame rate rose from 820 to 1,214, and the graphics card does less as well. If rain, snow or dust look wrong, turn off Rain, snow and dust on the GPU in the Precipitation options
 * Tough As Nails' wool and leaf armor and Alex's Mobs' creature armor sound like leather, and Epic Knights' lances like spears
+* `/dsdump blocks` gives each block's sound type and what rain sounds like on it, with what decided it: a tag, its sound type, or neither
 * `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items
 * `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
 * `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state

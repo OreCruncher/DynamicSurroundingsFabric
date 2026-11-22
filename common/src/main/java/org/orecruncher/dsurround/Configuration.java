@@ -585,6 +585,10 @@ public class Configuration extends ConfigurationData {
         @MovedFrom("weatherOptions.enableStormSounds")
         @Comment("Rain sounds that follow the storm's strength, from a patter to a roar, and the sound of blowing dust")
         public boolean enableStormSounds = true;
+
+        @Property
+        @Comment("Rain that sounds like what it falls on: ringing on metal, ticking on glass, pattering on leaves, plinking on water, duller on soft ground, boxy on wood")
+        public boolean enableRainSurfaces = true;
     }
 
     public static class Precipitation {

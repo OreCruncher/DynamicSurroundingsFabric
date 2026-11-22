@@ -2231,6 +2231,70 @@
 			"dsurround:ambient/weather/rain_medium4"
 		]
 	},
+	"weather.rain.leaves": {
+		"ds_credits": [
+			{
+				"name": "rain in the forest atmo field recording",
+				"author": "Garuda1982",
+				"website": "https://freesound.org/people/Garuda1982/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/weather/rain_leaves1",
+			"dsurround:ambient/weather/rain_leaves2",
+			"dsurround:ambient/weather/rain_leaves3",
+			"dsurround:ambient/weather/rain_leaves4"
+		]
+	},
+	"weather.rain.metal": {
+		"ds_credits": [
+			{
+				"name": "Medium rain on a tin roof",
+				"author": "Sassaby",
+				"website": "https://freesound.org/people/Sassaby/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/weather/rain_metal1",
+			"dsurround:ambient/weather/rain_metal2",
+			"dsurround:ambient/weather/rain_metal3",
+			"dsurround:ambient/weather/rain_metal4"
+		]
+	},
+	"weather.rain.glass": {
+		"ds_credits": [
+			{
+				"name": "120503 rain on skylight window interior 2012",
+				"author": "TRP",
+				"website": "https://freesound.org/people/TRP/",
+				"license": "Creative Commons 0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/weather/rain_glass1",
+			"dsurround:ambient/weather/rain_glass2",
+			"dsurround:ambient/weather/rain_glass3",
+			"dsurround:ambient/weather/rain_glass4"
+		]
+	},
+	"weather.rain.water": {
+		"ds_credits": [
+			{
+				"name": "Kevyt sade veden pintaan / Light rain on surface of a lake water",
+				"author": "YleArkisto",
+				"website": "https://freesound.org/people/YleArkisto/",
+				"license": "Creative Commons Attribution 4.0"
+			}
+		],
+		"sounds": [
+			"dsurround:ambient/weather/rain_water1",
+			"dsurround:ambient/weather/rain_water2",
+			"dsurround:ambient/weather/rain_water3",
+			"dsurround:ambient/weather/rain_water4"
+		]
+	},
 	"weather.dust": {
 		"ds_credits": [
 			{

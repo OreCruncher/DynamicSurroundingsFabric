@@ -22,6 +22,7 @@ sound and visual effects.
     * Simulated wind affects direction and velocity of precipitation particles
     * Rain, snow, and dust blown in under overhangs drift a little way in and fade (1.21.1-0.4.8+)
     * Rain and snow stop on top of blocks from other mods that Minecraft's own rain falls through, such as Mekanism's energy cube (1.21.1-0.4.8+)
+    * Rain sounds like what it falls on: ringing on metal roofs, ticking on glass, pattering on leaves, plinking on water, duller on soft ground (26.3-5.3.0+)
 * Lightning that branches and forks, more the stronger the thunderstorm, flickering with each stroke (1.21.1-0.4.8+)
     * Replaces Minecraft's bolts, and adds bolts, spider lightning, and flashes in the clouds through a thunderstorm, mostly upwind
     * Thunder from each strike arrives later the farther away it is

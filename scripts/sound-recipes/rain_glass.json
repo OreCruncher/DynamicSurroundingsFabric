@@ -1,0 +1,28 @@
+{
+  "name": "rain_glass",
+  "source": {
+    "title": "120503 rain on skylight window interior 2012",
+    "url": "https://freesound.org/people/TRP/sounds/616530/",
+    "author": "TRP",
+    "license": "CC0",
+    "file": "616530__trp__120503-rain-on-skylight-window-interior-2012.wav",
+    "notes": "48 kHz 24-bit stereo, 89 s of rain on a skylight heard from inside, mixed to mono: drops ticking on the glass over a low drumming, steady throughout (within 1.5 dB, sound-ambience.py). Chosen by the author over carthny's (522322), Vrymaa's (810879), AmiableWookie's (651676) and mmorgaine's (333510) rain on windows (see SOUND_REWORK.md). Stretches picked for the most drops (7-10 a second, 4 dB over their 1 s median, 1-8 kHz), none more than 7.7 dB over it (no spikes), level steady within 1 dB between halves (scratchpad pick_swells.py). High-passed at 200 Hz, as the drumming under 200 Hz is half the recording's level and the filtered glass rain keeps little of it."
+  },
+  "settings": {
+    "highpass": 200,
+    "pad_before": 0.0,
+    "pad_after": 0.0,
+    "fade_in": 0.6,
+    "fade_out": 0.5,
+    "target_rms": -46.0,
+    "limit": false,
+    "quality": 4
+  },
+  "clips": [
+    {"file": "ambient/weather/rain_glass1", "start": 35.9, "end": 37.9},
+    {"file": "ambient/weather/rain_glass2", "start": 65.9, "end": 67.9},
+    {"file": "ambient/weather/rain_glass3", "start": 13.0, "end": 15.0},
+    {"file": "ambient/weather/rain_glass4", "start": 86.3, "end": 88.3}
+  ],
+  "shape": "2 s swells (0.6 s in, 0.5 s out), as the calm and medium rain's, played with them where a rain sound lands on glass (RainSurface.GLASS), in place of most of it (the filtered rain keeps 0.3). Cut at the calm rain's average level (RMS about -46 dB); how loud it plays against the rain is set in code."
+}

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:leaves",
+    "minecraft:leaf_litter",
+    "minecraft:big_dripleaf",
+    "minecraft:lily_pad"
+  ]
+}

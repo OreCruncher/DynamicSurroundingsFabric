@@ -251,6 +251,22 @@ Others:
 
 * S: [Medium rain](https://freesound.org/people/Ryding/sounds/718518/) by [Ryding](https://freesound.org/people/Ryding/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: four stretches cut, made mono, faded in and out, levels matched
 
+*dsurround:weather.rain.leaves*
+
+* S: [rain in the forest atmo field recording](https://freesound.org/people/Garuda1982/sounds/536843/) by [Garuda1982](https://freesound.org/people/Garuda1982/) | License: Creative Commons 0 | Modified: four stretches cut, made mono, high-passed, faded in and out, levels matched
+
+*dsurround:weather.rain.metal*
+
+* S: [Medium rain on a tin roof](https://freesound.org/people/Sassaby/sounds/771981/) by [Sassaby](https://freesound.org/people/Sassaby/) | License: Creative Commons 0 | Modified: four stretches cut, made mono, high-passed, faded in and out, levels matched
+
+*dsurround:weather.rain.glass*
+
+* S: [120503 rain on skylight window interior 2012](https://freesound.org/people/TRP/sounds/616530/) by [TRP](https://freesound.org/people/TRP/) | License: Creative Commons 0 | Modified: four stretches cut, made mono, high-passed, faded in and out, levels matched
+
+*dsurround:weather.rain.water*
+
+* S: [Kevyt sade veden pintaan / Light rain on surface of a lake water](https://freesound.org/people/YleArkisto/sounds/248282/) by [YleArkisto](https://freesound.org/people/YleArkisto/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: four stretches cut, made mono, high-passed, faded in and out, levels matched
+
 *dsurround:weather.dust*
 
 * S: [Desert sand - Dune atmosphere](https://freesound.org/people/Vrymaa/sounds/825860/) by [Vrymaa](https://freesound.org/people/Vrymaa/) | License: Creative Commons 0 | Modified: six stretches cut, high-passed, faded in and out, levels matched

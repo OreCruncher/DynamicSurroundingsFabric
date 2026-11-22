@@ -550,6 +550,8 @@
   "dsurround.config.weatherOptions.storms.stormVariation.tooltip": "How far a storm eases off between its surges, as a percent of its peak. A storm's strength rises and falls every half minute or so; at 0 it holds steady. Every player in a world sees the same surges.",
   "dsurround.config.weatherOptions.storms.enableStormSounds": "Storm sounds",
   "dsurround.config.weatherOptions.storms.enableStormSounds.tooltip": "Rain that sounds as strong as the storm: a soft patter in a drizzle, building to a roar in a downpour. Dust storms make the sound of blowing dust.",
+  "dsurround.config.weatherOptions.storms.enableRainSurfaces": "Rain on surfaces",
+  "dsurround.config.weatherOptions.storms.enableRainSurfaces.tooltip": "Rain that sounds like what it falls on near you: ringing on metal, ticking on glass, pattering on leaves and plinking on water, duller on soft ground and boxy on wood. Needs storm sounds; with Enhanced Sounds on, each surface is also filtered, otherwise its volume and pitch change.",
   "dsurround.config.weatherOptions.precipitation": "Precipitation",
   "dsurround.config.weatherOptions.precipitation.tooltip": "Rain, snow and dust storms drawn as particles, and what they leave behind: drips, snow on walls, rain on windows",
   "dsurround.config.weatherOptions.precipitation.enableParticlePrecipitation": "Particle rain and snow",

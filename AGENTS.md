@@ -409,6 +409,15 @@ is known of 26.4.
   (`InstanceEmitter.hearingRangeSq`). A sound's first calculation runs as it starts, on the thread playing it (the
   sound engine's, which waits), within `StartBudget` (2 ms every 50 ms, in `SourceContext`); past it the sound starts
   without effects and the workers' next pass calculates it. `sound.json`'s `burst` scene goes past it.
+- Fixed filters (`runtime/audio/FixedFilter`): a sound that is a `FixedFilter.Carrier` gets a low-, high- or band-pass
+  set on its direct path once, as it starts (queued on its channel after the game's start, `Efx.uploadFixed`), and no
+  `SourceContext`: no reverb, no occlusion. Rain on surfaces (`runtime/weather/RainSurface`, `RainSoundInstance`, from
+  `MixinClientLevel`'s rain sound) uses it, falling back to volume and pitch without `Efx` (Enhanced Sounds off).
+  Filters beat pitch by ear (2026-11-21): pitch past about 1.5 sounds sped up, and a roof's rain is already at the
+  game's lowest pitch, 0.5. Each channel gets a fresh OpenAL source, so a filter never carries over to the next sound.
+  `scripts/bench/rain-surfaces.json` is a stage of each material to listen to (run captions, music off).
+  `/dsdump blocks` gives each block's sound type and rain surface with what sorted it (a `rain_on_*` tag, the sound
+  type, or neither), for fitting a pack's blocks: a metal block that sounds like stone needs `rain_on_metal`.
 - Simple Voice Chat (`runtime/audio/voicechat`): voices play in its own OpenAL context, so they get their own `Efx`
   (made in its `CreateOpenALContextEvent`). `VoiceSounds` keeps the channels (tested with a fake `Backend`);
   `OpenALBackend` does the OpenAL side. `VoiceChatPlugin` is the only class using its API (compile-only; loaded by the

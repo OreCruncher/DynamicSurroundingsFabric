@@ -80,6 +80,11 @@ Without `-Pscenario`, `runClientBench` is a plain client in the bench folder, fo
   (`enhancedSounds`: not without a sound device, or with it off), `soundsPlayed`, and `soundsMuted` if the blocks'
   volume is 0. Enhanced sounds on or off, and the reverb rays and bounces, need a restart, so can't be compared in one
   scenario.
+- **Listening**: the scenario's `"musicVolume"` sets the music volume (0 stops what is playing too), for a scenario
+  listened to rather than measured (`rain-surfaces.json`). It stays set in the bench folder's options, as `"volume"`
+  does. Each run's name shows in chat and over the hotbar as its warm-up starts, and a run's `"caption"` (its label if
+  not given) under the recording's line at the top of the screen, through the warm-up and the recording: what is being
+  captured, in a few words ("iron, roof above, surface sounds off").
 
 ## Scenes
 

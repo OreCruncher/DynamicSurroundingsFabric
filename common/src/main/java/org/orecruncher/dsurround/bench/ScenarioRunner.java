@@ -305,6 +305,12 @@ public final class ScenarioRunner {
             mc.options.improvedTransparency().set(this.scenario.improvedTransparency());
         this.scenario.maxFps().ifPresent(fps -> mc.options.framerateLimit().set(fps));
         this.scenario.volume().ifPresent(volume -> mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(volume));
+        this.scenario.musicVolume().ifPresent(volume -> {
+            mc.options.getSoundSourceOptionInstance(SoundSource.MUSIC).set(volume);
+            // What was already playing stops too
+            if (volume <= 0)
+                mc.getMusicManager().stopPlaying();
+        });
         if (this.scenario.width().isPresent() && this.scenario.height().isPresent())
             mc.getWindow().setWindowed(this.scenario.width().getAsInt(), this.scenario.height().getAsInt());
         // Its hints would sit in every screenshot
@@ -427,6 +433,13 @@ public final class ScenarioRunner {
                 this.boatSpeed = scene.boatSpeed();
                 this.flySpeed = scene.flySpeed();
                 this.boatMiddle = Minecraft.getInstance().player.position();
+                // Which run this is, for anyone watching or listening (rain-surfaces.json is listened to)
+                var said = Component.literal(String.format(Locale.ROOT, "Bench %d/%d: %s", index + 1, this.scenario.order().size(),
+                        run.caption().equals(run.label()) ? run.label() : run.label() + " (" + run.caption() + ")"));
+                // Under the recording's line on screen, through the warm-up and the recording
+                Profiler.setCaption(run.caption());
+                Minecraft.getInstance().player.sendSystemMessage(said);
+                Minecraft.getInstance().player.sendOverlayMessage(said);
             }
             // The sounds from here, where the player is once the commands have moved them; and whether they can be heard
             // and processed: a sound whose volume works out to 0 isn't played
@@ -712,6 +725,7 @@ public final class ScenarioRunner {
         if (this.finished)
             return;
         this.finished = true;
+        Profiler.setCaption(null);
         this.stopSounds();
         if (this.baseline != null) {
             try {

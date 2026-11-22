@@ -8,10 +8,12 @@ import org.lwjgl.openal.AL11;
 import org.lwjgl.openal.ALC10;
 import org.lwjgl.openal.EXTEfx;
 import org.orecruncher.dsurround.runtime.audio.AudioUtilities;
+import org.orecruncher.dsurround.runtime.audio.FixedFilter;
 
 /**
  * The OpenAL effects (EFX) used by enhanced sounds in one OpenAL context: four reverbs of increasing length, each in
- * an auxiliary effect slot that sounds send to, and low-pass filters for those sends and for each sound's direct path.
+ * an auxiliary effect slot that sounds send to, and low-pass filters for those sends and for each sound's direct path;
+ * and a low-pass, a high-pass and a band-pass for sounds given a fixed filter ({@link FixedFilter}: rain on a surface).
  * The game's sounds have one; Simple Voice Chat plays voices in a context of its own, which gets another.
  * <p>
  * A context can have fewer sends than reverbs (voice chat's, if the device won't give it more): sounds then only send
@@ -55,6 +57,9 @@ public final class Efx {
     private final int[] auxSlots;
     private final int[] sendFilters;
     private final int directFilter;
+    // For fixed filters (the direct path's low-pass serves those too)
+    private final int highPassFilter;
+    private final int bandPassFilter;
 
     private Efx(int sends) {
         this.context = ALC10.alcGetCurrentContext();
@@ -87,6 +92,8 @@ public final class Efx {
             this.sendFilters[i] = newLowPassFilter();
         }
         this.directFilter = newLowPassFilter();
+        this.highPassFilter = newFilter(EXTEfx.AL_FILTER_HIGHPASS);
+        this.bandPassFilter = newFilter(EXTEfx.AL_FILTER_BANDPASS);
     }
 
     /**
@@ -150,11 +157,43 @@ public final class Efx {
     }
 
     private static int newLowPassFilter() {
+        return newFilter(EXTEfx.AL_FILTER_LOWPASS);
+    }
+
+    private static int newFilter(int type) {
         int filter = EXTEfx.alGenFilters();
         AudioUtilities.validate("Efx generate filter");
-        EXTEfx.alFilteri(filter, EXTEfx.AL_FILTER_TYPE, EXTEfx.AL_FILTER_LOWPASS);
+        EXTEfx.alFilteri(filter, EXTEfx.AL_FILTER_TYPE, type);
         AudioUtilities.validate("Efx set filter type");
         return filter;
+    }
+
+    /**
+     * Sets a sound's fixed filter on its direct path, once, as it starts. Sounds given one get no sends, so no reverb.
+     */
+    public void uploadFixed(int sourceId, FixedFilter fixed) {
+        assert this.isCurrent() : "Efx used outside the OpenAL context it was made in";
+        int filter;
+        switch (fixed.type()) {
+            case LOW_PASS -> {
+                filter = this.directFilter;
+                EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAIN, 1F);
+                EXTEfx.alFilterf(filter, EXTEfx.AL_LOWPASS_GAINHF, fixed.gainHF());
+            }
+            case HIGH_PASS -> {
+                filter = this.highPassFilter;
+                EXTEfx.alFilterf(filter, EXTEfx.AL_HIGHPASS_GAIN, 1F);
+                EXTEfx.alFilterf(filter, EXTEfx.AL_HIGHPASS_GAINLF, fixed.gainLF());
+            }
+            default -> {
+                filter = this.bandPassFilter;
+                EXTEfx.alFilterf(filter, EXTEfx.AL_BANDPASS_GAIN, 1F);
+                EXTEfx.alFilterf(filter, EXTEfx.AL_BANDPASS_GAINLF, fixed.gainLF());
+                EXTEfx.alFilterf(filter, EXTEfx.AL_BANDPASS_GAINHF, fixed.gainHF());
+            }
+        }
+        AL11.alSourcei(sourceId, EXTEfx.AL_DIRECT_FILTER, filter);
+        AudioUtilities.validate("Efx fixed filter upload");
     }
 
     /**

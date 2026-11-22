@@ -119,3 +119,41 @@ What was found:
 - The old dust and underground sounds were generated (filtered noise, no microphone hiss); the water drops were 8-9 ms
   clicks too short to trace.
 - The author has no Freesound history before January 2017, so the 2015-16 sounds came from elsewhere.
+
+## Rain on surfaces: sources (2026-11-21, 5.3.0)
+
+Rain on a surface (`RainSurface`) is filtered, which changes its tone but can't add a metal roof's ring or the patter of
+drops on leaves: those need recordings of their own, layered under the rain. Searched Freesound (CC0; CC BY not needed,
+CC0 had plenty) for rain on metal and tin roofs and rain on leaves; HQ previews measured with `sound-ambience.py`
+(steady stretch, events, band balance). Offered to the author as loudness-matched 20 s excerpts:
+- Metal: A Sassaby "Medium rain on a tin roof" (771981, 123 s, 85 s steady, no events); B kyles "rain light on tin roof
+  soft" (451152, 47 s, steady throughout); C cocaine "Rain On Metal Roof" (611424, Burya library, swells from light to
+  heavy and back, 30 s steady at its peak); D mdsn "rain water drops on metal roof" (322579, outside, 50 s steady, more
+  low end).
+- Leaves: A newlocknew "Drops On Grass, Bushes, Ferns And Leaves" (865323, 162 s steady, brightest; a faint distant
+  highway in its description, below the drops); B Garuda1982 "rain in the forest" (536843, 603 s, steady throughout,
+  close drops); C nyoz "Tropical Rain - light in a forest with drop hitting the leaves" (615747, 62 s); D yaya-dc "Pluie
+  calme sur feuilles" (667775, 63 s, 40 s steady).
+- Ruled out: madamdata's park leaves (719747, mostly low rumble), Borgory's soft forest rain (678435, a clipped burst and
+  low thumps), Malte007 (rain starting, not steady), GregorQuendel's metal roof (239939, low thumps), MrFossy's shed
+  (521773, noisy), car roofs (a car's cabin), and anything with thunder, voices, birds or traffic in its description.
+- Chosen: metal A (Sassaby, recipe `rain_metal`) and leaves B (Garuda1982, recipe `rain_leaves`), each four 2 s swells
+  like the calm rain's (`weather.rain.metal`, `weather.rain.leaves`), played unfiltered and at pitch 1 under the filtered
+  rain where a rain sound lands on that surface, at 0.8 of the calm rain's share; lost in the wash on the bench (2026-11-21), so a layer now takes 0.7 of the
+  rain's volume where it plays, after the surface's, and the rain keeps 0.3 (`StormSounds.layerShare`, `keptShare`). One leaf
+  stretch (94.3 s) was passed over for a sharper drop.
+- Glass and water searched next (2026-11-21), previews measured the same way. Glass offered: A TRP skylight 2012
+  (616530, CC0, 89 s, steady throughout), B carthny conservatory roof (522322, CC0, uploaded as MP3), C Vrymaa skylight
+  (810879, CC0, its first minute, mic toward the glass; the second is muffled), D AmiableWookie skylight (651676, CC0,
+  quiet), E mmorgaine light rain on a skylight (333510, CC0, the brightest). All are from under the glass: rain on a
+  window from outside is hardly recorded. Water offered: A YleArkisto light rain on a lake (248282, CC BY 4.0, 213 s
+  steady, bright plinks), B TRP rain on a lake (572429, CC0, steady 255-345 s), C Garuda1982 small forest lake (636272,
+  CC BY 4.0), D Mjeno rain on a pond (399281, CC0, 38 s), E klangfabrik rain into a puddle (157161, CC0, many drops).
+  Ruled out: RyanKingArt's lake (713355, mostly low rumble), AppleCorey's skylight (689084, a large room's reverb, which
+  the mod adds itself), TRP's 2011 skylight (577305, dull), xkeril's window (669486, unsteady), JKata's lake shore
+  (626171, quiet and hissy), bigfriendlyjiant's lake (182684, unsteady, thumps), and those with thunder, traffic, birds or
+  frogs in their descriptions.
+- Chosen: glass A (TRP, recipe `rain_glass`, high-passed at 200 Hz for the drumming under the skylight) and water A
+  (YleArkisto, recipe `rain_water`, CC BY 4.0: credited in `CREDITS.md` and the event's `ds_credits`), each four 2 s
+  swells (`weather.rain.glass`, `weather.rain.water`), played as metal's and leaves' are. Water's spike limit is 1 dB
+  looser than leaves' (9.5 dB), as its plinks stand further out of the rain; true peaks within 2.3 dB in each set.
