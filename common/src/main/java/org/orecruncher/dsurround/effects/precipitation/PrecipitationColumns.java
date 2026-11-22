@@ -19,9 +19,12 @@ import java.util.Arrays;
  * into another column looks up only the columns that came into the area. A few rows are looked at again each
  * tick, every row once in {@link #REFRESH_TICKS} ticks, to see blocks placed or broken, light changing and the
  * camera's height (which what falls is taken at), spreading the work rather than doing it all at once; and all of
- * them when {@link #invalidate} says what was found is out of date. The shares of the area that rain, snow and dust
- * fall in, and the dust's color across it, are kept as running totals: a column's part is taken out when it is
- * looked up again or leaves, and the new one's added.
+ * them when {@link #invalidate} says what was found is out of date. What falls in a column (from its biome and
+ * temperature, which no block changes) is asked again only when the height it is taken at has changed, or on every
+ * {@link #WEATHER_LOOKS}th look, for the season turning: a rain area's columns were about 4,000 biome and as many
+ * temperature lookups a second, a third of the precipitation handler's time, in a recording (2026-11-22). The shares
+ * of the area that rain, snow and dust fall in, and the dust's color across it, are kept as running totals: a column's
+ * part is taken out when it is looked up again or leaves, and the new one's added.
  * <p>
  * The drops keep to a cylinder around the camera, so the area is the disc of columns they can reach, not the square
  * around it: about 15% fewer lookups (a little short of the disc's own share of the square, as the camera can be
@@ -31,6 +34,11 @@ import java.util.Arrays;
 final class PrecipitationColumns {
 
     static final int REFRESH_TICKS = 10;
+    /**
+     * A column's looks, at the most, between asking the season provider what falls in it: every 5 seconds standing
+     * still, which no season turns faster than
+     */
+    static final int WEATHER_LOOKS = 10;
 
     private final int radius;
     private final int size;
@@ -46,6 +54,9 @@ final class PrecipitationColumns {
     private final int[] dustColor;
     private final float[] snowShare;
     private final PrecipitationKind[] kind;
+    // The height what falls was asked at, and the looks left before it is asked again
+    private final int[] weatherY;
+    private final byte[] weatherLooksLeft;
     private int originX;
     private int originZ;
     private int regionalDustColor;
@@ -70,6 +81,8 @@ final class PrecipitationColumns {
         this.dustColor = new int[cells];
         this.snowShare = new float[cells];
         this.kind = new PrecipitationKind[cells];
+        this.weatherY = new int[cells];
+        this.weatherLooksLeft = new byte[cells];
         this.rowReach = new int[this.size];
         int count = 0;
         for (int dz = 0; dz < this.size; dz++) {
@@ -192,13 +205,22 @@ final class PrecipitationColumns {
             this.count(slot, -1);
         int g = source.groundHeight(x, z);
         int y = Math.max(g, cameraY);
-        var what = source.precipitation(x, y, z);
+        // What falls is kept while the column, the height it is taken at and the looks left allow (see WEATHER_LOOKS)
+        PrecipitationKind what;
+        if (this.slotX[slot] == x && this.slotZ[slot] == z && this.weatherY[slot] == y && this.weatherLooksLeft[slot] > 0) {
+            what = this.kind[slot];
+            this.weatherLooksLeft[slot]--;
+        } else {
+            what = source.precipitation(x, y, z);
+            this.kind[slot] = what;
+            this.snowShare[slot] = what == PrecipitationKind.RAIN ? source.snowShare(x, y, z) : 0F;
+            this.weatherY[slot] = y;
+            this.weatherLooksLeft[slot] = WEATHER_LOOKS - 1;
+        }
         this.slotX[slot] = x;
         this.slotZ[slot] = z;
         this.ground[slot] = g;
-        this.kind[slot] = what;
         this.light[slot] = source.light(x, y, z);
-        this.snowShare[slot] = what == PrecipitationKind.RAIN ? source.snowShare(x, y, z) : 0F;
         // From the top block of the column, if dust is blown from it
         this.dustColor[slot] = what == PrecipitationKind.DUST ? source.dustColor(x, g - 1, z) : IColumnSource.NOT_A_DUST_SOURCE;
         this.count(slot, 1);

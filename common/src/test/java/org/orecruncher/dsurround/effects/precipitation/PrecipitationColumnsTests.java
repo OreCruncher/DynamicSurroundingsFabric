@@ -104,6 +104,7 @@ public class PrecipitationColumnsTests {
         int ground = 64;
         int rainBelowX = Integer.MAX_VALUE;
         int heightReads;
+        int weatherReads;
 
         @Override
         public int groundHeight(int x, int z) {
@@ -113,6 +114,7 @@ public class PrecipitationColumnsTests {
 
         @Override
         public PrecipitationKind precipitation(int x, int y, int z) {
+            this.weatherReads++;
             return x < this.rainBelowX ? PrecipitationKind.RAIN : PrecipitationKind.NONE;
         }
 
@@ -159,6 +161,69 @@ public class PrecipitationColumnsTests {
                 assertEquals(66, columns.ground(index), "column " + x + ", " + z);
             }
         assertEquals(columns.columnCount(), inArea);
+    }
+
+    @Test
+    void whatFallsIsAskedAgainOnlyEveryFewLooks() {
+        var source = new Changing();
+        var columns = new PrecipitationColumns(RADIUS);
+        columns.refresh(source, 0, 70, 0);
+        int count = columns.columnCount();
+        assertEquals(count, source.weatherReads, "every column, the first time");
+
+        // Standing still, a few rows are looked at again each tick, their heights and light read each time, and what
+        // falls asked again on a column's WEATHER_LOOKS-th look. Ticks enough for every row's next WEATHER_LOOKS - 1
+        // looks, the rows taken in turn
+        int size = 2 * RADIUS + 1;
+        int rows = PrecipitationColumns.rowsPerTick(size);
+        for (int t = 0; t < (PrecipitationColumns.WEATHER_LOOKS - 1) * size / rows; t++)
+            columns.refresh(source, 0, 70, 0);
+        assertEquals(count, source.weatherReads, "kept for the looks in between");
+        assertEquals(count * PrecipitationColumns.WEATHER_LOOKS, source.heightReads, "the heights read every look");
+        // One more look each: asked again
+        for (int t = 0; t < Math.ceilDiv(size, rows); t++)
+            columns.refresh(source, 0, 70, 0);
+        assertEquals(2 * count, source.weatherReads, "every column asked again");
+    }
+
+    @Test
+    void aChangeInWhatFallsIsSeenWithinTheWeatherLooks() {
+        // A season turning: rain stops east of x = 0, which no block shows
+        var source = new Changing();
+        var columns = new PrecipitationColumns(RADIUS);
+        columns.refresh(source, 0, 70, 0);
+        assertEquals(PrecipitationKind.RAIN, columns.kind(columns.index(5, 0)));
+        source.rainBelowX = 0;
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS * PrecipitationColumns.WEATHER_LOOKS; t++)
+            columns.refresh(source, 0, 70, 0);
+        assertEquals(PrecipitationKind.NONE, columns.kind(columns.index(5, 0)));
+        assertEquals(PrecipitationKind.RAIN, columns.kind(columns.index(-5, 0)));
+        // The share of falling columns agrees with a fresh look
+        var fresh = new PrecipitationColumns(RADIUS);
+        fresh.update(source, 0, 70, 0);
+        assertEquals(fresh.fallingShare(), columns.fallingShare(), 1e-6F);
+    }
+
+    @Test
+    void aNewHeightAsksWhatFallsAgain() {
+        // The camera climbs above the ground: what falls is taken at its height (snow higher up), so each column is
+        // asked again on its next look
+        var source = new Changing();
+        var columns = new PrecipitationColumns(RADIUS);
+        columns.refresh(source, 0, 70, 0);
+        int count = columns.columnCount();
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS; t++)
+            columns.refresh(source, 0, 90, 0);
+        assertEquals(2 * count, source.weatherReads);
+
+        // Below the ground's top, the height is the ground's: the camera's own changes nothing
+        var low = new Changing();
+        low.ground = 100;
+        var under = new PrecipitationColumns(RADIUS);
+        under.refresh(low, 0, 70, 0);
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS; t++)
+            under.refresh(low, 0, 75, 0);
+        assertEquals(count, low.weatherReads);
     }
 
     /**
