@@ -284,7 +284,7 @@ final class PrecipitationRenderer {
                 fade *= dustNearFade(x, y, z);
             if (fade <= 0F)
                 continue;
-            int light = Float.floatToRawIntBits(r[at + PackedDrops.LIGHT]);
+            int light = (int) r[at + PackedDrops.LIGHT];
             float size = r[at + PackedDrops.SIZE];
 
             if (kind == PrecipitationField.DUST) {
@@ -293,7 +293,7 @@ final class PrecipitationRenderer {
                 float spinCos = r[at + PackedDrops.A], spinSin = r[at + PackedDrops.B];
                 float cos = spinCos * dustCos - spinSin * dustSin;
                 float sin = spinSin * dustCos + spinCos * dustSin;
-                int c = Float.floatToRawIntBits(r[at + PackedDrops.C]);
+                int c = (int) r[at + PackedDrops.C];
                 float red = Mth.lerp(DUST_PALENESS, ((c >> 16) & 0xFF) / 255F, 1F);
                 float green = Mth.lerp(DUST_PALENESS, ((c >> 8) & 0xFF) / 255F, 1F);
                 float blue = Mth.lerp(DUST_PALENESS, (c & 0xFF) / 255F, 1F);

@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.lib.threading.RecordingLog;
 import org.orecruncher.dsurround.runtime.weather.Wind;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,8 +36,12 @@ public class DropMeshesTests {
     private static final PrecipitationRenderer.View VIEW = new PrecipitationRenderer.View(new Vec3(0.5, CAMERA_Y, 0.5),
             new Vector3f(-1F, 0F, 0F), new Vector3f(0F, 0.97F, -0.24F), new Vector3f(0F, -0.24F, -0.97F));
 
-    // Rain to the west, snow to the east, on flat ground
-    private record Columns() implements IColumnSource {
+    // Rain to the west, snow to the east, on flat ground, in the light given
+    private record Columns(int lightThere) implements IColumnSource {
+        Columns() {
+            this(0xF000F0);
+        }
+
         @Override
         public int groundHeight(int x, int z) {
             return GROUND;
@@ -49,7 +54,7 @@ public class DropMeshesTests {
 
         @Override
         public int light(int x, int y, int z) {
-            return 0xF000F0;
+            return this.lightThere;
         }
 
         @Override
@@ -60,6 +65,24 @@ public class DropMeshesTests {
         @Override
         public int fallbackDustColor(int x, int y, int z) {
             return NOT_A_DUST_SOURCE;
+        }
+    }
+
+    @Test
+    void theQuadsCarryTheDropsLight() {
+        // Sky light 5, block light 15: packed, as the int's bits in a float, it was a denormal (see PackedDrops.whole);
+        // the CPU's quads read it back from the packed record as the GPU does
+        int light = 0x005000F0;
+        var field = new PrecipitationField(500);
+        var random = Randomizer.create(5);
+        for (int t = 0; t < 20; t++)
+            field.tick(new Columns(light), 0, CAMERA_Y, 0, 1F, 1F, new Wind(), random);
+        var vertices = ByteBuffer.wrap(build(field)).order(ByteOrder.nativeOrder());
+        int stride = 28;
+        assertTrue(vertices.limit() >= stride);
+        for (int at = 0; at + stride <= vertices.limit(); at += stride) {
+            int u = vertices.getShort(at + 24) & 0xFFFF, v = vertices.getShort(at + 26) & 0xFFFF;
+            assertEquals(light, u | (v << 16), "vertex at " + at);
         }
     }
 

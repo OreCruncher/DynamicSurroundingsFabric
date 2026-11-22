@@ -18,6 +18,18 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class PackedDropsTests {
 
+    @Test
+    void lightAndColorsArePackedAsWholeNumbers() {
+        // As the int's bits, sky light below 8 or a color with little red was a denormal float, which a GPU may read
+        // as 0: as whole numbers, nothing but 0 itself is under the smallest normal float
+        for (int value : new int[]{0xF0, 0x000010, 0x102030, 0xF000F0, 0xFFFFFF}) {
+            float packed = PackedDrops.whole(value);
+            assertEquals(value, (int) packed);
+            assertTrue(packed >= Float.MIN_NORMAL, Integer.toHexString(value));
+        }
+        assertEquals(0x123456, (int) PackedDrops.whole(0xFF123456), "only the color, not its alpha");
+    }
+
     private static final double CAMERA_Y = 70.5;
 
     // Rain to the west, snow in the middle, dust to the east
@@ -78,7 +90,7 @@ public class PackedDropsTests {
             assertEquals(Mth.lerp(partialTick, d.prevX[i], d.x[i]), x, 1e-4);
             assertEquals(Mth.lerp(partialTick, d.prevY[i], d.y[i]), y, 1e-4);
             assertEquals(Mth.lerp(partialTick, d.prevZ[i], d.z[i]), z, 1e-4);
-            assertEquals(d.light[i], Float.floatToRawIntBits(r[at + PackedDrops.LIGHT]));
+            assertEquals(d.light[i], (int) r[at + PackedDrops.LIGHT]);
             assertEquals(d.thinning[i], r[at + PackedDrops.THINNING]);
             assertEquals(PrecipitationField.fade(kind, d.age[i], d.lifetime[i], d.covered[i], partialTick),
                     PrecipitationField.fade(kind, r[at + PackedDrops.AGE], r[at + PackedDrops.LIFETIME], r[at + PackedDrops.COVERED], partialTick));
@@ -97,7 +109,7 @@ public class PackedDropsTests {
                 }
                 default -> {
                     assertEquals(PrecipitationField.dustSize(d, i), r[at + PackedDrops.SIZE]);
-                    assertEquals(d.color[i], Float.floatToRawIntBits(r[at + PackedDrops.C]));
+                    assertEquals(d.color[i], (int) r[at + PackedDrops.C]);
                 }
             }
         }

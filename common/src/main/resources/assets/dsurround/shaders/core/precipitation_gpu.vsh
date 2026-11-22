@@ -94,7 +94,8 @@ void main() {
     float fade = drop_fade(kind, t2.x, t2.z, t2.y, partialTick) * clamp((radius - outward) / EDGE_FADE, 0.0, 1.0);
     // Far rain and snow are thinned out; puffs of dust close by are not drawn (PrecipitationRenderer.dustNearFade)
     fade *= kind == KIND_DUST ? clamp((length(p) - DUST_NEAR_HIDDEN) / DUST_NEAR_FADE, 0.0, 1.0) : thinned(t2.w, outward, radius);
-    int light = floatBitsToInt(t1.w);
+    // Light and color are whole numbers in a float (PackedDrops.whole)
+    int light = int(t1.w);
     float size = t3.x;
     vec3 left = Left.xyz;
     vec3 up = Up.xyz;
@@ -115,7 +116,7 @@ void main() {
         if (kind == KIND_DUST) {
             halfSize = DUST_MIN_HALF_SIZE + DUST_HALF_SIZE_RANGE * size;
             // The color of the ground it was blown from, paler
-            int ground = floatBitsToInt(c);
+            int ground = int(c);
             vec3 tint = vec3(float((ground >> 16) & 0xFF), float((ground >> 8) & 0xFF), float(ground & 0xFF)) / 255.0;
             color = vec4(mix(tint, vec3(1.0), DUST_PALENESS), DUST_ALPHA * fade);
         } else {

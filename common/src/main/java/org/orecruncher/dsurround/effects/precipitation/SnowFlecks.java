@@ -192,7 +192,7 @@ public final class SnowFlecks implements PackedMarks.Source {
         r[at + 7] = this.variant[i];
         r[at + 8] = this.turnCos[i];
         r[at + 9] = this.turnSin[i];
-        r[at + 10] = Float.intBitsToFloat(this.light[i]);
+        r[at + 10] = PackedDrops.whole(this.light[i]);
         r[at + 11] = 0F;
     }
 }

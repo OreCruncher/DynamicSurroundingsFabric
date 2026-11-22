@@ -226,6 +226,21 @@ public class PrecipitationColumnsTests {
         assertEquals(count, low.weatherReads);
     }
 
+    @Test
+    void aNewGroundAsksWhatFallsAgain() {
+        // A column looked up before its chunk arrived has the lowest ground, and the placeholder biome's weather: the
+        // chunk arriving changes the ground, though the camera above it keeps the height what falls is taken at
+        var source = new Changing();
+        source.ground = -64;
+        var columns = new PrecipitationColumns(RADIUS);
+        columns.refresh(source, 0, 150, 0);
+        int count = columns.columnCount();
+        source.ground = 64;
+        for (int t = 0; t < PrecipitationColumns.REFRESH_TICKS; t++)
+            columns.refresh(source, 0, 150, 0);
+        assertEquals(2 * count, source.weatherReads);
+    }
+
     /**
      * The columns of the disc around a camera column, as x and z packed in a long
      */

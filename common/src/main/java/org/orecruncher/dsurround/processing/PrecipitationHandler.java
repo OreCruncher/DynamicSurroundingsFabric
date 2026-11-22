@@ -54,6 +54,7 @@ import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.threading.Worker;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
+import org.orecruncher.dsurround.runtime.weather.DustStorms;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.RainSurfaceTally;
 import org.orecruncher.dsurround.runtime.weather.WindService;
@@ -112,6 +113,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
     private SnowFlecks snowFlecks = new SnowFlecks(MAX_SNOW_FLECKS);
     private WindowStreaks windowStreaks = new WindowStreaks(MAX_WINDOW_STREAKS);
     private final AfterRainDrips drips = new AfterRainDrips();
+    // Whether dust storms were on at the last tick, as the columns keep what falls in them for seconds
+    private boolean dustStorms;
     // The drops drawn this frame, for the render timer's count
     private int dropsDrawn;
     private final Snowflakes snowflakes;
@@ -186,6 +189,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // left is packed again for the GPU by the next build, which can't start before this tick is done
         this.meshes.discard();
         this.sources().marksChanged();
+        if (!this.config.weatherOptions.precipitation.gpuDrops || !gpuUsable())
+            this.releaseGpu();
         var active = this.isActive();
         if (!active) {
             this.field.clear();
@@ -223,6 +228,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
         // The drops' last tick, made while the frames since were drawn: its drops are drawn from now on, and its
         // landings splash. The drops run a tick behind the world, which nobody sees.
         this.field.finish(this.columns);
+        boolean dustStorms = DustStorms.enabled(this.config.weatherOptions);
+        if (dustStorms != this.dustStorms) {
+            this.dustStorms = dustStorms;
+            this.field.weatherChanged();
+        }
         var random = Randomizer.forThisThread();
         this.landings.splash(level, this.field, this.dampSpots, this.snowFlecks, this.windowStreaks, particles, random);
         if (particles != ParticleStatus.MINIMAL)
@@ -250,6 +260,19 @@ public class PrecipitationHandler extends AbstractClientHandler {
         this.windowStreaks.clear();
         this.drips.clear();
         this.columns.setLevel(null);
+        this.releaseGpu();
+    }
+
+    /**
+     * Frees what drawing on the GPU holds (its texel buffers, uniform blocks and native staging, a few MB at the widest
+     * range), when it isn't used: made again at its next draw
+     */
+    private void releaseGpu() {
+        this.gpuDrops.close();
+        this.gpuDust.close();
+        this.gpuFlecks.close();
+        this.gpuStreaks.close();
+        this.gpuSpots.close();
     }
 
     /**
@@ -356,12 +379,16 @@ public class PrecipitationHandler extends AbstractClientHandler {
             this.meshes.await();
             PrecipitationShaders.WAIT_TIMER.end();
 
-            var spots = PrecipitationShaders.DAMP_SPOTS;
-            if (this.dampSpots.count() > 0 && spots.isUsable()) {
-                PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
-                PrecipitationShaders.DAMP_SPOTS_TIMER.count(this.dampSpots.count());
-                spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick), () -> {});
-                PrecipitationShaders.DAMP_SPOTS_TIMER.end();
+            if (this.dampSpots.count() > 0) {
+                // Drawn by the pipeline that builds them: the one on the GPU, or the CPU's quads
+                var style = this.style();
+                var spots = style.gpuDrops() ? PrecipitationShaders.GPU_SPOTS : PrecipitationShaders.DAMP_SPOTS;
+                if (spots.isUsable()) {
+                    PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
+                    PrecipitationShaders.DAMP_SPOTS_TIMER.count(this.dampSpots.count());
+                    spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick, style), () -> {});
+                    PrecipitationShaders.DAMP_SPOTS_TIMER.end();
+                }
             }
 
             // If the drops fail to draw, vanilla's weather is drawn in their place, this frame and after
@@ -465,13 +492,11 @@ public class PrecipitationHandler extends AbstractClientHandler {
                 }));
     }
 
-    private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick) {
+    private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, DropMeshes.Style style) {
         var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
         Consumer<RenderPass> bind = pass -> pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
-        var style = this.style();
         if (style.gpuDrops()) {
-            var gpu = PrecipitationShaders.GPU_SPOTS;
-            gpu.run(() -> this.gpuSpots.draw(this.dampSpots, gpu.pipeline(), target, camera, partialTick, style, bind), () -> {});
+            this.gpuSpots.draw(this.dampSpots, pipeline, target, camera, partialTick, style, bind);
             return;
         }
         this.meshes.draw(DropMeshes.Kind.SPOTS, this.sources(), camera, partialTick, style,
@@ -497,7 +522,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             text += String.format(Locale.ROOT, ", built ahead %.0f%%", ahead * 100F);
         // Where the rain, snow and dust's quads are made (see GpuDrops)
         if (this.config.weatherOptions.precipitation.gpuDrops && PrecipitationShaders.isAvailable())
-            text += PrecipitationShaders.GPU_DROPS.isUsable() ? ", drops on the GPU" : ", GPU drops failed, built on the CPU";
+            text += gpuUsable() ? ", drops on the GPU" : ", GPU drops failed, built on the CPU";
         if (this.config.weatherOptions.precipitation.enableAfterRainDrips && this.drips.strength() > 0F)
             text += String.format(Locale.ROOT, ", drips %.2f", this.drips.strength());
         event.add(CollectDiagnosticsEvent.Section.Systems, text);

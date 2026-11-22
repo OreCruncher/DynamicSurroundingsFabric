@@ -169,12 +169,15 @@ public record ConfigPreset(String id, @Nullable String name, @Nullable String de
                              Map<String, JsonElement> kept) {
         var placed = new ArrayList<String>();
         var refused = new ArrayList<String>();
+        var unpaired = new ArrayList<String>();
         for (var move : moves) {
             if (this.values.containsKey(move.path()) || kept.containsKey(move.path()))
                 continue;
             var converted = MovedProperties.convert(value, move.values());
-            if (converted == null)
+            if (converted == null) {
+                unpaired.add(move.path());
                 continue;
+            }
             if (move.values().length > 0)
                 converted = typed(converted);
             var problem = problem(config, allowed, move.path(), converted);
@@ -190,6 +193,8 @@ public record ConfigPreset(String id, @Nullable String name, @Nullable String de
             problems.accept(prefix + "has moved to " + String.join(" and ", placed) + "; the preset should name the new place");
         else if (!refused.isEmpty())
             refused.forEach(problem -> problems.accept(prefix + "moved to " + problem));
+        else if (!unpaired.isEmpty())
+            problems.accept(prefix + "moved to " + String.join(" and ", unpaired) + ", which " + value + " has no value at");
     }
 
     /**

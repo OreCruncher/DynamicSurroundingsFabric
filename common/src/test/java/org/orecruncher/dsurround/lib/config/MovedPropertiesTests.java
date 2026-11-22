@@ -14,7 +14,6 @@ import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ClockStyle;
 import org.orecruncher.dsurround.config.CompassStyle;
 import org.orecruncher.dsurround.config.GroundFogQuality;
-import org.orecruncher.dsurround.config.SkyStyle;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -311,13 +310,11 @@ public class MovedPropertiesTests {
         // 5.3.0 grouped the weather options, and moved the ground fog to the fog options
         var config = loadModConfig("""
                 {"weatherOptions": {"minStormIntensity": 30, "rainTint": 50, "enableDynamicClouds": false,
-                 "rainbowStyle": "REALISTIC", "haloChance": 5, "enableGroundFog": true, "groundFogQuality": "FAST"}}
+                 "enableGroundFog": true, "groundFogQuality": "FAST"}}
                 """);
         assertEquals(30, config.weatherOptions.storms.minStormIntensity);
         assertEquals(50, config.weatherOptions.precipitation.rainTint);
         assertFalse(config.weatherOptions.sky.enableDynamicClouds);
-        assertEquals(SkyStyle.REALISTIC, config.weatherOptions.sky.skyStyle);
-        assertEquals(5, config.weatherOptions.sky.haloChance);
         assertTrue(config.fogOptions.enableGroundFog);
         assertEquals(GroundFogQuality.FAST, config.fogOptions.groundFogQuality);
         var weather = written("dsurround.json").getAsJsonObject("weatherOptions");

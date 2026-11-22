@@ -660,31 +660,26 @@ public class Configuration extends ConfigurationData {
         public boolean enableDynamicClouds = true;
 
         @Property
-        @MovedFrom("weatherOptions.rainbowStyle")
         @Comment("How rainbows, moonbows and halos look: BLOCKY, flat stripes stepping in blocks to suit the game, or REALISTIC, their colors worked out from how light passes through raindrops and ice")
         public SkyStyle skyStyle = SkyStyle.BLOCKY;
 
         @Property
         @Experimental
-        @MovedFrom("weatherOptions.enableRainbows")
         @Comment("As rain eases off with the sun low, a rainbow can show in the sky opposite the sun; after a strong storm, a fainter second bow outside it. By a full moon, a pale moonbow")
         public boolean enableRainbows = true;
 
         @Property
         @Slider(min = 0, max = 100)
-        @MovedFrom("weatherOptions.rainbowChance")
         @Comment("How likely rain clearing with the sun low is to leave a rainbow, as a percent")
         public int rainbowChance = 50;
 
         @Property
         @Experimental
-        @MovedFrom("weatherOptions.enableHalos")
         @Comment("In cold biomes, under a clear sky, ice in the air can ring the sun with a halo, with a bright sun dog either side of it")
         public boolean enableHalos = true;
 
         @Property
         @Slider(min = 0, max = 100)
-        @MovedFrom("weatherOptions.haloChance")
         @Comment("How likely a quarter of a day of cold fair weather is to have a halo, as a percent")
         public int haloChance = 25;
     }

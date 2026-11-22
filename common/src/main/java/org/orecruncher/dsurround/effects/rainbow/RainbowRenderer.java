@@ -120,12 +120,13 @@ public final class RainbowRenderer {
         if (strength <= 0F || !isAvailable())
             return;
         prepare();
-        var colors = spectrum.getNow(null);
-        if (colors == null)
+        var colors = spectrum;
+        if (!colors.isDone())
             return;
         RENDER_TIMER.begin();
         try {
-            SHADER.run(() -> draw(colors, celestialAngle, strength, secondary, viewMatrix, time, seed, blocky, moonbow), () -> {});
+            // join rethrows a spectrum that failed to be made: the fail-safe logs it once and turns the rainbow off
+            SHADER.run(() -> draw(colors.join(), celestialAngle, strength, secondary, viewMatrix, time, seed, blocky, moonbow), () -> {});
         } finally {
             RENDER_TIMER.end();
         }

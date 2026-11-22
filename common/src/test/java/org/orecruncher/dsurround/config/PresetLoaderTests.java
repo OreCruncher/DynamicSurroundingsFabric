@@ -291,21 +291,31 @@ public class PresetLoaderTests {
         var problems = new ArrayList<String>();
         var presets = PresetLoader.load(new Configuration(), List.of(file("apack", """
                 [{"id": "calm", "values": {"weatherOptions.enableDynamicClouds": false,
-                  "weatherOptions.stormVariation": 10, "weatherOptions.rainbowStyle": "REALISTIC",
+                  "weatherOptions.stormVariation": 10,
                   "weatherOptions.groundFogQuality": "NONE"}}]""")), problems::add);
 
         var preset = presets.getFirst();
         assertEquals(List.of("weatherOptions.sky.enableDynamicClouds", "weatherOptions.storms.stormVariation",
-                "weatherOptions.sky.skyStyle", "fogOptions.enableGroundFog"), List.copyOf(preset.values().keySet()));
+                "fogOptions.enableGroundFog"), List.copyOf(preset.values().keySet()));
         var config = new Configuration();
         assertEquals(List.of(), preset.apply(config));
         assertFalse(config.weatherOptions.sky.enableDynamicClouds);
         assertEquals(10, config.weatherOptions.storms.stormVariation);
-        assertEquals(SkyStyle.REALISTIC, config.weatherOptions.sky.skyStyle);
         assertFalse(config.fogOptions.enableGroundFog);
         // Each move is logged, for the pack's author
-        assertEquals(4, problems.size(), problems.toString());
+        assertEquals(3, problems.size(), problems.toString());
         assertTrue(problems.stream().allMatch(p -> p.contains("has moved to")), problems.toString());
+    }
+
+    @Test
+    void aMovedValueWithNoPairIsReported() {
+        var problems = new ArrayList<String>();
+        var presets = PresetLoader.load(new Configuration(), List.of(file("apack", """
+                [{"id": "foggy", "values": {"weatherOptions.enableGroundFog": "sometimes"}}]""")), problems::add);
+
+        assertEquals(List.of(), List.copyOf(presets.getFirst().values().keySet()));
+        assertEquals(1, problems.size(), problems.toString());
+        assertTrue(problems.getFirst().contains("has no value at"), problems.toString());
     }
 
     @Test

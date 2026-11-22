@@ -269,6 +269,14 @@ public final class PrecipitationField {
     }
 
     /**
+     * Says what falls in the columns may have changed for a reason they can't see (dust storms turned on or off), so
+     * the next start looks them all up again. Only between {@link #finish} and {@link #start}, with no step under way.
+     */
+    public void weatherChanged() {
+        this.columns.invalidate();
+    }
+
+    /**
      * Says a tick went by without {@link #tick}, so the columns looked up before may be out of date by the next. A
      * step under way is dropped: with nothing falling, there was nothing for it to move.
      */

@@ -20,7 +20,8 @@ import java.util.Arrays;
  * tick, every row once in {@link #REFRESH_TICKS} ticks, to see blocks placed or broken, light changing and the
  * camera's height (which what falls is taken at), spreading the work rather than doing it all at once; and all of
  * them when {@link #invalidate} says what was found is out of date. What falls in a column (from its biome and
- * temperature, which no block changes) is asked again only when the height it is taken at has changed, or on every
+ * temperature, which no block changes) is asked again only when the height it is taken at or the ground's has changed
+ * (a column looked up before its chunk arrived has the lowest ground, so its chunk arriving asks again), or on every
  * {@link #WEATHER_LOOKS}th look, for the season turning: a rain area's columns were about 4,000 biome and as many
  * temperature lookups a second, a third of the precipitation handler's time, in a recording (2026-11-22). The shares
  * of the area that rain, snow and dust fall in, and the dust's color across it, are kept as running totals: a column's
@@ -205,9 +206,10 @@ final class PrecipitationColumns {
             this.count(slot, -1);
         int g = source.groundHeight(x, z);
         int y = Math.max(g, cameraY);
-        // What falls is kept while the column, the height it is taken at and the looks left allow (see WEATHER_LOOKS)
+        // What falls is kept while the column, the heights and the looks left allow (see WEATHER_LOOKS)
         PrecipitationKind what;
-        if (this.slotX[slot] == x && this.slotZ[slot] == z && this.weatherY[slot] == y && this.weatherLooksLeft[slot] > 0) {
+        if (this.slotX[slot] == x && this.slotZ[slot] == z && this.weatherY[slot] == y && this.ground[slot] == g
+                && this.weatherLooksLeft[slot] > 0) {
             what = this.kind[slot];
             this.weatherLooksLeft[slot]--;
         } else {

@@ -103,7 +103,8 @@ void main() {
     shown = darkness;
 #else
     float face = t0.w;
-    light = floatBitsToInt(t2.z);
+    // A whole number in a float (PackedDrops.whole)
+    light = int(t2.z);
     if (!streaks) {
         // x y z face | age lifetime size variant | turnCos turnSin light - (SnowFlecks.remaining, sizeFor)
         vec3 p = t0.xyz + Offset.xyz;

@@ -220,7 +220,7 @@ public final class WindowStreaks implements PackedMarks.Source {
         r[at + 7] = (float) (this.y[i] - anchorY);
         r[at + 8] = (float) (this.prevTrailTop[i] - anchorY);
         r[at + 9] = (float) (this.trailTop[i] - anchorY);
-        r[at + 10] = Float.intBitsToFloat(this.light[i]);
+        r[at + 10] = PackedDrops.whole(this.light[i]);
         r[at + 11] = 0F;
     }
 }

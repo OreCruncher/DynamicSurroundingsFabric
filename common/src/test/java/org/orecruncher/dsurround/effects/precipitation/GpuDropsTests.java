@@ -79,7 +79,7 @@ public class GpuDropsTests {
         assertEquals(16, PackedDrops.C);
         var text = shader();
         assertTrue(text.contains("float kind = t1.z;"));
-        assertTrue(text.contains("int light = floatBitsToInt(t1.w);"));
+        assertTrue(text.contains("int light = int(t1.w);"));
         assertTrue(text.contains("float size = t3.x;"));
     }
 }

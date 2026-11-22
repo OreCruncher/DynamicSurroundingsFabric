@@ -66,7 +66,7 @@ public class GpuMarksTests {
         assertEquals(flecks.variant[0], r[7]);
         assertEquals(flecks.turnCos[0], r[8]);
         assertEquals(flecks.turnSin[0], r[9]);
-        assertEquals(0x00F000A0, Float.floatToRawIntBits(r[10]), "the light's bits come back whole");
+        assertEquals(0x00F000A0, (int) r[10], "the light comes back whole");
     }
 
     @Test

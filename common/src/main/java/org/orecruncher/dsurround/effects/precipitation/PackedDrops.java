@@ -28,8 +28,7 @@ final class PackedDrops {
     static final int PREV_X = 0, PREV_Y = 1, PREV_Z = 2;
     static final int MOVE_X = 3, MOVE_Y = 4, MOVE_Z = 5;
     static final int KIND = 6;
-    // Packed light, as the float with its bits: its top byte is 0, as a color's is, so the bits are never a NaN's,
-    // which a float might not keep
+    // Packed light, as a whole number (see whole)
     static final int LIGHT = 7;
     static final int AGE = 8, COVERED = 9, LIFETIME = 10;
     static final int THINNING = 11;
@@ -37,13 +36,22 @@ final class PackedDrops {
     static final int SIZE = 12;
     // Which look it takes, 0 to 1, times the number of looks (see PrecipitationField.variant)
     static final int PICK = 13;
-    // Rain: the way it falls, a unit vector. Snow and dust: the cos and sin of its turn; dust: its color, as the float
-    // with its bits.
+    // Rain: the way it falls, a unit vector. Snow and dust: the cos and sin of its turn; dust: its color, as a whole
+    // number (see whole).
     static final int A = 14, B = 15, C = 16;
     // 17 values, padded to 20: five texels of four floats each, as the GPU reads them (see GpuDrops)
     static final int STRIDE = 20;
     // Each pack's number, from one count across both sets of drops, so the GPU's copy is replaced when it changes
     private static final AtomicLong PACKS = new AtomicLong();
+
+    /**
+     * A packed light or an RGB color as a float holding it as a whole number, which a float keeps exactly up to 2^24
+     * (packed light reaches 0xF000F0). The shaders take it back with int(). Not the int's bits as a float: light below
+     * sky 8, or a color with little red, made a denormal of them, which a GPU may read as 0.
+     */
+    static float whole(int value) {
+        return (float) (value & 0xFFFFFF);
+    }
 
     float[] data = new float[0];
     // Rain and snow are records [0, solid), dust [solid, solid + dust)
@@ -98,7 +106,7 @@ final class PackedDrops {
         r[at + MOVE_Y] = d.y[i] - d.prevY[i];
         r[at + MOVE_Z] = (float) (d.z[i] - d.prevZ[i]);
         r[at + KIND] = kind;
-        r[at + LIGHT] = Float.intBitsToFloat(d.light[i]);
+        r[at + LIGHT] = whole(d.light[i]);
         r[at + AGE] = d.age[i];
         r[at + COVERED] = d.covered[i];
         r[at + LIFETIME] = d.lifetime[i];
@@ -123,7 +131,7 @@ final class PackedDrops {
                 r[at + SIZE] = PrecipitationField.dustSize(d, i);
                 r[at + A] = d.spinCos[i];
                 r[at + B] = d.spinSin[i];
-                r[at + C] = Float.intBitsToFloat(d.color[i]);
+                r[at + C] = whole(d.color[i]);
             }
         }
         return at + STRIDE;
