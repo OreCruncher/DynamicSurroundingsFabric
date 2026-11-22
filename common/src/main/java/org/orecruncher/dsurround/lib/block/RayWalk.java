@@ -29,6 +29,23 @@ public final class RayWalk {
         boolean holdsOnlyAir(int sectionX, int sectionY, int sectionZ);
     }
 
+    /**
+     * What one thread's rays did, added up until read: rays walked, and blocks tested (state, fluid and shape asked
+     * for). Not thread safe: one per thread, as the view it is counted for.
+     */
+    public static final class Counts {
+        private long rays;
+        private long blocks;
+
+        public long rays() {
+            return this.rays;
+        }
+
+        public long blocks() {
+            return this.blocks;
+        }
+    }
+
     private RayWalk() {
     }
 
@@ -36,6 +53,16 @@ public final class RayWalk {
      * The first block or fluid the ray hits, as {@code blocks.clip(context)} finds it; a miss at its end if none
      */
     public static BlockHitResult clip(BlockGetter blocks, ClipContext context, SectionTest air) {
+        return clip(blocks, context, air, null);
+    }
+
+    /**
+     * As {@link #clip(BlockGetter, ClipContext, SectionTest)}, adding the ray and the blocks it tested to
+     * {@code counts}
+     */
+    public static BlockHitResult clip(BlockGetter blocks, ClipContext context, SectionTest air, @Nullable Counts counts) {
+        if (counts != null)
+            counts.rays++;
         var from = context.getFrom();
         var to = context.getTo();
         if (from.equals(to))
@@ -61,7 +88,7 @@ public final class RayWalk {
         boolean empty = air.holdsOnlyAir(sectionX, sectionY, sectionZ);
 
         if (!empty) {
-            var hit = test(blocks, context, pos);
+            var hit = test(blocks, context, pos, counts);
             if (hit != null)
                 return hit;
         }
@@ -110,7 +137,7 @@ public final class RayWalk {
             if (empty)
                 continue;
 
-            var hit = test(blocks, context, pos.set(x, y, z));
+            var hit = test(blocks, context, pos.set(x, y, z), counts);
             if (hit != null)
                 return hit;
         }
@@ -120,7 +147,9 @@ public final class RayWalk {
     /**
      * Whether the ray hits the block at {@code pos}, or its fluid, and where: the nearer of the two, as vanilla's
      */
-    private static @Nullable BlockHitResult test(BlockGetter blocks, ClipContext context, BlockPos pos) {
+    private static @Nullable BlockHitResult test(BlockGetter blocks, ClipContext context, BlockPos pos, @Nullable Counts counts) {
+        if (counts != null)
+            counts.blocks++;
         var state = blocks.getBlockState(pos);
         var fluid = blocks.getFluidState(pos);
         var from = context.getFrom();

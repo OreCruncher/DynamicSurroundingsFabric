@@ -23,6 +23,7 @@ import org.orecruncher.dsurround.lib.math.MathStuff;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastContext;
 import org.orecruncher.dsurround.lib.math.ReusableRaycastIterator;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.profiling.BlockQuerySamples;
 import org.orecruncher.dsurround.profiling.SoundSamples;
 
 import java.util.Arrays;
@@ -211,7 +212,11 @@ public final class SourceAcoustics {
             } else {
                 TRACED.increment();
                 final boolean timed = SoundSamples.isRecording();
-                final long began = timed ? System.nanoTime() : 0;
+                final boolean counted = BlockQuerySamples.isRecording();
+                final var rayCounts = traces.blocks.rayCounts();
+                final long raysBefore = rayCounts.rays();
+                final long blocksBefore = rayCounts.blocks();
+                final long began = timed || counted ? System.nanoTime() : 0;
                 traces.attach(ctx.world);
                 try {
                     // Need to offset sound toward player if it is in a solid block or fluid
@@ -221,8 +226,13 @@ public final class SourceAcoustics {
                 } finally {
                     traces.detach();
                 }
-                if (timed)
-                    SoundSamples.traced(System.nanoTime() - began);
+                if (timed || counted) {
+                    final long elapsed = System.nanoTime() - began;
+                    if (timed)
+                        SoundSamples.traced(elapsed);
+                    if (counted)
+                        BlockQuerySamples.traced(elapsed, rayCounts.rays() - raysBefore, rayCounts.blocks() - blocksBefore);
+                }
                 traces.shared.store(ctx.world, soundBlock, eyeBlock, generation, occlusion, this.traced);
             }
             this.cache.update(ctx.world, soundBlock, eyeBlock, generation);

@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.lib.collections.ObjectArray;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.scanner.SphereScanner;
 import org.orecruncher.dsurround.lib.scanner.ScanContext;
+import org.orecruncher.dsurround.profiling.BlockQuerySamples;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -115,6 +116,12 @@ public class SystemsScanner extends SphereScanner {
                 systemConsumer.accept(system);
             else if(clearSystems)
                 system.clear();
+    }
+
+    @Override
+    protected void onTickWorked(long nanos, int blocksRead) {
+        if (BlockQuerySamples.isRecording())
+            BlockQuerySamples.scanned(nanos, blocksRead);
     }
 
     // Called for every block scanned, so this is a plain loop over the per-tick list. Unscans aren't requested

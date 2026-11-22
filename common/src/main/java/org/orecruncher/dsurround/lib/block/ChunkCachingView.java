@@ -41,6 +41,7 @@ public final class ChunkCachingView implements BlockGetter {
     private int chunkX;
     private int chunkZ;
     private final RayWalk.SectionTest air = this::holdsOnlyAir;
+    private final RayWalk.Counts counts = new RayWalk.Counts();
 
     /**
      * Reads from the level until {@link #detach()}
@@ -79,7 +80,14 @@ public final class ChunkCachingView implements BlockGetter {
 
     @Override
     public @NotNull BlockHitResult clip(@NotNull ClipContext context) {
-        return RayWalk.clip(this, context, this.air);
+        return RayWalk.clip(this, context, this.air, this.counts);
+    }
+
+    /**
+     * What this view's rays have done since it was made: read before and after a batch for the batch's
+     */
+    public RayWalk.Counts rayCounts() {
+        return this.counts;
     }
 
     /**

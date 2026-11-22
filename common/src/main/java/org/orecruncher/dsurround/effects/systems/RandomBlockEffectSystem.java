@@ -18,6 +18,7 @@ import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.IRandomizer;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.profiling.BlockQuerySamples;
 import org.orecruncher.dsurround.profiling.RandomBlockSamples;
 import org.orecruncher.dsurround.sound.IAudioPlayer;
 
@@ -92,6 +93,9 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
             Arrays.fill(this.counts, 0);
         }
 
+        final boolean timed = BlockQuerySamples.isRecording();
+        final long began = timed ? System.nanoTime() : 0;
+        int sampled = 2 * RandomBlockSampler.PAIRS;
         final var pos = this.samplePos;
         for (int i = 0; i < RandomBlockSampler.PAIRS; i++) {
             RandomBlockSampler.near(this.random, this.center, pos);
@@ -104,9 +108,14 @@ public class RandomBlockEffectSystem extends AbstractEffectSystem {
         if (this.particles != ParticleStatus.MINIMAL) {
             int draws = RandomBlockSampler.tailDraws(this.random, this.effectRange);
             for (int i = 0; i < draws; i++)
-                if (RandomBlockSampler.tail(this.random, this.center, this.effectRange, pos))
+                if (RandomBlockSampler.tail(this.random, this.center, this.effectRange, pos)) {
                     this.sample(pos, false, RandomBlockSamples.TAIL);
+                    sampled++;
+                }
         }
+
+        if (timed)
+            BlockQuerySamples.sampled(System.nanoTime() - began, sampled);
 
         if (this.counts != null)
             RandomBlockSamples.ticked(this.effectRange, this.counts);

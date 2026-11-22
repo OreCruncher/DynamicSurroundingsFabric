@@ -48,7 +48,7 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 * `/dsdump blocks` gives each block's sound type and what rain sounds like on it, with what decided it: a tag, its sound type, or neither
 * `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items
 * `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
-* `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state, and name the installed mods by id and version, with the loader's version
+* `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state, name the installed mods by id and version, with the loader's version, and give what the mod's block and biome queries cost a block or lookup, for telling which kind of query a modpack slows down
 
 **Fixes**
 * Books in the hotbar play the book sound, and bookshelves no longer do

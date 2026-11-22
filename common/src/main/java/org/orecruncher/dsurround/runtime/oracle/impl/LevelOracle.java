@@ -19,6 +19,7 @@ import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.LevelCompat;
 import org.orecruncher.dsurround.lib.events.HandlerPriority;
+import org.orecruncher.dsurround.profiling.BlockQuerySamples;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
@@ -55,19 +56,48 @@ public final class LevelOracle implements ILevelOracle {
         return this.dimensionOracle.seaLevel();
     }
 
+    // Each lookup timed while /dsprofile records (BlockQuerySamples): seasons mods hook these. Precipitation and
+    // temperature look the biome up untimed, as part of their own time
     @Override
     public Holder<Biome> biomeHolder(BlockPos blockPos) {
-        return this.level.get().getBiome(blockPos);
+        if (!BlockQuerySamples.isRecording())
+            return this.holder(blockPos);
+        final long began = System.nanoTime();
+        var holder = this.holder(blockPos);
+        BlockQuerySamples.biome(System.nanoTime() - began);
+        return holder;
     }
 
     @Override
     public Biome.Precipitation precipitationAt(BlockPos pos) {
-        return this.biome(pos).getPrecipitationAt(pos, this.seaLevel());
+        if (!BlockQuerySamples.isRecording())
+            return this.precipitation(pos);
+        final long began = System.nanoTime();
+        var precipitation = this.precipitation(pos);
+        BlockQuerySamples.precipitation(System.nanoTime() - began);
+        return precipitation;
     }
 
     @Override
     public float temperatureAt(BlockPos pos) {
-        return this.biome(pos).getTemperature(pos, this.seaLevel());
+        if (!BlockQuerySamples.isRecording())
+            return this.temperature(pos);
+        final long began = System.nanoTime();
+        var temperature = this.temperature(pos);
+        BlockQuerySamples.temperature(System.nanoTime() - began);
+        return temperature;
+    }
+
+    private Holder<Biome> holder(BlockPos pos) {
+        return this.level.get().getBiome(pos);
+    }
+
+    private Biome.Precipitation precipitation(BlockPos pos) {
+        return this.holder(pos).value().getPrecipitationAt(pos, this.seaLevel());
+    }
+
+    private float temperature(BlockPos pos) {
+        return this.holder(pos).value().getTemperature(pos, this.seaLevel());
     }
 
     @Override

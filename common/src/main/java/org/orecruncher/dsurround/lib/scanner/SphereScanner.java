@@ -222,7 +222,16 @@ public abstract class SphereScanner extends Scanner {
                 this.jobs.pollFirst();
         }
 
-        this.stats.record(System.nanoTime() - start, this.blocksRead, this.sectionsSkipped);
+        final long elapsed = System.nanoTime() - start;
+        this.stats.record(elapsed, this.blocksRead, this.sectionsSkipped);
+        this.onTickWorked(elapsed, this.blocksRead);
+    }
+
+    /**
+     * After each tick's work: its time and the blocks it read (sections skipped whole aren't counted). Nothing by
+     * default.
+     */
+    protected void onTickWorked(long nanos, int blocksRead) {
     }
 
     /**

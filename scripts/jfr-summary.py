@@ -11,7 +11,8 @@ screen it covered (against its GPU time), the realistic aurora's night, quality 
 (against its GPU time), each kind of particle's CPU time (the mod's apart from all others) and our particle layers'
 drawing, what random block effects did by distance (each
 rate against what the sampler means it to be), what enhanced sound processing did (calculations as sounds start, on
-the sound engine's thread, and the worker's updates and passes), where each busy thread spends its time (by
+the sound engine's thread, and the worker's updates and passes), what the mod's block and biome queries cost
+(a block scanned, a block a sound ray tested, a random block sample, an oracle lookup), where each busy thread spends its time (by
 method and by mod package, a mixin's methods by its mod), what allocates, and GC.
 
   jfr-summary.py RECORDING [--thread NAME] [--top N] [--jfr PATH] [--dispatch-us US] [--worth-ms MS] [--shell-width N]
@@ -539,6 +540,39 @@ def enhanced_sounds(jfr, recording):
               f"sounds starting), worst second {worst}")
 
 
+def block_queries(jfr, recording):
+    """The mod's block and biome queries: a unit's time, each kind on a path that asks the world something different"""
+    seconds = [fields for _, fields, _ in events(jfr, recording, ["dsurround.BlockQueries"], 1)]
+    if not seconds:
+        return
+    total = lambda key: sum(int(number(f.get(key))) for f in seconds)
+    print(f"\n== Block queries ({len(seconds)} seconds; a unit's time against another recording's, from a similar "
+          f"scene: scanner, block states from chunk sections and our handlers (slow: our side, tags); rays, a sound "
+          f"ray's blocks' state, fluid and shape (slow: a mod hooking block shapes); random, the level's getBlockState "
+          f"and the block's effects (slow: a mod hooking level or chunk lookups); lookups through the level oracle "
+          f"(slow: a mod hooking biomes, seasons))")
+    print(f"  {'':14} {'batches/s':>10} {'units/s':>10} {'ns a unit':>10} {'ms a second':>12}")
+    rows = (("scanner", "scannerTicks", "scannerBlocks", "scannerNanos", "block"),
+            ("rays", "traceCalculations", "rayBlocks", "traceNanos", "block"),
+            ("random", "randomTicks", "randomSamples", "randomNanos", "sample"),
+            ("biome", "biomeLookups", "biomeLookups", "biomeNanos", "lookup"),
+            ("temperature", "temperatureLookups", "temperatureLookups", "temperatureNanos", "lookup"),
+            ("precipitation", "precipitationLookups", "precipitationLookups", "precipitationNanos", "lookup"))
+    for label, batches, units, nanos, unit in rows:
+        u, n = total(units), total(nanos)
+        if not u:
+            print(f"  {label:14} {'none':>10}")
+            continue
+        print(f"  {label:14} {total(batches) / len(seconds):10.1f} {u / len(seconds):10.0f} {n / u:10.0f} "
+              f"{n / 1e6 / len(seconds):12.2f}  ({unit})")
+    rays = total("rays")
+    if rays:
+        # A ray in open air tests few blocks (sections of air are skipped), so a calculation's fixed cost weighs on its
+        # time a block: compare rays by both, and from scenes alike (open air, enclosed)
+        print(f"  rays traced: {rays / len(seconds):.0f} a second, {total('rayBlocks') / rays:.1f} blocks tested a ray, "
+              f"{total('traceNanos') / rays:.0f} ns a ray (a calculation's fixed cost shared out over its rays)")
+
+
 def callers(jfr, recording, args):
     mods, nearest, ours, total = Counter(), Counter(), Counter(), 0
     for _, fields, frames in events(jfr, recording, ["jdk.ExecutionSample"]):
@@ -706,6 +740,7 @@ def main():
     handler_ticks(jfr, recording, args)
     random_block_samples(jfr, recording, args)
     enhanced_sounds(jfr, recording)
+    block_queries(jfr, recording)
 
     by_thread = Counter()
     methods = defaultdict(Counter)

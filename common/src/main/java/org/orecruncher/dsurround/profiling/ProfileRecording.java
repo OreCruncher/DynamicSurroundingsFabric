@@ -33,7 +33,8 @@ import java.util.Set;
  * ({@link RandomBlockSamplesEvent}), the classic aurora's shape and screen coverage once a second ({@link AuroraEvent}), the realistic
  * aurora's night, quality and pixels marched once a second ({@link RealisticAuroraEvent}), each kind of particle's CPU
  * time once a second ({@link ParticlesEvent}) and what enhanced sound
- * processing did once a second ({@link EnhancedSoundsEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
+ * processing did once a second ({@link EnhancedSoundsEvent}), and what the mod's block and biome queries cost once a
+ * second ({@link BlockQueriesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
@@ -127,6 +128,8 @@ final class ProfileRecording {
         FlightRecorder.addPeriodicEvent(ParticlesEvent.class, particleWriter);
         Runnable soundWriter = ProfileRecording::writeSounds;
         FlightRecorder.addPeriodicEvent(EnhancedSoundsEvent.class, soundWriter);
+        Runnable queryWriter = ProfileRecording::writeBlockQueries;
+        FlightRecorder.addPeriodicEvent(BlockQueriesEvent.class, queryWriter);
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
@@ -140,6 +143,7 @@ final class ProfileRecording {
                 RealisticAuroraSamples.start(realistic::add);
                 ParticleSamples.start();
                 SoundSamples.start();
+                BlockQuerySamples.start();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 ModEvent.write(environment.modList());
@@ -151,12 +155,14 @@ final class ProfileRecording {
                 RealisticAuroraSamples.stop();
                 ParticleSamples.stop();
                 SoundSamples.stop();
+                BlockQuerySamples.stop();
                 // What has been counted since the last second's write
                 samples.write();
                 auroras.write();
                 realistic.write();
                 writeParticles();
                 writeSounds();
+                writeBlockQueries();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -174,6 +180,7 @@ final class ProfileRecording {
             RealisticAuroraSamples.stop();
             ParticleSamples.stop();
             SoundSamples.stop();
+            BlockQuerySamples.stop();
             FlightRecorder.removePeriodicEvent(timers);
             FlightRecorder.removePeriodicEvent(frames);
             FlightRecorder.removePeriodicEvent(sampleWriter);
@@ -181,6 +188,7 @@ final class ProfileRecording {
             FlightRecorder.removePeriodicEvent(realisticWriter);
             FlightRecorder.removePeriodicEvent(particleWriter);
             FlightRecorder.removePeriodicEvent(soundWriter);
+            FlightRecorder.removePeriodicEvent(queryWriter);
             Files.deleteIfExists(unfinished);
         }
     }
@@ -239,6 +247,7 @@ final class ProfileRecording {
         FlightRecorder.register(RealisticAuroraEvent.class);
         FlightRecorder.register(ParticlesEvent.class);
         FlightRecorder.register(EnhancedSoundsEvent.class);
+        FlightRecorder.register(BlockQueriesEvent.class);
     }
 
     private static void enableOurs(Recording recording) {
@@ -253,6 +262,7 @@ final class ProfileRecording {
         recording.enable(RealisticAuroraEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(ParticlesEvent.class).withPeriod(Duration.ofSeconds(1));
         recording.enable(EnhancedSoundsEvent.class).withPeriod(Duration.ofSeconds(1));
+        recording.enable(BlockQueriesEvent.class).withPeriod(Duration.ofSeconds(1));
     }
 
     /**
@@ -307,6 +317,10 @@ final class ProfileRecording {
      */
     private static void writeSounds() {
         EnhancedSoundsEvent.write(SoundSamples.isAvailable(), SoundSamples.take());
+    }
+
+    private static void writeBlockQueries() {
+        BlockQueriesEvent.write(BlockQuerySamples.take());
     }
 
     /**

@@ -753,6 +753,103 @@ public class ProfilingTests {
     }
 
     @Test
+    void blockQueriesAreCountedOnlyWhileRecording() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        // Counted before the recording: not in it
+        BlockQuerySamples.scanned(9_000_000, 1000);
+        assertFalse(BlockQuerySamples.isRecording());
+        var recorder = new Thread(() -> {
+            try {
+                ProfileRecording.record(file, Duration.ofSeconds(2), environment());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        recorder.start();
+        // A scanner tick a tick, as the scanner would
+        while (recorder.isAlive()) {
+            if (BlockQuerySamples.isRecording())
+                BlockQuerySamples.scanned(100_000, 1000);
+            Thread.sleep(50);
+        }
+        recorder.join();
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.BlockQueries"))
+                .toList();
+        assertFalse(events.isEmpty());
+        long blocks = 0, nanos = 0;
+        for (var event : events) {
+            blocks += event.getLong("scannerBlocks");
+            nanos += event.getLong("scannerNanos");
+        }
+        assertTrue(blocks > 0);
+        // Every tick counted was 100 ns a block: the one before the recording, 9000 ns a block, isn't there
+        assertEquals(100.0, (double) nanos / blocks, 1e-9);
+        assertFalse(BlockQuerySamples.isRecording());
+    }
+
+    @Test
+    void blockQueriesEventsHoldWhatWasCounted() throws Exception {
+        var file = this.folder.resolve("test.jfr");
+        try (var recording = new Recording()) {
+            recording.enable(BlockQueriesEvent.class);
+            recording.start();
+            BlockQuerySamples.start();
+            try {
+                BlockQuerySamples.scanned(200_000, 2000);
+                BlockQuerySamples.scanned(50_000, 0);
+                BlockQuerySamples.traced(30_000, 12, 300);
+                BlockQuerySamples.sampled(400_000, 1400);
+                BlockQuerySamples.biome(60);
+                BlockQuerySamples.biome(40);
+                BlockQuerySamples.temperature(90);
+                BlockQuerySamples.precipitation(80);
+                BlockQueriesEvent.write(BlockQuerySamples.take());
+            } finally {
+                BlockQuerySamples.stop();
+            }
+            recording.stop();
+            recording.dump(file);
+        }
+
+        var events = RecordingFile.readAllEvents(file).stream()
+                .filter(e -> e.getEventType().getName().equals("dsurround.BlockQueries"))
+                .toList();
+        assertEquals(1, events.size());
+        var event = events.getFirst();
+        // A tick that read no blocks isn't a scanner tick
+        assertEquals(1, event.getInt("scannerTicks"));
+        assertEquals(2000, event.getLong("scannerBlocks"));
+        assertEquals(200_000, event.getLong("scannerNanos"));
+        assertEquals(1, event.getInt("traceCalculations"));
+        assertEquals(12, event.getLong("rays"));
+        assertEquals(300, event.getLong("rayBlocks"));
+        assertEquals(30_000, event.getLong("traceNanos"));
+        assertEquals(1, event.getInt("randomTicks"));
+        assertEquals(1400, event.getLong("randomSamples"));
+        assertEquals(400_000, event.getLong("randomNanos"));
+        assertEquals(2, event.getLong("biomeLookups"));
+        assertEquals(100, event.getLong("biomeNanos"));
+        assertEquals(1, event.getLong("temperatureLookups"));
+        assertEquals(90, event.getLong("temperatureNanos"));
+        assertEquals(1, event.getLong("precipitationLookups"));
+        assertEquals(80, event.getLong("precipitationNanos"));
+    }
+
+    @Test
+    void theSummaryGivesAQuerysTimeAUnit() {
+        var summary = new ProfileSummary();
+        summary.query("scanner", "block", 2000, 200_000);
+        summary.query("scanner", "block", 2000, 600_000);
+        summary.query("rays", "block", 0, 0);
+        summary.query("biome", "", 4, 240);
+        var text = summary.text("general");
+        // Added up over the seconds, then divided; a kind with nothing counted is left out
+        assertTrue(text.contains("Queries (ns): scanner/block 200, biome 60"), text);
+    }
+
+    @Test
     void enhancedSoundsEventsHoldWhatWasCounted() throws Exception {
         var file = this.folder.resolve("test.jfr");
         try (var recording = new Recording()) {
@@ -867,7 +964,7 @@ public class ProfilingTests {
                     .map(p -> p.getFileName().toString())
                     .sorted()
                     .toList();
-            assertEquals(List.of("AuroraEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ModEvent.java", "ParticlesEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RealisticAuroraEvent.java", "RenderTimerEvent.java"), users);
+            assertEquals(List.of("AuroraEvent.java", "BlockQueriesEvent.java", "EnhancedSoundsEvent.java", "EnvironmentEvent.java", "FeatureEvent.java", "FramesEvent.java", "HandlerTickEvent.java", "ModEvent.java", "ParticlesEvent.java", "ProfileRecording.java", "ProfileSummary.java", "RandomBlockSamplesEvent.java", "RealisticAuroraEvent.java", "RenderTimerEvent.java"), users);
         }
     }
 }

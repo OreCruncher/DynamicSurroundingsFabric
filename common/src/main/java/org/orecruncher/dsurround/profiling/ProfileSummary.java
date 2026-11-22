@@ -56,6 +56,8 @@ final class ProfileSummary {
     private final List<String> hooksMissing = new ArrayList<>();
     private final List<String> standingAside = new ArrayList<>();
     private final List<String> changed = new ArrayList<>();
+    // Block and biome queries: each kind's units and nanoseconds, added up over the seconds (see BlockQuerySamples)
+    private final Map<String, long[]> queries = new LinkedHashMap<>();
 
     record FrameSecond(int frames, double mean, double p95, double max, double gpu, double cpu) {
     }
@@ -86,11 +88,28 @@ final class ProfileSummary {
                     event.getDouble("cpuAverage"), event.getBoolean("perTick"));
             case "dsurround.HandlerTick" -> this.handlerTick(event.getLong("tick"), event.getString("handler"), event.getLong("time"));
             case "jdk.GCPhasePause" -> this.pause(event.getDuration("duration").toNanos() / 1_000_000D);
+            case "dsurround.BlockQueries" -> {
+                this.query("scanner", "block", event.getLong("scannerBlocks"), event.getLong("scannerNanos"));
+                this.query("rays", "block", event.getLong("rayBlocks"), event.getLong("traceNanos"));
+                this.query("random", "sample", event.getLong("randomSamples"), event.getLong("randomNanos"));
+                this.query("biome", "", event.getLong("biomeLookups"), event.getLong("biomeNanos"));
+                this.query("temperature", "", event.getLong("temperatureLookups"), event.getLong("temperatureNanos"));
+                this.query("precipitation", "", event.getLong("precipitationLookups"), event.getLong("precipitationNanos"));
+            }
             case "dsurround.Feature" -> this.feature(event.getString("kind"), event.getString("name"), event.getString("state"),
                     event.getBoolean("usual"));
             default -> {
             }
         }
+    }
+
+    /**
+     * A second's queries of one kind, named with its unit ("block", or "" for a lookup)
+     */
+    void query(String kind, String unit, long units, long nanos) {
+        var totals = this.queries.computeIfAbsent(unit.isEmpty() ? kind : kind + "/" + unit, _ -> new long[2]);
+        totals[0] += units;
+        totals[1] += nanos;
     }
 
     void environment(String field, Object value) {
@@ -266,6 +285,11 @@ final class ProfileSummary {
             lines.add(f("Ticks: mean %.2f ms, p95 %.2f; most: %s", mean, totals[Math.min(totals.length - 1, (int) (totals.length * 0.95))],
                     String.join(", ", top)));
         }
+
+        var queried = this.queries.entrySet().stream().filter(q -> q.getValue()[0] > 0)
+                .map(q -> f("%s %.0f", q.getKey(), (double) q.getValue()[1] / q.getValue()[0])).toList();
+        if (!queried.isEmpty())
+            lines.add("Queries (ns): " + String.join(", ", queried));
 
         if (!this.pauses.isEmpty()) {
             var sorted = this.pauses.stream().mapToDouble(Double::doubleValue).sorted().toArray();

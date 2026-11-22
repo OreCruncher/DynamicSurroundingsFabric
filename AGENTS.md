@@ -159,7 +159,12 @@ is known of 26.4.
   uploads; each calculation traced (timed), shared, reused or skipped; whether it ran at all),
   what it was made on (`dsurround.Environment`: graphics card, settings, frame size, frame rate limit, the potato run used) and each
   optional hook's status, conflict and non-text setting (`dsurround.Feature`, from `ProfileFeature`) and each installed mod's id and
-  version, nothing else of it (`dsurround.Mod`, from `ProfileMod`, cleaned of anything path-like; `jfr-summary.py --mods`)); unzip
+  version, nothing else of it (`dsurround.Mod`, from `ProfileMod`, cleaned of anything path-like; `jfr-summary.py --mods`), and what the mod's block and biome queries cost once a second
+  (`dsurround.BlockQueries`, through `profiling/BlockQuerySamples`: the scanner's blocks (`SphereScanner.onTickWorked`), the blocks sound
+  rays tested (`RayWalk.Counts`, read around each calculation's traces), random block samples, and the level oracle's
+  biome, temperature and precipitation lookups, each timed; which kind is slow says what a pack hooks: shapes for rays,
+  level lookups for random samples, biomes for the oracle; the scanner only works while the player moves, and rays need
+  sounds, so compare recordings of alike scenes)); unzip
   it and read it with the JDK's `jfr` (`jfr print --json --events ...`), or summarize it with
   `python scripts/jfr-summary.py <zip or jfr>` (frames; timers: mean and end of the running averages, share of the frame, and peak (CPU peaks a JVM pause could explain left out: a GC pause inside a timed draw reads as its spike); for a
   timer measured rarely, once a second or less, trust the end, not the mean; handler percentiles per tick (ticks a GC pause or other JVM stop landed in left out) and what

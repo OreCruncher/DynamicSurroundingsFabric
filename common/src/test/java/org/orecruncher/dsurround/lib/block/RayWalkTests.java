@@ -192,4 +192,19 @@ public class RayWalkTests {
         // Only the blocks of the one section with anything in it, up to the stone: none of the 96 before it
         assertTrue(reads[0] <= 16, "blocks read: " + reads[0]);
     }
+
+    @Test
+    void countsAreTheRaysAndTheBlocksTested() {
+        var world = new Blocks3();
+        world.put(100, 5, 0, Blocks.STONE.defaultBlockState());
+        var context = new ClipContext(new Vec3(0.5, 5.5, 0.5), new Vec3(120.5, 5.5, 0.5), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, CollisionContext.empty());
+        var counts = new RayWalk.Counts();
+
+        RayWalk.clip(world, context, world::holdsOnlyAir, counts);
+        RayWalk.clip(world, context, world::holdsOnlyAir, counts);
+        assertEquals(2, counts.rays());
+        // Each ray tests x = 96 to 100, the stone, in the one section with anything in it: the 96 blocks in sections
+        // of air before it aren't tested, nor counted
+        assertEquals(10, counts.blocks());
+    }
 }
