@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#factory_blocks:factory",
+      "required": false
+    },
+    {
+      "id": "factory_blocks:medium_fan",
+      "required": false
+    }
+  ]
+}

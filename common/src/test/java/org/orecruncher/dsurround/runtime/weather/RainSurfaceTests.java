@@ -5,13 +5,17 @@ package org.orecruncher.dsurround.runtime.weather;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -128,6 +132,28 @@ public class RainSurfaceTests {
         assertEquals(RainSurface.HARD, at(Blocks.STONE));
         assertEquals(RainSurface.HARD, at(Blocks.BRICKS));
         assertEquals(RainSurface.HARD, at(Blocks.CONCRETE.pick(DyeColor.WHITE)));
+    }
+
+    @Test
+    void aModsOwnSoundTypeIsSortedByItsStepSound() {
+        // Mini Mob Trophies' horses: a sound type of the mod's own, stepping as wool does
+        var woolly = new SoundType(1F, 1F, SoundEvents.WOOL_BREAK, SoundEvents.WOOL_STEP,
+                SoundEvents.WOOL_PLACE, SoundEvents.WOOL_HIT, SoundEvents.WOOL_FALL);
+        assertEquals(RainSurface.SOFT, RainSurface.of(woolly));
+        var planks = new SoundType(1F, 0.8F, SoundEvents.WOOD_BREAK, SoundEvents.WOOD_STEP,
+                SoundEvents.WOOD_PLACE, SoundEvents.WOOD_HIT, SoundEvents.WOOD_FALL);
+        assertEquals(RainSurface.WOOD, RainSurface.of(planks));
+        // Stepping as stone, it is hard, as stone is
+        var stony = new SoundType(1F, 1F, SoundEvents.STONE_BREAK, SoundEvents.STONE_STEP,
+                SoundEvents.STONE_PLACE, SoundEvents.STONE_HIT, SoundEvents.STONE_FALL);
+        assertEquals(RainSurface.HARD, RainSurface.of(stony));
+        // A step sound of the mod's own says nothing: a tag sorts those (Factory Blocks' metal_sound)
+        var own = SoundEvent.createVariableRangeEvent(Identifier.parse("mymod:metal_sound"));
+        var factory = new SoundType(1F, 1F, own, own, own, own, own);
+        assertEquals(RainSurface.HARD, RainSurface.of(factory));
+        // The game's own sound types keep their lists' answer: one that isn't listed stays hard ground
+        assertEquals(RainSurface.HARD, RainSurface.of(SoundType.STONE));
+        assertEquals(RainSurface.SOFT, RainSurface.of(SoundType.WOOL));
     }
 
     @Test

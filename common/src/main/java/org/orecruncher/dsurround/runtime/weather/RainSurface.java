@@ -20,6 +20,8 @@ import org.orecruncher.dsurround.runtime.audio.FixedFilter;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -179,7 +181,7 @@ public enum RainSurface {
      * A sound type's name as the game's field has it, or for a mod's own, its step sound
      */
     public static String soundTypeName(SoundType sound) {
-        var name = SoundTypeNames.NAMES.get(sound);
+        var name = GameSoundTypes.NAMES.get(sound);
         return name != null ? name : "mod's own, steps " + sound.getStepSound().location();
     }
 
@@ -198,7 +200,26 @@ public enum RainSurface {
         for (var rule : TAGS)
             if (tags.is(rule.tag(), state))
                 return rule;
-        var sound = state.getSoundType();
+        return bySound(state.getSoundType());
+    }
+
+    /**
+     * What a sound type is to the rain, for a block no tag sorts
+     */
+    static RainSurface of(SoundType sound) {
+        return bySound(sound).surface();
+    }
+
+    private static Sorted bySound(SoundType sound) {
+        var sorted = bySoundType(sound);
+        if (sorted != BY_DEFAULT || GameSoundTypes.NAMES.containsKey(sound))
+            return sorted;
+        // A mod's own sound type that steps as one of the game's does is what that one is to the rain (Mini Mob
+        // Trophies' horses step as wool): seen in The Cozy Artificer's dump, 2026-11-22
+        return GameSoundTypes.BY_STEP.getOrDefault(sound.getStepSound().location(), BY_DEFAULT);
+    }
+
+    private static Sorted bySoundType(SoundType sound) {
         if (METAL_SOUNDS.contains(sound))
             return BY_SOUND_METAL;
         if (GLASS_SOUNDS.contains(sound))
@@ -232,20 +253,34 @@ public enum RainSurface {
     private static final Sorted BY_SOUND_SOFT = new Sorted(SOFT, null);
     private static final Sorted BY_DEFAULT = new Sorted(HARD, null);
 
-    // Read only by the dump, so made on first use
-    private static final class SoundTypeNames {
+    // The game's sound types, made on first use (the dump, or a mod's own sound type rained on): each one's field name,
+    // and what each step sound is to the rain where every listed game sound type stepping with it agrees
+    private static final class GameSoundTypes {
         static final Map<SoundType, String> NAMES = new IdentityHashMap<>();
+        static final Map<Identifier, Sorted> BY_STEP = new HashMap<>();
 
         static {
+            var disagreeing = new HashSet<Identifier>();
             for (var field : SoundType.class.getFields()) {
                 if (field.getType() != SoundType.class || !Modifier.isStatic(field.getModifiers()))
                     continue;
                 try {
-                    NAMES.putIfAbsent((SoundType) field.get(null), field.getName());
+                    var sound = (SoundType) field.get(null);
+                    NAMES.putIfAbsent(sound, field.getName());
+                    // Only the listed ones: those left out are hard ground, or plants the rain falls through (crops
+                    // and berry bushes step as grass, cocoa as wood), which say nothing of what a step sound is
+                    var sorted = bySoundType(sound);
+                    if (sorted == BY_DEFAULT)
+                        continue;
+                    var step = sound.getStepSound().location();
+                    var before = BY_STEP.putIfAbsent(step, sorted);
+                    if (before != null && before.surface() != sorted.surface())
+                        disagreeing.add(step);
                 } catch (IllegalAccessException ignored) {
                     // Public fields only; none is refused
                 }
             }
+            disagreeing.forEach(BY_STEP::remove);
         }
     }
 }

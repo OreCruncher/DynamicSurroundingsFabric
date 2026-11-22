@@ -23,6 +23,10 @@
     {
       "id": "#minecraft:enchantable/fishing",
       "required": false
+    },
+    {
+      "id": "#c:tools/wrench",
+      "required": false
     }
   ]
 }

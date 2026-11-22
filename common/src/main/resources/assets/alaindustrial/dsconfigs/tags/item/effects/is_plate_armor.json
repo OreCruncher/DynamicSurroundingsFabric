@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "alaindustrial:jetpack",
+      "required": false
+    },
+    {
+      "id": "alaindustrial:energy_pack",
+      "required": false
+    }
+  ]
+}

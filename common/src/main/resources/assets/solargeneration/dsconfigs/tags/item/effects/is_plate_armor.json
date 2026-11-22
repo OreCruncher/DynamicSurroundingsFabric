@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#solargeneration:solar_helmet",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "reliquary:witch_hat",
+      "required": false
+    }
+  ]
+}
