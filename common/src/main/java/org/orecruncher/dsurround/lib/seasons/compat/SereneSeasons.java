@@ -91,20 +91,20 @@ public class SereneSeasons extends AbstractSeasonProvider {
     }
 
     @Override
-    public Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
+    protected Biome.Precipitation precipitationAt(BlockPos blockPos) {
         var level = this.levelOracle.level();
         var biome = this.levelOracle.biomeHolder(blockPos);
         return SeasonHooks.getPrecipitationAtSeasonal(level, biome, blockPos, this.levelOracle.seaLevel());
     }
 
     @Override
-    public float getTemperatureAt(BlockPos blockPos) {
+    protected float temperatureAt(BlockPos blockPos) {
         var biome = this.levelOracle.biomeHolder(blockPos);
         return SeasonHooks.getBiomeTemperature(this.levelOracle.level(), biome, blockPos, this.levelOracle.seaLevel());
     }
 
     @Override
-    public boolean hasPrecipitationAt(BlockPos blockPos) {
+    protected boolean precipitates(BlockPos blockPos) {
         // A tropical biome's dry and wet seasons decide, rather than the biome's own setting
         return SeasonHooks.hasPrecipitationSeasonal(this.levelOracle.level(), this.levelOracle.biomeHolder(blockPos));
     }

@@ -9,6 +9,7 @@ import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,7 +21,10 @@ import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
 import org.orecruncher.dsurround.mixinutils.OptionalHook;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.lib.seasons.compat.VanillaSeasons;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
+import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
+import org.orecruncher.dsurround.testing.Fakes;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -805,6 +809,9 @@ public class ProfilingTests {
                 BlockQuerySamples.biome(40);
                 BlockQuerySamples.temperature(90);
                 BlockQuerySamples.precipitation(80);
+                BlockQuerySamples.seasonTemperature(700);
+                BlockQuerySamples.seasonPrecipitation(300);
+                BlockQuerySamples.seasonPrecipitation(500);
                 BlockQueriesEvent.write(BlockQuerySamples.take());
             } finally {
                 BlockQuerySamples.stop();
@@ -835,6 +842,34 @@ public class ProfilingTests {
         assertEquals(90, event.getLong("temperatureNanos"));
         assertEquals(1, event.getLong("precipitationLookups"));
         assertEquals(80, event.getLong("precipitationNanos"));
+        assertEquals(1, event.getLong("seasonTemperatureLookups"));
+        assertEquals(700, event.getLong("seasonTemperatureNanos"));
+        assertEquals(2, event.getLong("seasonPrecipitationLookups"));
+        assertEquals(800, event.getLong("seasonPrecipitationNanos"));
+    }
+
+    @Test
+    void theSeasonProvidersQuestionsAreTimedWhateverTheProvider() {
+        var oracle = Fakes.of(ILevelOracle.class, Map.of(
+                "temperatureAt", _ -> 0.1F,
+                "precipitationAt", _ -> Biome.Precipitation.SNOW));
+        var seasons = new VanillaSeasons(oracle);
+        var pos = new BlockPos(0, 64, 0);
+        // Not recording: nothing counted
+        seasons.getTemperatureAt(pos);
+        BlockQuerySamples.start();
+        try {
+            seasons.getTemperatureAt(pos);
+            // Through the provider's own helpers too, each one question
+            assertTrue(seasons.isColdTemperature(pos));
+            assertTrue(seasons.isSnowTemperature(pos));
+            seasons.getPrecipitationAt(pos);
+            var second = BlockQuerySamples.take();
+            assertEquals(3, second.seasonTemperature().units());
+            assertEquals(1, second.seasonPrecipitation().units());
+        } finally {
+            BlockQuerySamples.stop();
+        }
     }
 
     @Test

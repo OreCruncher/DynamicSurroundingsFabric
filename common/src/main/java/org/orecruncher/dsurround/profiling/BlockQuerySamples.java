@@ -16,8 +16,11 @@ import java.util.concurrent.atomic.LongAdder;
  *     shapes or behavior (Camol, in ATM10).</li>
  *     <li>Random block effects: the level's {@code getBlockState}, the chunk looked up each time, then the block's
  *     effects. Slow here is a mod hooking the level's or the chunk source's lookups.</li>
- *     <li>Biome, temperature and precipitation lookups through the level oracle. Slow here is a mod hooking biome
- *     queries (seasons mods).</li>
+ *     <li>Biome, temperature and precipitation lookups through the level oracle. Slow here is a mod hooking the
+ *     game's biome queries.</li>
+ *     <li>The season provider's temperature and precipitation questions (whether anything falls, and what), whichever
+ *     provider answers: a seasons mod's own hooks (Serene Seasons), or the oracle's lookups without one. Slow here is
+ *     the seasons mod.</li>
  * </ul>
  * Work is timed in batches (a tick's scan, a sound's traces), never a block at a time, but for the oracle's lookups,
  * which are one call each. Counted from several threads, so each count is an adder; while nothing records, nothing is
@@ -70,8 +73,11 @@ public final class BlockQuerySamples {
      * @param biome         the oracle's biome lookups
      * @param temperature   the oracle's temperature lookups, the biome's lookup included
      * @param precipitation the oracle's precipitation lookups, the biome's lookup included
+     * @param seasonTemperature   the season provider's temperature questions
+     * @param seasonPrecipitation the season provider's precipitation questions: whether anything falls, and what
      */
-    record Second(Taken scanner, Taken rays, long raysTraced, Taken random, Taken biome, Taken temperature, Taken precipitation) {
+    record Second(Taken scanner, Taken rays, long raysTraced, Taken random, Taken biome, Taken temperature, Taken precipitation,
+                  Taken seasonTemperature, Taken seasonPrecipitation) {
     }
 
     private static final Work SCANNER = new Work();
@@ -81,6 +87,8 @@ public final class BlockQuerySamples {
     private static final Work BIOME = new Work();
     private static final Work TEMPERATURE = new Work();
     private static final Work PRECIPITATION = new Work();
+    private static final Work SEASON_TEMPERATURE = new Work();
+    private static final Work SEASON_PRECIPITATION = new Work();
 
     private static volatile boolean recording;
 
@@ -138,9 +146,23 @@ public final class BlockQuerySamples {
         PRECIPITATION.add(nanos, 1);
     }
 
+    /**
+     * A season provider temperature question's time
+     */
+    public static void seasonTemperature(long nanos) {
+        SEASON_TEMPERATURE.add(nanos, 1);
+    }
+
+    /**
+     * A season provider precipitation question's time: whether anything falls, or what
+     */
+    public static void seasonPrecipitation(long nanos) {
+        SEASON_PRECIPITATION.add(nanos, 1);
+    }
+
     static Second take() {
         return new Second(SCANNER.take(), RAYS.take(), RAYS_TRACED.sumThenReset(), RANDOM.take(), BIOME.take(),
-                TEMPERATURE.take(), PRECIPITATION.take());
+                TEMPERATURE.take(), PRECIPITATION.take(), SEASON_TEMPERATURE.take(), SEASON_PRECIPITATION.take());
     }
 
     /**

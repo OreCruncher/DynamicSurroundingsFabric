@@ -67,12 +67,12 @@ public class VanillaSeasons extends AbstractSeasonProvider {
     }
 
     @Override
-    public float getTemperatureAt(BlockPos blockPos) {
+    protected float temperatureAt(BlockPos blockPos) {
         return this.levelOracle.temperatureAt(blockPos);
     }
 
     @Override
-    public Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
+    protected Biome.Precipitation precipitationAt(BlockPos blockPos) {
         return this.levelOracle.precipitationAt(blockPos);
     }
 }

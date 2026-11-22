@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.profiling.BlockQuerySamples;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 
 import java.util.Optional;
@@ -55,8 +56,20 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
     @Override
     public abstract boolean isLate();
 
+    // The temperature and precipitation questions are timed here while /dsprofile records (BlockQuerySamples), whatever
+    // the provider: a seasons mod answers them with its own hooks, past the level oracle. Providers answer them in
+    // temperatureAt, precipitationAt and precipitates
     @Override
-    public abstract float getTemperatureAt(BlockPos blockPos);
+    public final float getTemperatureAt(BlockPos blockPos) {
+        if (!BlockQuerySamples.isRecording())
+            return this.temperatureAt(blockPos);
+        final long began = System.nanoTime();
+        var temperature = this.temperatureAt(blockPos);
+        BlockQuerySamples.seasonTemperature(System.nanoTime() - began);
+        return temperature;
+    }
+
+    protected abstract float temperatureAt(BlockPos blockPos);
 
     @Override
     public boolean isColdTemperature(BlockPos blockPos) {
@@ -69,7 +82,20 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
     }
 
     @Override
-    public boolean hasPrecipitationAt(BlockPos blockPos) {
+    public final boolean hasPrecipitationAt(BlockPos blockPos) {
+        if (!BlockQuerySamples.isRecording())
+            return this.precipitates(blockPos);
+        final long began = System.nanoTime();
+        var precipitates = this.precipitates(blockPos);
+        BlockQuerySamples.seasonPrecipitation(System.nanoTime() - began);
+        return precipitates;
+    }
+
+    /**
+     * Whether anything falls at all in the biome at {@code blockPos}: the biome's own setting, unless a seasons mod's
+     * seasons decide
+     */
+    protected boolean precipitates(BlockPos blockPos) {
         return this.levelOracle.biomeHolder(blockPos).value().hasPrecipitation();
     }
 
@@ -79,7 +105,16 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
     }
 
     @Override
-    public abstract Biome.Precipitation getPrecipitationAt(BlockPos blockPos);
+    public final Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
+        if (!BlockQuerySamples.isRecording())
+            return this.precipitationAt(blockPos);
+        final long began = System.nanoTime();
+        var precipitation = this.precipitationAt(blockPos);
+        BlockQuerySamples.seasonPrecipitation(System.nanoTime() - began);
+        return precipitation;
+    }
+
+    protected abstract Biome.Precipitation precipitationAt(BlockPos blockPos);
 
     @Override
     public Biome.Precipitation getActivePrecipitationAt(BlockPos pos) {

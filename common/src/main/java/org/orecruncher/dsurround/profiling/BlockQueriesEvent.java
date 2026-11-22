@@ -83,6 +83,22 @@ public final class BlockQueriesEvent extends Event {
     @Description("The precipitation lookups' time, their biome lookup included, in nanoseconds")
     long precipitationNanos;
 
+    @Label("Season Temperature Questions")
+    @Description("Temperatures asked of the season provider: a seasons mod's, or the level oracle's without one")
+    long seasonTemperatureLookups;
+
+    @Label("Season Temperature Time")
+    @Description("Their time, in nanoseconds")
+    long seasonTemperatureNanos;
+
+    @Label("Season Precipitation Questions")
+    @Description("Whether anything falls, and what, asked of the season provider")
+    long seasonPrecipitationLookups;
+
+    @Label("Season Precipitation Time")
+    @Description("Their time, in nanoseconds")
+    long seasonPrecipitationNanos;
+
     static void write(BlockQuerySamples.Second second) {
         var event = new BlockQueriesEvent();
         event.scannerTicks = (int) second.scanner().batches();
@@ -101,6 +117,10 @@ public final class BlockQueriesEvent extends Event {
         event.temperatureNanos = second.temperature().nanos();
         event.precipitationLookups = second.precipitation().units();
         event.precipitationNanos = second.precipitation().nanos();
+        event.seasonTemperatureLookups = second.seasonTemperature().units();
+        event.seasonTemperatureNanos = second.seasonTemperature().nanos();
+        event.seasonPrecipitationLookups = second.seasonPrecipitation().units();
+        event.seasonPrecipitationNanos = second.seasonPrecipitation().nanos();
         event.commit();
     }
 }

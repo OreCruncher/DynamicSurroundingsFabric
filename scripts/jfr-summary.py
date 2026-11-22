@@ -553,14 +553,19 @@ def block_queries(jfr, recording):
           f"scene: scanner, block states from chunk sections and our handlers (slow: our side, tags); rays, a sound "
           f"ray's blocks' state, fluid and shape (slow: a mod hooking block shapes); random, the level's getBlockState "
           f"and the block's effects (slow: a mod hooking level or chunk lookups); lookups through the level oracle "
-          f"(slow: a mod hooking biomes, seasons))")
+          f"(slow: a mod hooking biomes); the season provider's questions, a seasons mod's own hooks or else the "
+          f"oracle's lookups (slow: the seasons mod))")
     print(f"  {'':14} {'batches/s':>10} {'units/s':>10} {'ns a unit':>10} {'ms a second':>12}")
     rows = (("scanner", "scannerTicks", "scannerBlocks", "scannerNanos", "block"),
             ("rays", "traceCalculations", "rayBlocks", "traceNanos", "block"),
             ("random", "randomTicks", "randomSamples", "randomNanos", "sample"),
             ("biome", "biomeLookups", "biomeLookups", "biomeNanos", "lookup"),
             ("temperature", "temperatureLookups", "temperatureLookups", "temperatureNanos", "lookup"),
-            ("precipitation", "precipitationLookups", "precipitationLookups", "precipitationNanos", "lookup"))
+            ("precipitation", "precipitationLookups", "precipitationLookups", "precipitationNanos", "lookup"),
+            # The season provider's: a seasons mod's own hooks, or the oracle's lookups above without one
+            ("season temp", "seasonTemperatureLookups", "seasonTemperatureLookups", "seasonTemperatureNanos", "question"),
+            ("season precip", "seasonPrecipitationLookups", "seasonPrecipitationLookups", "seasonPrecipitationNanos",
+             "question"))
     for label, batches, units, nanos, unit in rows:
         u, n = total(units), total(nanos)
         if not u:

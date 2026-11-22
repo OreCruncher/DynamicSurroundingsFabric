@@ -95,6 +95,8 @@ final class ProfileSummary {
                 this.query("biome", "", event.getLong("biomeLookups"), event.getLong("biomeNanos"));
                 this.query("temperature", "", event.getLong("temperatureLookups"), event.getLong("temperatureNanos"));
                 this.query("precipitation", "", event.getLong("precipitationLookups"), event.getLong("precipitationNanos"));
+                this.query("season temperature", "", event.getLong("seasonTemperatureLookups"), event.getLong("seasonTemperatureNanos"));
+                this.query("season precipitation", "", event.getLong("seasonPrecipitationLookups"), event.getLong("seasonPrecipitationNanos"));
             }
             case "dsurround.Feature" -> this.feature(event.getString("kind"), event.getString("name"), event.getString("state"),
                     event.getBoolean("usual"));
