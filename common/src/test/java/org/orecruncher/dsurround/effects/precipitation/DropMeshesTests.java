@@ -176,6 +176,25 @@ public class DropMeshesTests {
     }
 
     @Test
+    void aFrameBuiltForTheGpuIsRebuiltWhenDrawnOnTheCpu() {
+        // Built ahead for the GPU (packed, no quads), then drawn by the CPU (a GPU pipeline failed in between): it has
+        // to be rebuilt, not drawn empty
+        var meshes = new DropMeshes(new RecordingLog());
+        var sources = sources(raining());
+        var camera = new TurnedCamera(0F, 0F);
+        var gpu = new DropMeshes.Style(STYLE.snowflakes(), 1, NO_DUST, STYLE.scales(), STYLE.rainColor(), null, true);
+        meshes.begin(sources, camera, 0.5F, gpu, Runnable::run);
+        meshes.await();
+        var view = PrecipitationRenderer.View.of(camera);
+        assertNull(meshes.mismatch(DropMeshes.Kind.DROPS, new DropMeshes.Request(sources, view, 0.5F, gpu)));
+        var mismatch = meshes.mismatch(DropMeshes.Kind.DROPS, new DropMeshes.Request(sources, view, 0.5F, STYLE));
+        assertNotNull(mismatch);
+        assertEquals(DropMeshes.Behind.SETTINGS, mismatch.kind());
+        assertTrue(mismatch.detail().contains("GPU"), mismatch.detail());
+        meshes.discard();
+    }
+
+    @Test
     void eachKindIsThereOnlyWithSomethingToDraw() {
         var sources = sources(new PrecipitationField(10));
         assertTrue(sources.isEmpty());

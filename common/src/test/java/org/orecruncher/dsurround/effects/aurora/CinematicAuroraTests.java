@@ -264,6 +264,14 @@ public class CinematicAuroraTests {
     }
 
     @Test
+    void theShaderLoopsOverNoMoreRibbonsThanTheBlockHolds() throws IOException {
+        // The count comes in a float; one past the arrays would read off the end of the uniform block (a driver crash)
+        var fragment = ShaderSources.read("core/aurora_cinematic.fsh");
+        assertTrue(fragment.contains("int ribbons = min(int(Frame.w + 0.5), MAX_RIBBONS);"), "the ribbon count capped");
+        assertTrue(fragment.contains("for (int i = 0; i < ribbons"), "the loop bounded by the capped count");
+    }
+
+    @Test
     void theShadersRibbonIsTheModels() throws IOException {
         var fragment = ShaderSources.read("core/aurora_cinematic.fsh");
         assertTrue(fragment.contains("fold.x * sin(along * TWO_PI / fold.y + fold.z)"), "large folds");

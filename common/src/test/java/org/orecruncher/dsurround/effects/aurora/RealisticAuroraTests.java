@@ -48,6 +48,14 @@ public class RealisticAuroraTests {
     }
 
     @Test
+    void theShaderLoopsOverNoMoreArcsThanTheBlockHolds() throws IOException {
+        // The count comes in a float; one past the arrays would read off the end of the uniform block (a driver crash)
+        var fragment = ShaderSources.read("core/aurora_realistic.fsh");
+        assertTrue(fragment.contains("int arcs = min(int(Frame.w + 0.5), MAX_ARCS);"), "the arc count capped");
+        assertTrue(fragment.contains("for (int i = 0; i < arcs; i++)"), "the loop bounded by the capped count");
+    }
+
+    @Test
     void thereIsRoomInTheShaderForEveryArc() {
         for (long night = 0; night < NIGHTS; night++) {
             var arcs = create(night).arcs();

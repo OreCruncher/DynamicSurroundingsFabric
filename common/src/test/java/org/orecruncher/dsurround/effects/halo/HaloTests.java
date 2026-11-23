@@ -78,9 +78,30 @@ public class HaloTests {
 
     @Test
     void slotsKeepToTheMorningsAndAfternoons() {
-        // Taken from the day clock, 0 at sunrise: every day's slots start at sunrise, noon, sunset and midnight
-        assertEquals(0, 24000 % HaloConditions.SLOT_TICKS);
-        assertEquals(6000, HaloConditions.SLOT_TICKS);
+        // Taken from the day clock, 0 at sunrise: a morning runs from sunrise to noon and an afternoon from noon to
+        // sunset, each with its own chance, on every day alike
+        final long day = 24000L;
+        final long noon = 6000L;
+        int changedAtNoon = 0;
+        int daysDiffer = 0;
+        for (long d = 0; d < 200; d++) {
+            long sunrise = d * day;
+            boolean morning = HaloConditions.slotHasHalo(sunrise, 0.5F);
+            for (long t = sunrise; t < sunrise + noon; t += 250)
+                assertEquals(morning, HaloConditions.slotHasHalo(t, 0.5F), "day " + d + ": the same all morning");
+            assertEquals(morning, HaloConditions.slotHasHalo(sunrise + noon - 1, 0.5F), "day " + d + ": until noon");
+            boolean afternoon = HaloConditions.slotHasHalo(sunrise + noon, 0.5F);
+            for (long t = sunrise + noon; t < sunrise + 2 * noon; t += 250)
+                assertEquals(afternoon, HaloConditions.slotHasHalo(t, 0.5F), "day " + d + ": the same all afternoon");
+            if (morning != afternoon)
+                changedAtNoon++;
+            if (morning != HaloConditions.slotHasHalo(sunrise + day, 0.5F))
+                daysDiffer++;
+        }
+        assertTrue(changedAtNoon > 50, "an afternoon has its own chance: " + changedAtNoon + " of 200");
+        assertTrue(daysDiffer > 50, "each morning has its own chance: " + daysDiffer + " of 200");
+        // Before the world's first sunrise (a clock set back), the night before is a slot of its own, not the morning's
+        assertEquals(HaloConditions.slotHasHalo(-1, 0.5F), HaloConditions.slotHasHalo(-noon, 0.5F));
     }
 
     @Test

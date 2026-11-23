@@ -815,6 +815,34 @@ public class ProfilingTests {
     }
 
     @Test
+    void aLookupIsTimedOnlyWhileRecording() {
+        var lookup = BlockQuerySamples.BIOME;
+        BlockQuerySamples.stop();
+        lookup.take();
+        // Not recording: no clock read, nothing counted
+        long began = lookup.begin();
+        assertEquals(0L, began);
+        lookup.end(began);
+        assertEquals(0L, lookup.take().units());
+
+        BlockQuerySamples.start();
+        try {
+            began = lookup.begin();
+            assertNotEquals(0L, began);
+            lookup.end(began);
+            var taken = lookup.take();
+            assertEquals(1L, taken.batches());
+            assertEquals(1L, taken.units());
+            assertTrue(taken.nanos() >= 0L);
+            // One begun before the recording started isn't counted when it ends
+            lookup.end(0L);
+            assertEquals(0L, lookup.take().units());
+        } finally {
+            BlockQuerySamples.stop();
+        }
+    }
+
+    @Test
     void blockQueriesEventsHoldWhatWasCounted() throws Exception {
         var file = this.folder.resolve("test.jfr");
         try (var recording = new Recording()) {
