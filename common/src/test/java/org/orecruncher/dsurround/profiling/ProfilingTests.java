@@ -826,13 +826,13 @@ public class ProfilingTests {
                 BlockQuerySamples.scanned(50_000, 0);
                 BlockQuerySamples.traced(30_000, 12, 300);
                 BlockQuerySamples.sampled(400_000, 1400);
-                BlockQuerySamples.biome(60);
-                BlockQuerySamples.biome(40);
-                BlockQuerySamples.temperature(90);
-                BlockQuerySamples.precipitation(80);
-                BlockQuerySamples.seasonTemperature(700);
-                BlockQuerySamples.seasonPrecipitation(300);
-                BlockQuerySamples.seasonPrecipitation(500);
+                BlockQuerySamples.BIOME.add(60);
+                BlockQuerySamples.BIOME.add(40);
+                BlockQuerySamples.TEMPERATURE.add(90);
+                BlockQuerySamples.PRECIPITATION.add(80);
+                BlockQuerySamples.SEASON_TEMPERATURE.add(700);
+                BlockQuerySamples.SEASON_PRECIPITATION.add(300);
+                BlockQuerySamples.SEASON_PRECIPITATION.add(500);
                 BlockQueriesEvent.write(BlockQuerySamples.take());
             } finally {
                 BlockQuerySamples.stop();

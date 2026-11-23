@@ -61,11 +61,9 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
     // temperatureAt, precipitationAt and precipitates
     @Override
     public final float getTemperatureAt(BlockPos blockPos) {
-        if (!BlockQuerySamples.isRecording())
-            return this.temperatureAt(blockPos);
-        final long began = System.nanoTime();
+        final long began = BlockQuerySamples.SEASON_TEMPERATURE.begin();
         var temperature = this.temperatureAt(blockPos);
-        BlockQuerySamples.seasonTemperature(System.nanoTime() - began);
+        BlockQuerySamples.SEASON_TEMPERATURE.end(began);
         return temperature;
     }
 
@@ -83,11 +81,9 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
 
     @Override
     public final boolean hasPrecipitationAt(BlockPos blockPos) {
-        if (!BlockQuerySamples.isRecording())
-            return this.precipitates(blockPos);
-        final long began = System.nanoTime();
+        final long began = BlockQuerySamples.SEASON_PRECIPITATION.begin();
         var precipitates = this.precipitates(blockPos);
-        BlockQuerySamples.seasonPrecipitation(System.nanoTime() - began);
+        BlockQuerySamples.SEASON_PRECIPITATION.end(began);
         return precipitates;
     }
 
@@ -106,11 +102,9 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
 
     @Override
     public final Biome.Precipitation getPrecipitationAt(BlockPos blockPos) {
-        if (!BlockQuerySamples.isRecording())
-            return this.precipitationAt(blockPos);
-        final long began = System.nanoTime();
+        final long began = BlockQuerySamples.SEASON_PRECIPITATION.begin();
         var precipitation = this.precipitationAt(blockPos);
-        BlockQuerySamples.seasonPrecipitation(System.nanoTime() - began);
+        BlockQuerySamples.SEASON_PRECIPITATION.end(began);
         return precipitation;
     }
 

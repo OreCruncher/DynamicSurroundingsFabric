@@ -60,31 +60,25 @@ public final class LevelOracle implements ILevelOracle {
     // temperature look the biome up untimed, as part of their own time
     @Override
     public Holder<Biome> biomeHolder(BlockPos blockPos) {
-        if (!BlockQuerySamples.isRecording())
-            return this.holder(blockPos);
-        final long began = System.nanoTime();
+        final long began = BlockQuerySamples.BIOME.begin();
         var holder = this.holder(blockPos);
-        BlockQuerySamples.biome(System.nanoTime() - began);
+        BlockQuerySamples.BIOME.end(began);
         return holder;
     }
 
     @Override
     public Biome.Precipitation precipitationAt(BlockPos pos) {
-        if (!BlockQuerySamples.isRecording())
-            return this.precipitation(pos);
-        final long began = System.nanoTime();
+        final long began = BlockQuerySamples.PRECIPITATION.begin();
         var precipitation = this.precipitation(pos);
-        BlockQuerySamples.precipitation(System.nanoTime() - began);
+        BlockQuerySamples.PRECIPITATION.end(began);
         return precipitation;
     }
 
     @Override
     public float temperatureAt(BlockPos pos) {
-        if (!BlockQuerySamples.isRecording())
-            return this.temperature(pos);
-        final long began = System.nanoTime();
+        final long began = BlockQuerySamples.TEMPERATURE.begin();
         var temperature = this.temperature(pos);
-        BlockQuerySamples.temperature(System.nanoTime() - began);
+        BlockQuerySamples.TEMPERATURE.end(began);
         return temperature;
     }
 

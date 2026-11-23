@@ -64,6 +64,40 @@ public final class BlockQuerySamples {
     }
 
     /**
+     * A kind of lookup, timed one call at a time: {@code began = begin()}, the lookup, then {@code end(began)}. Reads
+     * the clock only while recording, and allocates nothing, as the lookups are on hot paths
+     */
+    public static final class Lookup {
+        private final Work work = new Work();
+
+        private Lookup() {
+        }
+
+        /**
+         * When the lookup began, by System.nanoTime; 0 while nothing records
+         */
+        public long begin() {
+            return recording ? System.nanoTime() : 0;
+        }
+
+        /**
+         * Counts the lookup that began at {@code began}, if {@link #begin} timed it
+         */
+        public void end(long began) {
+            if (began != 0)
+                this.add(System.nanoTime() - began);
+        }
+
+        void add(long nanos) {
+            this.work.add(nanos, 1);
+        }
+
+        Taken take() {
+            return this.work.take();
+        }
+    }
+
+    /**
      * Everything counted since the last take
      *
      * @param scanner       the block scanner: ticks with blocks read, blocks read
@@ -84,11 +118,26 @@ public final class BlockQuerySamples {
     private static final Work RAYS = new Work();
     private static final LongAdder RAYS_TRACED = new LongAdder();
     private static final Work RANDOM = new Work();
-    private static final Work BIOME = new Work();
-    private static final Work TEMPERATURE = new Work();
-    private static final Work PRECIPITATION = new Work();
-    private static final Work SEASON_TEMPERATURE = new Work();
-    private static final Work SEASON_PRECIPITATION = new Work();
+    /**
+     * The oracle's biome lookups
+     */
+    public static final Lookup BIOME = new Lookup();
+    /**
+     * The oracle's temperature lookups
+     */
+    public static final Lookup TEMPERATURE = new Lookup();
+    /**
+     * The oracle's precipitation lookups
+     */
+    public static final Lookup PRECIPITATION = new Lookup();
+    /**
+     * The season provider's temperature questions
+     */
+    public static final Lookup SEASON_TEMPERATURE = new Lookup();
+    /**
+     * The season provider's precipitation questions: whether anything falls, or what
+     */
+    public static final Lookup SEASON_PRECIPITATION = new Lookup();
 
     private static volatile boolean recording;
 
@@ -123,41 +172,6 @@ public final class BlockQuerySamples {
      */
     public static void sampled(long nanos, int samples) {
         RANDOM.add(nanos, samples);
-    }
-
-    /**
-     * An oracle biome lookup's time
-     */
-    public static void biome(long nanos) {
-        BIOME.add(nanos, 1);
-    }
-
-    /**
-     * An oracle temperature lookup's time
-     */
-    public static void temperature(long nanos) {
-        TEMPERATURE.add(nanos, 1);
-    }
-
-    /**
-     * An oracle precipitation lookup's time
-     */
-    public static void precipitation(long nanos) {
-        PRECIPITATION.add(nanos, 1);
-    }
-
-    /**
-     * A season provider temperature question's time
-     */
-    public static void seasonTemperature(long nanos) {
-        SEASON_TEMPERATURE.add(nanos, 1);
-    }
-
-    /**
-     * A season provider precipitation question's time: whether anything falls, or what
-     */
-    public static void seasonPrecipitation(long nanos) {
-        SEASON_PRECIPITATION.add(nanos, 1);
     }
 
     static Second take() {
