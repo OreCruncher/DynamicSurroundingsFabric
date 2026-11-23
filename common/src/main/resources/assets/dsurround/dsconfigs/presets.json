@@ -9,9 +9,9 @@
 //   Combat & RPG (RPG): pop-offs, crit words, swing/bow/jump/toolbar sounds, burning flames, death mist, footprints,
 //     skull flames
 //   Weather & sky (Atmosphere): storms, particle precipitation, dust, drips, window streaks and frost, ground fog,
-//     clouds, fog, auroras, wind on particles, rain ripples, storm and thunder sounds
+//     clouds, fog, auroras, rainbows and halos, wind on particles, rain ripples, storm and thunder sounds
 //   World details (World): steam, bubble columns, flame jets, waterfalls, fireflies, breath
-//   Sound polish: ambience, remapped steps, footstep accents, brush steps, waterfall sounds
+//   Sound polish: ambience, remapped steps, footstep accents, brush steps, waterfall sounds, rain on surfaces
 // Left out on purpose: the HUD (compass, clock, light levels: personal layout), Scary Content (a comfort choice no
 // preset turns back on), ranges and quality (the performance presets'), technical settings, and anything that needs
 // a restart (the music manager).
@@ -51,6 +51,8 @@
       "soundOptions.replaceThunderSounds": false,
       "fogOptions.enableFogEffects": false,
       "auroraOptions.enableAuroras": false,
+      "weatherOptions.sky.enableRainbows": false,
+      "weatherOptions.sky.enableHalos": false,
       "worldActorOptions.enableWorldActors": false,
       "worldActorOptions.enableDustDevils": false,
       "worldActorOptions.enableWaterspouts": false,
@@ -77,7 +79,8 @@
       "footstepAccents.enableWetSurfaceAccents": true,
       "footstepAccents.enableFloorSqueaks": true,
       "entityEffects.enableBrushStepEffect": true,
-      "waterfallOptions.enableSounds": true
+      "waterfallOptions.enableSounds": true,
+      "weatherOptions.storms.enableRainSurfaces": true
     }
   },
   {
@@ -94,12 +97,15 @@
       "fogOptions.enableGroundFog": true,
       "weatherOptions.sky.enableDynamicClouds": true,
       "weatherOptions.storms.enableStormSounds": true,
+      "weatherOptions.storms.enableRainSurfaces": true,
       "soundOptions.replaceThunderSounds": true,
       "fogOptions.enableFogEffects": true,
       "fogOptions.enableMorningFog": true,
       "fogOptions.enableBiomeFog": true,
       "fogOptions.enableWeatherFog": true,
       "auroraOptions.enableAuroras": true,
+      "weatherOptions.sky.enableRainbows": true,
+      "weatherOptions.sky.enableHalos": true,
       "worldActorOptions.enableWorldActors": true,
       "worldActorOptions.enableDustDevils": true,
       "worldActorOptions.enableWaterspouts": true,
@@ -184,12 +190,15 @@
       "fogOptions.enableGroundFog": true,
       "weatherOptions.sky.enableDynamicClouds": true,
       "weatherOptions.storms.enableStormSounds": true,
+      "weatherOptions.storms.enableRainSurfaces": true,
       "soundOptions.replaceThunderSounds": true,
       "fogOptions.enableFogEffects": true,
       "fogOptions.enableMorningFog": true,
       "fogOptions.enableBiomeFog": true,
       "fogOptions.enableWeatherFog": true,
       "auroraOptions.enableAuroras": true,
+      "weatherOptions.sky.enableRainbows": true,
+      "weatherOptions.sky.enableHalos": true,
       "worldActorOptions.enableWorldActors": true,
       "worldActorOptions.enableDustDevils": true,
       "worldActorOptions.enableWaterspouts": true,

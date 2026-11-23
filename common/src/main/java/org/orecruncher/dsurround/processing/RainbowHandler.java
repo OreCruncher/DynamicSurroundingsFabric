@@ -106,30 +106,56 @@ public class RainbowHandler extends AbstractClientHandler {
             // The moon is opposite the sun
             var moon = RainbowConditions.sunFactor(-elevation, this.conditions.secondary())
                     * RainbowConditions.moonFactor(this.levelOracle.currentMoonSize());
-            if (this.seasons.getPrecipitationAt(player.blockPosition()) != Biome.Precipitation.RAIN) {
-                this.status = "not a rain biome";
-            } else if (!this.conditions.isClearing()) {
-                this.status = "rain not clearing";
-            } else if (!this.conditions.hasRainbow()) {
-                this.status = "none this time";
-            } else if (sun <= 0F && moon <= 0F) {
-                this.status = elevation > 0F ? "sun too high" : "sun down, moon not full or not low";
-            } else {
-                boolean byMoon = sun <= 0F;
-                if (byMoon != this.moonbow && this.strength > 0F) {
-                    // The last one fades away before the other shows
-                    this.status = "changing to a " + (byMoon ? "moonbow" : "rainbow");
-                } else {
-                    this.moonbow = byMoon;
-                    this.status = byMoon ? "showing a moonbow" : "showing";
-                    target = this.conditions.strength(level.getGameTime()) * (byMoon ? moon : sun);
-                    secondaryTarget = this.conditions.secondary() ? 1F : 0F;
-                }
+            var rainBiome = this.seasons.getPrecipitationAt(player.blockPosition()) == Biome.Precipitation.RAIN;
+            var decision = decide(rainBiome, this.conditions.isClearing(), this.conditions.hasRainbow(), elevation, sun,
+                    moon, this.moonbow, this.strength);
+            this.status = decision.status();
+            this.moonbow = decision.moonbow();
+            if (decision.light() > 0F) {
+                target = this.conditions.strength(level.getGameTime()) * decision.light();
+                secondaryTarget = this.conditions.secondary() ? 1F : 0F;
             }
         }
         this.strength = Mth.approach(this.strength, target, FADE_PER_TICK);
         this.secondary = Mth.approach(this.secondary, secondaryTarget, FADE_PER_TICK);
         this.state.setShowing(this.strength > 0F);
+    }
+
+    /**
+     * What the weather and the sky make of a bow this tick
+     *
+     * @param status  why there is or isn't one, as the diagnostics show it
+     * @param moonbow whether the bow showing, or fading, is a moonbow
+     * @param light   the sun's or the moon's share of its strength (see {@link RainbowConditions#sunFactor}), 0 for none:
+     *                it fades away
+     */
+    record Decision(String status, boolean moonbow, float light) {
+    }
+
+    /**
+     * Whether a bow shows, and by which light. A rainbow and a moonbow never swap while one shows: the last fades away
+     * before the other can
+     *
+     * @param elevation the sun's elevation, which only words the status
+     * @param sun       the sun's share of a rainbow's strength
+     * @param moon      the moon's share of a moonbow's
+     * @param moonbow   whether the bow showing, or fading, is a moonbow
+     * @param strength  how strongly it shows now
+     */
+    static Decision decide(boolean rainBiome, boolean clearing, boolean hasRainbow, float elevation, float sun, float moon,
+                           boolean moonbow, float strength) {
+        if (!rainBiome)
+            return new Decision("not a rain biome", moonbow, 0F);
+        if (!clearing)
+            return new Decision("rain not clearing", moonbow, 0F);
+        if (!hasRainbow)
+            return new Decision("none this time", moonbow, 0F);
+        if (sun <= 0F && moon <= 0F)
+            return new Decision(elevation > 0F ? "sun too high" : "sun down, moon not full or not low", moonbow, 0F);
+        boolean byMoon = sun <= 0F;
+        if (byMoon != moonbow && strength > 0F)
+            return new Decision("changing to a " + (byMoon ? "moonbow" : "rainbow"), moonbow, 0F);
+        return new Decision(byMoon ? "showing a moonbow" : "showing", byMoon, byMoon ? moon : sun);
     }
 
     @Override

@@ -130,26 +130,34 @@ public class AuroraHandler extends AbstractClientHandler {
 
         // Last night's aurora, one with more curtains than are now allowed, or one in the style no longer chosen, fades
         // out before the next can begin
-        var classic = this.aurora;
-        var realistic = this.realistic;
-        var showing = this.showing();
-        var stale = showing != null && (showing != options.style
-                || classic != null && (classic.night() != night || classic.bands() > options.classic.maxBands)
-                || realistic != null && realistic.night() != night);
+        var showing = showing(this.aurora, this.cinematic, this.realistic);
+        var stale = stale(showing, options.style, this.aurora, options.classic.maxBands, this.realistic, night);
         var target = showing != null && wanted && !stale ? 1F : 0F;
         this.strength = Mth.approach(this.strength, target, FADE_PER_TICK);
     }
 
     /**
-     * The style of the aurora started tonight, if one was
+     * The style of the aurora started, if one was. A cinematic aurora keeps a realistic one for how active it is, so
+     * it is asked for before the realistic
      */
     @Nullable
-    private AuroraStyle showing() {
-        if (this.aurora != null)
+    static AuroraStyle showing(@Nullable Aurora classic, @Nullable CinematicAurora cinematic, @Nullable RealisticAurora realistic) {
+        if (classic != null)
             return AuroraStyle.CLASSIC;
-        if (this.cinematic != null)
+        if (cinematic != null)
             return AuroraStyle.CINEMATIC;
-        return this.realistic != null ? AuroraStyle.REALISTIC : null;
+        return realistic != null ? AuroraStyle.REALISTIC : null;
+    }
+
+    /**
+     * Whether the aurora showing has to fade out before tonight's can begin: it is last night's, it has more curtains
+     * than are now allowed, or it is in a style no longer chosen
+     */
+    static boolean stale(@Nullable AuroraStyle showing, AuroraStyle chosen, @Nullable Aurora classic, int maxBands,
+                         @Nullable RealisticAurora realistic, long night) {
+        return showing != null && (showing != chosen
+                || classic != null && (classic.night() != night || classic.bands() > maxBands)
+                || realistic != null && realistic.night() != night);
     }
 
     private RealisticAurora createRealistic(long night) {
