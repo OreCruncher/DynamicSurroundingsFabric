@@ -131,8 +131,6 @@
   "dsurround.config.footstepAccents.enableFloorSqueaks.tooltip": "Włącza/wyłącza akcenty dla gracza chodzącego po skrzypiących blokach",
   "dsurround.config.particleTweaks": "Ulepszenia cząsteczek",
   "dsurround.config.particleTweaks.tooltip": "Opcje konfiguracji dla ulepszenia zachowania cząsteczek",
-  "dsurround.config.particleTweaks.suppressPlayerParticles": "Wygaś efekty mikstur gracza",
-  "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "Włącza/wyłącza wygaszanie cząsteczek mikstur obecnego gracza w widoku pierwszej osoby",
   "dsurround.config.particleTweaks.suppressProjectileParticleTrails": "Wygaś ślady cząsteczek pocisków",
   "dsurround.config.particleTweaks.suppressProjectileParticleTrails.tooltip": "Włącza/wyłącza pokazywanie śladów cząsteczek pocisków przy trafieniach krytycznych",
   "dsurround.config.compassAndClockOptions": "Opcje zegara i kompasu",

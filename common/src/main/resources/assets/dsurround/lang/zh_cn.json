@@ -135,8 +135,6 @@
   "dsurround.config.footstepAccents.enableFloorSqueaks.tooltip": "启用/禁用 当玩家走在吱吱作响的方块上的效果",
   "dsurround.config.particleTweaks": "粒子调整",
   "dsurround.config.particleTweaks.tooltip": "用于微调粒子行为的配置选项",
-  "dsurround.config.particleTweaks.suppressPlayerParticles": "抑制玩家药水效果",
-  "dsurround.config.particleTweaks.suppressPlayerParticles.tooltip": "启用/禁用 在第一人称视角时抑制当前玩家的药水粒子",
   "dsurround.config.particleTweaks.suppressProjectileParticleTrails": "抑制抛射物粒子轨迹",
   "dsurround.config.particleTweaks.suppressProjectileParticleTrails.tooltip": "启用/禁用 在暴击时显示抛射物粒子轨迹",
   "dsurround.config.compassAndClockOptions": "指南针和钟表选项",
