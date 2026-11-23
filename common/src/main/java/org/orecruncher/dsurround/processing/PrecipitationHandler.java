@@ -370,37 +370,30 @@ public class PrecipitationHandler extends AbstractClientHandler {
         var partialTick = minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         var target = minecraft.gameRenderer.mainRenderTarget();
 
-        PrecipitationShaders.RENDER_TIMER.begin();
         // For recordings, how much there was to draw: the drops in the area, whatever the storm and range make
-        PrecipitationShaders.RENDER_TIMER.count(this.field.count());
-        try {
+        PrecipitationShaders.RENDER_TIMER.time(() -> {
             // Timed on its own, so a wait isn't put down to what is drawn first
-            PrecipitationShaders.WAIT_TIMER.begin();
-            this.meshes.await();
-            PrecipitationShaders.WAIT_TIMER.end();
+            PrecipitationShaders.WAIT_TIMER.time(this.meshes::await);
 
+            // One look for the whole frame: a GPU pipeline failing part way through turns the rest to the CPU from the
+            // next frame, not part of this one, whose quads weren't built ahead for it
+            var style = this.style();
             if (this.dampSpots.count() > 0) {
                 // Drawn by the pipeline that builds them: the one on the GPU, or the CPU's quads
-                var style = this.style();
                 var spots = style.gpuDrops() ? PrecipitationShaders.GPU_SPOTS : PrecipitationShaders.DAMP_SPOTS;
-                if (spots.isUsable()) {
-                    PrecipitationShaders.DAMP_SPOTS_TIMER.begin();
-                    PrecipitationShaders.DAMP_SPOTS_TIMER.count(this.dampSpots.count());
-                    spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick, style), () -> {});
-                    PrecipitationShaders.DAMP_SPOTS_TIMER.end();
-                }
+                if (spots.isUsable())
+                    PrecipitationShaders.DAMP_SPOTS_TIMER.time(
+                            () -> spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick, style), () -> {}),
+                            this.dampSpots::count);
             }
 
             // If the drops fail to draw, vanilla's weather is drawn in their place, this frame and after
             var drops = PrecipitationShaders.DROPS;
-            PrecipitationShaders.DROPS_TIMER.begin();
             this.dropsDrawn = 0;
-            drops.run(() -> this.drawDrops(drops.pipeline(), target, camera, partialTick), () -> {});
-            PrecipitationShaders.DROPS_TIMER.count(this.dropsDrawn);
-            PrecipitationShaders.DROPS_TIMER.end();
-        } finally {
-            PrecipitationShaders.RENDER_TIMER.end();
-        }
+            PrecipitationShaders.DROPS_TIMER.time(
+                    () -> drops.run(() -> this.drawDrops(drops.pipeline(), target, camera, partialTick, style), () -> {}),
+                    () -> this.dropsDrawn);
+        }, this.field::count);
     }
 
     /**
@@ -408,9 +401,8 @@ public class PrecipitationHandler extends AbstractClientHandler {
      * and the dust, soft: it reads a copy of the scene's depth, water included. Nothing here writes depth, so the dust
      * goes first, behind the rest.
      */
-    private void drawDrops(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick) {
+    private void drawDrops(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, DropMeshes.Style style) {
         var sources = this.sources();
-        var style = this.style();
         var textures = GameUtils.getTextureManager();
         var lightmap = GameUtils.getMC().gameRenderer.lightmap();
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
@@ -426,11 +418,10 @@ public class PrecipitationHandler extends AbstractClientHandler {
         if (style.gpuDrops()) {
             // If it fails, the CPU builds them from the next frame on
             var gpu = PrecipitationShaders.GPU_DROPS;
-            PrecipitationShaders.GPU_DROPS_TIMER.begin();
             int before = this.dropsDrawn;
-            gpu.run(() -> this.dropsDrawn += this.gpuDrops.draw(this.field, gpu.pipeline(), target, camera, partialTick, style, bind), () -> {});
-            PrecipitationShaders.GPU_DROPS_TIMER.count(this.dropsDrawn - before);
-            PrecipitationShaders.GPU_DROPS_TIMER.end();
+            PrecipitationShaders.GPU_DROPS_TIMER.time(
+                    () -> gpu.run(() -> this.dropsDrawn += this.gpuDrops.draw(this.field, gpu.pipeline(), target, camera, partialTick, style, bind), () -> {}),
+                    () -> this.dropsDrawn - before);
         } else {
             this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, sources, camera, partialTick, style,
                     quads -> this.dropDraw.draw(quads, pipeline, target, bind));
@@ -444,14 +435,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
                         quads -> this.fleckDraw.draw(quads, pipeline, target, bind));
         }
         if (this.windowStreaks.count() > 0) {
-            PrecipitationShaders.STREAKS_TIMER.begin();
-            PrecipitationShaders.STREAKS_TIMER.count(this.windowStreaks.count());
-            if (style.gpuDrops())
-                marks.run(() -> this.gpuStreaks.draw(this.windowStreaks, marks.pipeline(), target, camera, partialTick, style, bind), () -> {});
-            else
-                this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
-                        quads -> this.streakDraw.draw(quads, pipeline, target, bind));
-            PrecipitationShaders.STREAKS_TIMER.end();
+            PrecipitationShaders.STREAKS_TIMER.time(() -> {
+                if (style.gpuDrops())
+                    marks.run(() -> this.gpuStreaks.draw(this.windowStreaks, marks.pipeline(), target, camera, partialTick, style, bind), () -> {});
+                else
+                    this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
+                            quads -> this.streakDraw.draw(quads, pipeline, target, bind));
+            }, this.windowStreaks::count);
         }
     }
 
@@ -470,16 +460,15 @@ public class PrecipitationHandler extends AbstractClientHandler {
             var gpuSoft = PrecipitationShaders.GPU_DUST;
             boolean softGpu = isSoft && gpuSoft.isUsable();
             var shader = softGpu ? gpuSoft : gpu;
-            PrecipitationShaders.GPU_DUST_TIMER.begin();
             int before = this.dropsDrawn;
-            shader.run(() -> this.dropsDrawn += this.gpuDust.draw(this.field, shader.pipeline(), target, camera, partialTick, style, pass -> {
-                pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
-                pass.setUniform("Sampler2", lightmap, lightmapSampler);
-                if (softGpu)
-                    SoftParticles.bindSoftDepth(pass);
-            }), () -> {});
-            PrecipitationShaders.GPU_DUST_TIMER.count(this.dropsDrawn - before);
-            PrecipitationShaders.GPU_DUST_TIMER.end();
+            PrecipitationShaders.GPU_DUST_TIMER.time(
+                    () -> shader.run(() -> this.dropsDrawn += this.gpuDust.draw(this.field, shader.pipeline(), target, camera, partialTick, style, pass -> {
+                        pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
+                        pass.setUniform("Sampler2", lightmap, lightmapSampler);
+                        if (softGpu)
+                            SoftParticles.bindSoftDepth(pass);
+                    }), () -> {}),
+                    () -> this.dropsDrawn - before);
             return;
         }
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;

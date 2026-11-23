@@ -10,6 +10,8 @@ import org.orecruncher.dsurround.lib.math.EMA;
 import org.orecruncher.dsurround.lib.math.ITimer;
 import org.orecruncher.dsurround.lib.math.TimerEMA;
 
+import java.util.function.IntSupplier;
+
 /**
  * How long drawing something takes, for the diagnostics overlay: on the CPU, building and handing over the drawing
  * (vertices, uploads, state), and on the GPU, doing it. The two don't add up to a frame's time: the GPU works on a
@@ -113,6 +115,31 @@ public final class RenderTimer implements ITimer {
         this.measuring = false;
         this.pending[this.frame] = true;
         this.frame = (this.frame + 1) % FRAMES;
+    }
+
+    /**
+     * Times {@code draw}, ended even if it throws
+     */
+    public void time(Runnable draw) {
+        this.begin();
+        try {
+            draw.run();
+        } finally {
+            this.end();
+        }
+    }
+
+    /**
+     * Times {@code draw}, ended even if it throws, and counts what it drew (see {@link #count}), asked once it is done
+     */
+    public void time(Runnable draw, IntSupplier count) {
+        this.begin();
+        try {
+            draw.run();
+            this.count(count.getAsInt());
+        } finally {
+            this.end();
+        }
     }
 
     /**
