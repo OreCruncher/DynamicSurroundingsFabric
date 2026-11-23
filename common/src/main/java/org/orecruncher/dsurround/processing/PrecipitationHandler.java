@@ -378,12 +378,13 @@ public class PrecipitationHandler extends AbstractClientHandler {
             // One look for the whole frame: a GPU pipeline failing part way through turns the rest to the CPU from the
             // next frame, not part of this one, whose quads weren't built ahead for it
             var style = this.style();
+            var frame = this.meshes.frame(this.sources(), camera, partialTick, style);
             if (this.dampSpots.count() > 0) {
                 // Drawn by the pipeline that builds them: the one on the GPU, or the CPU's quads
                 var spots = style.gpuDrops() ? PrecipitationShaders.GPU_SPOTS : PrecipitationShaders.DAMP_SPOTS;
                 if (spots.isUsable())
                     PrecipitationShaders.DAMP_SPOTS_TIMER.time(
-                            () -> spots.run(() -> this.drawDampSpots(spots.pipeline(), target, camera, partialTick, style), () -> {}),
+                            () -> spots.run(() -> this.drawDampSpots(spots.pipeline(), target, frame), () -> {}),
                             this.dampSpots::count);
             }
 
@@ -391,7 +392,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             var drops = PrecipitationShaders.DROPS;
             this.dropsDrawn = 0;
             PrecipitationShaders.DROPS_TIMER.time(
-                    () -> drops.run(() -> this.drawDrops(drops.pipeline(), target, camera, partialTick, style), () -> {}),
+                    () -> drops.run(() -> this.drawDrops(drops.pipeline(), target, frame), () -> {}),
                     () -> this.dropsDrawn);
         }, this.field::count);
     }
@@ -401,13 +402,15 @@ public class PrecipitationHandler extends AbstractClientHandler {
      * and the dust, soft: it reads a copy of the scene's depth, water included. Nothing here writes depth, so the dust
      * goes first, behind the rest.
      */
-    private void drawDrops(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, DropMeshes.Style style) {
-        var sources = this.sources();
+    private void drawDrops(RenderPipeline pipeline, RenderTarget target, DropMeshes.Frame frame) {
+        var camera = frame.camera();
+        var partialTick = frame.partialTick();
+        var style = frame.style();
         var textures = GameUtils.getTextureManager();
         var lightmap = GameUtils.getMC().gameRenderer.lightmap();
         var lightmapSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
 
-        this.drawDust(pipeline, target, camera, partialTick, sources, style, lightmap, lightmapSampler);
+        this.drawDust(pipeline, target, frame, lightmap, lightmapSampler);
 
         // The rain is untextured; the snow is cut from the game's snow texture
         var snow = textures.getTexture(Snowflakes.TEXTURE);
@@ -423,7 +426,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
                     () -> gpu.run(() -> this.dropsDrawn += this.gpuDrops.draw(this.field, gpu.pipeline(), target, camera, partialTick, style, bind), () -> {}),
                     () -> this.dropsDrawn - before);
         } else {
-            this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, sources, camera, partialTick, style,
+            this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DROPS, frame,
                     quads -> this.dropDraw.draw(quads, pipeline, target, bind));
         }
         var marks = PrecipitationShaders.GPU_MARKS;
@@ -431,7 +434,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             if (style.gpuDrops())
                 marks.run(() -> this.gpuFlecks.draw(this.snowFlecks, marks.pipeline(), target, camera, partialTick, style, bind), () -> {});
             else
-                this.meshes.draw(DropMeshes.Kind.FLECKS, sources, camera, partialTick, style,
+                this.meshes.draw(DropMeshes.Kind.FLECKS, frame,
                         quads -> this.fleckDraw.draw(quads, pipeline, target, bind));
         }
         if (this.windowStreaks.count() > 0) {
@@ -439,16 +442,17 @@ public class PrecipitationHandler extends AbstractClientHandler {
                 if (style.gpuDrops())
                     marks.run(() -> this.gpuStreaks.draw(this.windowStreaks, marks.pipeline(), target, camera, partialTick, style, bind), () -> {});
                 else
-                    this.meshes.draw(DropMeshes.Kind.STREAKS, sources, camera, partialTick, style,
+                    this.meshes.draw(DropMeshes.Kind.STREAKS, frame,
                             quads -> this.streakDraw.draw(quads, pipeline, target, bind));
             }, this.windowStreaks::count);
         }
     }
 
-    private void drawDust(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick,
-                          DropMeshes.Sources sources, DropMeshes.Style style, GpuTextureView lightmap, GpuSampler lightmapSampler) {
+    private void drawDust(RenderPipeline pipeline, RenderTarget target, DropMeshes.Frame frame, GpuTextureView lightmap,
+                          GpuSampler lightmapSampler) {
         if (this.field.dustCount() == 0)
             return;
+        var style = frame.style();
         var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
         // Soft if it can be, reading the scene's depth, water included
         var soft = PrecipitationShaders.DUST;
@@ -462,7 +466,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             var shader = softGpu ? gpuSoft : gpu;
             int before = this.dropsDrawn;
             PrecipitationShaders.GPU_DUST_TIMER.time(
-                    () -> shader.run(() -> this.dropsDrawn += this.gpuDust.draw(this.field, shader.pipeline(), target, camera, partialTick, style, pass -> {
+                    () -> shader.run(() -> this.dropsDrawn += this.gpuDust.draw(this.field, shader.pipeline(), target, frame.camera(), frame.partialTick(), style, pass -> {
                         pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
                         pass.setUniform("Sampler2", lightmap, lightmapSampler);
                         if (softGpu)
@@ -472,7 +476,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             return;
         }
         var dustPipeline = isSoft ? soft.pipeline() : pipeline;
-        this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DUST, sources, camera, partialTick, style,
+        this.dropsDrawn += this.meshes.draw(DropMeshes.Kind.DUST, frame,
                 quads -> this.dustDraw.draw(quads, dustPipeline, target, pass -> {
                     pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
                     pass.setUniform("Sampler2", lightmap, lightmapSampler);
@@ -481,14 +485,15 @@ public class PrecipitationHandler extends AbstractClientHandler {
                 }));
     }
 
-    private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, Camera camera, float partialTick, DropMeshes.Style style) {
+    private void drawDampSpots(RenderPipeline pipeline, RenderTarget target, DropMeshes.Frame frame) {
         var atlas = GameUtils.getTextureManager().getTexture(TextureAtlas.LOCATION_PARTICLES);
         Consumer<RenderPass> bind = pass -> pass.setUniform("Sampler0", atlas.getTextureView(), atlas.getSampler());
+        var style = frame.style();
         if (style.gpuDrops()) {
-            this.gpuSpots.draw(this.dampSpots, pipeline, target, camera, partialTick, style, bind);
+            this.gpuSpots.draw(this.dampSpots, pipeline, target, frame.camera(), frame.partialTick(), style, bind);
             return;
         }
-        this.meshes.draw(DropMeshes.Kind.SPOTS, this.sources(), camera, partialTick, style,
+        this.meshes.draw(DropMeshes.Kind.SPOTS, frame,
                 quads -> this.dampSpotDraw.draw(quads, pipeline, target, bind));
     }
 

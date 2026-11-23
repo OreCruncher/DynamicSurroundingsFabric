@@ -211,6 +211,53 @@ public final class DropMeshes implements AutoCloseable {
         }
     }
 
+    /**
+     * One frame's drawing: the drops, the camera, the partial tick and the settings every kind is drawn with, so all of
+     * them are checked against what was built ahead alike. The view is worked out once, when the first kind is written
+     * by the CPU; drawn on the GPU, it never is.
+     */
+    public final class Frame {
+        private final Sources sources;
+        private final Camera camera;
+        private final float partialTick;
+        private final Style style;
+        @Nullable
+        private Request request;
+
+        private Frame(Sources sources, Camera camera, float partialTick, Style style) {
+            this.sources = sources;
+            this.camera = camera;
+            this.partialTick = partialTick;
+            this.style = style;
+        }
+
+        public Sources sources() {
+            return this.sources;
+        }
+
+        public Camera camera() {
+            return this.camera;
+        }
+
+        public float partialTick() {
+            return this.partialTick;
+        }
+
+        public Style style() {
+            return this.style;
+        }
+
+        Request request() {
+            var request = this.request;
+            if (request == null) {
+                request = new Request(this.sources, PrecipitationRenderer.View.of(this.camera, DropMeshes.this.projection.get()),
+                        this.partialTick, this.style);
+                this.request = request;
+            }
+            return request;
+        }
+    }
+
     private static final Kind[] KINDS = Kind.values();
 
     private final IModLog logger;
@@ -307,16 +354,23 @@ public final class DropMeshes implements AutoCloseable {
     }
 
     /**
-     * Draws the quads of a kind with {@code drawer}: those built ahead, if they were built for this camera, partial
-     * tick and settings and not drawn yet; otherwise written now
+     * A frame's drawing, for {@link #draw}: once a frame, as its drawing starts
+     */
+    public Frame frame(Sources sources, Camera camera, float partialTick, Style style) {
+        return new Frame(sources, camera, partialTick, style);
+    }
+
+    /**
+     * Draws the quads of a kind with {@code drawer}: those built ahead, if they were built for the frame's camera,
+     * partial tick and settings and not drawn yet; otherwise written now
      *
      * @return how many quads were drawn
      * @throws RuntimeException what the build threw, if it failed
      */
-    public int draw(Kind kind, Sources sources, Camera camera, float partialTick, Style style, Drawer drawer) {
-        if (!sources.hasAny(kind))
+    public int draw(Kind kind, Frame frame, Drawer drawer) {
+        if (!frame.sources().hasAny(kind))
             return 0;
-        var now = new Request(sources, PrecipitationRenderer.View.of(camera, this.projection.get()), partialTick, style);
+        var now = frame.request();
         var mismatch = this.mismatch(kind, now);
         if (mismatch != null) {
             this.drawnBehind++;
