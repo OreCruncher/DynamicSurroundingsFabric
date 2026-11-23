@@ -28,7 +28,7 @@ public record CinematicAuroraFrame(Matrix4fc invViewProj, float[] vec4s) impleme
     /**
      * Vectors in all
      */
-    static final int VECTORS = HEADER + CinematicAurora.MAX_RIBBONS * 5;
+    public static final int VECTORS = HEADER + CinematicAurora.MAX_RIBBONS * 5;
 
     // Where some of the values are, as indexes into vec4s, for tests
     static final int ALPHA = 1;

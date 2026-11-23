@@ -28,7 +28,7 @@ public record GroundFogFrame(Matrix4fc invViewProj, float[] vec4s) implements Fr
     /**
      * Vectors after the matrix
      */
-    static final int VECTORS = 7;
+    public static final int VECTORS = 7;
 
     // Where some of the values are, as indexes into vec4s, for tests
     static final int CAMERA = 12;

@@ -74,4 +74,11 @@ public class GpuDropsTests {
         assertTrue(text.contains("int light = int(t1.w);"));
         assertTrue(text.contains("float size = t3.x;"));
     }
+
+    @Test
+    void theUniformBlockIsWhatIsPacked() throws IOException {
+        // DropInfo's room, with the pipeline's MAX_FLAKES, against what GpuDrops packs
+        var defines = PrecipitationShaders.GPU_DROPS.pipeline().getShaderDefines().values();
+        assertEquals(GpuDrops.INFO_SIZE, ShaderSources.blockSize(shader(), "DropInfo", defines));
+    }
 }

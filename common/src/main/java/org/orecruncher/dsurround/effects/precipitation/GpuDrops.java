@@ -42,7 +42,8 @@ public final class GpuDrops implements AutoCloseable {
     static final int BATCH_DROPS = 12_800;
     // As many looks as there may be snowflakes: the dust has fewer sprites
     static final int MAX_LOOKS = Snowflakes.MAX_FLAKES;
-    private static final int INFO_SIZE;
+    // The uniform block's size (a test holds it to the shader's)
+    static final int INFO_SIZE;
 
     static {
         var size = new Std140SizeCalculator().putVec4().putVec4().putVec4().putVec4().putVec4();

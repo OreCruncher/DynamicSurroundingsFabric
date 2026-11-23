@@ -400,7 +400,10 @@ is known of 26.4.
 - Shaders: every stage is compiled to SPIR-V, so `#version 330`, `#extension GL_ARB_separate_shader_objects : require`,
   `#include` (not `#moj_import`), `layout(location = N)` on every input and output (a vertex shader's attributes in the
   vertex format's order), `gl_VertexIndex`. An include has no `#version`. Pipelines are compiled on demand through
-  `RenderSystem.getCompiledPipeline`, and `RenderPass.setPipeline` takes the compiled one.
+  `RenderSystem.getCompiledPipeline`, and `RenderPass.setPipeline` takes the compiled one. `ShaderRulesTests` holds
+  every pipeline of ours to these (and the Vulkan rules above: what a vertex shader hands its fragment shader, by
+  location and type, after the pipeline's defines; the screen effects' blocks against their frames), with
+  `testing/ShaderSources.program` and `blockSize` for a new check.
   - Blend alpha as "over" (`ONE, ONE_MINUS_SRC_ALPHA`), not the default's `ONE, ZERO`, or piled-up color outgrows its
     alpha.
 - Enhanced sounds: a `SourceContext` per playing source, built from an `ISoundEmitter` (a game sound's

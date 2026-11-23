@@ -23,7 +23,7 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) implements Fram
     /**
      * Vectors after the matrix
      */
-    static final int VECTORS = 4;
+    public static final int VECTORS = 4;
 
     // Where some of the values are, as indexes into vec4s, for tests
     static final int ANTISOLAR = 0;

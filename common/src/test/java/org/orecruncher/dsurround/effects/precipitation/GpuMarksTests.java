@@ -133,4 +133,11 @@ public class GpuMarksTests {
     private static void assumeAny(int count) {
         org.junit.jupiter.api.Assumptions.assumeTrue(count > 0, "the streak ran off before it could be checked");
     }
+
+    @Test
+    void theUniformBlockIsWhatIsPacked() throws IOException {
+        // MarkInfo's room, with the pipeline's MAX_FLAKES, against what GpuMarks packs
+        var defines = PrecipitationShaders.GPU_MARKS.pipeline().getShaderDefines().values();
+        assertEquals(GpuMarks.INFO_SIZE, ShaderSources.blockSize(shader(), "MarkInfo", defines));
+    }
 }

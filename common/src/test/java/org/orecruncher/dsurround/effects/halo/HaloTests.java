@@ -6,6 +6,9 @@ package org.orecruncher.dsurround.effects.halo;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.effects.rainbow.RainbowFrame;
+import org.orecruncher.dsurround.testing.ShaderSources;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -71,6 +74,19 @@ public class HaloTests {
         assertEquals(1000, with, 100);
         assertFalse(HaloConditions.slotHasHalo(12345L, 0F));
         assertTrue(HaloConditions.slotHasHalo(12345L, 1F));
+    }
+
+    @Test
+    void theSunStraightOverheadIsDrawn() throws IOException {
+        // At noon with the daylight cycle held (celestial angle 0) the sun has no direction across the ground, and the
+        // halo is at its strongest: the shader must not normalize that nothing (0/0 made the whole halo NaN)
+        var v = HaloFrame.of(0F, 1F, 1F, new Matrix4f(), new Matrix4f(), false).vec4s();
+        assertEquals(0F, v[HaloFrame.SUN], EPSILON);
+        assertEquals(0F, v[HaloFrame.SUN + 2], EPSILON);
+        assertTrue(HaloConditions.sunFactor(v[HaloFrame.ELEVATION]) > 0F, "a halo shows then");
+        var shader = ShaderSources.read("core/halo.fsh");
+        assertFalse(shader.contains("normalize(Sun.xz)") || shader.contains("normalize(view.xz)"), "an unguarded direction across the ground");
+        assertTrue(shader.contains("direction(Sun.xz,") && shader.contains("direction(vec3(0.0, 1.0, 0.0) - Sun.xyz * Sun.y,"));
     }
 
     @Test

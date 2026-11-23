@@ -23,6 +23,17 @@ layout(location = 0) in vec2 screenPos;
 
 layout(location = 0) out vec4 fragColor;
 
+// A direction, or the one given where there is none: with the sun straight overhead it has no direction across the
+// ground and the blocks no up (at noon with the daylight cycle held, 0/0 made the whole halo NaN: black within 60
+// degrees of the sun), and a pixel straight up has none across the ground
+vec2 direction(vec2 v, vec2 otherwise) {
+    return dot(v, v) > 1.0e-12 ? normalize(v) : otherwise;
+}
+
+vec3 direction(vec3 v, vec3 otherwise) {
+    return dot(v, v) > 1.0e-12 ? normalize(v) : otherwise;
+}
+
 // The cosine of the furthest from the sun anything is drawn: 60 degrees, past the sun dogs' tails with the sun as high
 // as they show
 const float OUTERMOST = 0.5;
@@ -68,7 +79,7 @@ void main() {
     if (blocky) {
         // Blocks fixed in the sky: a square grid laid flat around the sun, true to the angle out from it and around
         // it, each block taken as its middle
-        vec3 up = normalize(vec3(0.0, 1.0, 0.0) - Sun.xyz * Sun.y);
+        vec3 up = direction(vec3(0.0, 1.0, 0.0) - Sun.xyz * Sun.y, vec3(1.0, 0.0, 0.0));
         vec3 side = cross(Sun.xyz, up);
         float around = atan(dot(view, side), dot(view, up));
         vec2 grid = angle * vec2(sin(around), cos(around));
@@ -81,8 +92,8 @@ void main() {
 
     // Where the pixel is beside the sun: its height against the sun's, and how far round from it
     float height = degrees(asin(clamp(view.y, -1.0, 1.0))) - Dogs.w;
-    vec2 flatView = normalize(view.xz);
-    vec2 flatSun = normalize(Sun.xz);
+    vec2 flatView = direction(view.xz, vec2(1.0, 0.0));
+    vec2 flatSun = direction(Sun.xz, vec2(1.0, 0.0));
     float aside = abs(degrees(atan(flatView.x * flatSun.y - flatView.y * flatSun.x, dot(flatView, flatSun))));
 
     vec3 light;

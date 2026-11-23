@@ -69,16 +69,21 @@ public class TagLibrary implements ITagLibrary {
     private final ISystemClock systemClock;
     private final ClientTagLoader tagLoader;
 
-    // The mod's tags and their members' ids. Every tag in ModTags has an entry once the cache is built.
-    private final Map<TagKey<?>, Collection<Identifier>> tagCache = new Reference2ObjectOpenHashMap<>();
-    // The same tags' members as objects, for the registries in OBJECT_REGISTRIES. Keyed by identity: TagKeys are
-    // interned.
-    private final Map<TagKey<?>, Set<Object>> memberObjects = new Reference2ObjectOpenHashMap<>();
-    // False until the cache is built, and again after anything that makes it stale; the next check rebuilds it
-    private boolean cacheValid = false;
+    /**
+     * The mod's tags and their members' ids (every tag in ModTags has an entry), and the same tags' members as objects,
+     * for the registries in OBJECT_REGISTRIES, keyed by identity (TagKeys are interned). Never changed once built: a
+     * new one replaces it, so a thread reading it sees one whole (rain surfaces are sorted on Async Particles' weather
+     * thread, while a reload may run on the client's).
+     */
+    private record Cache(Map<TagKey<?>, Collection<Identifier>> ids, Map<TagKey<?>, Set<Object>> objects) {
+    }
+
+    // Null until the cache is built, and again after anything that makes it stale; the next check rebuilds it. Built
+    // and dropped under the library's lock
+    private volatile @Nullable Cache cache;
 
     private boolean isConnected;
-    private int version;
+    private volatile int version;
 
     public TagLibrary(IModLog logger, ISystemClock systemClock) {
         this.logger = ModLog.createChild(logger, "TagLibrary");
@@ -159,8 +164,7 @@ public class TagLibrary implements ITagLibrary {
      */
     @Override
     public Stream<String> dump() {
-        this.ensureCache();
-        return this.tagCache.entrySet().stream()
+        return this.cache().ids().entrySet().stream()
                 .map(kvp -> {
                     var builder = new StringBuilder();
 
@@ -181,16 +185,17 @@ public class TagLibrary implements ITagLibrary {
     }
 
     @Override
-    public void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
+    public synchronized void reload(ResourceUtilities resourceUtilities, IReloadEvent.Scope scope) {
         this.tagLoader.setResourceUtilities(resourceUtilities);
 
-        this.logger.info("Cache has %d elements", this.tagCache.size());
+        var cache = this.cache;
+        this.logger.info("Cache has %d elements", cache == null ? 0 : cache.ids().size());
 
         // Rebuilt whether connected or not, so the cache always matches the current resources. While connected it
         // is rebuilt now (a /dsreload, resource pack change, tag sync, ...); otherwise on next use.
         this.invalidate();
         if (this.isConnected)
-            this.initializeTagCache();
+            this.cache = this.initializeTagCache();
     }
 
     @Override
@@ -218,24 +223,24 @@ public class TagLibrary implements ITagLibrary {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Stream<TagKey<T>> streamTags(Holder<T> registryEntry) {
-        this.ensureCache();
+        var cache = this.cache();
         var location = registryEntry.unwrapKey().orElseThrow().identifier();
         Set<TagKey<T>> tags = registryEntry.tags().collect(toSet());
-        for (var kvp : this.tagCache.entrySet()) {
+        for (var kvp : cache.ids().entrySet()) {
             if (kvp.getValue().contains(location))
                 tags.add((TagKey<T>) kvp.getKey());
         }
         return tags.stream();
     }
 
-    private void onConnect(Minecraft client) {
+    private synchronized void onConnect(Minecraft client) {
         this.isConnected = true;
         this.tagLoader.setServerType(GameUtils.getServerType());
         this.invalidate();
-        this.initializeTagCache();
+        this.cache = this.initializeTagCache();
     }
 
-    private void onDisconnect(Minecraft client) {
+    private synchronized void onDisconnect(Minecraft client) {
         this.isConnected = false;
         // Drop the last server's data; anything checked before the next connection gets a fresh build
         this.invalidate();
@@ -243,34 +248,43 @@ public class TagLibrary implements ITagLibrary {
 
     // ---- Cache -----------------------------------------------------------------------------------------------
 
+    // Under the lock
     private void invalidate() {
         this.version++;
-        this.tagCache.clear();
-        this.memberObjects.clear();
-        this.cacheValid = false;
-    }
-
-    private void ensureCache() {
-        if (!this.cacheValid)
-            this.initializeTagCache();
+        this.cache = null;
     }
 
     /**
-     * Loads every mod tag's members, as ids and, where possible, as objects.
+     * The cache, built first if it isn't (by one thread: another waits for it)
      */
-    private void initializeTagCache() {
+    private Cache cache() {
+        var cache = this.cache;
+        return cache != null ? cache : this.build();
+    }
+
+    private synchronized Cache build() {
+        var cache = this.cache;
+        if (cache == null)
+            this.cache = cache = this.initializeTagCache();
+        return cache;
+    }
+
+    /**
+     * Loads every mod tag's members, as ids and, where possible, as objects. Under the lock.
+     */
+    private Cache initializeTagCache() {
         var stopwatch = this.systemClock.getStopwatch();
         this.logger.info("Repopulating tag cache");
-        this.tagCache.clear();
-        this.memberObjects.clear();
         this.tagLoader.clear();
+        Map<TagKey<?>, Collection<Identifier>> ids = new Reference2ObjectOpenHashMap<>();
+        Map<TagKey<?>, Set<Object>> objects = new Reference2ObjectOpenHashMap<>();
         for (var tagKey : ModTags.getModTags()) {
-            var ids = this.tagLoader.getMembers(tagKey);
-            this.tagCache.put(tagKey, ids);
-            this.buildMemberObjects(tagKey, ids);
+            var members = this.tagLoader.getMembers(tagKey);
+            ids.put(tagKey, members);
+            this.buildMemberObjects(tagKey, members, objects);
         }
-        this.cacheValid = true;
-        this.logger.info("Tag cache initialization complete; %d tags cached, %dmillis", this.tagCache.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        this.logger.info("Tag cache initialization complete; %d tags cached, %dmillis", ids.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        return new Cache(ids, objects);
     }
 
     /**
@@ -279,7 +293,7 @@ public class TagLibrary implements ITagLibrary {
      * the mod's tags), so a check against the set alone matches checking both, as the id-based cache used to.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void buildMemberObjects(TagKey<?> tagKey, Collection<Identifier> ids) {
+    private void buildMemberObjects(TagKey<?> tagKey, Collection<Identifier> ids, Map<TagKey<?>, Set<Object>> objects) {
         if (!OBJECT_REGISTRIES.contains(tagKey.registry()))
             return;
         var found = RegistryUtils.getRegistry((ResourceKey) tagKey.registry());
@@ -291,7 +305,7 @@ public class TagLibrary implements ITagLibrary {
         for (var id : ids)
             registry.getOptional(id).ifPresent(members::add);
         registry.getTagOrEmpty((TagKey<Object>) tagKey).forEach(h -> members.add(h.value()));
-        this.memberObjects.put(tagKey, members);
+        objects.put(tagKey, members);
     }
 
     /**
@@ -299,16 +313,14 @@ public class TagLibrary implements ITagLibrary {
      * game's registries answer for other tags).
      */
     private @Nullable Set<Object> memberObjects(TagKey<?> tagKey) {
-        this.ensureCache();
-        return this.memberObjects.get(tagKey);
+        return this.cache().objects().get(tagKey);
     }
 
     /**
      * The member ids if {@code tagKey} is one of the mod's tags, otherwise null.
      */
     private @Nullable Collection<Identifier> memberIds(TagKey<?> tagKey) {
-        this.ensureCache();
-        return this.tagCache.get(tagKey);
+        return this.cache().ids().get(tagKey);
     }
 
     private void formatHelper(StringBuilder builder, String entryName, Collection<Identifier> data) {

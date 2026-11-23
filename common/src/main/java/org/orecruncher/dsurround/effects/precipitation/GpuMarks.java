@@ -31,7 +31,8 @@ public final class GpuMarks implements AutoCloseable {
      * Marks drawn a batch, from a buffer of their own: three texels each, within the 65,536 every GPU allows
      */
     static final int BATCH_MARKS = 16_384;
-    private static final int INFO_SIZE;
+    // The uniform block's size (a test holds it to the shader's)
+    static final int INFO_SIZE;
 
     static {
         var size = new Std140SizeCalculator().putVec4().putVec4().putVec4().putVec4();

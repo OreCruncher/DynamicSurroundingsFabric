@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -118,5 +120,59 @@ public class RedactionTests {
             }
         }
         assertTrue(events > 0);
+    }
+
+    @Test
+    void aCodeLocationsFolderIsFoundInEachScheme() {
+        assertEquals("C:/game/mods", Redaction.folderOf(URI.create("union:/C:/game/mods/a.jar%23205!/")));
+        assertEquals("C:/Games/My%20Pack/mods", Redaction.folderOf(URI.create("file:///C:/Games/My%20Pack/mods/sodium.jar")));
+        assertEquals("home/bob/.minecraft/mods", Redaction.folderOf(URI.create("jar:file:///home/bob/.minecraft/mods/b.jar!/")));
+        assertNull(Redaction.folderOf(URI.create("jrt:/java.base")));
+    }
+
+    @Test
+    void theGamesFolderIsStarredLeavingTheJarsName() {
+        // A game kept outside the home folder, the pack's name in its path (as NeoForge's module locations give it)
+        var url = "file:///D:/Games/Instances/Bob's SMP Pack/mods/sodium.jar";
+        var data = url.getBytes(StandardCharsets.UTF_8);
+        var replacements = Redaction.replacements("C:\\Users\\bob", List.of("D:\\Games\\Instances\\Bob's SMP Pack"));
+        assertTrue(Redaction.redact(data, replacements) > 0);
+        // Starred whole, its separators too: not even how deep it is or how long its names are is left
+        assertEquals("file:///" + "*".repeat("D:/Games/Instances/Bob's SMP Pack".length()) + "/mods/sodium.jar", new String(data, StandardCharsets.UTF_8));
+        // The percent-encoded form, as a URL writes it
+        var encoded = "file:///D:/Games/Instances/Bob's%20SMP%20Pack/mods/sodium.jar".getBytes(StandardCharsets.UTF_8);
+        Redaction.redact(encoded, replacements);
+        assertFalse(new String(encoded, StandardCharsets.UTF_8).contains("SMP"));
+    }
+
+    @Test
+    void aFolderInsideAnotherIsRedactedWhole() {
+        // The game's folder inside the home folder: its own parts are starred, not only the account's name
+        var replacements = Redaction.replacements("C:\\Users\\bob", List.of("C:\\Users\\bob\\curseforge\\My Pack"));
+        var data = "C:/Users/bob/curseforge/My Pack/mods/a.jar".getBytes(StandardCharsets.UTF_8);
+        Redaction.redact(data, replacements);
+        assertEquals("*".repeat("C:/Users/bob/curseforge/My Pack".length()) + "/mods/a.jar", new String(data, StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void aHomeFolderWrittenAnotherWayIsStarred() {
+        for (var path : new String[]{"C:/Users/JOHNSM~1/AppData/Local/Temp/1.jar", "c:\\users\\bob\\game\\a.jar",
+                "file:///home/Jos%C3%A9/game/a.jar", "C:\\USERS\\Bob\\x"}) {
+            var data = path.getBytes(StandardCharsets.UTF_8);
+            assertEquals(1, Redaction.redactHomes(data), path);
+            var redacted = new String(data, StandardCharsets.UTF_8);
+            assertFalse(redacted.contains("JOHNSM") || redacted.contains("bob") || redacted.contains("Bob") || redacted.contains("Jos"), redacted);
+            assertEquals(path.length(), redacted.length());
+        }
+        // Only the name: the folders past it are left, and so is a path with no home folder in it
+        var data = "C:/Users/bob/game/a.jar".getBytes(StandardCharsets.UTF_8);
+        Redaction.redactHomes(data);
+        assertEquals("C:/Users/***/game/a.jar", new String(data, StandardCharsets.UTF_8));
+        assertEquals(0, Redaction.redactHomes("D:/Games/users.txt".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void theGamesFolderIsPrivate() {
+        assertTrue(Redaction.privateFolders().contains(System.getProperty("user.dir")));
     }
 }

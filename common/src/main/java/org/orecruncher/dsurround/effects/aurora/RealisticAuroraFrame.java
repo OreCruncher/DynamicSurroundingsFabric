@@ -30,7 +30,7 @@ public record RealisticAuroraFrame(Matrix4fc invViewProj, float[] vec4s) impleme
     /**
      * Vectors in all
      */
-    static final int VECTORS = HEADER + RealisticAurora.MAX_ARCS * 4;
+    public static final int VECTORS = HEADER + RealisticAurora.MAX_ARCS * 4;
 
     // Where some of the values are, as indexes into vec4s, for tests
     static final int PIXEL_ANGLE = 7;

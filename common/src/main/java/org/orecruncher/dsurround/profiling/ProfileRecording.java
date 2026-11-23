@@ -16,6 +16,7 @@ import org.orecruncher.dsurround.effects.aurora.RealisticAurora;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -39,7 +40,8 @@ import java.util.Set;
  * <p>
  * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
  * turned off for the recording, the file is written again without them, in case anything recorded them anyway, and the
- * player's home folder's path is redacted (see {@link Redaction}).
+ * paths of the player's folders are redacted (see {@link Redaction}). It is written under a name of its own until it
+ * is redacted, so a failure leaves nothing unredacted under the recording's name ({@link ProfileFiles} clears it away).
  */
 final class ProfileRecording {
 
@@ -50,7 +52,8 @@ final class ProfileRecording {
      * exception messages (which often hold paths), loaded libraries and agents (paths), the OS (its description holds
      * the machine's name on some systems), thread dumps, the recording's own destination, and where code was loaded
      * from (finalizer statistics, and modules, which on NeoForge are the mods' jars). The game's own: its network
-     * events, which hold the server's address. What is shared between events, out of reach of leaving events out, is
+     * events, which hold the server's address. The JVM's text flags and heap dumps, which hold paths (a heap dump's
+     * destination, the -XX: options launchers set to an instance's folders). What is shared between events, out of reach of leaving events out, is
      * redacted afterwards (see {@link Redaction}).
      */
     static final Set<String> PRIVATE = Set.of(
@@ -85,6 +88,9 @@ final class ProfileRecording {
             "jdk.FinalizerStatistics",
             "jdk.ModuleExport",
             "jdk.ModuleRequire",
+            "jdk.StringFlag",
+            "jdk.StringFlagChanged",
+            "jdk.HeapDump",
             "minecraft.NetworkSummary",
             "minecraft.PacketReceived",
             "minecraft.PacketSent");
@@ -111,6 +117,8 @@ final class ProfileRecording {
         register();
 
         var unfinished = file.resolveSibling(file.getFileName() + ProfileFiles.UNFINISHED);
+        // A recording's name until it is redacted, which ProfileFiles clears away if left (see its UNFINISHED)
+        var unredacted = file.resolveSibling(file.getFileName().toString().replace(".jfr", "-unredacted.jfr") + ProfileFiles.UNFINISHED);
         Runnable timers = ProfileRecording::writeTimers;
         FlightRecorder.addPeriodicEvent(RenderTimerEvent.class, timers);
         Runnable frames = ProfileRecording::writeFrames;
@@ -168,10 +176,12 @@ final class ProfileRecording {
             }
             // Written again, without the private events: none should be there, but if anything recorded them anyway
             try (var recorded = new RecordingFile(unfinished)) {
-                recorded.write(file, event -> !PRIVATE.contains(event.getEventType().getName()));
+                recorded.write(unredacted, event -> !PRIVATE.contains(event.getEventType().getName()));
             }
-            // And the home folder's path redacted: shared between events, out of their reach
-            Redaction.redact(file, System.getProperty("user.home"));
+            // And the paths of the player's folders redacted: shared between events, out of their reach. Only then
+            // under the recording's name
+            Redaction.redact(unredacted);
+            Files.move(unredacted, file, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             HandlerTicks.stop();
             FrameTimes.stop();
@@ -190,6 +200,7 @@ final class ProfileRecording {
             FlightRecorder.removePeriodicEvent(soundWriter);
             FlightRecorder.removePeriodicEvent(queryWriter);
             Files.deleteIfExists(unfinished);
+            Files.deleteIfExists(unredacted);
         }
     }
 
