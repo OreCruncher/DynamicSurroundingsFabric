@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.Set;
 
 /**
- * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, without
- * anything that could tell who or where the player is ({@link #PRIVATE}), with what it was made on written into it once
+ * A Java Flight Recorder recording of the running game, made in the game itself: the JDK's "profile" settings, only for
+ * the events known to hold nothing that could tell who or where the player is ({@link #ALLOWED}), with what it was made on written into it once
  * ({@link EnvironmentEvent}, a {@link FeatureEvent} for each optional hook, conflict and setting, and a {@link ModEvent}
  * for each installed mod), the mod's render
  * timers once a second ({@link RenderTimerEvent}), the frames' lengths and the whole frame's drawing time once a second
@@ -38,21 +38,124 @@ import java.util.Set;
  * second ({@link BlockQueriesEvent}). The only class besides those events to use {@code jdk.jfr}, so nothing loads it until a
  * recording is made.
  * <p>
- * Players may send recordings to the mod's authors, so what is private is kept out three times over: those events are
- * turned off for the recording, the file is written again without them, in case anything recorded them anyway, and the
- * paths of the player's folders are redacted (see {@link Redaction}). It is written under a name of its own until it
+ * Players may send recordings to the mod's authors, so what is private is kept out three times over: every other
+ * event is turned off for the recording, the file is written again with only those allowed, in case anything recorded
+ * others anyway (another recording running at the same time turns on what it asks for, in ours too), and the paths of
+ * the player's folders are redacted (see {@link Redaction}). It is written under a name of its own until it
  * is redacted, so a failure leaves nothing unredacted under the recording's name ({@link ProfileFiles} clears it away).
  */
 final class ProfileRecording {
 
     /**
-     * Events that can carry something private: the command line (the game's arguments hold the player's name, id and
+     * The events a recording keeps, besides the mod's own ({@code dsurround.}): numbers, and the names of classes,
+     * methods and threads. The game's: the frame rate, the built-in server's tick time, and how long a world took to
+     * load. The JDK's: the machine (processor, memory), samples of what each thread was running and allocating, garbage
+     * collection, threads waiting (locks, parking, sleeping), the JIT compiler, safepoints and VM operations, and the
+     * JVM's number and switch flags (the heap's size, the collector). Any other is left out, a new JDK's or another
+     * mod's events among them, until it has been looked at for what it carries: one that can carry anything private
+     * goes in {@link #PRIVATE} instead.
+     */
+    static final Set<String> ALLOWED = Set.of(
+            "minecraft.ClientFps",
+            "minecraft.ServerTickTime",
+            "minecraft.LoadWorld",
+            // The machine
+            "jdk.CPUInformation",
+            "jdk.CPULoad",
+            "jdk.CPUTimeStampCounter",
+            "jdk.ThreadCPULoad",
+            "jdk.ThreadContextSwitchRate",
+            "jdk.PhysicalMemory",
+            "jdk.SwapSpace",
+            "jdk.ResidentSetSize",
+            "jdk.NativeMemoryUsage",
+            "jdk.NativeMemoryUsageTotal",
+            "jdk.VirtualizationInformation",
+            // What threads run and allocate
+            "jdk.ExecutionSample",
+            "jdk.NativeMethodSample",
+            "jdk.ObjectAllocationSample",
+            "jdk.ThreadAllocationStatistics",
+            "jdk.JavaThreadStatistics",
+            "jdk.ThreadStart",
+            "jdk.ThreadEnd",
+            "jdk.ClassLoadingStatistics",
+            "jdk.ExceptionStatistics",
+            "jdk.DirectBufferStatistics",
+            // Garbage collection
+            "jdk.GarbageCollection",
+            "jdk.YoungGarbageCollection",
+            "jdk.OldGarbageCollection",
+            "jdk.G1GarbageCollection",
+            "jdk.ParallelOldGarbageCollection",
+            "jdk.ZYoungGarbageCollection",
+            "jdk.ZOldGarbageCollection",
+            "jdk.ZAllocationStall",
+            "jdk.GCPhasePause",
+            "jdk.GCPhasePauseLevel1",
+            "jdk.GCPhasePauseLevel2",
+            "jdk.GCPhaseConcurrent",
+            "jdk.GCPhaseConcurrentLevel1",
+            "jdk.GCPhaseConcurrentLevel2",
+            "jdk.GCPhaseParallel",
+            "jdk.GCCPUTime",
+            "jdk.GCHeapSummary",
+            "jdk.G1HeapSummary",
+            "jdk.PSHeapSummary",
+            "jdk.MetaspaceSummary",
+            "jdk.GCHeapMemoryUsage",
+            "jdk.GCHeapMemoryPoolUsage",
+            "jdk.GCReferenceStatistics",
+            "jdk.GCConfiguration",
+            "jdk.GCHeapConfiguration",
+            "jdk.YoungGenerationConfiguration",
+            "jdk.SystemGC",
+            "jdk.EvacuationFailed",
+            "jdk.PromotionFailed",
+            "jdk.ConcurrentModeFailure",
+            "jdk.MetaspaceOOM",
+            // Threads waiting
+            "jdk.JavaMonitorEnter",
+            "jdk.JavaMonitorWait",
+            "jdk.ThreadPark",
+            "jdk.ThreadSleep",
+            "jdk.VirtualThreadPinned",
+            // The JIT compiler, safepoints and VM operations
+            "jdk.Compilation",
+            "jdk.CompilationFailure",
+            "jdk.CompilerConfiguration",
+            "jdk.CompilerStatistics",
+            "jdk.CodeCacheConfiguration",
+            "jdk.CodeCacheStatistics",
+            "jdk.CodeCacheFull",
+            "jdk.Deoptimization",
+            "jdk.SafepointBegin",
+            "jdk.ExecuteVMOperation",
+            // The JVM's flags but its text ones (paths), and what the recorder lost
+            "jdk.BooleanFlag",
+            "jdk.IntFlag",
+            "jdk.UnsignedIntFlag",
+            "jdk.LongFlag",
+            "jdk.UnsignedLongFlag",
+            "jdk.DoubleFlag",
+            "jdk.DataLoss");
+
+    /**
+     * Whether a recording keeps events of the type: the mod's own and {@link #ALLOWED}'s, never {@link #PRIVATE}'s
+     */
+    static boolean isAllowed(String type) {
+        return (type.startsWith("dsurround.") || ALLOWED.contains(type)) && !PRIVATE.contains(type);
+    }
+
+    /**
+     * Events known to carry something private, kept out even if they were allowed by mistake: the command line (the game's arguments hold the player's name, id and
      * access token), environment variables and system properties (names, folders), the machine's other processes, file
      * paths (which name the player's account), network addresses (the server's, and the machine's own), certificates,
      * exception messages (which often hold paths), loaded libraries and agents (paths), the OS (its description holds
      * the machine's name on some systems), thread dumps, the recording's own destination, and where code was loaded
      * from (finalizer statistics, and modules, which on NeoForge are the mods' jars). The game's own: its network
-     * events, which hold the server's address. The JVM's text flags and heap dumps, which hold paths (a heap dump's
+     * events, which hold the server's address, and its chunk and region events, which hold coordinates and the save's
+     * folder name (off unless another recording, vanilla's /jfr, turns them on). The JVM's text flags and heap dumps, which hold paths (a heap dump's
      * destination, the -XX: options launchers set to an instance's folders). What is shared between events, out of reach of leaving events out, is
      * redacted afterwards (see {@link Redaction}).
      */
@@ -93,7 +196,11 @@ final class ProfileRecording {
             "jdk.HeapDump",
             "minecraft.NetworkSummary",
             "minecraft.PacketReceived",
-            "minecraft.PacketSent");
+            "minecraft.PacketSent",
+            "minecraft.ChunkGeneration",
+            "minecraft.StructureGeneration",
+            "minecraft.ChunkRegionRead",
+            "minecraft.ChunkRegionWrite");
 
     // Set by the first warm-up, on the profile's thread; read on the render thread
     private static volatile boolean warm;
@@ -174,9 +281,10 @@ final class ProfileRecording {
                 recording.stop();
                 recording.dump(unfinished);
             }
-            // Written again, without the private events: none should be there, but if anything recorded them anyway
+            // Written again, with only the allowed events: no other should be there, but another recording running at
+            // the same time turns on what it asks for, in this one too
             try (var recorded = new RecordingFile(unfinished)) {
-                recorded.write(unredacted, event -> !PRIVATE.contains(event.getEventType().getName()));
+                recorded.write(unredacted, event -> isAllowed(event.getEventType().getName()));
             }
             // And the paths of the player's folders redacted: shared between events, out of their reach. Only then
             // under the recording's name
@@ -235,11 +343,19 @@ final class ProfileRecording {
         warm = true;
     }
 
-    // The JDK's "profile" settings, without the private events
+    // The JDK's "profile" settings for the allowed events, and every other event type known turned off: one the
+    // settings don't name records as its own annotations say, and most say it's on (the game's network summary, which
+    // holds the server's address; another mod's). One registered later is left out when the file is written again.
+    // Ours are set by enableOurs
     private static HashMap<String, String> settings() throws IOException, ParseException {
-        var settings = new HashMap<>(Configuration.getConfiguration("profile").getSettings());
-        for (var type : PRIVATE)
-            settings.put(type + "#enabled", "false");
+        var settings = new HashMap<String, String>();
+        Configuration.getConfiguration("profile").getSettings().forEach((key, value) -> {
+            if (isAllowed(key.substring(0, Math.max(key.indexOf('#'), 0))))
+                settings.put(key, value);
+        });
+        for (var type : FlightRecorder.getFlightRecorder().getEventTypes())
+            if (!isAllowed(type.getName()))
+                settings.put(type.getName() + "#enabled", "false");
         return settings;
     }
 

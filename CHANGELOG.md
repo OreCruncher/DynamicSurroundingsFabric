@@ -58,7 +58,7 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 **Fixes**
 * Books in the hotbar play the book sound, and bookshelves no longer do
 * Fixed an error from a mod's item that can be worn but has no equip sound: selecting it in the hotbar, or `/dsdump items`, threw an exception
-* `/dsprofile` recordings redact more paths: on NeoForge they kept the folders of the game and its mods (which can name a modpack or instance), and a home folder written in another form (a short name, another case) could get through. JVM text flags and heap dump paths are left out too
+* `/dsprofile` recordings redact more paths: on NeoForge they kept the folders of the game and its mods (which can name a modpack or instance), and a home folder written in another form (a short name, another case) could get through. They now keep only the events known to hold nothing private, so another mod's events, or Minecraft's chunk events (coordinates and the save's name, recorded if vanilla's `/jfr` runs at the same time), are left out too, as are JVM text flags and heap dump paths
 * Tags could be read half-rebuilt by another thread (Async Particles' weather, with rain sounds on surfaces) during a reload
 
 > ### DynamicSurroundings-26.3-5.2.0

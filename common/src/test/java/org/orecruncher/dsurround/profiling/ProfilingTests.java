@@ -5,6 +5,8 @@ package org.orecruncher.dsurround.profiling;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import jdk.jfr.EventType;
+import jdk.jfr.FlightRecorder;
 import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
 import net.minecraft.SharedConstants;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
@@ -274,6 +277,20 @@ public class ProfilingTests {
     }
 
     @Test
+    void theAllowedEventsAreKnownAndNoneIsPrivate() {
+        // A misspelled name would leave that event out without a word: each of the JDK's is one this Java has
+        var known = FlightRecorder.getFlightRecorder().getEventTypes().stream().map(EventType::getName).collect(Collectors.toSet());
+        for (var type : ProfileRecording.ALLOWED) {
+            assertFalse(ProfileRecording.PRIVATE.contains(type), type + " is allowed and private");
+            if (type.startsWith("jdk."))
+                assertTrue(known.contains(type), type + " isn't an event type");
+        }
+        assertTrue(ProfileRecording.isAllowed("dsurround.Frames"));
+        assertFalse(ProfileRecording.isAllowed("minecraft.NetworkSummary"));
+        assertFalse(ProfileRecording.isAllowed("othermod.WorldName"));
+    }
+
+    @Test
     void aRecordingIsWrittenWithNothingPrivate() throws Exception {
         var file = this.folder.resolve("test.jfr");
         ProfileRecording.record(file, Duration.ofSeconds(2), environment());
@@ -281,13 +298,17 @@ public class ProfilingTests {
         assertFalse(Files.exists(this.folder.resolve("test.jfr" + ProfileFiles.UNFINISHED)), "the unfinished file is left");
 
         try (var recording = new RecordingFile(file)) {
-            // The mod's event is there, and none of the private ones
+            // The mod's event is there, the JDK's allowed ones still come through, and nothing not allowed
             var types = recording.readEventTypes();
             assertTrue(types.stream().anyMatch(type -> type.getName().equals("dsurround.RenderTimer")));
+            var recorded = new HashSet<String>();
             while (recording.hasMoreEvents()) {
                 var name = recording.readEvent().getEventType().getName();
+                assertTrue(ProfileRecording.isAllowed(name), "recorded " + name);
                 assertFalse(ProfileRecording.PRIVATE.contains(name), "recorded " + name);
+                recorded.add(name);
             }
+            assertTrue(recorded.contains("jdk.CPULoad"), "no JDK events: " + recorded);
         }
 
         // Nor anything that names the player's account, folders or machine, anywhere in the file

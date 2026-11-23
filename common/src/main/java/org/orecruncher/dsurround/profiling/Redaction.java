@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 /**
  * Redacts the paths of the player's folders in a recording file. Most of what is private is kept out of a recording by
- * leaving out the events that carry it (see {@link ProfileRecording#PRIVATE}), but some is shared between events, where
+ * keeping only the events known to hold none of it (see {@link ProfileRecording#ALLOWED}), but some is shared between events, where
  * leaving events out can't reach it: where a module's or class's code was loaded from, say, which is a path in the
  * player's folders (on NeoForge, every mod's jar), and names the folder a game or modpack is in.
  * <ul>

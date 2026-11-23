@@ -181,8 +181,10 @@ is known of 26.4.
   `--callers <method>` for who calls something).
   Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
   fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
-  Players can make them too, so nothing private may get in: a new event type or a new `jdk.jfr` user needs a look at
-  `ProfileRecording.PRIVATE` and `Redaction`. The first recording since the game started waits
+  Players can make them too, so nothing private may get in: a recording keeps only `dsurround.*` events and those in
+  `ProfileRecording.ALLOWED` (an allow list: another mod's, a new JDK's or one turned on by a recording running
+  alongside are dropped), never `PRIVATE`'s. An event wanted from the JDK or the game needs a look at what it carries
+  before it goes in `ALLOWED`; a new `jdk.jfr` user needs a look at `Redaction`. The first recording since the game started waits
   `Profiler.WARM_UP_SECONDS` longer, with a throwaway recording running (`ProfileRecording.warmUp`): JFR's first start
   slowed the game for about 8 seconds (frames up to a second in ATM10), and later recordings showed nothing of it. A
   recording soon after joining a world still shows the pack settling in. Record under Run, not IntelliJ's Debug (its async stack trace agent
