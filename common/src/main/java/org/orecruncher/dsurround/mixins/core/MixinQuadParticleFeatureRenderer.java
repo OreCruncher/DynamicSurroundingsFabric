@@ -46,9 +46,10 @@ public class MixinQuadParticleFeatureRenderer {
     }
 
     /**
-     * Ends the timing of one of our layers once it is drawn (see ParticleLayerTimers)
+     * Ends the timing of one of our layers once it is drawn (see ParticleLayerTimers). Only for recordings, so optional
+     * ({@code OptionalHook.PARTICLE_COSTS}): without it, a layer's time runs on to the next layer's start
      */
-    @WrapOperation(method = "drawLayers", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/RenderPass;drawIndexed(IIIII)V"))
+    @WrapOperation(method = "drawLayers", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/commands/RenderPass;drawIndexed(IIIII)V"), require = 0)
     private static void dsurround$layerDrawn(RenderPass pass, int a, int b, int c, int d, int e, Operation<Void> original) {
         original.call(pass, a, b, c, d, e);
         ParticleLayerTimers.end();
