@@ -3,14 +3,11 @@
 
 package org.orecruncher.dsurround.effects.groundfog;
 
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.renderpearl.api.commands.RenderPassDescriptor;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
@@ -27,7 +24,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
-import org.lwjgl.system.MemoryStack;
+import org.orecruncher.dsurround.effects.FrameBlock;
 import org.orecruncher.dsurround.config.GroundFogQuality;
 import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -66,7 +63,6 @@ public final class GroundFogVolume {
     // Makes the triangle each pass draws
     private static final String SCREEN_VERTEX = "core/ground_fog_screen";
     // The matrix, then the frame's vectors (see GroundFogFrame for how the block's vec3s and vec2s are laid out as them)
-    private static final int INFO_SIZE;
     private static final String DEPTH_SAMPLER = "DepthSampler";
     private static final String FOG_GRID = "FogGrid";
     private static final String NOISE_SAMPLER = "NoiseSampler";
@@ -93,12 +89,7 @@ public final class GroundFogVolume {
     private static final Vector4f CLEAR_DISTANCE = new Vector4f(1.0e6F, 0F, 0F, 0F);
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
 
-    static {
-        var size = new Std140SizeCalculator().putMat4f();
-        for (int i = 0; i < GroundFogFrame.VECTORS; i++)
-            size.putVec4();
-        INFO_SIZE = size.get();
-    }
+    private static final FrameBlock BLOCK = new FrameBlock("Dynamic Surroundings ground fog UBO", GroundFogFrame.VECTORS);
 
     /**
      * Draws the mist, at a share of the screen's size, replacing what was there: its color, already multiplied by its
@@ -194,10 +185,6 @@ public final class GroundFogVolume {
     private static GpuTexture distances;
     @Nullable
     private static GpuTextureView distancesView;
-    // One buffer rewritten each frame, not a MappableRingBuffer: rotating that one sets a fence, which held the GPU idle
-    // for 2 ms a frame after the aurora on 1.21.11 (AMD)
-    @Nullable
-    private static GpuBuffer info;
 
     private GroundFogVolume() {
     }
@@ -251,7 +238,7 @@ public final class GroundFogVolume {
         var smoothedReduced = SMOOTHED.of(target, scale);
         var distance = distancesFor(reduced);
         var cam = camera.position();
-        pack(GroundFogFrame.of(field, cam.x, cam.y, cam.z, gridBaseY, gridHighest, LevelProjection.get(), RenderSystem.getModelViewMatrixCopy(),
+        BLOCK.write(GroundFogFrame.of(field, cam.x, cam.y, cam.z, gridBaseY, gridHighest, LevelProjection.get(), RenderSystem.getModelViewMatrixCopy(),
                 target.width, target.height, quality, strength, driftX, driftZ, seconds, RenderSystem.getDevice().getDeviceInfo().isZZeroToOne()));
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
@@ -311,22 +298,7 @@ public final class GroundFogVolume {
      */
     private static void bindShared(RenderPass pass) {
         RenderSystem.bindDefaultUniforms(pass);
-        pass.setUniform(INFO, info);
-    }
-
-    /**
-     * Writes the values the passes share this frame into the uniform block (see shaders/include/ground_fog.glsl)
-     */
-    private static void pack(GroundFogFrame frame) {
-        if (info == null)
-            info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings ground fog UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        var v = frame.vec4s();
-        try (var stack = MemoryStack.stackPush()) {
-            var builder = Std140Builder.onStack(stack, INFO_SIZE).putMat4f(frame.invViewProj());
-            for (int i = 0; i < v.length; i += 4)
-                builder.putVec4(v[i], v[i + 1], v[i + 2], v[i + 3]);
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
-        }
+        pass.setUniform(INFO, BLOCK.buffer());
     }
 
     private static RenderPipeline.Builder composite(String location) {

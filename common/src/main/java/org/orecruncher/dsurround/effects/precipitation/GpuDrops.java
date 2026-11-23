@@ -9,7 +9,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.util.Mth;
@@ -17,8 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.function.Consumer;
 
 /**
@@ -39,11 +36,10 @@ import java.util.function.Consumer;
 public final class GpuDrops implements AutoCloseable {
 
     /**
-     * Drops drawn a batch, from a buffer of their own: five texels each, within the {@link #MAX_TEXELS} every GPU allows
+     * Drops drawn a batch, from a buffer of their own: five texels each, within the {@link TexelBatches#MAX_TEXELS} every
+     * GPU allows
      */
     static final int BATCH_DROPS = 12_800;
-    static final int MAX_TEXELS = TexelBatches.MAX_TEXELS;
-    static final long BATCH_BYTES = (long) BATCH_DROPS * PackedDrops.STRIDE * Float.BYTES;
     // As many looks as there may be snowflakes: the dust has fewer sprites
     static final int MAX_LOOKS = Snowflakes.MAX_FLAKES;
     private static final int INFO_SIZE;
@@ -75,8 +71,6 @@ public final class GpuDrops implements AutoCloseable {
     private final TexelBatches records;
     @Nullable
     private GpuBuffer info;
-    // Which pack the GPU's copy holds
-    private long uploadedVersion = -1L;
 
     public GpuDrops(Part part) {
         this.part = part;
@@ -107,46 +101,21 @@ public final class GpuDrops implements AutoCloseable {
             anchorZ = packed.anchorZ;
             if (drops == 0)
                 return 0;
-            this.upload(packed, dust ? packed.solid : 0, drops);
+            this.records.uploadIfChanged(packed.version, packed.data, dust ? packed.solid : 0, drops);
         }
-        this.pack((float) (anchorX - cam.x), (float) (anchorY - cam.y), (float) (anchorZ - cam.z), partialTick,
+        var info = this.pack((float) (anchorX - cam.x), (float) (anchorY - cam.y), (float) (anchorZ - cam.z), partialTick,
                 PrecipitationRenderer.View.of(camera), field.radius(), style);
-
-        var device = RenderSystem.getDevice();
-        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-        var indexBuffer = indices.getBuffer(Math.min(drops, BATCH_DROPS) * 6);
-        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
-        var info = this.info;
-        try (RenderPass pass = device.createCommandEncoder().createRenderPass(() -> "Dynamic Surroundings " + this.part.description + " (GPU)",
-                target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
-            RenderSystem.bindDefaultUniforms(pass);
-            pass.setUniform("DynamicTransforms", transforms);
-            bind.accept(pass);
-            pass.setUniform(PrecipitationShaders.DROP_INFO, info);
-            pass.setIndexBuffer(indexBuffer, indices.type());
-            // Each batch from its own buffer, its vertex index starting again at 0
-            for (int first = 0, batch = 0; first < drops; first += BATCH_DROPS, batch++) {
-                pass.setUniform(PrecipitationShaders.DROP_RECORDS, this.records.batch(batch));
-                pass.drawIndexed(Math.min(BATCH_DROPS, drops - first) * 6, 1, 0, 0, 0);
-            }
-        }
+        this.records.draw("Dynamic Surroundings " + this.part.description + " (GPU)", pipeline, target,
+                bind.andThen(pass -> pass.setUniform(PrecipitationShaders.DROP_INFO, info)), PrecipitationShaders.DROP_RECORDS, drops, 1);
         return drops;
     }
 
-    // The part's records, from record {@code first}, into the batches' buffers, if they changed
-    private void upload(PackedDrops packed, int first, int count) {
-        if (packed.version == this.uploadedVersion)
-            return;
-        this.records.upload(packed.data, first, count);
-        this.uploadedVersion = packed.version;
-    }
-
-    // The frame's values, in DropInfo's order (see the shader)
-    private void pack(float offsetX, float offsetY, float offsetZ, float partialTick, PrecipitationRenderer.View view,
+    // The frame's values, in DropInfo's order (see the shader), into the uniform block it returns
+    private GpuBuffer pack(float offsetX, float offsetY, float offsetZ, float partialTick, PrecipitationRenderer.View view,
                       float radius, DropMeshes.Style style) {
-        if (this.info == null)
-            this.info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings " + this.part.description + " UBO",
+        var info = this.info;
+        if (info == null)
+            this.info = info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings " + this.part.description + " UBO",
                     GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
         boolean dust = this.part == Part.DUST;
         // How far every flake or puff has turned since its last tick (see PrecipitationRenderer.build)
@@ -165,23 +134,43 @@ public final class GpuDrops implements AutoCloseable {
                     .putVec4(up.x, up.y, up.z, style.scales().snow())
                     .putVec4(rain.red(), rain.green(), rain.blue(), style.scales().rain())
                     .putVec4(Mth.cos(turn), Mth.sin(turn), count, Math.max(1, style.largest()));
-            for (int i = 0; i < MAX_LOOKS; i++) {
-                if (i >= count) {
-                    builder.putVec4(0F, 0F, 0F, 0F);
-                } else if (dust) {
-                    var sprite = sprites[i];
-                    builder.putVec4(sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1());
-                } else {
-                    var flake = flakes.get(i);
-                    builder.putVec4(flake.u0(), flake.v0(), flake.u1(), flake.v1());
+            if (dust) {
+                for (int i = 0; i < MAX_LOOKS; i++) {
+                    if (i < count) {
+                        var sprite = sprites[i];
+                        builder.putVec4(sprite.getU0(), sprite.getV0(), sprite.getU1(), sprite.getV1());
+                    } else {
+                        builder.putVec4(0F, 0F, 0F, 0F);
+                    }
                 }
+                putSizes(builder, flakes, 0);
+            } else {
+                putFlakes(builder, flakes, count);
             }
-            int flakeCount = dust ? 0 : count;
-            for (int i = 0; i < MAX_LOOKS; i += 4)
-                builder.putVec4(size(flakes, flakeCount, i), size(flakes, flakeCount, i + 1), size(flakes, flakeCount, i + 2),
-                        size(flakes, flakeCount, i + 3));
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.info.slice(), builder.get());
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
+        return info;
+    }
+
+    /**
+     * The snowflakes' looks, as both shaders read them after their own values: {@link #MAX_LOOKS} texture rectangles,
+     * then their sizes four to a vec4, those past {@code count} zero
+     */
+    static void putFlakes(Std140Builder builder, List<Snowflakes.Flake> flakes, int count) {
+        for (int i = 0; i < MAX_LOOKS; i++) {
+            if (i < count) {
+                var flake = flakes.get(i);
+                builder.putVec4(flake.u0(), flake.v0(), flake.u1(), flake.v1());
+            } else {
+                builder.putVec4(0F, 0F, 0F, 0F);
+            }
+        }
+        putSizes(builder, flakes, count);
+    }
+
+    private static void putSizes(Std140Builder builder, List<Snowflakes.Flake> flakes, int count) {
+        for (int i = 0; i < MAX_LOOKS; i += 4)
+            builder.putVec4(size(flakes, count, i), size(flakes, count, i + 1), size(flakes, count, i + 2), size(flakes, count, i + 3));
     }
 
     private static float size(List<Snowflakes.Flake> flakes, int count, int i) {
@@ -195,6 +184,5 @@ public final class GpuDrops implements AutoCloseable {
             this.info.close();
             this.info = null;
         }
-        this.uploadedVersion = -1L;
     }
 }

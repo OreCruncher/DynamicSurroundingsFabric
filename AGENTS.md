@@ -330,9 +330,10 @@ is known of 26.4.
   `VertexConsumer` remain only where geometry is handed to vanilla's own drawing (footprints, the light level overlay,
   lightning for shader packs).
   A shader effect's per-frame values are worked out with no GPU into a frame record (`GroundFogFrame`, `AuroraFrame`,
-  `RealisticAuroraFrame`, `PointLightFrame`), unit-tested; the renderer only packs it into its uniform block (a `pack`
-  method: the matrix, then the record's vec4s in order), so that packing is all a render API change touches. A new
-  value goes in the record, in the block's order, and in its shader include.
+  `RealisticAuroraFrame`, `PointLightFrame`), unit-tested; the renderer only packs it into its uniform block (the
+  matrix, then the record's vec4s in order: `effects/FrameBlock`, which the screen effects' records implement, or a
+  `pack` method where the block differs), so that packing is all a render API change touches. A new value goes in the
+  record, in the block's order, and in its shader include.
   Passes over the whole screen (ground fog's three, the realistic aurora and its composite) go through
   `effects/ScreenPasses`: `pipeline` starts their pipelines (one triangle from the vertex index, no vertex buffer, no
   culling), `draw` opens the pass, sets the pipeline, binds and draws, and `Reduced` keeps a target at a share of the

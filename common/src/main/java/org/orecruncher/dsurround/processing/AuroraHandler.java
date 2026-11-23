@@ -6,8 +6,6 @@ package org.orecruncher.dsurround.processing;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Configuration;
@@ -229,22 +227,16 @@ public class AuroraHandler extends AbstractClientHandler {
             return;
 
         var level = GameUtils.getWorld().orElse(null);
-        if (level == null || level.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD)
+        if (level == null)
             return;
-        // Vanilla doesn't draw the sky from inside lava or powder snow, nor when blinded; the aurora isn't drawn
-        // from inside water either
-        var camera = GameUtils.getMC().gameRenderer.mainCamera();
-        if (camera.getFluidInCamera() != FogType.NONE)
-            return;
-        if (IrisCompat.isShaderPackInUse())
+        var fog = SkyEffects.visibility(level, this.fogHandler);
+        if (fog <= 0F)
             return;
 
         // Stars are at half brightness at the darkest of night; the aurora shows as they do, less the stronger the
-        // storm, and less in fog. The sky's fog for this frame is set by now, with the mod's own thickening.
+        // storm, and less in fog
         var stars = Math.clamp(starBrightness * 2F, 0F, 1F);
         var clear = 1F - this.weatherSimulation.rainLevel(level.getRainLevel(partialTick));
-        var renderDistance = GameUtils.getMC().options.getEffectiveRenderDistance() * 16F;
-        var fog = fogVisibility(this.fogHandler.skyFogEnd(), renderDistance);
         var alpha = Mth.lerp(partialTick, this.prevStrength, this.strength) * stars * clear * fog;
         if (alpha <= 0F)
             return;
@@ -263,6 +255,7 @@ public class AuroraHandler extends AbstractClientHandler {
             this.motion.advance(realistic, moment.speed(), time);
             // How high the Earth's shadow is: early and late in the night, the tops of the rays are still sunlit
             var options = this.config.auroraOptions.realistic;
+            var camera = GameUtils.getMC().gameRenderer.mainCamera();
             var sunAngle = DayCycle.getCelestialAngle(level, camera.position());
             var shadow = RealisticAurora.shadowHeight(sunAngle);
             // And how much a bright moon washes out its faint parts

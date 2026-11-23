@@ -3,11 +3,8 @@
 
 package org.orecruncher.dsurround.effects.aurora;
 
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
@@ -20,7 +17,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
-import org.lwjgl.system.MemoryStack;
+import org.orecruncher.dsurround.effects.FrameBlock;
 import org.orecruncher.dsurround.config.AuroraQuality;
 import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.ModShader;
@@ -50,7 +47,6 @@ public final class CinematicAuroraRenderer {
     // The shader's uniforms: the matrix turning pixels into directions, the frame's values, and the ribbons (four vec4s
     // each, in four arrays)
     private static final String INFO = "CinematicAuroraInfo";
-    private static final int INFO_SIZE;
     private static final String NOISE_SAMPLER = "NoiseSampler";
     private static final String AURORA_SAMPLER = "AuroraSampler";
     private static final BindGroupLayout INFO_LAYOUT = BindGroupLayout.builder()
@@ -62,12 +58,7 @@ public final class CinematicAuroraRenderer {
             .build();
     private static final Vector4f CLEAR = new Vector4f(0F, 0F, 0F, 0F);
 
-    static {
-        var size = new Std140SizeCalculator().putMat4f();
-        for (int i = 0; i < CinematicAuroraFrame.VECTORS; i++)
-            size.putVec4();
-        INFO_SIZE = size.get();
-    }
+    private static final FrameBlock BLOCK = new FrameBlock("Dynamic Surroundings aurora (cinematic) UBO", CinematicAuroraFrame.VECTORS);
 
     // Light adds to what is there: the sky, or (at FAST) the cleared target
     private static final BlendFunction ADD = new BlendFunction(BlendFactor.ONE, BlendFactor.ONE);
@@ -110,9 +101,6 @@ public final class CinematicAuroraRenderer {
 
     @Nullable
     private static DynamicTexture noise;
-    // One buffer rewritten each frame, not a MappableRingBuffer, whose rotation sets a fence (see the realistic aurora)
-    @Nullable
-    private static GpuBuffer info;
     // Where it is drawn at FAST, at a share of the screen's size
     private static final ScreenPasses.Reduced REDUCED = new ScreenPasses.Reduced("Dynamic Surroundings aurora (cinematic)");
 
@@ -154,11 +142,11 @@ public final class CinematicAuroraRenderer {
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         var fast = quality.scale() > 1;
         RenderTarget target = fast ? REDUCED.of(screen, quality.scale()) : screen;
-        pack(CinematicAuroraFrame.of(aurora, moment, motion, alpha, LevelProjection.get(), viewMatrix, time, target.height));
+        BLOCK.write(CinematicAuroraFrame.of(aurora, moment, motion, alpha, LevelProjection.get(), viewMatrix, time, target.height));
 
         // Made the first time it is used, which can't be while a render pass is open
         var noiseView = noiseTexture().getTextureView();
-        var block = info;
+        var block = BLOCK.buffer();
         ScreenPasses.draw(() -> "Dynamic Surroundings aurora (cinematic)", target.getColorTextureView(),
                 fast ? Optional.of(CLEAR) : Optional.empty(), PIPELINE, pass -> {
                     pass.setUniform(INFO, block);
@@ -170,21 +158,6 @@ public final class CinematicAuroraRenderer {
                     Optional.empty(), COMPOSITE_PIPELINE,
                     pass -> pass.setUniform(AURORA_SAMPLER, target.getColorTextureView(), RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))),
                     () -> {});
-        }
-    }
-
-    /**
-     * Writes the frame's values into the uniform block (see shaders/include/aurora_cinematic.glsl)
-     */
-    private static void pack(CinematicAuroraFrame frame) {
-        if (info == null)
-            info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings aurora (cinematic) UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        var v = frame.vec4s();
-        try (var stack = MemoryStack.stackPush()) {
-            var builder = Std140Builder.onStack(stack, INFO_SIZE).putMat4f(frame.invViewProj());
-            for (int i = 0; i < v.length; i += 4)
-                builder.putVec4(v[i], v[i + 1], v[i + 2], v[i + 3]);
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
     }
 

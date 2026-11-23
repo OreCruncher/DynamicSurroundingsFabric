@@ -6,10 +6,9 @@ package org.orecruncher.dsurround.effects.rainbow;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -104,7 +103,7 @@ public class RainbowSpectrumTests {
     @Test
     void noLightBeyondTheShadersOutermost() throws IOException {
         // The shader draws nothing further than OUTERMOST from the point opposite the sun: the light there is nearly gone
-        var source = resource("core/rainbow.fsh");
+        var source = ShaderSources.read("core/rainbow.fsh");
         var match = Pattern.compile("OUTERMOST = ([0-9.]+);").matcher(source);
         assertTrue(match.find());
         float outermost = (float) Math.toDegrees(Math.acos(Float.parseFloat(match.group(1))));
@@ -115,7 +114,7 @@ public class RainbowSpectrumTests {
 
     @Test
     void theShadersRowsSpanTheSameAngles() throws IOException {
-        var source = resource("include/rainbow.glsl");
+        var source = ShaderSources.read("include/rainbow.glsl");
         var match = Pattern.compile("#define MAX_DEGREES ([0-9.]+)").matcher(source);
         assertTrue(match.find());
         assertEquals(RainbowSpectrum.MAX_DEGREES, Float.parseFloat(match.group(1)));
@@ -127,11 +126,5 @@ public class RainbowSpectrumTests {
         assertEquals(255, RainbowRenderer.channel(1F));
         assertEquals(128, RainbowRenderer.channel(0.25F), 1);
         assertEquals(0, RainbowRenderer.channel(-1F));
-    }
-
-    private static String resource(String path) throws IOException {
-        try (var in = Objects.requireNonNull(RainbowSpectrumTests.class.getResourceAsStream("/assets/dsurround/shaders/" + path), path)) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
     }
 }

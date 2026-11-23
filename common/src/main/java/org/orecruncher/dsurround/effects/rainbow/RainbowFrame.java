@@ -6,6 +6,9 @@ package org.orecruncher.dsurround.effects.rainbow;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
+import org.orecruncher.dsurround.effects.FrameBlock;
+
+import static org.orecruncher.dsurround.effects.FrameBlock.put;
 
 /**
  * The rainbow's shader values for a frame ({@code RainbowInfo}, shaders/include/rainbow.glsl), worked out with no GPU
@@ -15,7 +18,7 @@ import org.joml.Vector3f;
  * @param invViewProj turns a pixel's place on the screen back into a direction in the sky
  * @param vec4s       the rest, four floats to a vector
  */
-public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
+public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) implements FrameBlock.Frame {
 
     /**
      * Vectors after the matrix
@@ -105,13 +108,5 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) {
     public static Vector3f sunlight(float elevation) {
         float t = Math.clamp(elevation / 15F, 0F, 1F);
         return new Vector3f(1F, 0.55F + 0.45F * t, 0.3F + 0.7F * t * t);
-    }
-
-    private static void put(float[] v, int vector, float x, float y, float z, float w) {
-        int i = vector * 4;
-        v[i] = x;
-        v[i + 1] = y;
-        v[i + 2] = z;
-        v[i + 3] = w;
     }
 }

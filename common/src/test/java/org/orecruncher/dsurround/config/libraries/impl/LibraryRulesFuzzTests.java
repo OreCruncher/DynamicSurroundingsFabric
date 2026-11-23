@@ -12,31 +12,23 @@ import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.block.BlockInfoBuilder;
 import org.orecruncher.dsurround.config.data.BlockConfigRule;
-import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
-import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.IConditionEvaluator;
-import org.orecruncher.dsurround.runtime.PlatformFunctions;
-import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
-import org.orecruncher.dsurround.runtime.variables.*;
-import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
-import org.orecruncher.dsurround.runtime.weather.RainbowState;
 import org.orecruncher.dsurround.sound.ISoundFactory;
 import org.orecruncher.dsurround.sound.SoundFactory;
-import org.orecruncher.dsurround.testing.ConfigFuzz;
 import org.orecruncher.dsurround.testing.ConfigFuzz.Source;
+import org.orecruncher.dsurround.testing.ConfigFuzz;
+import org.orecruncher.dsurround.testing.Evaluators;
 import org.orecruncher.dsurround.testing.Fakes;
 
 import java.lang.reflect.RecordComponent;
@@ -122,17 +114,9 @@ public class LibraryRulesFuzzTests {
         }
     }
 
-    // The evaluator as the game builds it, with every variable set and function the scripts can name. Their values
-    // are never updated (nothing ticks them), and what they would read the world through is never asked
+    // The evaluator as the game builds it (see Evaluators)
     private static IConditionEvaluator evaluator(IModLog log) {
-        var oracle = Fakes.of(ILevelOracle.class, Map.of());
-        var seasons = Fakes.of(ISeasonalInformation.class, Map.of());
-        var clock = Fakes.of(ISystemClock.class, Map.of());
-        return new ConditionEvaluator(log, new PlatformFunctions(clock),
-                new BiomeVariables(Fakes.of(IBiomeLibrary.class, Map.of())), new DimensionVariables(),
-                new DiurnalVariables(oracle), new PlayerVariables(oracle),
-                new WeatherVariables(oracle, seasons, Fakes.of(IWeatherSimulation.class, Map.of()), null, new RainbowState()),
-                new EnvironmentState(null), new GlobalVariables(new Configuration()), new SeasonVariables(seasons));
+        return Evaluators.conditions(log, Fakes.of(ISystemClock.class, Map.of()));
     }
 
     // Every script in every shipped file, as decoded

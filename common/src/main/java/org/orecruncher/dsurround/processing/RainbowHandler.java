@@ -6,8 +6,6 @@ package org.orecruncher.dsurround.processing;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.material.FogType;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Configuration;
@@ -17,7 +15,6 @@ import org.orecruncher.dsurround.effects.rainbow.RainbowRenderer;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ISkyRender;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
@@ -89,14 +86,9 @@ public class RainbowHandler extends AbstractClientHandler {
         float target = 0F;
         float secondaryTarget = 0F;
         var held = this.held;
-        if (!options.sky.enableRainbows) {
-            this.status = "disabled";
-        } else if (!RainbowRenderer.isAvailable()) {
-            this.status = "shader unavailable or failed";
-        } else if (IrisCompat.isShaderPackInUse()) {
-            this.status = "shader pack in use";
-        } else if (level.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD || level.dimensionType().hasCeiling()) {
-            this.status = "no sky";
+        var blocked = SkyEffects.blocked(options.sky.enableRainbows, RainbowRenderer.isAvailable(), level);
+        if (blocked != null) {
+            this.status = blocked;
         } else if (held != null) {
             this.status = "held";
             RainbowRenderer.prepare();
@@ -157,17 +149,9 @@ public class RainbowHandler extends AbstractClientHandler {
             return;
 
         var level = GameUtils.getWorld().orElse(null);
-        if (level == null || level.dimensionType().skybox() != DimensionType.Skybox.OVERWORLD)
+        if (level == null)
             return;
-        // Not from inside water, lava or powder snow, as the aurora isn't
-        var camera = GameUtils.getMC().gameRenderer.mainCamera();
-        if (camera.getFluidInCamera() != FogType.NONE)
-            return;
-        if (IrisCompat.isShaderPackInUse())
-            return;
-
-        var renderDistance = GameUtils.getMC().options.getEffectiveRenderDistance() * 16F;
-        var fog = AuroraHandler.fogVisibility(this.fogHandler.skyFogEnd(), renderDistance);
+        var fog = SkyEffects.visibility(level, this.fogHandler);
         var alpha = Mth.lerp(partialTick, this.prevStrength, this.strength) * fog;
         if (alpha <= 0F)
             return;

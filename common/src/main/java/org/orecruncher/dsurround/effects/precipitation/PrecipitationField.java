@@ -788,10 +788,6 @@ public final class PrecipitationField {
     /**
      * How big a rain drop is, 0 to 1. Taken from how fast it falls, which follows from its size and doesn't change.
      */
-    float rainSize(int i) {
-        return rainSize(this.drops, i);
-    }
-
     static float rainSize(Drops d, int i) {
         return Mth.clamp((d.speed[i] - RAIN_SPEED_MIN) / RAIN_SPEED_RANGE, 0F, 1F);
     }
@@ -828,7 +824,7 @@ public final class PrecipitationField {
     /**
      * Notes a landing on top of a column's ground
      *
-     * @param variant a snowflake's choice of flake, 0 to 1 (see {@link #variant})
+     * @param variant a snowflake's choice of flake, 0 to 1 (see {@link #pick})
      * @return false if there was no room to
      */
     private boolean landed(double x, double z, int ground, float size, byte kind, float variant, int light) {
@@ -869,10 +865,6 @@ public final class PrecipitationField {
      * and doesn't change, so larger flakes fall a little faster, as clumps of snow do. Squared, so most flakes are
      * small and a few are large.
      */
-    float snowSize(int i) {
-        return snowSize(this.drops, i);
-    }
-
     static float snowSize(Drops d, int i) {
         var fraction = Mth.clamp((d.speed[i] - SNOW_SPEED_MIN) / SNOW_SPEED_RANGE, 0F, 1F);
         return fraction * fraction;
@@ -882,39 +874,21 @@ public final class PrecipitationField {
      * How big a puff of dust is, 0 to 1. Taken from its drift, which is random and doesn't change, so larger puffs
      * are carried a little further by the wind.
      */
-    float dustSize(int i) {
-        return dustSize(this.drops, i);
-    }
-
     static float dustSize(Drops d, int i) {
         return Mth.clamp((d.drift[i] - MIN_DRIFT) / DRIFT_RANGE, 0F, 1F);
     }
 
     /**
-     * Which of {@code variants} looks a drop takes: picked by its drift, which is random and doesn't change, so a
-     * snowflake keeps its look for its whole fall even as drops are moved about in the arrays
-     */
-    int variant(int i, int variants) {
-        return PackedDrops.variant(pick(this.drops, i), variants);
-    }
-
-    /**
-     * What picks a drop's look, 0 to 1 (see {@link #variant})
+     * What picks a drop's look, 0 to 1 (see {@link PackedDrops#variant}): its drift, which is random and doesn't change,
+     * so a snowflake keeps its look for its whole fall even as drops are moved about in the arrays
      */
     static float pick(Drops d, int i) {
         return (d.drift[i] - MIN_DRIFT) / DRIFT_RANGE;
     }
 
     /**
-     * How faded in a drop is, 0 to 1. Every drop fades in when new; dust also fades out as it settles.
-     */
-    float fade(int i, float partialTick) {
-        var d = this.drops;
-        return fade(d.kind[i], d.age[i], d.lifetime[i], d.covered[i], partialTick);
-    }
-
-    /**
-     * How faded in a drop of a kind is, 0 to 1, from its age, lifetime and ticks under cover (see {@link #fade(int, float)})
+     * How faded in a drop of a kind is, 0 to 1, from its age, lifetime and ticks under cover. Every drop fades in when
+     * new; dust also fades out as it settles.
      */
     static float fade(byte kind, float ticksOld, float lifetime, float covered, float partialTick) {
         var age = ticksOld + partialTick;

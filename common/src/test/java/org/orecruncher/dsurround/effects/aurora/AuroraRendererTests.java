@@ -6,10 +6,9 @@ package org.orecruncher.dsurround.effects.aurora;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,10 +30,7 @@ public class AuroraRendererTests {
     private static final float MOST_FOLD = 0.5F + 0.175F;
 
     private static String shader() throws IOException {
-        try (var in = Objects.requireNonNull(AuroraRendererTests.class.getResourceAsStream(
-                "/assets/dsurround/shaders/core/aurora.fsh"))) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        return ShaderSources.read("core/aurora.fsh");
     }
 
     @Test

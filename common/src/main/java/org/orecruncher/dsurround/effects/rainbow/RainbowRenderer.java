@@ -3,11 +3,8 @@
 
 package org.orecruncher.dsurround.effects.rainbow;
 
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.pipeline.BindGroupLayout;
 import com.mojang.renderpearl.api.pipeline.BlendFactor;
 import com.mojang.renderpearl.api.pipeline.BlendFunction;
@@ -19,7 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.lwjgl.system.MemoryStack;
+import org.orecruncher.dsurround.effects.FrameBlock;
 import org.orecruncher.dsurround.effects.LevelProjection;
 import org.orecruncher.dsurround.effects.ModShader;
 import org.orecruncher.dsurround.effects.RenderTimer;
@@ -42,19 +39,13 @@ import java.util.concurrent.CompletableFuture;
 public final class RainbowRenderer {
 
     private static final String INFO = "RainbowInfo";
-    private static final int INFO_SIZE;
     private static final String SPECTRUM_SAMPLER = "SpectrumSampler";
     private static final BindGroupLayout LAYOUT = BindGroupLayout.builder()
             .withUniform(INFO, UniformType.UNIFORM_BUFFER)
             .withUniform(SPECTRUM_SAMPLER, UniformType.COMBINED_IMAGE_SAMPLER)
             .build();
 
-    static {
-        var size = new Std140SizeCalculator().putMat4f();
-        for (int i = 0; i < RainbowFrame.VECTORS; i++)
-            size.putVec4();
-        INFO_SIZE = size.get();
-    }
+    private static final FrameBlock BLOCK = new FrameBlock("Dynamic Surroundings rainbow UBO", RainbowFrame.VECTORS);
 
     // Light added over the sky, covering part of it (the shader's alpha): added alone, the bow came out nearly white
     // on a bright sky
@@ -81,9 +72,6 @@ public final class RainbowRenderer {
     private static CompletableFuture<RainbowSpectrum> spectrum;
     @Nullable
     private static DynamicTexture texture;
-    // One buffer rewritten each frame, not a MappableRingBuffer (see the realistic aurora's)
-    @Nullable
-    private static GpuBuffer info;
 
     private RainbowRenderer() {
     }
@@ -136,30 +124,15 @@ public final class RainbowRenderer {
                              float time, float seed, boolean blocky, boolean moonbow) {
         var frame = RainbowFrame.of(celestialAngle, strength, secondary, LevelProjection.get(), viewMatrix, time, seed, blocky,
                 moonbow);
-        pack(frame);
+        BLOCK.write(frame);
         // Made the first time it is used, which can't be while a render pass is open
         var view = texture(colors).getTextureView();
-        var block = info;
+        var block = BLOCK.buffer();
         var screen = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         ScreenPasses.draw(() -> "Dynamic Surroundings rainbow", screen.getColorTextureView(), Optional.empty(), PIPELINE, pass -> {
             pass.setUniform(INFO, block);
             pass.setUniform(SPECTRUM_SAMPLER, view, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR));
         });
-    }
-
-    /**
-     * Writes the frame's values into the uniform block (see shaders/include/rainbow.glsl)
-     */
-    private static void pack(RainbowFrame frame) {
-        if (info == null)
-            info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings rainbow UBO", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
-        var v = frame.vec4s();
-        try (var stack = MemoryStack.stackPush()) {
-            var builder = Std140Builder.onStack(stack, INFO_SIZE).putMat4f(frame.invViewProj());
-            for (int i = 0; i < v.length; i += 4)
-                builder.putVec4(v[i], v[i + 1], v[i + 2], v[i + 3]);
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
-        }
     }
 
     // The colors as a texture: a row for each bow, the square root of each channel for more precision in its faint

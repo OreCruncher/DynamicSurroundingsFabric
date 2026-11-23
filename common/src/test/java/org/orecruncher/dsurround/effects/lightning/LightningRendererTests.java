@@ -6,11 +6,9 @@ package org.orecruncher.dsurround.effects.lightning;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,12 +38,6 @@ public class LightningRendererTests {
     }
 
     private float shaderConstant(String name) throws IOException {
-        String source;
-        try (var in = Objects.requireNonNull(getClass().getResourceAsStream("/assets/dsurround/shaders/core/lightning.fsh"))) {
-            source = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        var matcher = Pattern.compile("const float " + name + " = ([0-9.]+);").matcher(source);
-        assertTrue(matcher.find(), "no " + name + " in the shader");
-        return Float.parseFloat(matcher.group(1));
+        return ShaderSources.constant(ShaderSources.read("core/lightning.fsh"), "const float " + name + " = ([0-9.]+);");
     }
 }

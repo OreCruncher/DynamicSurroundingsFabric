@@ -117,6 +117,12 @@ public class PrecipitationFieldTests {
     /**
      * A wind at full storm strength, blowing steadily, without gusts
      */
+    // How faded in a drop is, as the packed record gives the renderers
+    private static float fade(PrecipitationField field, int i, float partialTick) {
+        var d = field.drops();
+        return PrecipitationField.fade(d.kind[i], d.age[i], d.lifetime[i], d.covered[i], partialTick);
+    }
+
     private static Wind steadyWind() {
         var wind = new Wind();
         var random = Randomizer.create(9);
@@ -496,7 +502,7 @@ public class PrecipitationFieldTests {
         tick(field, new Columns(GROUND, Integer.MIN_VALUE, Integer.MIN_VALUE), 0, 0, 1F, 5);
         var seen = new int[4];
         for (int i = 0; i < field.count(); i++)
-            seen[field.variant(i, seen.length)]++;
+            seen[PackedDrops.variant(PrecipitationField.pick(field.drops(), i), seen.length)]++;
         for (int n = 0; n < seen.length; n++) {
             int look = n;
             assertTrue(seen[n] > field.count() / 8, () -> "look " + look + " only " + seen[look] + " of " + field.count());
@@ -509,7 +515,7 @@ public class PrecipitationFieldTests {
         tick(field, new Columns(GROUND, Integer.MIN_VALUE, Integer.MIN_VALUE), 0, 0, 1F, 5);
         int small = 0, large = 0;
         for (int i = 0; i < field.count(); i++) {
-            var size = field.snowSize(i);
+            var size = PrecipitationField.snowSize(field.drops(), i);
             assertTrue(size >= 0F && size <= 1F);
             if (size < 0.25F)
                 small++;
@@ -527,7 +533,7 @@ public class PrecipitationFieldTests {
         for (int i = 0; i < field.count(); i++)
             for (int j = 0; j < field.count(); j++)
                 if (field.drops().speed[i] > field.drops().speed[j])
-                    assertTrue(field.snowSize(i) >= field.snowSize(j));
+                    assertTrue(PrecipitationField.snowSize(field.drops(), i) >= PrecipitationField.snowSize(field.drops(), j));
     }
 
     @Test
@@ -552,7 +558,7 @@ public class PrecipitationFieldTests {
         tick(heavy, RAIN_EVERYWHERE, 0, 0, 1F, 3);
         assertTrue(meanFallSpeed(light) < meanFallSpeed(heavy));
         for (int i = 0; i < heavy.count(); i++)
-            assertEquals((heavy.drops().speed[i] - PrecipitationField.RAIN_SPEED_MIN) / PrecipitationField.RAIN_SPEED_RANGE, heavy.rainSize(i), 1e-5F);
+            assertEquals((heavy.drops().speed[i] - PrecipitationField.RAIN_SPEED_MIN) / PrecipitationField.RAIN_SPEED_RANGE, PrecipitationField.rainSize(heavy.drops(), i), 1e-5F);
     }
 
     private static float meanFallSpeed(PrecipitationField field) {
@@ -630,12 +636,12 @@ public class PrecipitationFieldTests {
         var field = new PrecipitationField(100);
         tick(field, ALL_DESERT, 0, 0, 1F, 1);
         assertTrue(field.count() > 0);
-        assertEquals(0F, field.fade(0, 0F));
+        assertEquals(0F, fade(field, 0, 0F));
         // Half way through its life it is at full strength; at the end, gone
         field.drops().age[0] = field.drops().lifetime[0] / 2;
-        assertEquals(1F, field.fade(0, 0F));
+        assertEquals(1F, fade(field, 0, 0F));
         field.drops().age[0] = field.drops().lifetime[0];
-        assertEquals(0F, field.fade(0, 0F));
+        assertEquals(0F, fade(field, 0, 0F));
     }
 
     @Test
@@ -654,7 +660,7 @@ public class PrecipitationFieldTests {
                 if (field.drops().kind[i] != PrecipitationField.DUST || field.drops().x[i] > -1F)
                     continue;
                 assertTrue(field.drops().lifetime[i] - field.drops().age[i] <= PrecipitationField.DUST_FADE, "dust outside the desert not fading");
-                sawFading |= field.fade(i, 0F) > 0F;
+                sawFading |= fade(field, i, 0F) > 0F;
             }
         }
         assertTrue(sawFading, "no dust drifted out of the desert");
@@ -1089,7 +1095,7 @@ public class PrecipitationFieldTests {
         var field = new PrecipitationField(10);
         tick(field, RAIN_EVERYWHERE, 0, 0, 1F, 1);
         assertTrue(field.count() > 0);
-        assertEquals(0F, field.fade(0, 0F));
-        assertTrue(field.fade(0, 0.5F) > 0F && field.fade(0, 0.5F) < 1F);
+        assertEquals(0F, fade(field, 0, 0F));
+        assertTrue(fade(field, 0, 0.5F) > 0F && fade(field, 0, 0.5F) < 1F);
     }
 }

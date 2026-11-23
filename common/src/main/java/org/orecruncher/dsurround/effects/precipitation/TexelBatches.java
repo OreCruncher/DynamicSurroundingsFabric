@@ -3,20 +3,28 @@
 
 package org.orecruncher.dsurround.effects.precipitation;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.function.Consumer;
 
 /**
  * Records of floats on the GPU as texel buffers of four floats a texel, in batches of a fixed number of records, each
  * batch a buffer of its own: a GPU need only allow {@link #MAX_TEXELS} texels in a texel buffer, the game can't ask how
  * many more it allows, and it binds only a whole buffer as a texel buffer ("Uniform texel buffers do not support a slice
- * of a buffer"). Buffers are made as the records need them and kept. Render thread only.
+ * of a buffer"). Buffers are made as the records need them and kept. Drawn as quads, each batch from its own buffer, its
+ * vertex index starting again at 0 (see {@link #draw}). Render thread only.
  */
 final class TexelBatches implements AutoCloseable {
 
@@ -30,6 +38,8 @@ final class TexelBatches implements AutoCloseable {
     private final List<GpuBuffer> buffers = new ArrayList<>();
     @Nullable
     private FloatBuffer staging;
+    // Which pack the buffers hold (see uploadIfChanged)
+    private long uploadedVersion = -1L;
 
     /**
      * @param name         what they hold, for the GPU's debugging labels
@@ -47,8 +57,15 @@ final class TexelBatches implements AutoCloseable {
         this.batchBytes = (long) batchRecords * stride * Float.BYTES;
     }
 
-    int batchRecords() {
-        return this.batchRecords;
+    /**
+     * Uploads {@code count} records from {@code data}, starting at record {@code first}, unless they are the pack
+     * numbered {@code version}, already uploaded
+     */
+    void uploadIfChanged(long version, float[] data, int first, int count) {
+        if (version == this.uploadedVersion)
+            return;
+        this.upload(data, first, count);
+        this.uploadedVersion = version;
     }
 
     /**
@@ -84,14 +101,35 @@ final class TexelBatches implements AutoCloseable {
     }
 
     /**
-     * The buffer of a batch, uploaded to
+     * Draws {@code records} records in a pass of their own over {@code target}, its depth tested, each batch's buffer bound
+     * as {@code recordsUniform} in turn
+     *
+     * @param bind           binds what the pipeline reads besides the records and the transforms
+     * @param quadsPerRecord the quads each record is drawn as
      */
-    GpuBuffer batch(int batch) {
-        return this.buffers.get(batch);
+    void draw(String label, RenderPipeline pipeline, RenderTarget target, Consumer<RenderPass> bind, String recordsUniform,
+              int records, int quadsPerRecord) {
+        int indicesPerRecord = quadsPerRecord * 6;
+        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
+        var indexBuffer = indices.getBuffer(Math.min(records, this.batchRecords) * indicesPerRecord);
+        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
+        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> label,
+                target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
+            RenderSystem.bindDefaultUniforms(pass);
+            pass.setUniform("DynamicTransforms", transforms);
+            bind.accept(pass);
+            pass.setIndexBuffer(indexBuffer, indices.type());
+            for (int first = 0, batch = 0; first < records; first += this.batchRecords, batch++) {
+                pass.setUniform(recordsUniform, this.buffers.get(batch));
+                pass.drawIndexed(Math.min(this.batchRecords, records - first) * indicesPerRecord, 1, 0, 0, 0);
+            }
+        }
     }
 
     @Override
     public void close() {
+        this.uploadedVersion = -1L;
         for (var buffer : this.buffers)
             buffer.close();
         this.buffers.clear();

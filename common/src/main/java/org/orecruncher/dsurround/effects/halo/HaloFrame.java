@@ -5,8 +5,11 @@ package org.orecruncher.dsurround.effects.halo;
 
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.orecruncher.dsurround.effects.FrameBlock;
 import org.orecruncher.dsurround.effects.rainbow.RainbowConditions;
 import org.orecruncher.dsurround.effects.rainbow.RainbowFrame;
+
+import static org.orecruncher.dsurround.effects.FrameBlock.put;
 
 /**
  * The halo's shader values for a frame ({@code HaloInfo}, shaders/include/halo.glsl), worked out with no GPU in sight:
@@ -15,7 +18,7 @@ import org.orecruncher.dsurround.effects.rainbow.RainbowFrame;
  * @param invViewProj turns a pixel's place on the screen back into a direction in the sky
  * @param vec4s       the rest, four floats to a vector
  */
-public record HaloFrame(Matrix4fc invViewProj, float[] vec4s) {
+public record HaloFrame(Matrix4fc invViewProj, float[] vec4s) implements FrameBlock.Frame {
 
     /**
      * Vectors after the matrix
@@ -64,13 +67,5 @@ public record HaloFrame(Matrix4fc invViewProj, float[] vec4s) {
     private static float dog(float elevation, int channel) {
         float azimuth = HaloConditions.sunDogAzimuth(elevation, HaloConditions.ICE[channel]);
         return Float.isNaN(azimuth) ? 180F : azimuth;
-    }
-
-    private static void put(float[] v, int vector, float x, float y, float z, float w) {
-        int i = vector * 4;
-        v[i] = x;
-        v[i + 1] = y;
-        v[i + 2] = z;
-        v[i + 3] = w;
     }
 }

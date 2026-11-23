@@ -9,7 +9,6 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.commands.RenderPass;
-import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -17,8 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.function.Consumer;
 
 /**
@@ -67,8 +64,6 @@ public final class GpuMarks implements AutoCloseable {
     private final TexelBatches records;
     @Nullable
     private GpuBuffer info;
-    // Which pack the GPU's copy holds
-    private long uploadedVersion = -1L;
 
     public GpuMarks(Kind kind) {
         this.kind = kind;
@@ -123,40 +118,21 @@ public final class GpuMarks implements AutoCloseable {
             anchorZ = packed.anchorZ;
             if (marks == 0)
                 return 0;
-            if (packed.version != this.uploadedVersion) {
-                this.records.upload(packed.data, 0, marks);
-                this.uploadedVersion = packed.version;
-            }
+            this.records.uploadIfChanged(packed.version, packed.data, 0, marks);
         }
         var cam = camera.position();
-        this.pack((float) (anchorX - cam.x), (float) (anchorY - cam.y), (float) (anchorZ - cam.z), partialTick, style);
-
-        var device = RenderSystem.getDevice();
-        var indices = RenderSystem.getSequentialBuffer(PrimitiveTopology.QUADS);
-        var indexBuffer = indices.getBuffer(Math.min(marks, BATCH_MARKS) * this.kind.quads * 6);
-        var transforms = RenderSystem.getDynamicUniforms().writeTransform(RenderSystem.getModelViewMatrixCopy());
-        var info = this.info;
-        try (RenderPass pass = device.createCommandEncoder().createRenderPass(() -> "Dynamic Surroundings " + this.kind.description + " (GPU)",
-                target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
-            RenderSystem.bindDefaultUniforms(pass);
-            pass.setUniform("DynamicTransforms", transforms);
-            bind.accept(pass);
-            pass.setUniform(PrecipitationShaders.MARK_INFO, info);
-            pass.setIndexBuffer(indexBuffer, indices.type());
-            // Each batch from its own buffer, its vertex index starting again at 0
-            for (int first = 0, batch = 0; first < marks; first += BATCH_MARKS, batch++) {
-                pass.setUniform(PrecipitationShaders.MARK_RECORDS, this.records.batch(batch));
-                pass.drawIndexed(Math.min(BATCH_MARKS, marks - first) * this.kind.quads * 6, 1, 0, 0, 0);
-            }
-        }
+        var info = this.pack((float) (anchorX - cam.x), (float) (anchorY - cam.y), (float) (anchorZ - cam.z), partialTick, style);
+        this.records.draw("Dynamic Surroundings " + this.kind.description + " (GPU)", pipeline, target,
+                bind.andThen(pass -> pass.setUniform(PrecipitationShaders.MARK_INFO, info)), PrecipitationShaders.MARK_RECORDS, marks,
+                this.kind.quads);
         return marks;
     }
 
-    // The frame's values, in MarkInfo's order (see the shader)
-    private void pack(float offsetX, float offsetY, float offsetZ, float partialTick, DropMeshes.Style style) {
-        if (this.info == null)
-            this.info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings " + this.kind.description + " UBO",
+    // The frame's values, in MarkInfo's order (see the shader), into the uniform block it returns
+    private GpuBuffer pack(float offsetX, float offsetY, float offsetZ, float partialTick, DropMeshes.Style style) {
+        var info = this.info;
+        if (info == null)
+            this.info = info = RenderSystem.getDevice().createBuffer(() -> "Dynamic Surroundings " + this.kind.description + " UBO",
                     GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, INFO_SIZE);
         var rain = style.rainColor();
         List<Snowflakes.Flake> flakes = style.snowflakes();
@@ -171,22 +147,10 @@ public final class GpuMarks implements AutoCloseable {
                 builder.putVec4(spot.getU0(), spot.getV0(), spot.getU1(), spot.getV1());
             else
                 builder.putVec4(0F, 0F, 0F, 0F);
-            for (int i = 0; i < GpuDrops.MAX_LOOKS; i++) {
-                if (i < count) {
-                    var flake = flakes.get(i);
-                    builder.putVec4(flake.u0(), flake.v0(), flake.u1(), flake.v1());
-                } else {
-                    builder.putVec4(0F, 0F, 0F, 0F);
-                }
-            }
-            for (int i = 0; i < GpuDrops.MAX_LOOKS; i += 4)
-                builder.putVec4(size(flakes, count, i), size(flakes, count, i + 1), size(flakes, count, i + 2), size(flakes, count, i + 3));
-            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(this.info.slice(), builder.get());
+            GpuDrops.putFlakes(builder, flakes, count);
+            RenderSystem.getDevice().createCommandEncoder().writeToBuffer(info.slice(), builder.get());
         }
-    }
-
-    private static float size(List<Snowflakes.Flake> flakes, int count, int i) {
-        return i < count ? flakes.get(i).size() : 0F;
+        return info;
     }
 
     @Override
@@ -196,6 +160,5 @@ public final class GpuMarks implements AutoCloseable {
             this.info.close();
             this.info = null;
         }
-        this.uploadedVersion = -1L;
     }
 }

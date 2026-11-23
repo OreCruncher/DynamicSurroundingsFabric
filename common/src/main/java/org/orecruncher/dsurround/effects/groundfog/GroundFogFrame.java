@@ -7,6 +7,9 @@ import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.orecruncher.dsurround.config.GroundFogQuality;
+import org.orecruncher.dsurround.effects.FrameBlock;
+
+import static org.orecruncher.dsurround.effects.FrameBlock.put;
 
 /**
  * The values the ground fog's passes share for a frame ({@code GroundFogInfo}, shaders/include/ground_fog.glsl), and
@@ -20,7 +23,7 @@ import org.orecruncher.dsurround.config.GroundFogQuality;
  * @param invViewProj turns a pixel's place on the screen and its depth back into a place, from the camera
  * @param vec4s       the rest, four floats to a vector
  */
-public record GroundFogFrame(Matrix4fc invViewProj, float[] vec4s) {
+public record GroundFogFrame(Matrix4fc invViewProj, float[] vec4s) implements FrameBlock.Frame {
 
     /**
      * Vectors after the matrix
@@ -70,14 +73,6 @@ public record GroundFogFrame(Matrix4fc invViewProj, float[] vec4s) {
         put(v, 5, driftX, driftZ, seconds, GroundFogVolume.MIST_DEPTH);
         put(v, 6, field.radius() - 1F, fadeWidth, GroundFogVolume.THICKNESS * strength, zeroToOne ? 1F : 0F);
         return new GroundFogFrame(invViewProj, v);
-    }
-
-    private static void put(float[] v, int vector, float x, float y, float z, float w) {
-        int i = vector * 4;
-        v[i] = x;
-        v[i + 1] = y;
-        v[i + 2] = z;
-        v[i + 3] = w;
     }
 
     /**

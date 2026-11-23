@@ -5,6 +5,9 @@ package org.orecruncher.dsurround.effects.aurora;
 
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.orecruncher.dsurround.effects.FrameBlock;
+
+import static org.orecruncher.dsurround.effects.FrameBlock.put;
 
 /**
  * The cinematic aurora's shader values for a frame ({@code CinematicAuroraInfo}, shaders/include/aurora_cinematic.glsl),
@@ -16,7 +19,7 @@ import org.joml.Matrix4fc;
  * @param invViewProj turns a pixel's place on the screen back into a direction in the sky
  * @param vec4s       the rest, four floats to a vector
  */
-public record CinematicAuroraFrame(Matrix4fc invViewProj, float[] vec4s) {
+public record CinematicAuroraFrame(Matrix4fc invViewProj, float[] vec4s) implements FrameBlock.Frame {
 
     /**
      * Vectors before the ribbons'
@@ -103,13 +106,5 @@ public record CinematicAuroraFrame(Matrix4fc invViewProj, float[] vec4s) {
             }
         }
         return new CinematicAuroraFrame(invViewProj, v);
-    }
-
-    private static void put(float[] v, int vector, float x, float y, float z, float w) {
-        int i = vector * 4;
-        v[i] = x;
-        v[i + 1] = y;
-        v[i + 2] = z;
-        v[i + 3] = w;
     }
 }

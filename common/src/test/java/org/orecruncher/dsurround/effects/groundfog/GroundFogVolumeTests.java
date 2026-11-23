@@ -4,10 +4,9 @@
 package org.orecruncher.dsurround.effects.groundfog;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,10 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GroundFogVolumeTests {
 
     private static String shader() throws IOException {
-        try (var in = Objects.requireNonNull(GroundFogVolumeTests.class.getResourceAsStream(
-                "/assets/dsurround/shaders/core/ground_fog_volume.fsh"))) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        return ShaderSources.read("core/ground_fog_volume.fsh");
     }
 
     @Test

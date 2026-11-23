@@ -7,11 +7,10 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,18 +32,6 @@ public class RealisticAuroraTests {
 
     private static RealisticAurora create(long night) {
         return RealisticAurora.create(night, STORM_CHANCE);
-    }
-
-    private static String resource(String path) throws IOException {
-        try (var in = Objects.requireNonNull(RealisticAuroraTests.class.getResourceAsStream("/assets/dsurround/shaders/" + path), path)) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
-
-    private static float constant(String source, String pattern) {
-        var match = Pattern.compile(pattern).matcher(source);
-        assertTrue(match.find(), pattern);
-        return Float.parseFloat(match.group(1));
     }
 
     // ---- The nights
@@ -498,24 +485,24 @@ public class RealisticAuroraTests {
 
     @Test
     void theShaderAgreesOnItsConstants() throws IOException {
-        var fragment = resource("core/aurora_realistic.fsh");
-        assertEquals(RealisticAuroraRenderer.NOISE_SIZE, constant(fragment, "const float NOISE_SIZE = ([0-9.]+);"));
-        assertEquals(RealisticAuroraRenderer.FINE_RAY, constant(fragment, "const float FINE_RAY = ([0-9.]+);"));
-        assertEquals(RealisticAuroraRenderer.COARSE_RAY, constant(fragment, "const float COARSE_RAY = ([0-9.]+);"));
-        assertEquals(RealisticAuroraRenderer.HAIR_RAY, constant(fragment, "const float HAIR_RAY = ([0-9.]+);"));
-        assertEquals(RealisticAuroraRenderer.SWAY_CELL, constant(fragment, "const float SWAY_CELL = ([0-9.]+);"));
-        assertEquals(RealisticAuroraRenderer.FIELD_CELL, constant(fragment, "const float FIELD_CELL = ([0-9.]+);"));
-        assertEquals(RealisticAurora.BOW_LENGTH, constant(fragment, "const float BOW_LENGTH = ([0-9.]+);"));
-        assertEquals(RealisticAurora.EARTH_RADIUS, constant(fragment, "const float EARTH_RADIUS = ([0-9.]+);"));
-        assertEquals(RealisticAurora.FOLD_DRIFT, constant(fragment, "const float FOLD_DRIFT = ([0-9.]+);"));
-        assertEquals(RealisticAurora.CURL_WAVELENGTH, constant(fragment, "const float CURL_WAVELENGTH = ([0-9.]+);"));
-        assertEquals(RealisticAurora.MAX_ARCS, constant(resource("include/aurora_realistic.glsl"), "#define MAX_ARCS ([0-9]+)"));
+        var fragment = ShaderSources.read("core/aurora_realistic.fsh");
+        assertEquals(RealisticAuroraRenderer.NOISE_SIZE, ShaderSources.constant(fragment, "const float NOISE_SIZE = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.FINE_RAY, ShaderSources.constant(fragment, "const float FINE_RAY = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.COARSE_RAY, ShaderSources.constant(fragment, "const float COARSE_RAY = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.HAIR_RAY, ShaderSources.constant(fragment, "const float HAIR_RAY = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.SWAY_CELL, ShaderSources.constant(fragment, "const float SWAY_CELL = ([0-9.]+);"));
+        assertEquals(RealisticAuroraRenderer.FIELD_CELL, ShaderSources.constant(fragment, "const float FIELD_CELL = ([0-9.]+);"));
+        assertEquals(RealisticAurora.BOW_LENGTH, ShaderSources.constant(fragment, "const float BOW_LENGTH = ([0-9.]+);"));
+        assertEquals(RealisticAurora.EARTH_RADIUS, ShaderSources.constant(fragment, "const float EARTH_RADIUS = ([0-9.]+);"));
+        assertEquals(RealisticAurora.FOLD_DRIFT, ShaderSources.constant(fragment, "const float FOLD_DRIFT = ([0-9.]+);"));
+        assertEquals(RealisticAurora.CURL_WAVELENGTH, ShaderSources.constant(fragment, "const float CURL_WAVELENGTH = ([0-9.]+);"));
+        assertEquals(RealisticAurora.MAX_ARCS, ShaderSources.constant(ShaderSources.read("include/aurora_realistic.glsl"), "#define MAX_ARCS ([0-9]+)"));
     }
 
     @Test
     void theShaderBendsArcsAsTheModDoes() throws IOException {
         // Arc.northAt, in the shader
-        var fragment = resource("core/aurora_realistic.fsh");
+        var fragment = ShaderSources.read("core/aurora_realistic.fsh");
         assertTrue(fragment.contains("shape.x - shape.y * sin(east * TWO_PI / shape.z + shape.w + time * FOLD_DRIFT)"), "large folds");
         assertTrue(fragment.contains("wave.x * sin((east - wave.z) * TWO_PI / wave.y)"), "the wave");
         assertTrue(fragment.contains("wave.w * sin((east - ArcLight[i].z) * TWO_PI / CURL_WAVELENGTH + shape.w * 3.0)"), "curls");
@@ -543,7 +530,7 @@ public class RealisticAuroraTests {
 
     @Test
     void theHorizonMarchedToIsTheShaders() throws IOException {
-        var fragment = resource("core/aurora_realistic.fsh");
+        var fragment = ShaderSources.read("core/aurora_realistic.fsh");
         var discard = Pattern.compile("if \\(view\\.y < (-?[0-9.]+) \\|\\|").matcher(fragment);
         assertTrue(discard.find(), "the shader's discard below the horizon");
         assertEquals(RealisticAuroraFrame.HORIZON, Float.parseFloat(discard.group(1)), 1e-6F);

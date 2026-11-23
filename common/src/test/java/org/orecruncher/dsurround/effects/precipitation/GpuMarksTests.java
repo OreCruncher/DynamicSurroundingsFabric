@@ -7,12 +7,10 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,9 +24,7 @@ public class GpuMarksTests {
     private static final double CAMERA_X = 1000.25, CAMERA_Y = 70.5, CAMERA_Z = -2000.75;
 
     private static String shader() throws IOException {
-        try (InputStream in = Objects.requireNonNull(GpuMarksTests.class.getResourceAsStream("/assets/dsurround/shaders/core/precipitation_marks.vsh"))) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        return ShaderSources.read("core/precipitation_marks.vsh");
     }
 
     @Test
@@ -39,7 +35,7 @@ public class GpuMarksTests {
 
     @Test
     void aBatchFitsTheTexelsEveryGpuAllows() {
-        assertTrue((long) GpuMarks.BATCH_MARKS * PackedMarks.STRIDE / TexelBatches.FLOATS_A_TEXEL <= TexelBatches.MAX_TEXELS);
+        assertDoesNotThrow(() -> new TexelBatches("marks", PackedMarks.STRIDE, GpuMarks.BATCH_MARKS).close());
     }
 
     @Test

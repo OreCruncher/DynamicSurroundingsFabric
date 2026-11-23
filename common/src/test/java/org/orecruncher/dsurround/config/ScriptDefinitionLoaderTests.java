@@ -8,23 +8,18 @@ import com.google.gson.JsonParser;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.Test;
-import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.resources.DiscoveredResource;
 import org.orecruncher.dsurround.lib.scripting.Script;
-import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
 import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions.Section;
-import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.lib.scripting.ScriptDefinitions;
 import org.orecruncher.dsurround.lib.system.ISystemClock;
 import org.orecruncher.dsurround.lib.threading.RecordingLog;
 import org.orecruncher.dsurround.runtime.BiomeConditionEvaluator;
 import org.orecruncher.dsurround.runtime.ConditionEvaluator;
 import org.orecruncher.dsurround.runtime.PlatformFunctions;
-import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
-import org.orecruncher.dsurround.runtime.variables.*;
-import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
-import org.orecruncher.dsurround.runtime.weather.RainbowState;
+import org.orecruncher.dsurround.testing.Evaluators;
 import org.orecruncher.dsurround.testing.Fakes;
 
 import java.io.InputStreamReader;
@@ -136,14 +131,7 @@ public class ScriptDefinitionLoaderTests {
 
     // The game's conditions engine, with every variable set, and the time of day it is told
     private static ConditionEvaluator conditions(RecordingLog log, String now) {
-        var oracle = Fakes.of(ILevelOracle.class, Map.of());
-        var seasons = Fakes.of(ISeasonalInformation.class, Map.of());
-        var clock = Fakes.of(ISystemClock.class, Map.of("getUtcNow", args -> Instant.parse(now)));
-        return new ConditionEvaluator(log, new PlatformFunctions(clock),
-                new BiomeVariables(Fakes.of(IBiomeLibrary.class, Map.of())), new DimensionVariables(),
-                new DiurnalVariables(oracle), new PlayerVariables(oracle),
-                new WeatherVariables(oracle, seasons, Fakes.of(IWeatherSimulation.class, Map.of()), null, new RainbowState()),
-                new EnvironmentState(null), new GlobalVariables(new Configuration()), new SeasonVariables(seasons));
+        return Evaluators.conditions(log, Fakes.of(ISystemClock.class, Map.of("getUtcNow", args -> Instant.parse(now))));
     }
 
     @Test

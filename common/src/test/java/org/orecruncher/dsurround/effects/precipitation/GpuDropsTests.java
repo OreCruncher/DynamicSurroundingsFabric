@@ -4,11 +4,9 @@
 package org.orecruncher.dsurround.effects.precipitation;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,9 +19,7 @@ public class GpuDropsTests {
     private static final int FLOATS_A_TEXEL = 4;
 
     private static String shader() throws IOException {
-        try (InputStream in = Objects.requireNonNull(GpuDropsTests.class.getResourceAsStream("/assets/dsurround/shaders/core/precipitation_gpu.vsh"))) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
+        return ShaderSources.read("core/precipitation_gpu.vsh");
     }
 
     @Test
@@ -33,13 +29,9 @@ public class GpuDropsTests {
 
     @Test
     void aBatchFitsTheTexelsEveryGpuAllows() {
-        long texels = (long) GpuDrops.BATCH_DROPS * PackedDrops.STRIDE / FLOATS_A_TEXEL;
-        assertTrue(texels <= GpuDrops.MAX_TEXELS, "a batch of " + texels + " texels is more than every GPU allows");
-    }
-
-    @Test
-    void aBatchBufferHoldsABatchsRecords() {
-        assertEquals(GpuDrops.BATCH_DROPS * (long) PackedDrops.STRIDE * Float.BYTES, GpuDrops.BATCH_BYTES);
+        // The batches refuse one larger than every GPU allows
+        assertDoesNotThrow(() -> new TexelBatches("drops", PackedDrops.STRIDE, GpuDrops.BATCH_DROPS).close());
+        assertThrows(IllegalArgumentException.class, () -> new TexelBatches("drops", PackedDrops.STRIDE, TexelBatches.MAX_TEXELS));
     }
 
     @Test

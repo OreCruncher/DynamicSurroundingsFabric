@@ -7,11 +7,10 @@ import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.ShaderSources;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,18 +28,6 @@ public class CinematicAuroraTests {
     }
 
     private static final int NIGHTS = 2000;
-
-    private static String resource(String path) throws IOException {
-        try (var in = Objects.requireNonNull(CinematicAuroraTests.class.getResourceAsStream("/assets/dsurround/shaders/" + path), path)) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
-
-    private static float constant(String source, String pattern) {
-        var match = Pattern.compile(pattern).matcher(source);
-        assertTrue(match.find(), pattern);
-        return Float.parseFloat(match.group(1));
-    }
 
     private static RealisticAurora.Moment moment(long night, RealisticAurora.Phase phase) {
         var aurora = RealisticAurora.create(night, 10).withActivity(AuroraActivity.STORM);
@@ -266,19 +253,19 @@ public class CinematicAuroraTests {
 
     @Test
     void theShadersConstantsAreTheModels() throws IOException {
-        var fragment = resource("core/aurora_cinematic.fsh");
-        assertEquals(CinematicAuroraRenderer.NOISE_SIZE, constant(fragment, "const float NOISE_SIZE = ([0-9.]+);"));
-        assertEquals(CinematicAuroraRenderer.FINE_RAY, constant(fragment, "const float FINE_RAY = ([0-9.]+);"));
-        assertEquals(CinematicAuroraRenderer.COARSE_RAY, constant(fragment, "const float COARSE_RAY = ([0-9.]+);"));
-        assertEquals(CinematicAurora.BOW_LENGTH, constant(fragment, "const float BOW_LENGTH = ([0-9.]+);"));
-        assertEquals(CinematicAurora.CURL_STRETCH, constant(fragment, "const float CURL_STRETCH = ([0-9.]+);"));
-        assertEquals(RealisticAurora.EARTH_RADIUS, constant(fragment, "const float EARTH_RADIUS = ([0-9.]+);"));
-        assertEquals(CinematicAurora.MAX_RIBBONS, constant(resource("include/aurora_cinematic.glsl"), "#define MAX_RIBBONS ([0-9]+)"));
+        var fragment = ShaderSources.read("core/aurora_cinematic.fsh");
+        assertEquals(CinematicAuroraRenderer.NOISE_SIZE, ShaderSources.constant(fragment, "const float NOISE_SIZE = ([0-9.]+);"));
+        assertEquals(CinematicAuroraRenderer.FINE_RAY, ShaderSources.constant(fragment, "const float FINE_RAY = ([0-9.]+);"));
+        assertEquals(CinematicAuroraRenderer.COARSE_RAY, ShaderSources.constant(fragment, "const float COARSE_RAY = ([0-9.]+);"));
+        assertEquals(CinematicAurora.BOW_LENGTH, ShaderSources.constant(fragment, "const float BOW_LENGTH = ([0-9.]+);"));
+        assertEquals(CinematicAurora.CURL_STRETCH, ShaderSources.constant(fragment, "const float CURL_STRETCH = ([0-9.]+);"));
+        assertEquals(RealisticAurora.EARTH_RADIUS, ShaderSources.constant(fragment, "const float EARTH_RADIUS = ([0-9.]+);"));
+        assertEquals(CinematicAurora.MAX_RIBBONS, ShaderSources.constant(ShaderSources.read("include/aurora_cinematic.glsl"), "#define MAX_RIBBONS ([0-9]+)"));
     }
 
     @Test
     void theShadersRibbonIsTheModels() throws IOException {
-        var fragment = resource("core/aurora_cinematic.fsh");
+        var fragment = ShaderSources.read("core/aurora_cinematic.fsh");
         assertTrue(fragment.contains("fold.x * sin(along * TWO_PI / fold.y + fold.z)"), "large folds");
         assertTrue(fragment.contains("fold.w * sin((along - wave.y) * TWO_PI / wave.x)"), "the wave");
         assertTrue(fragment.contains("RibbonAxis[i].w * a2 / (a2 + BOW_LENGTH * BOW_LENGTH)"), "the bow");
@@ -291,7 +278,7 @@ public class CinematicAuroraTests {
 
     @Test
     void theBlockHasTheFramesVectorsInOrder() throws IOException {
-        var include = resource("include/aurora_cinematic.glsl");
+        var include = ShaderSources.read("include/aurora_cinematic.glsl");
         var single = Pattern.compile("^\\s*vec4 (\\w+);", Pattern.MULTILINE).matcher(include);
         int singles = 0;
         while (single.find())
