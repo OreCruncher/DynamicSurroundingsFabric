@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.profiling;
 
 import jdk.jfr.Configuration;
+import jdk.jfr.Event;
 import jdk.jfr.FlightRecorder;
 import jdk.jfr.Recording;
 import jdk.jfr.consumer.RecordingFile;
@@ -21,6 +22,8 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -221,63 +224,32 @@ final class ProfileRecording {
      */
     static void record(Path file, Duration length, ProfileEnvironment environment) throws IOException, ParseException, InterruptedException {
         var settings = settings();
-        register();
+        var sources = sources();
+        register(sources);
 
         var unfinished = file.resolveSibling(file.getFileName() + ProfileFiles.UNFINISHED);
         // A recording's name until it is redacted, which ProfileFiles clears away if left (see its UNFINISHED)
         var unredacted = file.resolveSibling(file.getFileName().toString().replace(".jfr", "-unredacted.jfr") + ProfileFiles.UNFINISHED);
-        Runnable timers = ProfileRecording::writeTimers;
-        FlightRecorder.addPeriodicEvent(RenderTimerEvent.class, timers);
-        Runnable frames = ProfileRecording::writeFrames;
-        FlightRecorder.addPeriodicEvent(FramesEvent.class, frames);
-        var samples = new SampleTotals();
-        Runnable sampleWriter = samples::write;
-        FlightRecorder.addPeriodicEvent(RandomBlockSamplesEvent.class, sampleWriter);
-        var auroras = new AuroraTotals();
-        Runnable auroraWriter = auroras::write;
-        FlightRecorder.addPeriodicEvent(AuroraEvent.class, auroraWriter);
-        var realistic = new RealisticAuroraTotals();
-        Runnable realisticWriter = realistic::write;
-        FlightRecorder.addPeriodicEvent(RealisticAuroraEvent.class, realisticWriter);
-        Runnable particleWriter = ProfileRecording::writeParticles;
-        FlightRecorder.addPeriodicEvent(ParticlesEvent.class, particleWriter);
-        Runnable soundWriter = ProfileRecording::writeSounds;
-        FlightRecorder.addPeriodicEvent(EnhancedSoundsEvent.class, soundWriter);
-        Runnable queryWriter = ProfileRecording::writeBlockQueries;
-        FlightRecorder.addPeriodicEvent(BlockQueriesEvent.class, queryWriter);
+        for (var source : sources)
+            if (source.write() != null)
+                FlightRecorder.addPeriodicEvent(source.type(), source.write());
         try {
             try (var recording = new Recording(settings)) {
                 recording.setName("Dynamic Surroundings");
                 recording.setToDisk(true);
-                enableOurs(recording);
+                enable(recording, sources);
                 recording.start();
-                HandlerTicks.start(ProfileRecording::writeHandlerTick);
-                FrameTimes.start();
-                RandomBlockSamples.start(samples::add);
-                AuroraSamples.start(auroras::add);
-                RealisticAuroraSamples.start(realistic::add);
-                ParticleSamples.start();
-                SoundSamples.start();
-                BlockQuerySamples.start();
+                for (var source : sources)
+                    source.start().run();
                 EnvironmentEvent.write(environment);
                 FeatureEvent.write(environment.features());
                 ModEvent.write(environment.modList());
                 Thread.sleep(length.toMillis());
-                HandlerTicks.stop();
-                FrameTimes.stop();
-                RandomBlockSamples.stop();
-                AuroraSamples.stop();
-                RealisticAuroraSamples.stop();
-                ParticleSamples.stop();
-                SoundSamples.stop();
-                BlockQuerySamples.stop();
+                stop(sources);
                 // What has been counted since the last second's write
-                samples.write();
-                auroras.write();
-                realistic.write();
-                writeParticles();
-                writeSounds();
-                writeBlockQueries();
+                for (var source : sources)
+                    if (source.flush())
+                        Objects.requireNonNull(source.write()).run();
                 recording.stop();
                 recording.dump(unfinished);
             }
@@ -291,22 +263,10 @@ final class ProfileRecording {
             Redaction.redact(unredacted);
             Files.move(unredacted, file, StandardCopyOption.REPLACE_EXISTING);
         } finally {
-            HandlerTicks.stop();
-            FrameTimes.stop();
-            RandomBlockSamples.stop();
-            AuroraSamples.stop();
-            RealisticAuroraSamples.stop();
-            ParticleSamples.stop();
-            SoundSamples.stop();
-            BlockQuerySamples.stop();
-            FlightRecorder.removePeriodicEvent(timers);
-            FlightRecorder.removePeriodicEvent(frames);
-            FlightRecorder.removePeriodicEvent(sampleWriter);
-            FlightRecorder.removePeriodicEvent(auroraWriter);
-            FlightRecorder.removePeriodicEvent(realisticWriter);
-            FlightRecorder.removePeriodicEvent(particleWriter);
-            FlightRecorder.removePeriodicEvent(soundWriter);
-            FlightRecorder.removePeriodicEvent(queryWriter);
+            stop(sources);
+            for (var source : sources)
+                if (source.write() != null)
+                    FlightRecorder.removePeriodicEvent(source.write());
             Files.deleteIfExists(unfinished);
             Files.deleteIfExists(unredacted);
         }
@@ -331,11 +291,12 @@ final class ProfileRecording {
             Thread.sleep(length.toMillis());
             return;
         }
-        register();
+        var sources = sources();
+        register(sources);
         try (var recording = new Recording(settings())) {
             recording.setName("Dynamic Surroundings warm-up");
             recording.setToDisk(false);
-            enableOurs(recording);
+            enable(recording, sources);
             recording.start();
             Thread.sleep(length.toMillis());
             recording.stop();
@@ -346,7 +307,7 @@ final class ProfileRecording {
     // The JDK's "profile" settings for the allowed events, and every other event type known turned off: one the
     // settings don't name records as its own annotations say, and most say it's on (the game's network summary, which
     // holds the server's address; another mod's). One registered later is left out when the file is written again.
-    // Ours are set by enableOurs
+    // Ours are set by enable
     private static HashMap<String, String> settings() throws IOException, ParseException {
         var settings = new HashMap<String, String>();
         Configuration.getConfiguration("profile").getSettings().forEach((key, value) -> {
@@ -359,37 +320,77 @@ final class ProfileRecording {
         return settings;
     }
 
+    /**
+     * One of the mod's event types and what feeds it: what writes it once a second (null for one written as things
+     * happen, or once), whether that runs once more when the recording ends, for what was counted since its last
+     * second, and the sampler started and stopped with the recording. Each event type is one row in {@link #sources},
+     * which registers, enables, hooks, starts, flushes and stops it, so none can be left counting after a recording.
+     */
+    record Source(Class<? extends Event> type, @Nullable Runnable write, boolean flush, Runnable start, Runnable stop) {
+
+        private static final Runnable NOTHING = () -> {
+        };
+
+        // Written once, as the recording starts
+        static Source once(Class<? extends Event> type) {
+            return new Source(type, null, false, NOTHING, NOTHING);
+        }
+
+        // Written by its sampler as things happen
+        static Source live(Class<? extends Event> type, Runnable start, Runnable stop) {
+            return new Source(type, null, false, start, stop);
+        }
+
+        // Written once a second, and what was counted since the last second when the recording ends
+        static Source sampled(Class<? extends Event> type, Runnable write, Runnable start, Runnable stop) {
+            return new Source(type, write, true, start, stop);
+        }
+    }
+
+    /**
+     * The mod's event types and what feeds them, made afresh for each recording (the totals they add up in)
+     */
+    static List<Source> sources() {
+        var samples = new SampleTotals();
+        var auroras = new AuroraTotals();
+        var realistic = new RealisticAuroraTotals();
+        return List.of(
+                Source.once(EnvironmentEvent.class),
+                Source.once(FeatureEvent.class),
+                Source.once(ModEvent.class),
+                Source.live(HandlerTickEvent.class, () -> HandlerTicks.start(ProfileRecording::writeHandlerTick), HandlerTicks::stop),
+                // The render timers' running averages, read: nothing is counted to flush
+                new Source(RenderTimerEvent.class, ProfileRecording::writeTimers, false, Source.NOTHING, Source.NOTHING),
+                // Not flushed: an event holds a second's frames, and the summaries count them as a second's
+                new Source(FramesEvent.class, ProfileRecording::writeFrames, false, FrameTimes::start, FrameTimes::stop),
+                Source.sampled(RandomBlockSamplesEvent.class, samples::write, () -> RandomBlockSamples.start(samples::add), RandomBlockSamples::stop),
+                Source.sampled(AuroraEvent.class, auroras::write, () -> AuroraSamples.start(auroras::add), AuroraSamples::stop),
+                Source.sampled(RealisticAuroraEvent.class, realistic::write, () -> RealisticAuroraSamples.start(realistic::add), RealisticAuroraSamples::stop),
+                Source.sampled(ParticlesEvent.class, ProfileRecording::writeParticles, ParticleSamples::start, ParticleSamples::stop),
+                Source.sampled(EnhancedSoundsEvent.class, ProfileRecording::writeSounds, SoundSamples::start, SoundSamples::stop),
+                Source.sampled(BlockQueriesEvent.class, ProfileRecording::writeBlockQueries, BlockQuerySamples::start, BlockQuerySamples::stop));
+    }
+
     // Registered before the recording starts, so starting it instruments them with the JDK's, in one pause. Left to
     // their first event, each paused every thread for its own, there and then: in a game, 100 ms, inside a tick being
     // timed. The periodic ones are registered with their hooks, by the recording; registering them again is harmless.
-    private static void register() {
-        FlightRecorder.register(EnvironmentEvent.class);
-        FlightRecorder.register(FeatureEvent.class);
-        FlightRecorder.register(ModEvent.class);
-        FlightRecorder.register(HandlerTickEvent.class);
-        FlightRecorder.register(RenderTimerEvent.class);
-        FlightRecorder.register(FramesEvent.class);
-        FlightRecorder.register(RandomBlockSamplesEvent.class);
-        FlightRecorder.register(AuroraEvent.class);
-        FlightRecorder.register(RealisticAuroraEvent.class);
-        FlightRecorder.register(ParticlesEvent.class);
-        FlightRecorder.register(EnhancedSoundsEvent.class);
-        FlightRecorder.register(BlockQueriesEvent.class);
+    private static void register(List<Source> sources) {
+        for (var source : sources)
+            FlightRecorder.register(source.type());
     }
 
-    private static void enableOurs(Recording recording) {
-        recording.enable(RenderTimerEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(FramesEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(EnvironmentEvent.class);
-        recording.enable(FeatureEvent.class);
-        recording.enable(ModEvent.class);
-        recording.enable(HandlerTickEvent.class);
-        recording.enable(RandomBlockSamplesEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(AuroraEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(RealisticAuroraEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(ParticlesEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(EnhancedSoundsEvent.class).withPeriod(Duration.ofSeconds(1));
-        recording.enable(BlockQueriesEvent.class).withPeriod(Duration.ofSeconds(1));
+    private static void enable(Recording recording, List<Source> sources) {
+        for (var source : sources) {
+            var settings = recording.enable(source.type());
+            if (source.write() != null)
+                settings.withPeriod(Duration.ofSeconds(1));
+        }
+    }
+
+    // Each stop is safe to repeat: the recording's end, then again in its finally, for a recording that failed
+    private static void stop(List<Source> sources) {
+        for (var source : sources)
+            source.stop().run();
     }
 
     /**

@@ -1004,6 +1004,18 @@ public class ProfilingTests {
     }
 
     @Test
+    void everyEventOfTheModIsASource() throws IOException {
+        // An event class left out of the table would never be registered, enabled or written, and its sampler never
+        // started: each is a row, once
+        var types = ProfileRecording.sources().stream().map(source -> source.type().getSimpleName() + ".java").toList();
+        assertEquals(types.size(), new HashSet<>(types).size(), "a type is in the table twice: " + types);
+        try (Stream<Path> files = Files.list(Path.of("src/main/java/org/orecruncher/dsurround/profiling"))) {
+            var events = files.map(p -> p.getFileName().toString()).filter(name -> name.endsWith("Event.java")).sorted().toList();
+            assertEquals(events, types.stream().sorted().toList());
+        }
+    }
+
+    @Test
     void onlyTheRecordingUsesJfr() throws IOException {
         // Anywhere else, a class using jdk.jfr would fail to load in a Java without that module, and could take the
         // game down with it
