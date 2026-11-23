@@ -23,6 +23,7 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
 import org.orecruncher.dsurround.runtime.audio.EnhancedSoundProcessor;
 import org.orecruncher.dsurround.runtime.audio.FixedFilter;
+import org.orecruncher.dsurround.runtime.weather.RainMix;
 import org.orecruncher.dsurround.runtime.weather.RainSoundInstance;
 import org.orecruncher.dsurround.runtime.weather.RainSurface;
 import org.orecruncher.dsurround.runtime.weather.StormSounds;
@@ -99,50 +100,36 @@ public class MixinClientLevel {
         var thread = MixinHelpers.rainTickThread;
         MixinHelpers.rainTickThread = null;
         try {
-            // The shares are worked out before anything plays, so a failure leaves vanilla's sound, played once
-            float calmVolume;
-            float medium;
-            float heavy;
+            // Worked out before anything plays, so a failure leaves vanilla's sound, played once (see RainMix)
+            RainMix mix;
             SoundEvent calm;
             SoundEvent mediumRain;
-            FixedFilter filter = null;
-            // The surface's own rain and its volume, if it has any
-            SoundEvent layer = null;
-            float layerVolume = 0F;
+            SoundEvent layer;
             try {
                 var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
                 calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
                 mediumRain = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN_MEDIUM);
                 // Vanilla plays it at the center of the block the rain lands on (see RainSurface)
+                RainSurface surface = null;
                 if (MixinHelpers.weatherOptions.storms.enableRainSurfaces) {
-                    var surface = RainSurface.of(level, BlockPos.containing(x, y, z), MixinHelpers.TAG_LIBRARY);
+                    surface = RainSurface.of(level, BlockPos.containing(x, y, z), MixinHelpers.TAG_LIBRARY);
                     MixinHelpers.RAIN_SURFACES.add(surface);
-                    if (surface.filter() != null && EnhancedSoundProcessor.isAvailable())
-                        filter = surface.filter();
-                    volume *= surface.volume(filter != null);
-                    pitch *= surface.pitch(filter != null);
-                    // The surface's own rain takes part of the rain's place, at the surface's volume
-                    if (surface.layer() != null) {
-                        layer = MixinHelpers.SOUND_LIBRARY.getSound(surface.layer());
-                        layerVolume = volume * StormSounds.layerShare(rainLevel);
-                        volume *= StormSounds.keptShare();
-                    }
                 }
-                calmVolume = volume * StormSounds.calmShare(rainLevel);
-                medium = StormSounds.mediumShare(rainLevel);
-                heavy = StormSounds.heavyShare(rainLevel);
+                mix = RainMix.of(surface, volume, pitch, rainLevel, EnhancedSoundProcessor.isAvailable());
+                layer = mix.layer() == null ? null : MixinHelpers.SOUND_LIBRARY.getSound(mix.layer());
             } catch (Throwable t) {
                 MixinHelpers.RAIN_SOUND_GUARD.failed(t);
                 return;
             }
-            dsurround$playRain(level, x, y, z, calm, source, calmVolume, pitch, distanceDelay, filter);
-            if (medium > 0F)
-                dsurround$playRain(level, x, y, z, mediumRain, source, volume * medium, pitch, distanceDelay, filter);
-            if (heavy > 0F)
-                dsurround$playRain(level, x, y, z, sound, source, volume * heavy, pitch, distanceDelay, filter);
+            var filter = mix.filter();
+            dsurround$playRain(level, x, y, z, calm, source, mix.calmVolume(), mix.pitch(), distanceDelay, filter);
+            if (mix.mediumVolume() > 0F)
+                dsurround$playRain(level, x, y, z, mediumRain, source, mix.mediumVolume(), mix.pitch(), distanceDelay, filter);
+            if (mix.heavyVolume() > 0F)
+                dsurround$playRain(level, x, y, z, sound, source, mix.heavyVolume(), mix.pitch(), distanceDelay, filter);
             // As recorded: neither filtered nor pitched, a roof's lower pitch included
             if (layer != null)
-                dsurround$playRain(level, x, y, z, layer, source, layerVolume, 1F, distanceDelay, null);
+                dsurround$playRain(level, x, y, z, layer, source, mix.layerVolume(), 1F, distanceDelay, null);
             ci.cancel();
         } finally {
             MixinHelpers.rainTickThread = thread;

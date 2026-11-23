@@ -72,7 +72,7 @@ public class HaloHandler extends AbstractClientHandler {
             this.status = "not a cold biome";
         } else if (this.weatherSimulation.intensity() > 0F) {
             this.status = "snowing";
-        } else if (!HaloConditions.slotHasHalo(level.getGameTime(), options.sky.haloChance / 100F)) {
+        } else if (!HaloConditions.slotHasHalo(level.getDefaultClockTime(), options.sky.haloChance / 100F)) {
             this.status = "none this time";
         } else {
             var elevation = RainbowConditions.sunElevation(this.levelOracle.currentCelestialAngle());

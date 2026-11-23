@@ -321,7 +321,8 @@ void main() {
     float tIn = shell_distance(mu, SHELL_BOTTOM);
     float tOut = min(shell_distance(mu, SHELL_TOP), FARTHEST);
     vec3 light = vec3(0.0);
-    int ribbons = int(Frame.w + 0.5);
+    // Never past the arrays, whatever the count says: reading past a uniform array is undefined on Vulkan
+    int ribbons = min(int(Frame.w + 0.5), MAX_RIBBONS);
     for (int i = 0; i < ribbons && tIn < tOut; i++) {
         vec2 axis = RibbonAxis[i].xy;
         float sigma = RibbonWave[i].w;

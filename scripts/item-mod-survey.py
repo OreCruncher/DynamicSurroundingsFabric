@@ -48,7 +48,11 @@ DEST = ROOT / 'neoforge' / 'run-pack' / PACK
 LOADER = 'neoforge'
 DUMP = DEST / 'config' / 'dsurround' / 'dumps' / 'items.txt'
 
-# modpack-fetch.py's downloads, cache, mod ids and the mods a pack run leaves out
+# The shared Modrinth code (search, downloads, mod ids), and modpack-fetch.py's pack run settings (the mods a pack run
+# leaves out, the loader version it runs), loaded from its file as its name has a hyphen
+# The scripts' shared Modrinth code, beside this one
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import modrinth_api as api  # noqa: E402
 _spec = importlib.util.spec_from_file_location('modpack_fetch', ROOT / 'scripts' / 'modpack-fetch.py')
 mf = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mf)
@@ -56,19 +60,8 @@ _spec.loader.exec_module(mf)
 
 def candidates(game_version, min_downloads):
     """Equipment mods for the game version on NeoForge by downloads, past the count, less libraries"""
-    facets = json.dumps([['versions:' + game_version], ['project_type:mod'], ['categories:equipment'],
-                         ['categories:' + LOADER]])
-    found, offset = [], 0
-    while True:
-        page = mf.get_json(mf.API + '/search', facets=facets, index='downloads', limit=100, offset=offset)
-        for hit in page['hits']:
-            if hit['downloads'] < min_downloads:
-                return found
-            if 'library' not in hit['categories']:
-                found.append(hit)
-        offset += len(page['hits'])
-        if not page['hits'] or offset >= page['total_hits']:
-            return found
+    facets = [['versions:' + game_version], ['project_type:mod'], ['categories:equipment'], ['categories:' + LOADER]]
+    return api.search(facets, min_downloads, leave_out=('library',))
 
 
 ITEM_DEFINITION = re.compile(r'^assets/([^/]+)/items/[^/]+\.json$')
@@ -94,7 +87,7 @@ def neoforge_needed(jar):
 
 def newest_version(project, game_version):
     """The project's newest NeoForge version for the game version, or None"""
-    versions = mf.get_json(mf.API + '/project/%s/version' % project, loaders=[LOADER], game_versions=[game_version])
+    versions = api.get_json(api.API + '/project/%s/version' % project, loaders=[LOADER], game_versions=[game_version])
     # Modrinth's filter has let other loaders' versions through (modpack-fetch.py): checked here too
     versions = [v for v in versions if LOADER in v['loaders'] and game_version in v['game_versions']]
     return versions[0] if versions else None
@@ -119,7 +112,7 @@ def resolve(project, game_version, chosen, missing, trail):
 
 def jar_of(version):
     file = next((f for f in version['files'] if f.get('primary')), version['files'][0])
-    return mf.cached(file['url'], file['hashes']['sha512'], file['filename'])
+    return api.cached(file['url'], file['hashes']['sha512'], file['filename'])
 
 
 def requirements(jar):
@@ -129,7 +122,7 @@ def requirements(jar):
             return set(), None
         text = z.read('META-INF/neoforge.mods.toml').decode('utf-8', 'replace')
     required, minecraft = set(), None
-    tables = list(mf.TOML_TABLE.finditer(text))
+    tables = list(api.TOML_TABLE.finditer(text))
     for n, table in enumerate(tables):
         if not table.group(1).strip().startswith('dependencies'):
             continue
@@ -146,7 +139,7 @@ def requirements(jar):
                 found = re.search(r'^\s*versionRange\s*=\s*"([^"]+)"', entry, re.MULTILINE)
                 minecraft = found.group(1) if found else None
             elif needed and not (side and side.group(1).upper() == 'SERVER'):
-                required.add(mf.normal_id(mod.group(1)))
+                required.add(api.normal_id(mod.group(1)))
     return required, minecraft
 
 
@@ -175,7 +168,7 @@ def in_range(version, spec):
 
 @functools.cache
 def ids_of(jar):
-    return frozenset(mf.mod_ids(jar))
+    return frozenset(api.mod_ids(jar))
 
 
 @functools.cache
@@ -191,11 +184,11 @@ def find_by_mod_id(mod_id, game_version):
     """The Modrinth project for a mod id (its slug is usually the id), whose jar declares it, and its version"""
     for slug in dict.fromkeys([mod_id, mod_id.replace('_', '-')]):
         try:
-            project = mf.get_json(mf.API + '/project/' + slug)
+            project = api.get_json(api.API + '/project/' + slug)
         except urllib.error.HTTPError:
             continue
         version = newest_version(project['id'], game_version)
-        if version and mod_id in mf.mod_ids(jar_of(version)):
+        if version and mod_id in api.mod_ids(jar_of(version)):
             return project['id']
     return None
 
@@ -245,7 +238,7 @@ def fetch(args, game_version):
     known = {m['slug'] for m in mods}
     for slug in args.slug:
         if slug not in known:
-            project = mf.get_json(mf.API + '/project/' + slug)
+            project = api.get_json(api.API + '/project/' + slug)
             mods.append({'slug': project['slug'], 'project_id': project['id'], 'title': project['title'],
                          'downloads': project['downloads']})
     if not mods:
@@ -255,7 +248,7 @@ def fetch(args, game_version):
             print('%-36s %10s  %s' % (m['slug'], m['downloads'], m['title']))
         return
 
-    leave_out = {mf.normal_id(i) for i in args.leave_out}
+    leave_out = {api.normal_id(i) for i in args.leave_out}
     chosen, surveyed, skipped = {}, [], []
     for m in mods:
         # Modrinth's equipment category holds structures, tooltips and enchantments too: only a mod adding items
@@ -264,7 +257,7 @@ def fetch(args, game_version):
             skipped.append({'mod': m['slug'], 'why': 'no %s %s version' % (LOADER, game_version)})
             continue
         file = next((f for f in version['files'] if f.get('primary')), version['files'][0])
-        if item_count(mf.cached(file['url'], file['hashes']['sha512'], file['filename'])) == 0:
+        if item_count(api.cached(file['url'], file['hashes']['sha512'], file['filename'])) == 0:
             skipped.append({'mod': m['slug'], 'why': 'adds no items'})
             continue
         trial, missing = dict(chosen), []
@@ -287,8 +280,8 @@ def fetch(args, game_version):
     neoforge = None
     for project, version in chosen.items():
         file = next((f for f in version['files'] if f.get('primary')), version['files'][0])
-        source = mf.cached(file['url'], file['hashes']['sha512'], file['filename'])
-        ids = mf.mod_ids(source)
+        source = api.cached(file['url'], file['hashes']['sha512'], file['filename'])
+        ids = api.mod_ids(source)
         reason = mf.left_out(ids, [], leave_out)
         name = titles[project]['slug'] if project in titles else project
         if reason:

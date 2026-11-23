@@ -7,11 +7,14 @@
 Usage: python scripts/modrinth-version-stats.py [slug ...] > tables.md
 Prints one Markdown table per project. No API key needed.
 """
-import json
 import re
 import sys
-import urllib.request
 from collections import defaultdict
+from pathlib import Path
+
+# The scripts' shared Modrinth code, beside this one
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import modrinth_api as api  # noqa: E402
 
 DEFAULT_SLUGS = ['dynamicsurroundingsfabric', 'fabric-api', 'sodium', 'iris', 'jei']
 LOADERS = ('fabric', 'neoforge', 'forge', 'quilt')
@@ -30,10 +33,7 @@ def wanted(v):
 
 
 def fetch(slug):
-    req = urllib.request.Request(f'https://api.modrinth.com/v2/project/{slug}/version',
-                                 headers={'User-Agent': 'OreCruncher/DynamicSurroundings version-stats'})
-    with urllib.request.urlopen(req) as r:
-        return json.load(r)
+    return api.get_json(f'{api.API}/project/{slug}/version')
 
 
 def report(slug):

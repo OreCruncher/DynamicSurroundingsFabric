@@ -64,6 +64,8 @@ is known of 26.4.
   `item-mod-survey.py report` lists each mod's armor families, classes and the dump's "needs a look" lines (also in
   `build/item-mods/<version>/report.txt`). Fixes go in `assets/<mod id>/dsconfigs/tags/item/effects/`
   (`is_<family>_armor`, `is_<class>`), each `"required": false`. `/dsdump items <namespace>` dumps one mod's items.
+  The scripts reading Modrinth share `scripts/modrinth_api.py` (search past a download count, the hash-checked
+  download cache in `build/modpack-cache`, a jar's mod ids): a new one imports it rather than its own copy.
 - Rewriting biome selectors (moving a fragment into `scripts.json`, say): `python scripts/biome-selector-diff.py
   [--since REV] [--dump biomes.txt]` checks each rule matches the same biomes as at REV (HEAD by default), def.
   functions expanded: proved over every combination of its traits and terms, and checked on each biome of a

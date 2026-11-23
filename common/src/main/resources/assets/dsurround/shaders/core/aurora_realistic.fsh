@@ -394,7 +394,8 @@ void main() {
     float leanDown = (Emission.x - SHELL_BOTTOM) * Emission.y;
 
     vec3 light = vec3(0.0);
-    int arcs = int(Frame.w + 0.5);
+    // Never past the arrays, whatever the count says: reading past a uniform array is undefined on Vulkan
+    int arcs = min(int(Frame.w + 0.5), MAX_ARCS);
     for (int i = 0; i < arcs; i++) {
         // Only the stretch of the line of sight within the band the arc's sheet can be in, north to south, is stepped
         // along: a few hundred kilometers of it at most, where the whole layer can be a couple of thousand. Its reach

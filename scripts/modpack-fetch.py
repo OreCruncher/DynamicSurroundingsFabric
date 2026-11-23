@@ -34,20 +34,18 @@ What was fetched, left out and set, and why, is written to the folder's pack.jso
 """
 
 import argparse
-import hashlib
 import json
 import re
 import shutil
 import sys
-import urllib.parse
-import urllib.request
 import zipfile
 from pathlib import Path
 
+# The scripts' shared Modrinth code, beside this one
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from modrinth_api import API, cached, get_json, mod_ids, normal_id  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
-CACHE = ROOT / "build" / "modpack-cache"
-API = "https://api.modrinth.com/v2"
-USER_AGENT = "OreCruncher/DynamicSurroundings modpack-fetch (github.com/OreCruncher/DynamicSurroundingsFabric)"
 
 # Loaded by a pack run too (each platform's build.gradle), so a pack's copy would be a second one
 DEV_RUN_MODS = {
@@ -77,35 +75,6 @@ REPLACED = ["mods", "resourcepacks", "shaderpacks", "config"]
 # if one was interrupted
 KEPT = ["config/dsurround/profiles"]
 SET_ASIDE = ".fetch-kept"
-
-MODS_TOML_ID = re.compile(r'^\s*modId\s*=\s*"([^"]+)"', re.MULTILINE)
-# A mods.toml table header (a comment may follow it): only [[mods]] tables declare the jar's mods; [[dependencies.x]]
-# name the ones it needs
-TOML_TABLE = re.compile(r"^\s*\[\[?([^\]]+)\]\]?\s*(?:#.*)?$", re.MULTILINE)
-
-
-def toml_mod_ids(text):
-    ids = []
-    tables = list(TOML_TABLE.finditer(text))
-    for n, table in enumerate(tables):
-        if table.group(1).strip() != "mods":
-            continue
-        end = tables[n + 1].start() if n + 1 < len(tables) else len(text)
-        ids += MODS_TOML_ID.findall(text[table.end():end])
-    return ids
-
-
-def get(url):
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return response.read()
-
-
-def get_json(url, **params):
-    if params:
-        url += "?" + urllib.parse.urlencode({k: json.dumps(v) if isinstance(v, list) else v for k, v in params.items()})
-    return json.loads(get(url))
-
 
 def set_aside(dest):
     """Moves what is kept through a fetch out of the folders it replaces"""
@@ -182,46 +151,9 @@ def pack_file(spec, version, game_version, loader):
     return cached(file["url"], file["hashes"]["sha512"], file["filename"]), spec
 
 
-def cached(url, sha512, name):
-    """A download, from the cache if a file with that hash is there; checked against the hash either way"""
-    target = CACHE / sha512[:2] / sha512 / name
-    if target.exists():
-        return target
-    data = get(url)
-    if hashlib.sha512(data).hexdigest() != sha512:
-        sys.exit(f"{name}: downloaded file doesn't match the pack's hash")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(data)
-    return target
-
-
 def version_key(version):
     """A loader version's numbers, to compare: 26.2.0.90 > 26.2.0.82; 21.11.13-beta < 21.11.48"""
     return tuple(int(n) for n in re.findall(r"\d+", version.split("-")[0]))
-
-
-def mod_ids(jar):
-    """The mod ids a jar declares: NeoForge's mods.toml, or fabric.mod.json for one Connector loads"""
-    ids = set()
-    try:
-        with zipfile.ZipFile(jar) as z:
-            names = set(z.namelist())
-            for toml in ("META-INF/neoforge.mods.toml", "META-INF/mods.toml"):
-                if toml in names:
-                    ids.update(toml_mod_ids(z.read(toml).decode("utf-8", "replace")))
-            if "fabric.mod.json" in names:
-                try:
-                    ids.add(json.loads(z.read("fabric.mod.json").decode("utf-8", "replace"), strict=False)["id"])
-                except (ValueError, KeyError):
-                    pass
-    except zipfile.BadZipFile:
-        pass
-    return {normal_id(i) for i in ids}
-
-
-def normal_id(mod_id):
-    """Fabric ids use '-' where NeoForge's can't: compared with it as '_', given on the command line either way"""
-    return mod_id.replace("-", "_")
 
 
 def left_out(ids, keep, leave_out):

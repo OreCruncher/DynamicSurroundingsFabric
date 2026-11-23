@@ -19,51 +19,34 @@ Then judge each survey (blocks with no effect that should have one), and add the
 common/src/main/resources/assets/<mod id>/dsconfigs/tags/block/effects/, each "required": false.
 """
 import argparse
-import glob
 import hashlib
-import json
 import os
 import re
 import subprocess
 import sys
-import urllib.parse
-import urllib.request
 import zipfile
+from pathlib import Path
+
+# The scripts' shared Modrinth code, beside this one
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import modrinth_api as api  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(REPO, 'common', 'src', 'main', 'resources', 'assets')
 SURVEY = os.path.join(REPO, 'scripts', 'block-effect-survey.py')
-API = 'https://api.modrinth.com/v2'
-AGENT = 'OreCruncher/DynamicSurroundings biome-mod-survey'
 # Loaders tried for a mod's file, in order: the survey reads blockstates and tags, the same in either
 LOADERS = ('fabric', 'neoforge', 'quilt', 'forge')
 
 
-def get(path, **params):
-    url = API + path + ('?' + urllib.parse.urlencode(params) if params else '')
-    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': AGENT})) as r:
-        return json.load(r)
-
-
 def candidates(version, min_downloads):
     """Biome mods for a version by downloads, past the count, less libraries and datapacks"""
-    facets = json.dumps([['versions:' + version], ['project_type:mod'], ['categories:worldgen']])
-    found, offset = [], 0
-    while True:
-        page = get('/search', query='biome', facets=facets, index='downloads', limit=100, offset=offset)
-        for hit in page['hits']:
-            if hit['downloads'] < min_downloads:
-                return found
-            if not {'library', 'datapack'} & set(hit['categories']):
-                found.append(hit)
-        offset += len(page['hits'])
-        if not page['hits'] or offset >= page['total_hits']:
-            return found
+    facets = [['versions:' + version], ['project_type:mod'], ['categories:worldgen']]
+    return api.search(facets, min_downloads, query='biome', leave_out=('library', 'datapack'))
 
 
 def file_for(slug, version):
     """The mod's newest primary file for the version, on the first loader it has"""
-    versions = get('/project/%s/version' % slug, game_versions=json.dumps([version]))
+    versions = api.get_json(api.API + '/project/%s/version' % slug, game_versions=[version])
     for loader in LOADERS:
         for v in versions:
             if loader in v['loaders']:
@@ -80,29 +63,13 @@ def fetch(slug, version, folder):
     os.makedirs(target, exist_ok=True)
     path = os.path.join(target, file['filename'])
     if not os.path.exists(path):
-        req = urllib.request.Request(file['url'], headers={'User-Agent': AGENT})
-        with urllib.request.urlopen(req) as r, open(path, 'wb') as out:
-            out.write(r.read())
+        with open(path, 'wb') as out:
+            out.write(api.get(file['url']))
     with open(path, 'rb') as f:
         if hashlib.sha1(f.read()).hexdigest() != file['hashes']['sha1']:
             os.remove(path)
             return None, 'SHA-1 mismatch: removed'
     return path, number
-
-
-def mod_ids(jar):
-    """The mod ids a jar declares, for matching our config folders"""
-    ids = []
-    with zipfile.ZipFile(jar) as z:
-        names = z.namelist()
-        if 'fabric.mod.json' in names:
-            m = re.search(r'"id"\s*:\s*"([^"]+)"', z.read('fabric.mod.json').decode('utf-8', 'replace'))
-            if m:
-                ids.append(m.group(1))
-        for toml in (n for n in names if n.endswith('mods.toml')):
-            ids += [i for i in re.findall(r'modId\s*=\s*"([^"]+)"', z.read(toml).decode('utf-8', 'replace'))
-                    if i not in ('neoforge', 'forge', 'minecraft') and i not in ids]
-    return ids
 
 
 def block_count(jar):
@@ -140,7 +107,8 @@ def main():
             rows.append((m['slug'], '-', '-', note))
             continue
         blocks = block_count(jar)
-        ids = mod_ids(jar)
+        # As written: our folders are named by the id as it is
+        ids = sorted(api.mod_ids(jar, normalize=False))
         if blocks == 0:
             rows.append((m['slug'], note, 0, 'no blocks: nothing to tag'))
             continue

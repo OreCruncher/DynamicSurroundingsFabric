@@ -77,6 +77,13 @@ public class HaloTests {
     }
 
     @Test
+    void slotsKeepToTheMorningsAndAfternoons() {
+        // Taken from the day clock, 0 at sunrise: every day's slots start at sunrise, noon, sunset and midnight
+        assertEquals(0, 24000 % HaloConditions.SLOT_TICKS);
+        assertEquals(6000, HaloConditions.SLOT_TICKS);
+    }
+
+    @Test
     void theSunStraightOverheadIsDrawn() throws IOException {
         // At noon with the daylight cycle held (celestial angle 0) the sun has no direction across the ground, and the
         // halo is at its strongest: the shader must not normalize that nothing (0/0 made the whole halo NaN)

@@ -22,7 +22,8 @@ import org.orecruncher.dsurround.lib.random.Randomizer;
 public final class HaloConditions {
 
     /**
-     * Game ticks to a slot: a quarter of a day, so a morning and an afternoon each have their own chance
+     * Ticks of the day clock to a slot: a quarter of a day, from sunrise to noon and noon to sunset, so a morning and an
+     * afternoon each have their own chance
      */
     static final long SLOT_TICKS = 6000L;
     /**
@@ -49,13 +50,14 @@ public final class HaloConditions {
     }
 
     /**
-     * Whether the slot the game time is in has a halo, the same for every player
+     * Whether the slot the day clock is in has a halo, the same for every player
      *
-     * @param gameTime the world's game time
-     * @param chance   how likely a slot is to have one, 0 to 1
+     * @param clockTime the world's day clock (what {@code /time set} and sleeping change, 0 at sunrise), not its game
+     *                  time, so the slots keep to the mornings and afternoons
+     * @param chance    how likely a slot is to have one, 0 to 1
      */
-    public static boolean slotHasHalo(long gameTime, float chance) {
-        long slot = Math.floorDiv(gameTime, SLOT_TICKS);
+    public static boolean slotHasHalo(long clockTime, float chance) {
+        long slot = Math.floorDiv(clockTime, SLOT_TICKS);
         return Randomizer.create(slot * 0x9E3779B97F4A7C15L + 0x68616C6FL).nextFloat() < chance;
     }
 
