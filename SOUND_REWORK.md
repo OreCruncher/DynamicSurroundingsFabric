@@ -221,3 +221,19 @@ made with it, so the gap was the uploader's missing grant, not IK's terms.
   and the game read that stream, so the track "played" (the diagnostics showed it) with nothing heard and nothing
   logged. Remuxed with only the audio (`-map 0:a -c:a copy`, no re-encode). Encode from a source with cover art with
   `-vn` (or `-map 0:a`), and check a new OGG with `ffprobe` shows one stream, `vorbis`.
+
+## Extended pack: licenses checked (2026-11-23)
+- Each credit in the pack's `CREDITS.md` now links its license (CC 4.0 asks for the link). Fixed: AudioCoffee's link
+  (`audiocoffe.net` doesn't exist) and "Pixbay" in `sounds.json`.
+- Chosic's pages refuse automated fetches (HTTP 403), so the license each Chosic track was posted under wasn't seen.
+- Confirmed: Alexander Nakarada (Wintersong, Vopna, Gjallar): creatorchords.com/licensing-info says all his music is
+  CC BY 4.0 (the tracks' own pages weren't reached). Scott Buckley (Anna's Theme): CC BY 4.0, with his own terms (not
+  resold in isolation, not sent to distribution or streaming services), which a free pack doesn't touch.
+- AudioCoffee (Wonderful Fairytail): Chosic, which publishes it, gives CC BY-SA 3.0 (seen by the user in a
+  browser). The artist's own terms name no CC license and forbid remixing without consent, but a CC license granted
+  on a copy can't be withdrawn, and the pack only converted it to OGG; ShareAlike keeps our file under CC BY-SA 3.0.
+- Keys of Moon (Enchanted): CC BY 4.0 on Chosic (seen by the user in a browser). Every credit is now confirmed.
+- The Britons: "Free for use under the Pixabay Content License". The license forbids distributing a file "on a
+  Standalone basis" (no creative effort added); a pack playing it as biome music is the use a game makes of a track,
+  so it was kept. Whether it is Kevin MacLeod's incompetech piece (CC BY 4.0) wasn't settled: incompetech's lists
+  need a browser.
