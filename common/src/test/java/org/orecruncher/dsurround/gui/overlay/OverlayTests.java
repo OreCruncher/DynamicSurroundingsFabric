@@ -178,10 +178,12 @@ public class OverlayTests {
     void dayDiscTellsNoonFromMidnight() {
         // The hands are the same at both; the dome window isn't
         assertEquals(ClockOverlay.hourHandAngle(6000), ClockOverlay.hourHandAngle(18000), 0.001F);
-        assertEquals(0F, ClockOverlay.dayDiscAngle(6000), 0.001F, "noon: the disc's top (the sun) up in the window");
-        assertEquals(180F, ClockOverlay.dayDiscAngle(18000), 0.001F, "midnight: the moon");
-        assertEquals(270F, ClockOverlay.dayDiscAngle(0), 0.001F, "6 AM: three quarters around, the sun rising");
-        assertEquals(ClockOverlay.dayDiscAngle(500), ClockOverlay.dayDiscAngle(500 + 24000 * 3), 0.001F, "later days");
+        // The disc follows the sun's angle (0 at noon, 180 at midnight), not the clock
+        assertEquals(0F, ClockOverlay.dayDiscAngle(0F), 0.001F, "noon: the disc's top (the sun) up in the window");
+        assertEquals(180F, ClockOverlay.dayDiscAngle(180F), 0.001F, "midnight: the moon");
+        assertEquals(282.37F, ClockOverlay.dayDiscAngle(282.37F), 0.001F, "vanilla's sunrise (6 AM): the sun rising");
+        assertEquals(10F, ClockOverlay.dayDiscAngle(370F), 0.001F, "past a full turn");
+        assertEquals(300F, ClockOverlay.dayDiscAngle(-60F), 0.001F, "below 0");
     }
 
     @Test

@@ -49,7 +49,13 @@ dependencies {
     def devMod = rootProject.hasProperty('pack') ? 'compileOnly' : 'implementation'
     "$devMod" "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
     "$devMod" "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
-    "$devMod" "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
+    // The seasons mod it plays with: Ecliptic Seasons on Fabric and Serene Seasons on NeoForge unless -Pseasons or
+    // dev.properties says otherwise (seasonsModOf in the root build.gradle). Serene Seasons is compiled against either way
+    def seasons = project.ext.seasonsMod
+    "${seasons == 'serene' ? devMod : 'compileOnly'}" "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
+    if (seasons == 'ecliptic' && !rootProject.hasProperty('pack')) {
+        localRuntime "maven.modrinth:ecliptic-seasons:${rootProject.ecliptic_seasons_neoforge_version}"
+    }
     "$devMod" "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
 
     // Simple Voice Chat: its plugin API to compile the common classes against; the mod itself in the dev client only

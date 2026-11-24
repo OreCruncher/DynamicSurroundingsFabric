@@ -79,6 +79,15 @@ public interface ISeasonalInformation {
     float SNOW_TEMPERATURE = 0.15F;
 
     /**
+     * Whether what falls at the position (where anything does) is snow rather than rain. Below
+     * {@link #SNOW_TEMPERATURE} unless a seasons mod decides snow by itself (Ecliptic Seasons, by solar term: a warm
+     * biome can snow in its winter).
+     *
+     * @param temperature {@link #getTemperatureAt} at the position, which the caller has already looked up
+     */
+    boolean snowsAt(BlockPos blockPos, float temperature);
+
+    /**
      * Whether rain or snow falls at the position now, whichever it is: the biome's own setting, or its season's
      */
     boolean hasPrecipitationAt(BlockPos blockPos);

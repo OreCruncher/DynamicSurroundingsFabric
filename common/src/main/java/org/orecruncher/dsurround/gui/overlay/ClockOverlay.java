@@ -120,6 +120,8 @@ public final class ClockOverlay extends AbstractOverlay {
     private int side;
     private long lastDayTime;
     private long dayTime;
+    private float lastSunAngle;
+    private float sunAngle;
     private boolean seasonDisc;
     private float lastDiscAngle;
     private float discAngle;
@@ -211,10 +213,17 @@ public final class ClockOverlay extends AbstractOverlay {
 
         // The hands follow the day time between ticks; a jump (the time being set) moves them straight there
         var time = player.level().getDefaultClockTime();
-        this.lastDayTime = justShown || Math.abs(time - this.dayTime) > 100 ? time : this.dayTime;
+        boolean jumped = justShown || Math.abs(time - this.dayTime) > 100;
+        this.lastDayTime = jumped ? time : this.dayTime;
         this.dayTime = time;
 
-        // The day disc follows the time as the hands do; the lower disc eases to the season or the moon's phase
+        // The day disc follows the sun, not the clock: where it is in the sky, with vanilla's sun speeding up and slowing
+        // through the day and a mod's longer or shorter days (Ecliptic Seasons'); with the hands, a jump goes straight there
+        var sun = DayCycle.getCelestialAngle(player.level(), player.position());
+        this.lastSunAngle = jumped ? sun : this.sunAngle;
+        this.sunAngle = sun;
+
+        // The lower disc eases to the season or the moon's phase
         this.seasonDisc = this.seasonalInformation.hasSeasons();
         var target = this.seasonDisc ? seasonDiscAngle(this.season(), this.subSeason()) : moonDiscAngle(moonPhase(player));
         this.lastDiscAngle = justShown ? target : this.discAngle;
@@ -296,10 +305,11 @@ public final class ClockOverlay extends AbstractOverlay {
 
     /**
      * How far to turn the day disc, in degrees clockwise: the sun (at the disc's top) up in the dome window at
-     * noon, the moon (at its bottom) at midnight, telling noon from midnight on a twelve hour dial
+     * noon, the moon (at its bottom) at midnight, telling noon from midnight on a twelve hour dial. The sun's angle
+     * (the environment attribute's, 0 at noon and 180 at midnight) turns the same way, so it is the disc's.
      */
-    static float dayDiscAngle(double dayTime) {
-        return (float) (Mth.positiveModulo(dayTime - 6000D, 24000D) * 360D / 24000D);
+    static float dayDiscAngle(float sunAngle) {
+        return Mth.positiveModulo(sunAngle, 360F);
     }
 
     /**
@@ -373,7 +383,7 @@ public final class ClockOverlay extends AbstractOverlay {
         float overshoot = this.dayTime != this.lastDayTime ? tickOvershoot(time) : 0F;
         float hourHand = hourHandAngle(handTime);
         float minuteHand = minuteHandAngle(handTime) + overshoot;
-        float dayDisc = dayDiscAngle(time);
+        float dayDisc = dayDiscAngle(Mth.rotLerp(partialTick, this.lastSunAngle, this.sunAngle));
         if (this.spinRandomly) {
             // The hands and day disc turn together, as if the watch's works were running wild
             float spin = this.wobbler.getRandomlySpinningRotation(partialTick);

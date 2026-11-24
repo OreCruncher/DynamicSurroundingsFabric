@@ -8,42 +8,87 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for how strong the ground fog is for the time of day, the wind, rain, and being out in it.
+ * Tests for how strong the ground fog is for the time of day, the wind, rain, and being out in it. Times of day are
+ * given as vanilla's ticks and turned into the sun's angle as vanilla's day timeline does, so the mist is shown to
+ * keep vanilla's times.
  */
 public class GroundFogConditionsTests {
 
+    // data/minecraft/timeline/day.json: the sun's angle runs 0 to 360 degrees from noon (6000) to noon, eased by this
+    // cubic Bézier
+    private static final double X1 = 0.362, Y1 = 0.241, X2 = 0.638, Y2 = 0.759;
+
+    private static double bezier(double t, double p1, double p2) {
+        double u = 1 - t;
+        return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t;
+    }
+
+    /**
+     * The sun's angle at a time of vanilla's day, in ticks, as its timeline gives it
+     */
+    static float sun(long ticks) {
+        double progress = Math.floorMod(ticks - 6000, 24000L) / 24000.0;
+        double lo = 0, hi = 1;
+        for (int i = 0; i < 60; i++) {
+            double mid = (lo + hi) / 2;
+            if (bezier(mid, X1, X2) < progress)
+                lo = mid;
+            else
+                hi = mid;
+        }
+        return (float) (360 * bezier((lo + hi) / 2, Y1, Y2));
+    }
+
+    @Test
+    void theThresholdsAreVanillasTimes() {
+        // Where vanilla's sun is when the mist used to start and finish changing, by the clock
+        assertEquals(sun(11000), GroundFogConditions.GATHERS_FROM, 0.01F);
+        assertEquals(sun(13000), GroundFogConditions.GATHERED_AT, 0.01F);
+        assertEquals(sun(1000), GroundFogConditions.BURNS_OFF_FROM, 0.01F);
+        assertEquals(sun(3000), GroundFogConditions.BURNED_OFF_AT, 0.01F);
+    }
+
     @Test
     void thickestAtNightAndDawn() {
-        assertEquals(1F, GroundFogConditions.timeOfDay(18000), 1e-6F, "midnight");
-        assertEquals(1F, GroundFogConditions.timeOfDay(500), 1e-6F, "just after sunrise");
-        assertEquals(1F, GroundFogConditions.timeOfDay(23500), 1e-6F, "just before sunrise");
+        assertEquals(1F, GroundFogConditions.timeOfDay(sun(18000)), 1e-6F, "midnight");
+        assertEquals(1F, GroundFogConditions.timeOfDay(sun(500)), 1e-6F, "just after sunrise");
+        assertEquals(1F, GroundFogConditions.timeOfDay(sun(23500)), 1e-6F, "just before sunrise");
     }
 
     @Test
     void burnsOffByMidMorningToAThinHaze() {
-        assertEquals(GroundFogConditions.DAYTIME, GroundFogConditions.timeOfDay(6000), 1e-6F, "noon");
-        float burning = GroundFogConditions.timeOfDay(2000);
+        assertEquals(GroundFogConditions.DAYTIME, GroundFogConditions.timeOfDay(sun(6000)), 1e-6F, "noon");
+        float burning = GroundFogConditions.timeOfDay(sun(2000));
         assertTrue(burning < 1F && burning > GroundFogConditions.DAYTIME, "burning off: " + burning);
         assertTrue(GroundFogConditions.DAYTIME > 0F, "it lingers through the day");
     }
 
     @Test
     void gathersAgainInTheEvening() {
-        float gathering = GroundFogConditions.timeOfDay(12000);
+        float gathering = GroundFogConditions.timeOfDay(sun(12000));
         assertTrue(gathering > GroundFogConditions.DAYTIME && gathering < 1F, "gathering: " + gathering);
-        assertEquals(1F, GroundFogConditions.timeOfDay(13000), 1e-6F, "by nightfall");
+        assertEquals(1F, GroundFogConditions.timeOfDay(sun(13000)), 1e-6F, "by nightfall");
     }
 
     @Test
     void changesSmoothlyThroughTheDay() {
-        float last = GroundFogConditions.timeOfDay(0);
+        float last = GroundFogConditions.timeOfDay(sun(0));
         for (long t = 50; t < 24000; t += 50) {
-            float now = GroundFogConditions.timeOfDay(t);
+            float now = GroundFogConditions.timeOfDay(sun(t));
             assertTrue(Math.abs(now - last) < 0.05F, "a jump at " + t);
             last = now;
         }
-        // Days after the first are the same
-        assertEquals(GroundFogConditions.timeOfDay(6000), GroundFogConditions.timeOfDay(30000), 1e-6F);
+        // Angles past a full turn, or below 0, are the same time of day
+        assertEquals(GroundFogConditions.timeOfDay(10F), GroundFogConditions.timeOfDay(370F), 1e-6F);
+        assertEquals(GroundFogConditions.timeOfDay(300F), GroundFogConditions.timeOfDay(-60F), 1e-6F);
+    }
+
+    @Test
+    void followsTheSunWhereTheDayIsShorter() {
+        // A winter day with a late sunrise (Ecliptic Seasons): at the clock's usual mid-morning the sun is still low,
+        // so the mist hasn't burned off
+        float lowSun = GroundFogConditions.BURNS_OFF_FROM - 5F;
+        assertEquals(1F, GroundFogConditions.timeOfDay(lowSun), 1e-6F);
     }
 
     @Test
@@ -63,14 +108,14 @@ public class GroundFogConditionsTests {
 
     @Test
     void underCoverThereIsNone() {
-        assertEquals(0F, GroundFogConditions.strength(18000, 0F, 0F, 0F), 1e-6F);
-        assertEquals(1F, GroundFogConditions.strength(18000, 0F, 0F, 1F), 1e-6F, "out in it at night, calm and dry");
+        assertEquals(0F, GroundFogConditions.strength(sun(18000), 0F, 0F, 0F), 1e-6F);
+        assertEquals(1F, GroundFogConditions.strength(sun(18000), 0F, 0F, 1F), 1e-6F, "out in it at night, calm and dry");
     }
 
     @Test
     void theConditionsCombine() {
-        float all = GroundFogConditions.strength(6000, 150F, 0.5F, 0.5F);
-        float expected = GroundFogConditions.timeOfDay(6000) * GroundFogConditions.wind(150F) * GroundFogConditions.rain(0.5F) * 0.5F;
+        float all = GroundFogConditions.strength(sun(6000), 150F, 0.5F, 0.5F);
+        float expected = GroundFogConditions.timeOfDay(sun(6000)) * GroundFogConditions.wind(150F) * GroundFogConditions.rain(0.5F) * 0.5F;
         assertEquals(expected, all, 1e-6F);
     }
 }

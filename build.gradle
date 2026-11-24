@@ -297,6 +297,11 @@ configure(subprojects.findAll { it.name != 'processor' }) {
         tasks.named('build') { finalizedBy 'copyJarToMain', ':zipResourcePacks', 'installResourcePacks' }
         // Through the script (this), not the project: Gradle 10 drops looking methods up in parent projects
         this.installResourcePacks(project)
+        // Before the platform's own script, which picks its dev mods by it, and before the other runs are made from
+        // the client run, so they tell the game what to expect too (not a modpack run's: the pack has its own)
+        project.ext.seasonsMod = this.seasonsModOf(project)
+        if (!project.rootProject.hasProperty('pack'))
+            project.loom.runs.client.vmArg "-Ddsurround.seasonsMod=${project.ext.seasonsMod}"
         this.potatoRuns(project)
         this.benchJarExclusion(project)
         this.accessInJar(project)
@@ -319,6 +324,39 @@ configure(subprojects.findAll { it.name != 'processor' }) {
             // retrieving dependencies.
         }
     }
+}
+
+// Which seasons mod a platform's development client plays with (lib/seasons): serene, ecliptic or none.
+//  - -Pseasons=<one> for this run;
+//  - else the seasons line of dev.properties at the root (gitignored; read at each Gradle run and sync, so the IDE's
+//    runs follow it after a reload);
+//  - else Serene Seasons for a bench run, whose scenarios set the season with its command;
+//  - else by platform: Ecliptic Seasons on Fabric, Serene Seasons on NeoForge, so both are in daily use (each release
+//    launches each loader with the other one too, AGENTS.md, Versions).
+// The game is told which (-Ddsurround.seasonsMod) and fails to start in development if its season provider isn't that
+// one (a classpath left over from an earlier sync). A modpack run (-Ppack) plays with the pack's own, if any.
+String seasonsModOf(Project p) {
+    def choices = ['serene', 'ecliptic', 'none']
+    def chosen = p.rootProject.findProperty('seasons')
+    def from = '-Pseasons'
+    if (chosen == null) {
+        def devFile = p.rootProject.file('dev.properties')
+        if (devFile.isFile()) {
+            def props = new Properties()
+            devFile.withInputStream { props.load(it) }
+            chosen = props.getProperty('seasons')
+            from = 'dev.properties'
+        }
+    }
+    if (chosen == null) {
+        def bench = gradle.startParameter.taskNames.any { it.contains('runClientBench') }
+        chosen = bench ? 'serene' : (p.name == 'fabric' ? 'ecliptic' : 'serene')
+        from = bench ? 'bench runs' : "$p.name's default"
+    }
+    chosen = chosen.toString().trim()
+    if (!(chosen in choices))
+        throw new GradleException("seasons ($from) is '$chosen': it can be ${choices.join(', ')}")
+    return chosen
 }
 
 // Dev clients that stand in for a low-end PC, to see what the mod's effects cost there (each also has an IDE run config):

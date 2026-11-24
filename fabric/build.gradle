@@ -45,7 +45,15 @@ dependencies {
     def devMod = rootProject.hasProperty('pack') ? 'compileOnly' : 'implementation'
     "$devMod" "com.github.glitchfiend:TerraBlender-fabric:${minecraft_version}-${rootProject.terrablender_version}"
     "$devMod" "com.github.glitchfiend:GlitchCore-fabric:${minecraft_version}-${rootProject.glitchcore_version}"
-    "$devMod" "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
+    // The seasons mod it plays with: Ecliptic Seasons on Fabric and Serene Seasons on NeoForge unless -Pseasons or
+    // dev.properties says otherwise (seasonsModOf in the root build.gradle). Serene Seasons is compiled against either way
+    def seasons = project.ext.seasonsMod
+    "${seasons == 'serene' ? devMod : 'compileOnly'}" "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
+    if (seasons == 'ecliptic' && !rootProject.hasProperty('pack')) {
+        localRuntime "maven.modrinth:ecliptic-seasons-fabricated:${rootProject.ecliptic_seasons_fabric_version}"
+        // Which Ecliptic Seasons needs on Fabric
+        localRuntime "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_fabric_version}"
+    }
     "$devMod" "com.github.glitchfiend:BiomesOPlenty-fabric:${minecraft_version}-${rootProject.bop_version}"
 
     api("me.shedaniel.cloth:cloth-config-fabric:${rootProject.clothapi_version}") {

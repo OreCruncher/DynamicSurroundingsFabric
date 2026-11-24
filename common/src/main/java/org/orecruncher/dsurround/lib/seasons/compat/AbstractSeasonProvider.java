@@ -80,6 +80,11 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
     }
 
     @Override
+    public boolean snowsAt(BlockPos blockPos, float temperature) {
+        return temperature < SNOW_TEMPERATURE;
+    }
+
+    @Override
     public final boolean hasPrecipitationAt(BlockPos blockPos) {
         final long began = BlockQuerySamples.SEASON_PRECIPITATION.begin();
         var precipitates = this.precipitates(blockPos);
@@ -127,8 +132,8 @@ public abstract class AbstractSeasonProvider implements ISeasonalInformation {
             return Biome.Precipitation.NONE;
         }
 
-        // Use the temperature of the biome to get whether it is raining or snowing
-        return this.isSnowTemperature(pos) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
+        // Rain or snow: by the temperature, or the seasons mod's own say
+        return this.snowsAt(pos, this.getTemperatureAt(pos)) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
     }
 
     @Override

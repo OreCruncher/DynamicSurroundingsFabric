@@ -13,14 +13,17 @@ import net.minecraft.util.Mth;
 public final class GroundFogConditions {
 
     /**
-     * Times of day, in ticks from sunrise: full until {@link #BURNS_OFF_FROM}, thinning until {@link #BURNED_OFF_AT},
-     * thin through the day, thickening again from {@link #GATHERS_FROM} to full at {@link #GATHERED_AT} and through the
-     * night
+     * Times of day, as the sun's angle in degrees (0 at noon, 180 at midnight): thin through the day, thickening from
+     * {@link #GATHERS_FROM} to full at {@link #GATHERED_AT} and through the night, full until {@link #BURNS_OFF_FROM},
+     * thinning until {@link #BURNED_OFF_AT}. By the sun, not the clock, so the mist keeps to sunrise and sunset where a
+     * mod changes how long the day is (Ecliptic Seasons, by the time of year). With vanilla's day these are where its
+     * sun is at 11000, 13000, 1000 and 3000 ticks (its timeline's eased sun angle), so it gathers and burns off when it
+     * always did.
      */
-    static final int BURNS_OFF_FROM = 1000;
-    static final int BURNED_OFF_AT = 3000;
-    static final int GATHERS_FROM = 11000;
-    static final int GATHERED_AT = 13000;
+    static final float GATHERS_FROM = 62.45F;
+    static final float GATHERED_AT = 93.52F;
+    static final float BURNS_OFF_FROM = 297.55F;
+    static final float BURNED_OFF_AT = 325.4F;
     /**
      * How much of the mist is left through the day: it lingers, thin, where it gathers
      */
@@ -43,17 +46,17 @@ public final class GroundFogConditions {
     /**
      * How much of the mist there is at a time of day
      *
-     * @param dayTime the level's time of day, in ticks; only the time within the day counts
+     * @param sunAngle the sun's angle, in degrees: 0 at noon, 180 at midnight (the environment attribute's)
      */
-    public static float timeOfDay(long dayTime) {
-        int time = (int) Math.floorMod(dayTime, 24000L);
-        if (time < BURNS_OFF_FROM || time >= GATHERED_AT)
+    public static float timeOfDay(float sunAngle) {
+        float angle = sunAngle - 360F * Mth.floor(sunAngle / 360F);
+        if (angle >= GATHERED_AT && angle < BURNS_OFF_FROM)
             return 1F;
-        if (time < BURNED_OFF_AT)
-            return Mth.lerp(ease((time - BURNS_OFF_FROM) / (float) (BURNED_OFF_AT - BURNS_OFF_FROM)), 1F, DAYTIME);
-        if (time < GATHERS_FROM)
-            return DAYTIME;
-        return Mth.lerp(ease((time - GATHERS_FROM) / (float) (GATHERED_AT - GATHERS_FROM)), DAYTIME, 1F);
+        if (angle >= BURNS_OFF_FROM && angle < BURNED_OFF_AT)
+            return Mth.lerp(ease((angle - BURNS_OFF_FROM) / (BURNED_OFF_AT - BURNS_OFF_FROM)), 1F, DAYTIME);
+        if (angle >= GATHERS_FROM && angle < GATHERED_AT)
+            return Mth.lerp(ease((angle - GATHERS_FROM) / (GATHERED_AT - GATHERS_FROM)), DAYTIME, 1F);
+        return DAYTIME;
     }
 
     /**
@@ -78,10 +81,11 @@ public final class GroundFogConditions {
     /**
      * How strong the mist is, all told
      *
+     * @param sunAngle the sun's angle, in degrees, as {@link #timeOfDay} takes it
      * @param exposure how open to the sky the player is, 0 to 1: under cover, out of the mist
      */
-    public static float strength(long dayTime, float windPercent, float rainLevel, float exposure) {
-        return timeOfDay(dayTime) * wind(windPercent) * rain(rainLevel) * Mth.clamp(exposure, 0F, 1F);
+    public static float strength(float sunAngle, float windPercent, float rainLevel, float exposure) {
+        return timeOfDay(sunAngle) * wind(windPercent) * rain(rainLevel) * Mth.clamp(exposure, 0F, 1F);
     }
 
     private static float ease(float t) {

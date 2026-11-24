@@ -125,16 +125,17 @@ public final class LevelColumns implements IColumnSource {
     public PrecipitationKind precipitation(int x, int y, int z) {
         this.pos.set(x, y, z);
         // Whether anything falls, then rain or snow, and how much snow is mixed into the rain, all from one look at
-        // the temperature: Serene Seasons builds a string each time it is asked. Both are the season provider's, so
-        // the same as vanilla's precipitation would say (seasonal, with Serene Seasons).
+        // the temperature: Serene Seasons builds a string each time it is asked. All are the season provider's, so
+        // the same as vanilla's precipitation would say (seasonal, with a seasons mod; Ecliptic Seasons decides snow
+        // by itself, so only rain is given sleet by the temperature).
         this.snowShare = 0F;
         Biome.Precipitation precipitation;
         if (!this.seasons.hasPrecipitationAt(this.pos)) {
             precipitation = Biome.Precipitation.NONE;
         } else {
             var temperature = this.seasons.getTemperatureAt(this.pos);
-            precipitation = temperature < ISeasonalInformation.SNOW_TEMPERATURE ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
-            this.snowShare = sleetShare(temperature);
+            precipitation = this.seasons.snowsAt(this.pos, temperature) ? Biome.Precipitation.SNOW : Biome.Precipitation.RAIN;
+            this.snowShare = precipitation == Biome.Precipitation.RAIN ? sleetShare(temperature) : 0F;
         }
         var dusty = precipitation == Biome.Precipitation.NONE
                 && DustStorms.enabled(this.options)

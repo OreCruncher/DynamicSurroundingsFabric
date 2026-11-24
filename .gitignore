@@ -130,3 +130,6 @@ common/logs/
 
 # Python bytecode
 __pycache__/
+
+# Local development choices (seasons=serene|ecliptic|none; see seasonsModOf in build.gradle)
+dev.properties

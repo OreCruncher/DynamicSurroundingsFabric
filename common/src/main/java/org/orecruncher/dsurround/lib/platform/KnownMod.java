@@ -59,6 +59,11 @@ public enum KnownMod {
      */
     SERENE_SEASONS(true, "sereneseasons"),
     /**
+     * Seasons by solar term, which change temperatures and decide by themselves where it snows; used when Serene
+     * Seasons isn't installed
+     */
+    ECLIPTIC_SEASONS(true, "eclipticseasons"),
+    /**
      * Quilt runs Fabric mods, but not the client commands the mod registers
      */
     QUILTED_LOADER(true, "quilt_loader"),

@@ -28,6 +28,7 @@ import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 import org.orecruncher.dsurround.runtime.weather.Shelter;
@@ -147,12 +148,12 @@ public class GroundFogHandler extends AbstractClientHandler {
         this.driftZ = wrap(this.driftZ + dz);
         this.ticks++;
 
-        // The time of day, the wind, rain, and whether the player is out in it; all of it when set by command
+        // The time of day (by the sun), the wind, rain, and whether the player is out in it; all of it when set by command
         if (Float.isNaN(this.forced)) {
             var exposure = Shelter.exposure(level, BlockPos.containing(player.getEyePosition()));
             var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
             var windPercent = Wind.percentOfFullStorm(this.windService.steadySpeed());
-            this.target = GroundFogConditions.strength(level.getDefaultClockTime(), windPercent, rainLevel, exposure);
+            this.target = GroundFogConditions.strength(DayCycle.getCelestialAngle(level, player.position()), windPercent, rainLevel, exposure);
         } else {
             this.target = 1F;
         }

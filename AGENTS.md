@@ -252,6 +252,17 @@ is known of 26.4.
   - The `c:` tags are in `forge-universal.jar` and in `fabric-convention-tags-v2`, where older versions stay in Gradle's
     cache: use the one the client's log names. Read jars with Python's `zipfile`: `unzip` here silently extracted only
     some files, and the count came out low (202 where the truth was 332) with nothing to show for it.
+- Seasons mods: the Fabric dev client plays with Ecliptic Seasons (and Forge Config API Port, which it needs there),
+  NeoForge's with Serene Seasons, so both are in daily use; bench runs take Serene Seasons on both, as their scenarios
+  set the season with its `season set`. `-Pseasons=serene|ecliptic|none` overrides any run, and a `seasons=` line in
+  `dev.properties` at the root (gitignored) does the same for every run, the IDE's after a Gradle reload
+  (`seasonsModOf` in `build.gradle`). The game is told which (`-Ddsurround.seasonsMod`) and a development run stops
+  at start if its season provider isn't that one (`SeasonManager.checkDevelopmentRun`: a classpath from an earlier
+  choice). The mod picks Serene Seasons when both are in. Ecliptic Seasons' season is set with
+  `/eclipticseasons solar setTerm <term>` (`greater_cold`, `summer_solstice`...). It saves its data in the world, and a
+  world it has been in, opened without it, waits on a screen at load that a bench run can't answer (the Fabric
+  `bench-ecliptic` world stalled there): give an Ecliptic Seasons scenario a world of its own. `common` compiles against
+  its Fabric jar, as the API is the same on both (`lib/seasons/compat/EclipticSeasons`).
 - Low-end stand-ins (both platforms, IDE configs too): `runClientPotatoCpu` (4 logical CPUs, 2 GB heap),
   `runClientPotatoFill` (3840x2160 window, a slower GPU's load per pixel), `runClientPotato` (both). The Gradle tasks
   pin the CPUs with `scripts/run-affinity.ps1`; after an IDE launch run it by hand (see the script).
@@ -663,6 +674,9 @@ is known of 26.4.
 - One number means one set of features across Minecraft versions: 1.21.11 and 26.x release the same minor when they
   carry the same features, and a line skips a minor it gets nothing from. Pre-releases are `5.0.0-beta.1` (sorted
   before `5.0.0`, so the update check tells testers about the final).
+- Before a release, launch each loader once with the other seasons mod (`-Pseasons=serene` on Fabric,
+  `-Pseasons=ecliptic` on NeoForge): the clock shows the season, rain or snow follows it (a winter solar term snows on
+  plains with Ecliptic Seasons) and so does frost breath. Daily runs only cover the pairing each loader plays with.
 - A release sets `mod_version` in `gradle.properties`, adds a changelog heading `DynamicSurroundings-<mc>-<version>`
   and a `versions.json` entry, and `recommend`, under its Minecraft version (the update check compares only within a
   Minecraft version, so 0.4.8 and 5.0.0 never meet), and is tagged `<mc>-<version>` (`1.21.11-5.0.1`). The jar's name

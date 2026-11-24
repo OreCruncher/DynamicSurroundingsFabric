@@ -58,6 +58,7 @@ public class KnownModTests {
         assertEquals(List.of("yet_another_config_lib_v3"), KnownMod.YACL.ids());
         assertEquals(List.of("connectormod"), KnownMod.SINYTRA_CONNECTOR.ids());
         assertEquals(List.of("sereneseasons"), KnownMod.SERENE_SEASONS.ids());
+        assertEquals(List.of("eclipticseasons"), KnownMod.ECLIPTIC_SEASONS.ids());
         assertEquals(List.of("quilt_loader"), KnownMod.QUILTED_LOADER.ids());
         assertEquals(List.of("modmenu"), KnownMod.MODMENU.ids());
         assertEquals(List.of("iris", "oculus"), KnownMod.IRIS.ids());
