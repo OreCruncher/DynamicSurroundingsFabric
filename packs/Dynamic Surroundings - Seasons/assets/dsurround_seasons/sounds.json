@@ -5,16 +5,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 1 in E major, Op. 8, RV 269, \"Spring\" (La primavera), Allegro (in E major)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_1_Spring_mvt_1_Allegro_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/spring1",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -24,16 +24,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 1 in E major, Op. 8, RV 269, \"Spring\" (La primavera), Largo e pianissimo sempre (in C♯ minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_1_Spring_mvt_2_Largo_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/spring2",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -43,16 +43,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 1 in E major, Op. 8, RV 269, \"Spring\" (La primavera), Allegro pastorale (in E major)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_1_Spring_mvt_3_Allegro_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/spring3",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -62,16 +62,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 2 in G minor, Op. 8, RV 315, \"Summer\" (L'estate), Allegro non molto (in G minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_2_Summer_mvt_1_Allegro_non_molto_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/summer1",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -81,16 +81,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 2 in G minor, Op. 8, RV 315, \"Summer\" (L'estate), Adagio e piano – Presto e forte (in G minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_2_Summer_mvt_2_Adagio_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/summer2",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -100,16 +100,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 2 in G minor, Op. 8, RV 315, \"Summer\" (L'estate), Presto (in G minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_2_Summer_mvt_3_Presto_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/summer3",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -119,16 +119,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 3 in F major, Op. 8, RV 293, \"Autumn\" (L'autunno), Allegro (in F major)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_3_Autumn_mvt_1_Allegro_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/autumn1",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -138,16 +138,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 3 in F major, Op. 8, RV 293, \"Autumn\" (L'autunno), Adagio molto (in D minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_3_Autumn_mvt_2_Adagio_molto_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/autumn2",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -157,16 +157,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 3 in F major, Op. 8, RV 293, \"Autumn\" (L'autunno), Allegro (in F major)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_3_Autumn_mvt_3_Allegro_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/autumn3",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -176,16 +176,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 4 in F minor, Op. 8, RV 297, \"Winter\" (L'inverno), Allegro non molto (in F minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:Vivaldi_-_Four_Seasons_4_Winter_mvt_1_Allegro_non_molto_-_John_Harrison_violin.oga",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/winter1",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -195,16 +195,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 4 in F minor, Op. 8, RV 297, \"Winter\" (L'inverno), Largo (in E♭ major)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:11_-_Vivaldi_Winter_mvt_2_Largo_-_John_Harrison_violin.ogg",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/winter2",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	},
@@ -214,16 +214,16 @@
 		"ds_credits": [
 			{
 				"name": "Concerto No. 4 in F minor, Op. 8, RV 297, \"Winter\" (L'inverno), Allegro (in F minor)",
-				"author": "Antonio Vivaldi, arranged by Jerzey Kulik",
-				"website": "https://archive.org/details/ETitleA.Vivaldi-TheFourSeasons",
-				"license": "Open Source Audio"
+				"author": "Antonio Vivaldi, performed by John Harrison (violin) with the Wichita State University Chamber Players",
+				"website": "https://commons.wikimedia.org/wiki/File:12_-_Vivaldi_Winter_mvt_3_Allegro_-_John_Harrison_violin.ogg",
+				"license": "Creative Commons Attribution-ShareAlike 4.0"
 			}
 		],
 		"sounds": [
 			{
 				"name": "dsurround_seasons:music/winter3",
 				"stream": true,
-				"volume": 0.5
+				"volume": 1.0
 			}
 		]
 	}

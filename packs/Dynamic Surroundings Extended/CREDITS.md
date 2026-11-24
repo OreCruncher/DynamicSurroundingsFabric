@@ -1,64 +1,51 @@
 ### Sounds
-The sounds provided with Dynamic Surroundings are from the public
-domain or have Creative Common restrictions.  These restrictions may impact
-whether LPs can be monetized on the various streaming services.
+The sounds provided with Dynamic Surroundings are from the public domain or have Creative Commons restrictions. These
+restrictions may impact whether LPs can be monetized on the various streaming services.
 
-##### Modifications (if any):
-* Sounds converted to OGG format as necessary
+##### Modifications (if any)
+* Sounds converted to OGG format as necessary.
+* Moonlight Sonata trimmed of the silence before it, faded out, leveled to the loudness of the recording it replaces,
+  and re-encoded as Ogg Vorbis (2026-11-23).
+* Canon in D Major trimmed of the silence before and after it, leveled, and re-encoded as Ogg Vorbis (2026-11-23).
 
 ##### Credits
 
 *dsurround_ex:music.wintersong*
-
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/29631/">Wintersong</a> by <a href="https://creatorchords.com">Alexander Nakarada</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Creative Commons CC BY 4.0</li>
-</ul>
+* [Wintersong](https://www.chosic.com/download-audio/29631/) by [Alexander Nakarada](https://creatorchords.com); music
+  promoted by [Chosic](https://www.chosic.com/free-music/all/) | License: Creative Commons CC BY 4.0
 
 *dsurround_ex:music.vopna*
-
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/29642/">Vopna</a> by <a href="https://creatorchords.com">Alexander Nakarada</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Creative Commons CC BY 4.0</li>
-</ul>
+* [Vopna](https://www.chosic.com/download-audio/29642/) by [Alexander Nakarada](https://creatorchords.com); music
+  promoted by [Chosic](https://www.chosic.com/free-music/all/) | License: Creative Commons CC BY 4.0
 
 *dsurround_ex:music.wonderful_fairytail*
-
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/58006/">Wonderful Fairytail</a> by <a href="https://www.audiocoffe.net">AudioCoffee</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Creative Commons CC BY-SA 3.0</li>
-</ul>
+* [Wonderful Fairytail](https://www.chosic.com/download-audio/58006/) by [AudioCoffee](https://www.audiocoffe.net);
+  music promoted by [Chosic](https://www.chosic.com/free-music/all/) | License: Creative Commons CC BY-SA 3.0
 
 *dsurround_ex:music.enchanted*
-
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/30479/">Enchanted</a> by <a href="https://soundcloud.com/keysofmoon">Keys of Moon</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Creative Commons CC BY 4.0</li>
-</ul>
+* [Enchanted](https://www.chosic.com/download-audio/30479/) by [Keys of Moon](https://soundcloud.com/keysofmoon); music
+  promoted by [Chosic](https://www.chosic.com/free-music/all/) | License: Creative Commons CC BY 4.0
 
 *dsurround_ex:music.gjallar*
-
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/29643/">Gjallar</a> by <a href="https://creatorchords.com">Alexander Nakarada</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Creative Commons CC BY 4.0</li>
-</ul>
+* [Gjallar](https://www.chosic.com/download-audio/29643/) by [Alexander Nakarada](https://creatorchords.com); music
+  promoted by [Chosic](https://www.chosic.com/free-music/all/) | License: Creative Commons CC BY 4.0
 
 *dsurround_ex:music.annas_theme*
-
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/27877/">Anna's Theme</a> by <a href="https://www.scottbuckley.com.au">Scott Buckley</a>; Music promoted by <a href="https://www.chosic.com/free-music/all/">https://www.chosic.com/free-music/all/</a> | License: Attribution 4.0 International (CC BY 4.0)</li>
-</ul>
+* [Anna's Theme](https://www.chosic.com/download-audio/27877/) by [Scott Buckley](https://www.scottbuckley.com.au);
+  music promoted by [Chosic](https://www.chosic.com/free-music/all/) | License: Attribution 4.0 International (CC BY
+  4.0)
 
 *dsurround_ex:music.moonlight_sonata*
+* [Piano Sonata No. 14 in C-sharp minor, "Moonlight", Op. 27 No. 2: I. Adagio sostenuto](https://commons.wikimedia.org/wiki/File:Ludwig_van_Beethoven_-_sonata_no._14_in_c_sharp_minor_%27moonlight%27,_op._27_no._2_-_i._adagio_sostenuto.ogg)
+  by Ludwig van Beethoven, performed by Paul Pitman for [Musopen](https://musopen.org), from Wikimedia Commons |
+  License: Public domain
 
-<ul>
-    <li><a href="https://www.chosic.com/download-audio/27877/">Moonlight Sonata</a> by <a href="https://orangefreesounds.com/moonlight-sonata-piano/">Ludwig van Beethoven, played by Alexander Blu</a> | License: Open Source Audio</li>
-</ul>
-
-*dsurround_ex:music.cannon_in_dmajor*
-
-<ul>
-    <li><a href="https://archive.org/details/PachelbelCanonInDMajor">Cannon in D Major</a> by Johann Pachelbel | License: Attribution-No Derivative Works 3.0</li>
-</ul>
+*dsurround_ex:music.canon_in_dmajor*
+* [Canon in D Major](https://commons.wikimedia.org/wiki/File:Canon_(2004)_-_Strolling_Strings_-_United_States_Air_Force_Band.mp3)
+  by Johann Pachelbel, arranged by Frank Hudson, performed by the Strolling Strings of the United States Air Force Band
+  (from *The Strolling Strings 50th Anniversary*, 2004), from Wikimedia Commons | License: Public domain (a work of
+  the United States government)
 
 *dsurround_ex:music.the_britons*
-
-<ul>
-    <li><a href="https://pixabay.com/music/acoustic-group-the-britons-127687/">The Britons</a> by <a href="https://pixabay.com/users/kmacleod-3979860">kmacleod via Pixbay</a> | License: Pixbay Content License</li>
-</ul>
-
+* [The Britons](https://pixabay.com/music/acoustic-group-the-britons-127687/) by
+  [kmacleod via Pixabay](https://pixabay.com/users/kmacleod-3979860) | License: Pixabay Content License

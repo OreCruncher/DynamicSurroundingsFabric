@@ -13,6 +13,209 @@ allprojects {
     version = rootProject.mod_version
 }
 
+// The resource packs in packs/ (a folder each, with its pack.mcmeta), zipped into build/libs beside the jars for
+// release. Each zip is named after its folder, which the game shows as the pack's name. They aren't versioned with
+// the mod: their pack.mcmeta says which game versions they suit.
+def resourcePackDirs = file('packs').listFiles()
+        .findAll { it.isDirectory() && new File(it, 'pack.mcmeta').isFile() }
+        .sort { it.name }
+
+// A pack's problems, each a line naming its file. The game reports none of them in a way anyone sees: a file that
+// doesn't parse loses everything in it (a missing comma in Seasons' sound_factories.json left its music unplayed,
+// the music manager flickering on missing_sound), and an OGG whose first stream isn't Vorbis plays silence with
+// nothing logged (Canon in D, with the MP3's cover art carried over as a Theora stream).
+def resourcePackProblems = { File dir ->
+    def problems = []
+    def rel = { File f -> dir.toPath().relativize(f.toPath()).toString().replace('\\', '/') }
+    def gson = new com.google.gson.Gson()
+    // Strict, as the game's reader is: a missing comma, a trailing one or anything after the end is an error
+    def parse = { File f ->
+        try {
+            f.withReader('UTF-8') { r ->
+                def reader = new com.google.gson.stream.JsonReader(r)
+                reader.setLenient(false)
+                def element = gson.getAdapter(com.google.gson.JsonElement).read(reader)
+                if (reader.peek() != com.google.gson.stream.JsonToken.END_DOCUMENT)
+                    throw new IOException('more after the end of the document')
+                element
+            }
+        } catch (Exception e) {
+            problems << "${rel(f)}: doesn't parse: ${e.message}"
+            null
+        }
+    }
+    def parsed = [:]
+    dir.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+        if (f.name.endsWith('.json') || f.name.endsWith('.mcmeta'))
+            parsed[f] = parse(f)
+    }
+
+    // pack.mcmeta: formats from 1.21.1's (34) on are read by 26.3 only with pack_format and supported_formats
+    // beside min_format and max_format, as long as min_format is at or under 64, the last format without a minor part
+    def mcmeta = parsed[new File(dir, 'pack.mcmeta')]?.getAsJsonObject()?.getAsJsonObject('pack')
+    if (mcmeta == null) {
+        problems << 'pack.mcmeta: no "pack" object'
+    } else {
+        ['min_format', 'max_format'].each { if (!mcmeta.has(it)) problems << "pack.mcmeta: no $it" }
+        def min = mcmeta.get('min_format')
+        def major = min == null ? null : (min.isJsonArray() ? min.getAsJsonArray().get(0).getAsInt() : min.getAsInt())
+        if (major != null && major <= 64)
+            ['pack_format', 'supported_formats'].each {
+                if (!mcmeta.has(it)) problems << "pack.mcmeta: min_format $major needs $it as well, or 26.3 rejects the pack"
+            }
+    }
+
+    def assets = new File(dir, 'assets')
+    def namespaces = assets.isDirectory() ? assets.listFiles().findAll { it.isDirectory() }*.name as Set : [] as Set
+    def splitId = { String id, String ns -> id.contains(':') ? id.split(':', 2) as List : [ns, id] }
+
+    // Sound events and the files they play, from each namespace's sounds.json
+    def events = [] as Set
+    def soundsUnread = false
+    def usedOggs = [] as Set
+    namespaces.each { ns ->
+        def soundsFile = new File(assets, "$ns/sounds.json")
+        def sounds = parsed[soundsFile]
+        soundsUnread |= soundsFile.isFile() && sounds == null
+        if (sounds == null)
+            return
+        sounds.getAsJsonObject().entrySet().each { event ->
+            events << "$ns:${event.key}".toString()
+            event.value.getAsJsonObject().getAsJsonArray('sounds')?.each { s ->
+                def name = s.isJsonPrimitive() ? s.getAsString() : s.getAsJsonObject().get('name')?.getAsString()
+                def type = s.isJsonObject() && s.getAsJsonObject().has('type') ? s.getAsJsonObject().get('type').getAsString() : 'file'
+                if (name == null || type != 'file')
+                    return
+                def (sns, path) = splitId(name, 'minecraft')
+                if (!(sns in namespaces))
+                    return
+                def ogg = new File(assets, "$sns/sounds/${path}.ogg")
+                usedOggs << ogg.canonicalFile
+                if (!ogg.isFile())
+                    problems << "${rel(soundsFile)}: ${event.key} plays $name, and ${rel(ogg)} doesn't exist"
+            }
+        }
+    }
+
+    // Sound factories name an event; biome acoustics name a factory
+    def factories = [] as Set
+    // A file that doesn't parse has its own line; what refers into it would only repeat it
+    def unreadFactories = [] as Set
+    namespaces.each { ns ->
+        def factoriesFile = new File(assets, "$ns/dsconfigs/sound_factories.json")
+        if (factoriesFile.isFile() && parsed[factoriesFile] == null)
+            unreadFactories << ns
+        parsed[factoriesFile]?.getAsJsonArray()?.each { e ->
+            def o = e.getAsJsonObject()
+            def location = o.get('location')?.getAsString()
+            def event = o.get('soundEvent')?.getAsString()
+            if (location != null && !factories.add(location))
+                problems << "${rel(factoriesFile)}: $location is defined twice"
+            if (event != null && !soundsUnread && splitId(event, 'minecraft')[0] in namespaces && !(event in events))
+                problems << "${rel(factoriesFile)}: $location plays $event, which no sounds.json in the pack defines"
+        }
+    }
+    def eachFactory
+    eachFactory = { com.google.gson.JsonElement e, Closure action ->
+        if (e == null || e.isJsonNull() || e.isJsonPrimitive())
+            return
+        if (e.isJsonArray()) {
+            e.getAsJsonArray().each { eachFactory(it, action) }
+            return
+        }
+        e.getAsJsonObject().entrySet().each { entry ->
+            if (entry.key == 'factory' && entry.value.isJsonPrimitive())
+                action(entry.value.getAsString())
+            else
+                eachFactory(entry.value, action)
+        }
+    }
+    namespaces.each { ns ->
+        def biomesFile = new File(assets, "$ns/dsconfigs/biomes.json")
+        if (!unreadFactories.isEmpty())
+            return
+        eachFactory(parsed[biomesFile]) { String factory ->
+            if (splitId(factory, 'minecraft')[0] in namespaces && !(factory in factories))
+                problems << "${rel(biomesFile)}: $factory isn't in the pack's sound_factories.json"
+        }
+    }
+
+    // Each OGG: one logical stream, Vorbis, and played by some event. The beginning-of-stream pages come first, each
+    // holding its stream's identification header
+    namespaces.each { ns ->
+        def soundsDir = new File(assets, "$ns/sounds")
+        if (!soundsDir.isDirectory())
+            return
+        soundsDir.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+            if (!f.name.endsWith('.ogg'))
+                return
+            if (!(f.canonicalFile in usedOggs))
+                problems << "${rel(f)}: no sound event plays it"
+            def codecs = []
+            new DataInputStream(new BufferedInputStream(new FileInputStream(f))).withCloseable { input ->
+                def header = new byte[27]
+                while (true) {
+                    try { input.readFully(header) } catch (EOFException ignored) { break }
+                    if (new String(header, 0, 4, 'ISO-8859-1') != 'OggS') {
+                        codecs << 'not an Ogg page'
+                        break
+                    }
+                    if ((header[5] & 0x02) == 0)
+                        break
+                    def segments = new byte[header[26] & 0xFF]
+                    input.readFully(segments)
+                    def body = new byte[segments.collect { it & 0xFF }.sum(0) as int]
+                    input.readFully(body)
+                    def magic = new String(body, 0, Math.min(7, body.length), 'ISO-8859-1')
+                    codecs << (magic == '\u0001vorbis' ? 'vorbis' : magic == '\u0080theora' ? 'theora'
+                            : magic.startsWith('OpusHead') ? 'opus' : 'unknown')
+                }
+            }
+            if (codecs != ['vorbis'])
+                problems << "${rel(f)}: streams ${codecs ?: 'none'}, where the game plays only a lone Vorbis stream" +
+                        " (re-encode with -map 0:a or -vn to drop cover art)"
+        }
+    }
+    problems
+}
+
+def checkResourcePacks = tasks.register('checkResourcePacks') {
+    group = 'verification'
+    description = 'Checks each resource pack in packs/: its JSON parses, every reference resolves, every OGG is lone Vorbis'
+    def marker = layout.buildDirectory.file('resource-pack-check.txt')
+    inputs.files(resourcePackDirs).withPropertyName('packs')
+    outputs.file(marker)
+    doLast {
+        def problems = resourcePackDirs.collectMany { dir -> resourcePackProblems(dir).collect { "${dir.name}/$it" } }
+        if (!problems.isEmpty())
+            throw new GradleException("Resource pack problems:\n  " + problems.join('\n  '))
+        marker.get().asFile.text = resourcePackDirs*.name.join('\n') + '\n'
+        logger.lifecycle("Resource packs checked: ${resourcePackDirs*.name.join(', ')}")
+    }
+}
+
+def resourcePackZips = resourcePackDirs
+        .collect { dir ->
+            tasks.register("zipResourcePack${dir.name.replaceAll(/[^A-Za-z0-9]/, '')}", Zip) {
+                description = "Zips the $dir.name resource pack into build/libs"
+                dependsOn checkResourcePacks
+                from dir
+                archiveFileName = "${dir.name}.zip"
+                destinationDirectory = layout.buildDirectory.dir('libs')
+                // The same files give the same zip
+                preserveFileTimestamps = false
+                reproducibleFileOrder = true
+                // After the platforms' syncs into build/libs, which keep what isn't their own jars anyway
+                mustRunAfter subprojects.collect { it.tasks.matching { t -> t.name == 'copyJarToMain' } }
+            }
+        }
+ext.resourcePackZips = resourcePackZips
+tasks.register('zipResourcePacks') {
+    group = 'build'
+    description = 'Zips every resource pack in packs/ into build/libs'
+    dependsOn resourcePackZips
+}
+
 // Every subproject is a Minecraft module except the annotation processor, which is plain Java used at build time
 configure(subprojects.findAll { it.name != 'processor' }) {
     apply plugin: 'dev.architectury.loom-no-remap'
@@ -91,10 +294,12 @@ configure(subprojects.findAll { it.name != 'processor' }) {
     }
 
     if (project.name != "common" && project.name != "stubs") {
-        tasks.named('build') { finalizedBy 'copyJarToMain' }
-        potatoRuns(project)
-        benchJarExclusion(project)
-        accessInJar(project)
+        tasks.named('build') { finalizedBy 'copyJarToMain', ':zipResourcePacks', 'installResourcePacks' }
+        // Through the script (this), not the project: Gradle 10 drops looking methods up in parent projects
+        this.installResourcePacks(project)
+        this.potatoRuns(project)
+        this.benchJarExclusion(project)
+        this.accessInJar(project)
     }
 
     // Configure Maven publishing.
@@ -188,6 +393,31 @@ def potatoRuns(Project p) {
             }
         }
     }
+}
+
+// The resource packs' zips copied into each run folder's resourcepacks (run, run-bench and every run-pack/<slug>, the
+// -Ppack one too), there to turn on in the game's pack screen: nothing turns them on, so bench runs are unchanged.
+// Before every client run, and after a build for runs started from the IDE.
+def installResourcePacks(Project p) {
+    def zips = p.rootProject.files(p.rootProject.resourcePackZips)
+    def install = p.tasks.register('installResourcePacks') {
+        group = 'build'
+        description = "Copies the resource packs in packs/ into the $p.name run folders"
+        inputs.files zips
+        doLast {
+            def folders = ['run', 'run-bench'] as Set
+            folders.addAll((p.file('run-pack').listFiles() ?: []).findAll { it.isDirectory() }.collect { "run-pack/$it.name" })
+            folders << "run-pack/${p.rootProject.findProperty('pack') ?: 'none'}"
+            folders.each { folder ->
+                p.copy {
+                    from zips
+                    into p.file("$folder/resourcepacks")
+                }
+            }
+            logger.lifecycle("Resource packs copied into ${folders.sort().join(', ')}")
+        }
+    }
+    p.tasks.matching { it.name.startsWith('runClient') }.configureEach { dependsOn install }
 }
 
 // The development bench (common's org.orecruncher.dsurround.bench: scenario runs, /dsbench) is never published: left

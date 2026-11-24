@@ -43,6 +43,18 @@ is known of 26.4.
 - Tests (common only, ~2570): `./gradlew :common:test -q` ends with `Tests: N run, N failed, N skipped`, after a
   `FAILED <class>.<test>: <message>` line per failure; read `common/build/test-results/test/*.xml` only for a stack trace.
 - One class: `./gradlew :common:test --tests "*BlockInfoTests" -q`
+- Resource packs (`packs/`, a folder each with its `pack.mcmeta`; Seasons and Extended, 1.21.1 through 26.3):
+  `./gradlew zipResourcePacks` zips each into `build/libs` beside the jars, named after its folder (the name the game
+  shows), also after a platform's `build`. `installResourcePacks` (per platform, before every `runClient*` and after a
+  build) copies the zips into the `resourcepacks` of `run`, `run-bench` and every `run-pack/<slug>`; nothing turns them
+  on, so bench runs are unchanged. A new folder with a `pack.mcmeta` is picked up with no build change. A pack's
+  `pack.mcmeta` reaching back past format 64 needs `pack_format` and `supported_formats` beside `min_format` and
+  `max_format`, or 26.3 rejects it.
+  `checkResourcePacks` runs before every zip (so before a build's, an install and every `runClient*`) and fails on
+  what the game would only take silently: JSON that doesn't parse strictly (a missing comma in Seasons'
+  `sound_factories.json` lost all its music, the manager flickering on `missing_sound`), a `pack.mcmeta` missing
+  those keys, a sound file, event or factory named and not in the pack, an OGG no event plays, and an OGG that isn't
+  a lone Vorbis stream (Canon in D played silence with the MP3's cover art carried over as Theora: encode with `-vn`).
 - License headers: every tracked Java, shader and Python file starts with an SPDX header (after a shader's `#version`
   or a script's shebang). `python scripts/license-headers.py` adds missing ones and brings the copyright line in step
   with `LICENSE` (change the years there, then run it); `--check` only reports. Files with another holder's notice are

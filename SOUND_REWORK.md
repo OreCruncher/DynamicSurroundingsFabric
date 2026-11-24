@@ -157,3 +157,67 @@ CC0 had plenty) for rain on metal and tin roofs and rain on leaves; HQ previews 
   (YleArkisto, recipe `rain_water`, CC BY 4.0: credited in `CREDITS.md` and the event's `ds_credits`), each four 2 s
   swells (`weather.rain.glass`, `weather.rain.water`), played as metal's and leaves' are. Water's spike limit is 1 dB
   looser than leaves' (9.5 dB), as its plinks stand further out of the rain; true peaks within 2.3 dB in each set.
+
+## Seasons pack: Four Seasons recording replaced (2026-11-23)
+
+The Seasons resource pack (`packs/Dynamic Surroundings - Seasons`, music for Serene Seasons' sub-seasons, one movement
+each) played Jerzy Kulik's Four Seasons from archive.org (`ETitleA.Vivaldi-TheFourSeasons`, 2014). That item carries no
+license: no `licenseurl` or rights field, only the Community Audio collection (formerly `opensource_audio`, which the
+pack's credit took for a license). It was rendered with IK Multimedia's Miroslav Philharmonik, whose EULA allows music
+made with it, so the gap was the uploader's missing grant, not IK's terms.
+- Before that, MIDI was tried as a way to ship the packs' music in the jar (`docs/specifications/midi-playback-design-spec.md`,
+  parked): Basic Pitch transcriptions of two Extended tracks were "not even close", and Mutopia's score MIDIs of the
+  concertos (CC BY-SA 3.0) through a General MIDI SoundFont lacked the recordings' richness.
+- Searched Wikimedia Commons (`Category:The Four Seasons (Vivaldi)`) and Musopen. Two complete sets: John Harrison with
+  the Wichita State University Chamber Players (CC BY-SA 1.0 or later, permission ticket 2007022510020031, a featured
+  sound on English Wikipedia) and The Modena Chamber Orchestra (via Musopen, public domain mark by its uploader; ruled
+  out: Musopen's listing reportedly hidden over a copyright problem, named soloists suggesting a commercial release,
+  and the Commons copies' pitch moved 20 cents). The US Air Force Band's (public domain) is Winter alone.
+- Chosen by ear: Harrison, live 2000-02-06. Each movement cut where its music ends: the last step (0.1 s) both louder
+  than -20 dB against the movement's median and tonal (spectral flatness under 0.012; claps pass the level alone),
+  followed while the reverb stays tonal and over -32 dB; starts at the first step over -15 dB, less 0.15 s. Cuts in the
+  source, seconds: spring1 0.55-213.1, spring2 1.95-170.4, spring3 2.15-241.9, summer1 0.55-299.7, summer2
+  1.35-105.15 (by hand, 1.25 s before the found end, where room noise under the held note began), summer3 0.95-156.2,
+  autumn1 0.45-300.2, autumn2 0.35-151.8, autumn3 1.75-198.2, winter1 0.45-206.8, winter2 1.55-129.5, winter3
+  1.25-192.3. Faded in 0.08 s and out over the last 1.0 s.
+- Leveled by integrated loudness (ffmpeg `loudnorm` analysis): each movement to its old file's loudness less 6 dB, with
+  `sounds.json`'s volume raised from 0.5 to 1.0, so each plays as loud as the one it replaced (the old files were
+  mastered at about -14.5 LUFS with peaks to +2.3 dBTP; the live recording averages -23 LUFS with peaks at full scale).
+  That brings Autumn II up 12.9 dB, from nearly inaudible. A limiter at -2 dBFS (5 ms attack, 80 ms release) takes
+  peaks only: 3.5 dB off Spring I's loudest, under 1 dB elsewhere. Encoded stereo 44.1 kHz Vorbis q0: 16 MB for the 12
+  (the old set 17 MB); a q2 set (25 MB) was made for comparison. True peaks -0.9 to -6.2 dBTP.
+- Credited in the pack's `CREDITS.md` and each event's `ds_credits` (the movement's Commons page). The pack's versions
+  stay CC BY-SA 4.0.
+
+## Extended pack: Moonlight Sonata replaced (2026-11-23)
+- The old file came from orangefreesounds.com (posted 2015 by "alexander"). The page names no performer ("Artist: /")
+  and says only "permitted for commercial use under license open source audio", a link to archive.org's Community
+  Audio collection, which is not a license; the site has no terms page. `sound-match.py` (also `--contour --speeds`)
+  found it wasn't cut from piano-midi.de's CC BY-SA rendering on Commons nor from Musopen's recording, so its origin
+  is unknown. The pack's `CREDITS.md` linked it to Chosic's page 27877, which is Anna's Theme's.
+- Commons candidates for the first movement: Paul Pitman for Musopen (public domain, 5:36), Dorian Péquet
+  (CC BY-SA 4.0, 6:31), Jfarjona (CC BY 2.5, 7:53). Pitman's chosen: a real pianist and no conditions.
+- Cut 4.15 s (the end of 4.2 s of digital silence) to 335.7 s (the file's end, where the last chord still rings at
+  -20 dB under the piece's median, so a 3 s fade-out instead of 1 s); fade-in 0.08 s; +7.3 dB to the old file's
+  loudness (-25.2 LUFS against -25.1; the event's volume stays 1.0); the same limiter at -2 dBFS, which touched
+  nothing (-6.5 dBTP); stereo 44.1 kHz Vorbis q0, 2.1 MB.
+- Both packs' `CREDITS.md` files were rewritten from HTML lists to Markdown at the same time.
+- Pachelbel's "Cannon in D Major" renamed Canon at the same time: its title, credit, file (`canon_in_dmajor.ogg`) and
+  event (`dsurround_ex:music.canon_in_dmajor`), with the factory and biome rule that name it.
+
+## Extended pack: Canon in D replaced (2026-11-23)
+- The old file sounded muted in game: about the pack's average loudness (-21.1 LUFS at volume 1.0) but with a wide
+  range (10.7 LU against 3-5 for the others), so its soft passages fell far under the rest. It couldn't be brought up:
+  its credit was CC BY-ND 3.0 (no derivatives), the event's volume was already 1.0, and the archive.org item it
+  credited (PachelbelCanonInDMajor) is dark (taken down), with no Wayback copy, so neither the original nor its
+  license can be checked. `sound-match.py` matched it to none of the candidates below.
+- Commons candidates: the US Air Force Band's Strolling Strings (public domain, a US government work, 3:49), Kevin
+  MacLeod (CC BY 3.0, a production), Michael Fischer v. Mollard (CC BY 4.0, which the user heard as generated),
+  Jeffrey C. Hall's Canon and Gigue (CC BY-SA 3.0, synthesizers). The Air Force recording was chosen.
+- Cut 0.45 s (the end of the leading silence) to 225.0 s (its reverb gone under -60 dB; 4 s of silence after);
+  fade-in 0.08 s, fade-out 1 s; -2.2 dB to -18 LUFS (3 dB over the old file, its range 4.5 LU); the -2 dBFS limiter
+  touched nothing (-5.8 dBTP); stereo 44.1 kHz Vorbis q0, 1.6 MB.
+- First installed silent: ffmpeg carried the MP3's cover art into the OGG as a Theora video stream ahead of the audio,
+  and the game read that stream, so the track "played" (the diagnostics showed it) with nothing heard and nothing
+  logged. Remuxed with only the audio (`-map 0:a -c:a copy`, no re-encode). Encode from a source with cover art with
+  `-vn` (or `-map 0:a`), and check a new OGG with `ffprobe` shows one stream, `vorbis`.

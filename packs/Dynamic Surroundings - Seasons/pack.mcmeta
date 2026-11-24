@@ -1,6 +1,9 @@
 {
   "pack": {
     "pack_format": 34,
+    "supported_formats": [34, 64],
+    "min_format": 34,
+    "max_format": 97,
     "description": "Dynamic Surroundings: Seasons Resource Pack"
   }
 }

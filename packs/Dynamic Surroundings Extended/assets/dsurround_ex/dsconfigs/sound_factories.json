@@ -70,8 +70,8 @@
     }
   },
   {
-    "location": "dsurround_ex:music/cannon_in_dmajor",
-    "soundEvent": "dsurround_ex:music.cannon_in_dmajor",
+    "location": "dsurround_ex:music/canon_in_dmajor",
+    "soundEvent": "dsurround_ex:music.canon_in_dmajor",
     "category": "MUSIC",
     "music": {
       "min_delay": 3000,

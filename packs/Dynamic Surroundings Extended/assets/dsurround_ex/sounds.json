@@ -118,10 +118,10 @@
 		"ds_category": "music",
 		"ds_credits": [
 			{
-				"name": "Moonlight Sonata",
-				"author": "Ludwig van Beethoven, played by Alexander Blu",
-				"website": "https://orangefreesounds.com/moonlight-sonata-piano/",
-				"license": "Open Source Audio"
+				"name": "Moonlight Sonata (Piano Sonata No. 14, Op. 27 No. 2: I. Adagio sostenuto)",
+				"author": "Ludwig van Beethoven, performed by Paul Pitman for Musopen",
+				"website": "https://commons.wikimedia.org/wiki/File:Ludwig_van_Beethoven_-_sonata_no._14_in_c_sharp_minor_%27moonlight%27,_op._27_no._2_-_i._adagio_sostenuto.ogg",
+				"license": "Public domain"
 			}
 		],
 		"sounds": [
@@ -131,20 +131,20 @@
 			}
 		]
 	},
-	"music.cannon_in_dmajor": {
-		"ds_title": "Cannon in D Major",
+	"music.canon_in_dmajor": {
+		"ds_title": "Canon in D Major",
 		"ds_category": "music",
 		"ds_credits": [
 			{
-				"name": "Cannon in D Major",
-				"author": "Johann Pachelbel",
-				"website": "https://archive.org/details/PachelbelCanonInDMajor",
-				"license": "Attribution-No Derivative Works 3.0"
+				"name": "Canon in D Major",
+				"author": "Johann Pachelbel, arranged by Frank Hudson, performed by the Strolling Strings of the United States Air Force Band",
+				"website": "https://commons.wikimedia.org/wiki/File:Canon_(2004)_-_Strolling_Strings_-_United_States_Air_Force_Band.mp3",
+				"license": "Public domain"
 			}
 		],
 		"sounds": [
 			{
-				"name": "dsurround_ex:music/cannon_in_dmajor",
+				"name": "dsurround_ex:music/canon_in_dmajor",
 				"stream": true
 			}
 		]

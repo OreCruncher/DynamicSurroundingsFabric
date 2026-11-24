@@ -98,6 +98,7 @@
       "max_delay": 12000,
       "replace_current_music": false
     }
+  },
   {
     "location": "dsurround_seasons:music/season/winter/mid",
     "soundEvent": "dsurround_seasons:music.season.winter.mid",
@@ -107,6 +108,7 @@
       "max_delay": 12000,
       "replace_current_music": false
     }
+  },
   {
     "location": "dsurround_seasons:music/season/winter/late",
     "soundEvent": "dsurround_seasons:music.season.winter.late",
