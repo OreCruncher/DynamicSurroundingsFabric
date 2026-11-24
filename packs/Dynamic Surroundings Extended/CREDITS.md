@@ -55,3 +55,7 @@ restrictions may impact whether LPs can be monetized on the various streaming se
 * [The Britons](https://pixabay.com/music/acoustic-group-the-britons-127687/) by
   [kmacleod via Pixabay](https://pixabay.com/users/kmacleod-3979860) | License:
   [Pixabay Content License](https://pixabay.com/service/license-summary/)
+
+### Icon
+The pack icon (`pack.png`) is the Dynamic Surroundings icon, © OreCruncher and contributors, licensed under
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
