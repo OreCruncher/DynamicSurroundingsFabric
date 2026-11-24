@@ -22,8 +22,12 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
+import org.orecruncher.dsurround.Constants;
 import org.orecruncher.dsurround.gui.TextPanel;
 import org.orecruncher.dsurround.lib.GameUtils;
+import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.platform.ModInformation;
+import org.orecruncher.dsurround.lib.resources.FileResourceUtil;
 import org.orecruncher.dsurround.lib.markdown.MarkdownParser;
 import org.orecruncher.dsurround.lib.markdown.Options;
 
@@ -53,6 +57,8 @@ public class CreditsScreen extends Screen {
     private static final WidgetSprites BACKGROUND_SPRITES = new WidgetSprites(
             Identifier.withDefaultNamespace("widget/text_field"), Identifier.withDefaultNamespace("widget/text_field_highlighted"));
 
+    private static final Style TITLE_STYLE = Style.EMPTY.withColor(ColorPalette.GOLD);
+
     private final Screen parent;
     private final List<CreditsFinder.CreditsEntry> entries;
     private final Map<CreditsFinder.CreditsEntry, Component> documents = new HashMap<>();
@@ -62,6 +68,20 @@ public class CreditsScreen extends Screen {
     private @Nullable TextPanel shownOn;
     private @Nullable EntryList list;
     private TextPanel textPanel;
+
+    /**
+     * Opens the Attributions screen over {@code parent}: the mod's own credits, from its jar, then those of every
+     * active pack that has its own. Done goes back to {@code parent}.
+     */
+    public static void open(Screen parent) {
+        var ownName = ModInformation.getModDisplayName(Constants.MOD_ID).orElse(Constants.MOD_ID);
+        var own = FileResourceUtil.readResourceFromJar("assets/" + Constants.MOD_ID + "/credits.md")
+                .map(text -> new CreditsFinder.CreditsEntry(Component.literal(ownName), text));
+        var packs = GameUtils.getResourceManager().listPacks().toList();
+        var entries = CreditsFinder.find(own, packs, ModInformation::getModDisplayName);
+        var title = Component.translatable("dsurround.text.config.credits.title").withStyle(TITLE_STYLE);
+        GameUtils.setScreen(new CreditsScreen(parent, title, entries, Component.translatable("dsurround.text.config.resourcenotfound")));
+    }
 
     /**
      * @param entries what to list, in order; the first is shown first. An empty list shows {@code emptyText}.
