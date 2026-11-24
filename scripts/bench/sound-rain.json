@@ -1,0 +1,105 @@
+// sound.json's scenes in the rain: while it rains, each sound's calculation asks the season provider three times what
+// falls between the sound and the player (SourceAcoustics.calculateWeatherAbsorption, getActivePrecipitationAt), which
+// sound.json's clear weather never reaches. For comparing what that question costs (a seasons mod answers it: Serene
+// Seasons in the dev run, through its hook on Biome.getPrecipitationAt), in the recordings' block queries
+// (jfr-summary.py) and the enhanced sounds' work. A forest (it rains there in a temperate spring; savanna, sound.json's,
+// has none) at the same absolute height, in the air, so nothing the forest scenes build at ground level is in the way.
+// The occlusion and simplified-airspace variants are left out: the weather question is asked the same in each. Needs a
+// sound device, as sound.json does: run it first in a chain. See README.md for the format.
+{
+  "world": "bench",
+  "seed": 20261030,
+  "setup": [
+    "gamemode creative",
+    "gamerule advance_time false",
+    "gamerule advance_weather false",
+    "gamerule spawn_mobs false"
+  ],
+  "video": {"width": 1920, "height": 1080, "vsync": false, "maxFps": 260},
+  // Quiet, but not 0: a sound whose volume works out to 0 isn't played, so isn't processed
+  "volume": 0.05,
+  "warmup": 10,
+  "record": 45,
+  "repeats": 2,
+  "settingSets": {
+    "quiet": {"soundOptions.ambientVolumeScaling": 0}
+  },
+  "scenes": {
+    "rain-sound-open": {
+      "biome": "minecraft:forest",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_spring",
+        "weather rain",
+        "tp @s ~ 245 ~",
+        // What the box scenes left here
+        "fill ~-8 ~-7 ~-8 ~8 ~9 ~8 air",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 6, "seed": 1},
+        {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 1.5, "radius": 6, "seed": 2}
+      ],
+      // Holds a full storm
+      "profile": "weather"
+    },
+    "rain-sound-enclosed": {
+      "biome": "minecraft:forest",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_spring",
+        "weather rain",
+        "tp @s ~ 245 ~",
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 1.5, "radius": 5, "seed": 1},
+        {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 1.5, "radius": 5, "seed": 2}
+      ],
+      "profile": "weather"
+    },
+    "rain-sound-occluded": {
+      "biome": "minecraft:forest",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_spring",
+        "weather rain",
+        "tp @s ~ 245 ~",
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 20, "minRadius": 13, "radius": 16, "seed": 1},
+        {"id": "minecraft:block.beacon.ambient", "count": 8, "volume": 2.4, "minRadius": 13, "radius": 16, "seed": 2}
+      ],
+      "profile": "weather"
+    },
+    // More sounds starting than the start budget lets the sound engine's thread calculate (see sound.json)
+    "rain-sound-burst": {
+      "biome": "minecraft:forest",
+      "pitch": 0,
+      "commands": [
+        "time set 6000",
+        "season set mid_spring",
+        "weather rain",
+        "tp @s ~ 245 ~",
+        "fill ~-7 ~-6 ~-7 ~7 ~8 ~7 stone hollow",
+        "setblock ~ ~-1 ~ barrier"
+      ],
+      "sounds": [
+        {"id": "minecraft:block.stone_button.click_on", "perSecond": 150, "minRadius": 1.5, "radius": 5, "seed": 1}
+      ],
+      "profile": "weather"
+    }
+  },
+  "runs": [
+    {"label": "open", "scene": "rain-sound-open", "use": "quiet"},
+    {"label": "enclosed", "scene": "rain-sound-enclosed", "use": "quiet"},
+    {"label": "occluded", "scene": "rain-sound-occluded", "use": "quiet"},
+    {"label": "burst", "scene": "rain-sound-burst", "use": "quiet"}
+  ]
+}

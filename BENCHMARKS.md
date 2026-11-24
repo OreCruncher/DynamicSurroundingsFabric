@@ -1440,6 +1440,36 @@ changed since the tick; the render thread only uploads). `gpu-drops-wide.json` a
   three times the CPU way's frame rate on OpenGL (878 with only the drops on the GPU). The damp spots' GPU time halved:
   a vertex buffer a frame became records a tick.
 
+## Results, 2026-11-24: Serene Seasons through its API (`sound-rain.json`, `precipitation.json`)
+
+5.3.0 before commit, NeoForge, OpenGL, 1920x1080, two repeats, Serene Seasons 26.1.2.0.7 (the dev run's). The season
+provider's rain-or-snow question moved from Serene Seasons' `SeasonHooks.getPrecipitationAtSeasonal` to vanilla's
+`Biome.getPrecipitationAt`, which Serene Seasons' client mixin answers with the same hook after looking the biome up
+again; whether anything falls moved to its API (`SeasonHelper.usesTropicalSeasons` and the cached season state).
+Each scenario was run with the new `SereneSeasons.java`, then with the last commit's (`4a241de3`), back to back.
+`sound-rain.json` (new) plays `sound.json`'s scenes in the rain in a forest, where each sound's calculation asks what
+falls three times. Figures are the recordings' block queries (`jfr-summary.py`), each label's two runs.
+
+| Scene | Precipitation question, old | New | Work a second, old / new | fps old / new |
+|---|---|---|---|---|
+| sound open | 1.33-1.38 us | 1.72-1.88 us | 0.60 / 0.82 ms | 976 / 1016 |
+| sound enclosed | 1.25-1.31 us | 1.66-1.70 us | 0.59 / 0.77 ms | 962 / 967 |
+| sound occluded | 1.34-1.46 us | 1.67-1.82 us | 0.61 / 0.75 ms | 950 / 973 |
+| sound burst (1270 a second) | 0.87-0.92 us | 1.14-1.15 us | 1.14 / 1.46 ms | 920 / 936 |
+| rain (Low to High, columns; each build's first run, 0.7-0.9 us, left out) | 0.39-0.47 us | 0.37-0.45 us | 0.09-0.17 / 0.09-0.16 ms | |
+| snow (Low to High, columns) | 0.43-0.65 us | 0.40-0.53 us | 0.13-0.22 / 0.12-0.19 ms | |
+
+- The rain-or-snow question costs about 0.4 us more (a quarter) where sounds ask it: the extra biome lookup in Serene
+  Seasons' mixin and its callback. At 450 questions a second that is 0.15-0.25 ms of the sound workers' time a second,
+  0.3 ms in the burst; sound starts (0.16-0.33 ms each) and frames show none of it.
+- The precipitation scenes' question is mostly whether anything falls (a column each), now through the API: the same
+  or a little less.
+- Temperature (unchanged, still `SeasonHooks.getBiomeTemperature`, now guarded) came out the same to 10% lower in the
+  new runs, and so did biome lookups in the precipitation scenes: the spread between launches, not the change.
+  Frame rates were higher in every new run for the same reason.
+- The new build's first precipitation runs (rain Low, Medium) overlapped an analysis of the sound runs for about two
+  minutes; the figures above agree with the reversed second half, which ran alone.
+
 ## Rerunning
 
 - Run every scenario from a clean tree, the machine otherwise idle, and note the commit. On 26.3 `sound.json` once

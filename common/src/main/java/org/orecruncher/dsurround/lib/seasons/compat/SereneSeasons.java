@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
+import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.function.CachingSupplier;
 import org.orecruncher.dsurround.runtime.oracle.ILevelOracle;
 import sereneseasons.api.season.ISeasonState;
@@ -25,6 +26,8 @@ public class SereneSeasons extends AbstractSeasonProvider {
     private Season.SubSeason subSeason;
     private Season.TropicalSeason tropicalSeason;
     private Component computed;
+    // Set once SeasonHooks.getBiomeTemperature is found missing (see temperatureAt)
+    private volatile boolean temperatureHookBroken;
 
     public SereneSeasons(ILevelOracle levelOracle) {
         super("Serene Seasons", levelOracle);
@@ -92,20 +95,49 @@ public class SereneSeasons extends AbstractSeasonProvider {
 
     @Override
     protected Biome.Precipitation precipitationAt(BlockPos blockPos) {
-        var level = this.levelOracle.level();
+        // Serene Seasons answers vanilla's own question on the client (its mixin on Biome.getPrecipitationAt), so the
+        // biome is asked directly: not through the oracle, which would time it a second time
         var biome = this.levelOracle.biomeHolder(blockPos);
-        return SeasonHooks.getPrecipitationAtSeasonal(level, biome, blockPos, this.levelOracle.seaLevel());
+        return biome.value().getPrecipitationAt(blockPos, this.levelOracle.seaLevel());
     }
 
+    /**
+     * The one question still answered past Serene Seasons' API: how far the season moves a biome's temperature is in
+     * its config ({@code biomeTempAdjustment} a sub-season), which the API doesn't give. Its hook isn't API, so a
+     * Serene Seasons that renamed or moved it would crash every caller (frost, breath, rain or snow); instead that is
+     * logged once and the biome's own temperature used from then on, without the season.
+     */
     @Override
     protected float temperatureAt(BlockPos blockPos) {
         var biome = this.levelOracle.biomeHolder(blockPos);
-        return SeasonHooks.getBiomeTemperature(this.levelOracle.level(), biome, blockPos, this.levelOracle.seaLevel());
+        if (!this.temperatureHookBroken) {
+            try {
+                return SeasonHooks.getBiomeTemperature(this.levelOracle.level(), biome, blockPos, this.levelOracle.seaLevel());
+            } catch (LinkageError e) {
+                this.temperatureHookBroken = true;
+                Library.LOGGER.error(e, "Serene Seasons' temperature hook isn't there in this version: temperatures won't follow the season");
+            }
+        }
+        return biome.value().getTemperature(blockPos, this.levelOracle.seaLevel());
     }
 
     @Override
     protected boolean precipitates(BlockPos blockPos) {
-        // A tropical biome's dry and wet seasons decide, rather than the biome's own setting
-        return SeasonHooks.hasPrecipitationSeasonal(this.levelOracle.level(), this.levelOracle.biomeHolder(blockPos));
+        // A tropical biome's dry and wet seasons decide in their middle, rather than the biome's own setting, as
+        // Serene Seasons decides it
+        var biome = this.levelOracle.biomeHolder(blockPos);
+        if (SeasonHelper.usesTropicalSeasons(biome)) {
+            switch (this.seasonStateCache.get().getTropicalSeason()) {
+                case MID_DRY -> {
+                    return false;
+                }
+                case MID_WET -> {
+                    return true;
+                }
+                default -> {
+                }
+            }
+        }
+        return biome.value().hasPrecipitation();
     }
 }
