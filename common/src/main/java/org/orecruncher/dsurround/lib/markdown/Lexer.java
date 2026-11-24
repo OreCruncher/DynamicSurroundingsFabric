@@ -54,6 +54,8 @@ class Lexer {
                     if (next < this.length && this.input.charAt(next) == '\n') {
                         this.pos = next;
                     }
+                } else if (this.endsWithTwoSpaces(newlineStart)) {
+                    tokens.add(new Token(TokenType.HARD_BREAK, newlineStart, newlineStart + 1, this.input));
                 } else {
                     tokens.add(new Token(TokenType.SOFT_BREAK, newlineStart, newlineStart + 1, this.input));
                 }
@@ -150,6 +152,14 @@ class Lexer {
             }
         }
         return true;
+    }
+
+    /**
+     * True if the line ending at the newline at {@code newlineIndex} ends in two or more spaces, a hard line break.
+     * Only asked of a line that isn't blank.
+     */
+    private boolean endsWithTwoSpaces(int newlineIndex) {
+        return newlineIndex >= 2 && this.input.charAt(newlineIndex - 1) == ' ' && this.input.charAt(newlineIndex - 2) == ' ';
     }
 
     /**

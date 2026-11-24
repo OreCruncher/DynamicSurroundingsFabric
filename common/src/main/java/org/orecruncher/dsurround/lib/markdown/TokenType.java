@@ -11,6 +11,11 @@ enum TokenType {
     ESCAPED,
     NEWLINE,
     SOFT_BREAK,
+    /**
+     * A newline after two or more spaces inside a paragraph: the line ends there, but the paragraph and its inline
+     * styles go on, as in CommonMark.
+     */
+    HARD_BREAK,
     BOLD_MARKER,
     ITALIC_MARKER,
     UNDERLINE_MARKER,

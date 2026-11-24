@@ -15,11 +15,12 @@ import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.orecruncher.dsurround.Constants;
-import org.orecruncher.dsurround.gui.ComponentDisplayScreen;
+import org.orecruncher.dsurround.gui.credits.CreditsFinder;
+import org.orecruncher.dsurround.gui.credits.CreditsScreen;
 import org.orecruncher.dsurround.gui.sound.IndividualSoundControlScreen;
 import org.orecruncher.dsurround.lib.GameUtils;
-import org.orecruncher.dsurround.lib.text.Localization;
 import org.orecruncher.dsurround.lib.gui.ColorPalette;
+import org.orecruncher.dsurround.lib.platform.ModInformation;
 import org.orecruncher.dsurround.lib.resources.FileResourceUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -75,9 +76,13 @@ public abstract class MixinSoundOptionsScreen extends OptionsSubScreen {
 
     @Unique
     private void dsurround$activateCreditsScreen(Button button) {
-        String body = FileResourceUtil.readResourceFromJar("assets/" + Constants.MOD_ID + "/credits.md")
-                .orElse(Localization.load("dsurround.text.config.resourcenotfound"));
-        var screen = ComponentDisplayScreen.createFromMarkdown(this, Component.translatable("dsurround.text.config.credits.title").withStyle(dsurround$STYLE), body);
-        GameUtils.setScreen(screen);
+        // Ours first, from our jar; then every active pack's that has its own
+        var ownName = ModInformation.getModDisplayName(Constants.MOD_ID).orElse(Constants.MOD_ID);
+        var own = FileResourceUtil.readResourceFromJar("assets/" + Constants.MOD_ID + "/credits.md")
+                .map(text -> new CreditsFinder.CreditsEntry(Component.literal(ownName), text));
+        var packs = GameUtils.getResourceManager().listPacks().toList();
+        var entries = CreditsFinder.find(own, packs, ModInformation::getModDisplayName);
+        var title = Component.translatable("dsurround.text.config.credits.title").withStyle(dsurround$STYLE);
+        GameUtils.setScreen(new CreditsScreen(this, title, entries, Component.translatable("dsurround.text.config.resourcenotfound")));
     }
 }

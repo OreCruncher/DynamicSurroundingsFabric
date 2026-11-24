@@ -767,6 +767,36 @@ class MarkdownParserTests {
         assertEquals(Boolean.TRUE, find(parse("**a\n#tag**"), "#tag").style().bold());
     }
 
+    @Test
+    void twoTrailingSpacesMakeAHardBreak() {
+        assertEquals("one  \ntwo", plain(parse("one  \ntwo")));
+        assertEquals("one   \ntwo", plain(parse("one   \ntwo")));
+        // One space is still a soft break
+        assertEquals("one  two", plain(parse("one \ntwo")));
+        // CRLF files too: the parser normalizes them first
+        assertEquals("one  \ntwo", plain(parse("one  \r\ntwo")));
+    }
+
+    @Test
+    void hardBreakKeepsTheParagraphAndItsStyles() {
+        // Bold carries over the hard break, as it does over a soft one; a block break would close it
+        assertEquals(Boolean.TRUE, find(parse("**a  \nb**"), "b").style().bold());
+        // A link can't span it
+        assertNull(find(parse("[a  \nb](https://example.com)"), "b").style().clickEventUrl());
+    }
+
+    @Test
+    void italicLinesWithHardBreaksAreEachItalic() {
+        // The Seasons pack's credits list its events this way, then a bullet
+        var segments = parse("*one*  \n*two*  \n*three*\n* credit");
+        assertEquals(Boolean.TRUE, find(segments, "one").style().italic());
+        assertEquals(Boolean.TRUE, find(segments, "two").style().italic());
+        assertEquals(Boolean.TRUE, find(segments, "three").style().italic());
+        String text = plain(segments);
+        assertFalse(text.contains("*"), text);
+        assertTrue(text.contains("one  \ntwo  \nthree"), text);
+    }
+
     // ---- Options applied to output ---------------------------------------------------------------------------
 
     @Test

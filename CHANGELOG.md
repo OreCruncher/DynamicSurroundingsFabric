@@ -56,6 +56,7 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 * `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
 * `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state, name the installed mods by id and version, with the loader's version, and give what the mod's block and biome queries cost a block or lookup, for telling which kind of query a modpack slows down
 * Play biome music while creative and Display music toast messages have moved from the Sound options to the Music Manager options. The settings carry over
+* The Attributions screen (Sound options) lists the credits of every active resource pack and mod that has its own beside Dynamic Surroundings', picked from a list on the left: a resource pack's `CREDITS.md` at its root, a mod's `assets/<mod id>/credits.md`. Credits files can break a line with two trailing spaces
 
 **Fixes**
 * Books in the hotbar play the book sound, and bookshelves no longer do

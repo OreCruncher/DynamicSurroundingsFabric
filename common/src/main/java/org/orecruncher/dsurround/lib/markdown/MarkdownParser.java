@@ -52,7 +52,8 @@ import java.util.Optional;
  * A block marker ({@code #}, {@code >}, {@code -}, {@code *}) is only recognized at the very start of a line, with
  * no indentation. A single newline inside a paragraph is a "soft break" and becomes one space. A blank line (one
  * that is empty or holds only spaces and tabs), or a line beginning with a block marker, starts a new block and
- * keeps its newline.
+ * keeps its newline. A line ending in two or more spaces is a hard line break: the newline is kept, and the paragraph
+ * (with any open inline style) goes on.
  * <p>
  * Inline markers do not carry across blocks: an unclosed {@code *} or {@code **} lasts until the end of its
  * paragraph (the next blank line or block marker) and then stops. {@code <color:>} tags are the exception, since
@@ -69,7 +70,7 @@ import java.util.Optional;
  * opening tag is silently dropped.
  * <p>
  * Not supported, and shown as written: numbered and nested lists, inline code and code blocks, tables,
- * horizontal rules, HTML other than {@code <color>}, and hard line breaks. Images are not supported either:
+ * horizontal rules, HTML other than {@code <color>}, and backslash line breaks. Images are not supported either:
  * {@code ![alt](url)} shows a literal {@code !} followed by {@code alt} as an ordinary link.
  *
  * <h2>Threading</h2>

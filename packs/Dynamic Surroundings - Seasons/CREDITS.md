@@ -21,5 +21,5 @@ whether videos and streams using it can be monetized on some services.
 This pack's versions of the recordings are shared under the same license, CC BY-SA 4.0.
 
 ### Icon
-The pack icon (`pack.png`) is the Dynamic Surroundings icon, © OreCruncher and contributors, licensed under
+The pack icon (pack.png) is the Dynamic Surroundings icon, © OreCruncher and contributors, licensed under
 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).

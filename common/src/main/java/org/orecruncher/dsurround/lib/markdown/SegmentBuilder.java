@@ -78,6 +78,8 @@ class SegmentBuilder {
                 case TEXT, ESCAPED -> this.emit(token.source(), token.start(), token.end());
                 // Soft breaks are wrapped lines inside a paragraph and act as a single space
                 case SOFT_BREAK -> this.emit(" ");
+                // A hard break ends the line but not the paragraph, so inline styles carry on
+                case HARD_BREAK -> this.emit("\n");
                 case NEWLINE -> {
                     this.emit("\n");
                     this.endBlock();
@@ -272,7 +274,7 @@ class SegmentBuilder {
         for (int i = from; i < this.tokens.size(); i++) {
             Token token = this.tokens.get(i);
             TokenType type = token.type();
-            if (type == TokenType.NEWLINE || type == TokenType.SOFT_BREAK) {
+            if (type == TokenType.NEWLINE || type == TokenType.SOFT_BREAK || type == TokenType.HARD_BREAK) {
                 return null;
             }
             if (mid < 0) {
