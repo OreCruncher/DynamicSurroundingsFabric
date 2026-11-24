@@ -54,7 +54,7 @@ public final class DSurroundMusicManager extends MusicManager {
      */
     @Override
     public void startPlaying(@NotNull Music music) {
-        if (MixinHelpers.soundOptions.displayToastMessagesForMusic && !GameUtils.getGameSettings().musicToast().get().renderToast())
+        if (MixinHelpers.musicOptions.displayToastMessagesForMusic && !GameUtils.getGameSettings().musicToast().get().renderToast())
             SoundToast.from(music);
         super.startPlaying(music);
     }

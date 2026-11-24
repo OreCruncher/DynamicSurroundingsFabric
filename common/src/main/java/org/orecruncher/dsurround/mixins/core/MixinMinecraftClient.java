@@ -57,7 +57,7 @@ public class MixinMinecraftClient {
      */
     @WrapOperation(method = "getSituationalMusic()Lnet/minecraft/sounds/Music;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/attribute/BackgroundMusic;select(ZZ)Ljava/util/Optional;"))
     private Optional<Music> dsurround$biomeMusic(BackgroundMusic backgroundMusic, boolean isCreative, boolean isUnderwater, Operation<Optional<Music>> original) {
-        if (MixinHelpers.soundOptions.playBiomeMusicWhileCreative)
+        if (MixinHelpers.musicOptions.playBiomeMusicWhileCreative)
             isCreative = false;
 
         var vanilla = original.call(backgroundMusic, isCreative, isUnderwater);

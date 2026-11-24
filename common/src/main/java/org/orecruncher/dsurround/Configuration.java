@@ -247,14 +247,6 @@ public class Configuration extends ConfigurationData {
         public boolean replaceThunderSounds = true;
 
         @Property
-        @Comment("Enables playing biome background music while in creative")
-        public boolean playBiomeMusicWhileCreative = false;
-
-        @Property
-        @Comment("Enables display of toast messages for credited music")
-        public boolean displayToastMessagesForMusic = true;
-
-        @Property
         @Comment("Enables sound remapping when sounds are played")
         public boolean remapSounds = true;
     }
@@ -813,5 +805,15 @@ public class Configuration extends ConfigurationData {
         @Slider(min = 0, max = 100)
         @Comment("Reduce the wait time between music plays by a percentage")
         public int reduceWaitTime = 0;
+
+        @Property
+        @MovedFrom("soundOptions.playBiomeMusicWhileCreative")
+        @Comment("Enables playing biome background music while in creative")
+        public boolean playBiomeMusicWhileCreative = false;
+
+        @Property
+        @MovedFrom("soundOptions.displayToastMessagesForMusic")
+        @Comment("Enables display of toast messages for credited music")
+        public boolean displayToastMessagesForMusic = true;
     }
 }

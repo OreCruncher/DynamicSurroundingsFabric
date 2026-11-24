@@ -55,12 +55,14 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 * `/dsdump items` gives each item's class, armor family and sounds with the reason for each, under a summary that lists modded items needing a look. `/dsdump items <namespace>` dumps one mod's items
 * `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
 * `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state, name the installed mods by id and version, with the loader's version, and give what the mod's block and biome queries cost a block or lookup, for telling which kind of query a modpack slows down
+* Play biome music while creative and Display music toast messages have moved from the Sound options to the Music Manager options. The settings carry over
 
 **Fixes**
 * Books in the hotbar play the book sound, and bookshelves no longer do
 * Fixed an error from a mod's item that can be worn but has no equip sound: selecting it in the hotbar, or `/dsdump items`, threw an exception
 * `/dsprofile` recordings redact more paths: on NeoForge they kept the folders of the game and its mods (which can name a modpack or instance), and a home folder written in another form (a short name, another case) could get through. They now keep only the events known to hold nothing private, so another mod's events, or Minecraft's chunk events (coordinates and the save's name, recorded if vanilla's `/jfr` runs at the same time), are left out too, as are JVM text flags and heap dump paths
 * Tags could be read half-rebuilt by another thread (Async Particles' weather, with rain sounds on surfaces) during a reload
+* The music toast showed for only a moment, and a credit long enough to wrap drew its background as a missing texture, with the text running past it. It now stays for the game's notification time, sized to its text, in its own colors
 
 > ### DynamicSurroundings-26.3-5.2.0
 
