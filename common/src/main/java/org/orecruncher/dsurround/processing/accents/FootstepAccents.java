@@ -8,6 +8,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
+import org.orecruncher.dsurround.config.libraries.IBlockLibrary;
 import org.orecruncher.dsurround.config.libraries.IItemLibrary;
 import org.orecruncher.dsurround.config.libraries.ISoundLibrary;
 import org.orecruncher.dsurround.config.libraries.ITagLibrary;
@@ -19,12 +20,13 @@ public class FootstepAccents {
 
     private final ObjectArray<IFootstepAccentProvider> providers = new ObjectArray<>();
 
-    public FootstepAccents(Configuration config, IItemLibrary itemLibrary, ISoundLibrary soundLibrary, ITagLibrary tagLibrary, IWeatherSimulation weatherSimulation) {
+    public FootstepAccents(Configuration config, IItemLibrary itemLibrary, ISoundLibrary soundLibrary, ITagLibrary tagLibrary,
+                           IBlockLibrary blockLibrary, IWeatherSimulation weatherSimulation) {
         this.providers.add(new ArmorAccents(config, itemLibrary));
         this.providers.add(new FloorSqueakAccent(config, soundLibrary, tagLibrary));
 
         if (!FeatureConflict.FOOTSTEP_EFFECTS.isBlocked()) {
-            this.providers.add(new WaterySurfaceAccent(config, soundLibrary, tagLibrary, weatherSimulation));
+            this.providers.add(new WaterySurfaceAccent(config, soundLibrary, tagLibrary, blockLibrary, weatherSimulation));
         }
     }
 

@@ -22,6 +22,7 @@ import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
+import org.orecruncher.dsurround.runtime.weather.GroundWetness;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 
 /**
@@ -56,8 +57,6 @@ public class FootprintEffect extends EntityEffectBase {
     static final float LARGE = 1.25F;
     static final float SMALL = 0.75F;
     static final float TINY = 0.5F;
-    // How wet the ground has to be for feet to pick up mud: 0 to 1, the storm's strength where it is open to the sky
-    static final float MUDDY_WETNESS = 0.25F;
 
     private final Configuration.EntityEffects config;
     private final IBlockLibrary blockLibrary;
@@ -227,7 +226,7 @@ public class FootprintEffect extends EntityEffectBase {
             return info.tracks();
         if (snowCovered)
             return TrackedGround.SNOW;
-        if (info.tracksMudWhenWet() && this.footprints.wetness(level, pos.above()) >= MUDDY_WETNESS)
+        if (info.tracksMudWhenWet() && this.footprints.wetness(level, pos.above()) >= GroundWetness.MUDDY)
             return TrackedGround.MUD;
         return null;
     }

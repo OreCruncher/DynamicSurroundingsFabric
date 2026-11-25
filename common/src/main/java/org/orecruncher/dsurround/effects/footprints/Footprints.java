@@ -21,7 +21,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Matrix4f;
 import org.orecruncher.dsurround.Constants;
@@ -29,7 +28,7 @@ import org.orecruncher.dsurround.config.FootprintStyle;
 import org.orecruncher.dsurround.config.TrackedGround;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
 import org.orecruncher.dsurround.lib.di.ContainerManager;
-import org.orecruncher.dsurround.runtime.weather.Shelter;
+import org.orecruncher.dsurround.runtime.weather.GroundWetness;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
 
 import java.lang.ref.WeakReference;
@@ -198,22 +197,14 @@ public final class Footprints {
         var above = BlockPos.containing(x, y, z);
         int light = LightCoordsUtil.getLightCoords(level, above);
         this.prints.addLast(new Print(x, y + LIFT, z, yawDegrees, scale, style, rightFoot, light, ground.immutable(),
-                state, openToRain(level, above), life, color, strength, tracked));
-    }
-
-    /**
-     * How open a place is to rain: 0 under cover or where it doesn't rain, to 1 in the open
-     */
-    private static float openToRain(Level level, BlockPos pos) {
-        boolean rains = level.getBiome(pos).value().getPrecipitationAt(pos, level.getSeaLevel()) == Biome.Precipitation.RAIN;
-        return rains ? Shelter.exposure(level, pos) : 0F;
+                state, GroundWetness.openToRain(level, above), life, color, strength, tracked));
     }
 
     /**
      * How soaked the ground at a place is by the rain falling on it now, 0 to 1
      */
     float wetness(Level level, BlockPos pos) {
-        return this.weather.precipitationLevel(level.getRainLevel(1F)) * openToRain(level, pos);
+        return GroundWetness.at(this.weather, level, pos);
     }
 
     /**

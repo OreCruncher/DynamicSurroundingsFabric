@@ -467,7 +467,7 @@
   "dsurround.config.footstepAccents.enableArmorAccents": "Armor Accents",
   "dsurround.config.footstepAccents.enableArmorAccents.tooltip": "Enable/disable accents for armor that is worn",
   "dsurround.config.footstepAccents.enableWetSurfaceAccents": "Wet Surface Accents",
-  "dsurround.config.footstepAccents.enableWetSurfaceAccents.tooltip": "Enable/disable accents for when it is raining or blocks are waterlogged",
+  "dsurround.config.footstepAccents.enableWetSurfaceAccents.tooltip": "Enable/disable accents for wet steps: a splash on waterlogged blocks, and in the rain a squelch on muddy ground or a wet slap on hard ground",
   "dsurround.config.footstepAccents.enableFloorSqueaks": "Floor Squeaks",
   "dsurround.config.footstepAccents.enableFloorSqueaks.tooltip": "Enable/disable accents for when the player is walking on squeaky blocks",
   "dsurround.config.particleTweaks": "Particle Tweaks",

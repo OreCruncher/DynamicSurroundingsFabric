@@ -38,7 +38,8 @@ public class StepAccentGenerator extends AbstractClientHandler {
 
             this.accents.clear();
             this.footstepAccents.collect(living, blockPos, blockState, this.accents);
-            this.accents.forEach((factory, volumeScale) -> this.audioPlayer.play(factory.attachToEntity(living, volumeScale)));
+            this.accents.forEach((factory, volumeScale, pitchScale, filter) ->
+                    this.audioPlayer.play(factory.attachToEntity(living, volumeScale, pitchScale, filter)));
         }
     }
 }

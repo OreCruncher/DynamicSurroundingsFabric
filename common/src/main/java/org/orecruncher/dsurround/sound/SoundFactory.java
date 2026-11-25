@@ -18,8 +18,10 @@ import net.minecraft.util.valueproviders.ConstantFloat;
 import net.minecraft.util.valueproviders.FloatProvider;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.registry.IdentityUtils;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.runtime.audio.FixedFilter;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -110,15 +112,13 @@ public record SoundFactory(
     }
 
     @Override
-    public EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale) {
-        return new EntityBoundSoundInstance(
-                this.soundEvent,
-                this.category,
-                this.getVolume() * volumeScale,
-                this.getPitch(),
-                entity,
-                Randomizer.current().nextLong()
-        );
+    public EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale, float pitchScale, @Nullable FixedFilter filter) {
+        float volume = this.getVolume() * volumeScale;
+        float pitch = this.getPitch() * pitchScale;
+        long seed = Randomizer.current().nextLong();
+        return filter == null
+                ? new EntityBoundSoundInstance(this.soundEvent, this.category, volume, pitch, entity, seed)
+                : new FilteredEntitySoundInstance(this.soundEvent, this.category, volume, pitch, entity, seed, filter);
     }
 
     /**

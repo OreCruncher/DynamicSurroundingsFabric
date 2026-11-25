@@ -10,7 +10,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.lib.math.MathStuff;
+import org.orecruncher.dsurround.runtime.audio.FixedFilter;
 
 @SuppressWarnings("unused")
 public interface ISoundFactory {
@@ -32,7 +34,15 @@ public interface ISoundFactory {
      * Creates an attenuated sound instance that is attached to the entity and will move as the entity moves. The
      * provided factor scales the sound volume. The sound instance is not repeated.
      */
-    EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale);
+    default EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale) {
+        return this.attachToEntity(entity, volumeScale, 1F, null);
+    }
+
+    /**
+     * As {@link #attachToEntity(Entity, float)}, its pitch scaled as well, and with a fixed filter of its own if given
+     * ({@link FilteredEntitySoundInstance})
+     */
+    EntityBoundSoundInstance attachToEntity(Entity entity, float volumeScale, float pitchScale, @Nullable FixedFilter filter);
 
     /**
      * Whether, as a biome's ambient loop, it plays as loud as the wind blows: wind sounds
