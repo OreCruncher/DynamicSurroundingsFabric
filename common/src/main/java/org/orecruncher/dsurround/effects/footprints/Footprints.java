@@ -162,14 +162,15 @@ public final class Footprints {
     /**
      * Leaves a print.
      *
-     * @param y      the top of the ground as it is drawn
-     * @param ground the block it is pressed into
-     * @param state  that block; in snow prints last longer
+     * @param y           the top of the ground as it is drawn
+     * @param ground      the block it is pressed into
+     * @param state       that block; in snow prints last longer
+     * @param snowCovered whether a seasons mod draws snow on top of it, which counts as snow
      */
     void add(Level level, double x, double y, double z, float yawDegrees, float scale, FootprintStyle style,
-             boolean rightFoot, BlockPos ground, BlockState state) {
+             boolean rightFoot, BlockPos ground, BlockState state, boolean snowCovered) {
         this.add(level, x, y, z, yawDegrees, scale, style, rightFoot, ground, state,
-                state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE, 0xFFFFFF, 1F, false);
+                snowCovered || state.is(BlockTags.SNOW) ? SNOW_LIFE : LIFE, 0xFFFFFF, 1F, false);
     }
 
     /**
@@ -212,7 +213,7 @@ public final class Footprints {
      * How soaked the ground at a place is by the rain falling on it now, 0 to 1
      */
     float wetness(Level level, BlockPos pos) {
-        return this.weather.rainLevel(level.getRainLevel(1F)) * openToRain(level, pos);
+        return this.weather.precipitationLevel(level.getRainLevel(1F)) * openToRain(level, pos);
     }
 
     /**
@@ -222,7 +223,7 @@ public final class Footprints {
         this.inLevel(level);
         if (this.prints.isEmpty())
             return;
-        float rain = this.weather.rainLevel(level.getRainLevel(1F));
+        float rain = this.weather.precipitationLevel(level.getRainLevel(1F));
         boolean check = --this.untilCheck <= 0;
         if (check)
             this.untilCheck = CHECK_INTERVAL;

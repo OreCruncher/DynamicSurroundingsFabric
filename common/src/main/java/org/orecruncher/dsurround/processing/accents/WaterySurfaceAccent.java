@@ -71,7 +71,7 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
                 // Get the precipitation type at the location
                 var precipitation = world.getBiome(up).value().getPrecipitationAt(up, world.getSeaLevel());
                 if (precipitation == Biome.Precipitation.RAIN) {
-                    var rainLevel = this.weatherSimulation.rainLevel(world.getRainLevel(1F));
+                    var rainLevel = this.weatherSimulation.precipitationLevel(world.getRainLevel(1F));
                     volumeScale = rainVolume(rainLevel);
                     addAcoustic = Randomizer.current().nextFloat() < splashChance(rainLevel);
                 }

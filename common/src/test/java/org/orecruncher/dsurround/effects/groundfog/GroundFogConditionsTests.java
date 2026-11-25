@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.effects.groundfog;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.VanillaSun;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,29 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class GroundFogConditionsTests {
 
-    // data/minecraft/timeline/day.json: the sun's angle runs 0 to 360 degrees from noon (6000) to noon, eased by this
-    // cubic Bézier
-    private static final double X1 = 0.362, Y1 = 0.241, X2 = 0.638, Y2 = 0.759;
-
-    private static double bezier(double t, double p1, double p2) {
-        double u = 1 - t;
-        return 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t;
-    }
-
     /**
      * The sun's angle at a time of vanilla's day, in ticks, as its timeline gives it
      */
     static float sun(long ticks) {
-        double progress = Math.floorMod(ticks - 6000, 24000L) / 24000.0;
-        double lo = 0, hi = 1;
-        for (int i = 0; i < 60; i++) {
-            double mid = (lo + hi) / 2;
-            if (bezier(mid, X1, X2) < progress)
-                lo = mid;
-            else
-                hi = mid;
-        }
-        return (float) (360 * bezier((lo + hi) / 2, Y1, Y2));
+        return VanillaSun.angle(ticks);
     }
 
     @Test

@@ -21,6 +21,7 @@ import org.orecruncher.dsurround.effects.entity.EntityEffectBase;
 import org.orecruncher.dsurround.effects.entity.EntityEffectInfo;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.compat.IrisCompat;
+import org.orecruncher.dsurround.lib.seasons.ISeasonalInformation;
 import org.orecruncher.dsurround.tags.EntityEffectTags;
 
 /**
@@ -62,6 +63,7 @@ public class FootprintEffect extends EntityEffectBase {
     private final IBlockLibrary blockLibrary;
     private final ITagLibrary tagLibrary;
     private final Footprints footprints;
+    private final ISeasonalInformation seasons;
     private final StrideTracker strides = new StrideTracker();
     private final CarriedGround carried = new CarriedGround();
     private float carriedStrength;
@@ -69,11 +71,13 @@ public class FootprintEffect extends EntityEffectBase {
     private @Nullable FootprintStyle style;
     private float sizeBoost = 1F;
 
-    public FootprintEffect(Configuration.EntityEffects config, IBlockLibrary blockLibrary, ITagLibrary tagLibrary, Footprints footprints) {
+    public FootprintEffect(Configuration.EntityEffects config, IBlockLibrary blockLibrary, ITagLibrary tagLibrary, Footprints footprints,
+                           ISeasonalInformation seasons) {
         this.config = config;
         this.blockLibrary = blockLibrary;
         this.tagLibrary = tagLibrary;
         this.footprints = footprints;
+        this.seasons = seasons;
     }
 
     @Override
@@ -156,20 +160,23 @@ public class FootprintEffect extends EntityEffectBase {
         double z = entity.getZ() - Math.sin(radians) * side;
         double feet = entity.getY();
 
-        // The block the feet sink into (a snow layer, soul sand), else the one they stand on
+        // The block the feet sink into (a snow layer, soul sand), else the one they stand on. A seasons mod's cover of
+        // snow on it (Ecliptic Seasons') makes it snow to the feet.
         var level = entity.level();
         var ground = BlockPos.containing(x, feet, z);
         var state = level.getBlockState(ground);
-        double top = this.surface(level, ground, state, feet);
+        boolean snowCovered = this.seasons.isSnowCovered(ground, state);
+        double top = this.surface(level, ground, state, feet, snowCovered);
         if (Double.isNaN(top)) {
             ground = BlockPos.containing(x, feet - PROBE, z);
             state = level.getBlockState(ground);
-            top = this.surface(level, ground, state, feet);
+            snowCovered = this.seasons.isSnowCovered(ground, state);
+            top = this.surface(level, ground, state, feet, snowCovered);
         }
 
         float scale = scaleFor(width) * this.sizeBoost;
         boolean pressed = !Double.isNaN(top);
-        var carrying = this.config.enableTrackedFootprints ? this.step(level, ground, state) : null;
+        var carrying = this.config.enableTrackedFootprints ? this.step(level, ground, state, snowCovered) : null;
         if (carrying != null && (!pressed || carrying.showsOnSoftGround())) {
             float strength = this.carriedStrength;
             if (!pressed)
@@ -177,7 +184,7 @@ public class FootprintEffect extends EntityEffectBase {
             if (!Double.isNaN(top))
                 this.footprints.addTracked(level, x, top, z, yaw, scale, style, rightFoot, ground, state, carrying, strength);
         } else if (pressed) {
-            this.footprints.add(level, x, top, z, yaw, scale, style, rightFoot, ground, state);
+            this.footprints.add(level, x, top, z, yaw, scale, style, rightFoot, ground, state, snowCovered);
         }
     }
 
@@ -186,9 +193,9 @@ public class FootprintEffect extends EntityEffectBase {
      *
      * @return what this step tracks onto it, null if nothing ({@link #carriedStrength} says how much)
      */
-    private @Nullable TrackedGround step(Level level, BlockPos pos, BlockState state) {
+    private @Nullable TrackedGround step(Level level, BlockPos pos, BlockState state, boolean snowCovered) {
         var carrying = this.carried.ground();
-        var picked = this.pickedUp(level, pos, state);
+        var picked = this.pickedUp(level, pos, state, snowCovered);
         if (picked != null && replaces(picked, carrying)) {
             this.carried.pickUp(picked);
             // Soaked ground is mud to look at too; mud itself takes a print as any soft ground does
@@ -212,12 +219,14 @@ public class FootprintEffect extends EntityEffectBase {
     }
 
     /**
-     * What feet pick up from a block, if anything
+     * What feet pick up from a block, if anything: snow from a seasons mod's cover of it
      */
-    private @Nullable TrackedGround pickedUp(Level level, BlockPos pos, BlockState state) {
+    private @Nullable TrackedGround pickedUp(Level level, BlockPos pos, BlockState state, boolean snowCovered) {
         var info = this.blockLibrary.getBlockInfo(state);
         if (info.tracks() != null)
             return info.tracks();
+        if (snowCovered)
+            return TrackedGround.SNOW;
         if (info.tracksMudWhenWet() && this.footprints.wetness(level, pos.above()) >= MUDDY_WETNESS)
             return TrackedGround.MUD;
         return null;
@@ -234,16 +243,21 @@ public class FootprintEffect extends EntityEffectBase {
     }
 
     /**
-     * Where a print goes on a block the feet are on or in, if it takes prints; NaN if it doesn't or they aren't
+     * Where a print goes on a block the feet are on or in, if it takes prints; NaN if it doesn't or they aren't. A
+     * block under a seasons mod's cover of snow takes them whatever it is, on top of the cover.
+     *
+     * @param snowCovered whether a seasons mod draws snow on top of it ({@link ISeasonalInformation#isSnowCovered})
      */
-    private double surface(Level level, BlockPos pos, BlockState state, double feet) {
-        if (!this.blockLibrary.getBlockInfo(state).takesFootprints())
+    private double surface(Level level, BlockPos pos, BlockState state, double feet, boolean snowCovered) {
+        if (!snowCovered && !this.blockLibrary.getBlockInfo(state).takesFootprints())
             return Double.NaN;
         var collision = state.getCollisionShape(level, pos);
         var drawn = state.getShape(level, pos);
         double y = pos.getY();
         double standsAt = collision.isEmpty() ? y : y + collision.max(Direction.Axis.Y);
         double drawnTop = drawn.isEmpty() ? standsAt : y + drawn.max(Direction.Axis.Y);
+        if (snowCovered)
+            drawnTop += ISeasonalInformation.SNOW_COVER;
         return printHeight(feet, standsAt, drawnTop);
     }
 

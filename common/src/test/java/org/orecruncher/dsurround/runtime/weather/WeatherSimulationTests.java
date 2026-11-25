@@ -274,4 +274,42 @@ public class WeatherSimulationTests {
         assertEquals(1F, sim.rainLevel(1F));
         assertEquals(1F, sim.intensity());
     }
+
+    @Test
+    void aSeasonsLighterRainCapsWhatFallsNotTheStorm() {
+        var sim = simulation(false, 10, 20);
+        sim.update(1F, 7, 0L);
+        // Ecliptic Seasons' light rain, the first since joining, taken as it is
+        sim.updateSeasonalCap(0.35F);
+
+        assertEquals(0.35F, sim.precipitationLevel(1F), 1e-6F);
+        assertEquals(0.2F, sim.precipitationLevel(0.2F), 1e-6F, "a weaker storm falls as it is");
+        assertEquals(1F, sim.rainLevel(1F), 1e-6F, "the storm itself, for the sky, clouds and wind");
+        assertTrue(sim.diagnosticText().contains("season cap 0.35"), sim.diagnosticText());
+    }
+
+    @Test
+    void theSeasonalCapEasesOnceTaken() {
+        var sim = simulation(false, 10, 20);
+        sim.updateSeasonalCap(1F);
+        sim.updateSeasonalCap(0.35F);
+        assertEquals(1F - WeatherSimulation.CAP_STEP, sim.seasonalCap(), 1e-6F);
+
+        int ticks = 1;
+        while (sim.seasonalCap() > 0.35F + 1e-6F && ticks < 1000) {
+            sim.updateSeasonalCap(0.35F);
+            ticks++;
+        }
+        assertEquals(0.35F, sim.seasonalCap(), 1e-6F);
+        assertTrue(ticks >= 60 && ticks <= 70, "a few seconds, not a snap: " + ticks);
+    }
+
+    @Test
+    void aBadSeasonalCapIsFullRain() {
+        var sim = simulation(false, 10, 20);
+        sim.updateSeasonalCap(Float.NaN);
+        assertEquals(1F, sim.seasonalCap());
+        sim.updateSeasonalCap(5F);
+        assertEquals(1F, sim.seasonalCap());
+    }
 }

@@ -151,7 +151,7 @@ public class GroundFogHandler extends AbstractClientHandler {
         // The time of day (by the sun), the wind, rain, and whether the player is out in it; all of it when set by command
         if (Float.isNaN(this.forced)) {
             var exposure = Shelter.exposure(level, BlockPos.containing(player.getEyePosition()));
-            var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
+            var rainLevel = this.weatherSimulation.precipitationLevel(level.getRainLevel(1F));
             var windPercent = Wind.percentOfFullStorm(this.windService.steadySpeed());
             this.target = GroundFogConditions.strength(DayCycle.getCelestialAngle(level, player.position()), windPercent, rainLevel, exposure);
         } else {

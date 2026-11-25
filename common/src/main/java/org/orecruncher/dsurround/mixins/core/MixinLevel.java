@@ -16,7 +16,7 @@ public class MixinLevel {
      * The storm's strength in place of the world's rain level while vanilla's rain is ticked (see
      * MixinHelpers.rainTickThread): how many splashes, and the rain sound. Only then, and only on the thread ticking it:
      * the sky, isRaining() and everything else reading the level, the server among them, are left alone. Drawn rain is
-     * in MixinWeatherEffectRenderer.
+     * in MixinWeatherEffectRenderer. Not scaled by a season's lighter rain: Ecliptic Seasons scales this level itself.
      */
     @ModifyReturnValue(method = "getRainLevel(F)F", at = @At("RETURN"), require = 0)
     private float dsurround$stormRainLevelTicked(float vanillaLevel) {

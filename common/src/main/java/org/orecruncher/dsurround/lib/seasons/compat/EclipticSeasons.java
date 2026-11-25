@@ -6,9 +6,13 @@ package org.orecruncher.dsurround.lib.seasons.compat;
 import com.teamtea.eclipticseasons.api.EclipticSeasonsApi;
 import com.teamtea.eclipticseasons.api.constant.solar.Season;
 import com.teamtea.eclipticseasons.api.util.EclipticUtil;
+import com.teamtea.eclipticseasons.api.util.WeatherUtil;
+import com.teamtea.eclipticseasons.config.ClientConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.eventing.IClientTickStart;
 import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.function.CachingSupplier;
@@ -34,6 +38,10 @@ public class EclipticSeasons extends AbstractSeasonProvider {
     private final CachingSupplier<Season.Sub> subSeasonCache;
     // Set once EclipticUtil.getTemperatureFloat is found missing (see temperatureAt)
     private volatile boolean temperatureHookBroken;
+    // Set once WeatherUtil.getWeatherEffectByEntity is found missing (see getRainCap)
+    private boolean rainCapHookBroken;
+    // Set once its client config's weather switch is found missing (see lighterRainOn)
+    private boolean rainSwitchHookBroken;
 
     public EclipticSeasons(ILevelOracle levelOracle) {
         super("Ecliptic Seasons", levelOracle);
@@ -157,6 +165,59 @@ public class EclipticSeasons extends AbstractSeasonProvider {
     @Override
     protected boolean precipitates(BlockPos blockPos) {
         return this.precipitationAt(blockPos) != Biome.Precipitation.NONE;
+    }
+
+    /**
+     * The amount Ecliptic Seasons' weather effect gives the rain where the camera is, as its own client reads it for
+     * vanilla's rain (light rain 0.35, moderate 0.45 in its solar terms' data): {@code WeatherUtil}, in its API package
+     * but not on the interface. Its client multiplies vanilla's rain level by it, which is nearly always 1 while it
+     * rains, so here it caps the storm. Only while its client config's {@code TweakPrecipitationParticleTexture} is
+     * on, as its own client does. Should a version move it, that is logged once and the rain is left at full from then on.
+     */
+    @Override
+    public float getRainCap() {
+        if (this.rainCapHookBroken || !this.hasSeasons() || !this.lighterRainOn())
+            return 1F;
+        var camera = Minecraft.getInstance().getCameraEntity();
+        if (camera == null)
+            return 1F;
+        try {
+            var effect = WeatherUtil.getWeatherEffectByEntity(camera);
+            return effect != null && effect.shouldChangeAmount(true) ? effect.getModifiedAmount(1F, true) : 1F;
+        } catch (LinkageError e) {
+            this.rainCapHookBroken = true;
+            Library.LOGGER.error(e, "Ecliptic Seasons' weather effects aren't there in this version: its lighter rain will fall at full");
+            return 1F;
+        }
+    }
+
+    /**
+     * Whether Ecliptic Seasons' client applies its lighter rain: {@code TweakPrecipitationParticleTexture} in the
+     * {@code Weather} section of its client config (on by default). On if it can't be read: before the config loads, or,
+     * logged once, should a version move it.
+     */
+    private boolean lighterRainOn() {
+        if (this.rainSwitchHookBroken)
+            return true;
+        try {
+            var setting = ClientConfig.Weather.tweakPrecipitationParticleTexture;
+            return setting == null || setting.get();
+        } catch (LinkageError e) {
+            this.rainSwitchHookBroken = true;
+            Library.LOGGER.error(e, "Ecliptic Seasons' weather setting isn't there in this version: its lighter rain applies whatever it is set to");
+            return true;
+        } catch (IllegalStateException e) {
+            // Its config isn't loaded yet
+            return true;
+        }
+    }
+
+    /**
+     * Its snowy winter's cover on top of a block (grass, leaves...), which it draws without changing the block
+     */
+    @Override
+    public boolean isSnowCovered(BlockPos blockPos, BlockState state) {
+        return this.hasSeasons() && api().isSnowyBlock(this.level(), state, blockPos);
     }
 
     @Override

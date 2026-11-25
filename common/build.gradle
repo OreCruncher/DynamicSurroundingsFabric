@@ -18,6 +18,8 @@ dependencies {
     implementation "com.github.glitchfiend:SereneSeasons-fabric:${minecraft_version}-${rootProject.serene_seasons_version}"
     // Ecliptic Seasons' API (lib/seasons/compat/EclipticSeasons): the same on both loaders, so the Fabric jar serves
     compileOnly "maven.modrinth:ecliptic-seasons-fabricated:${rootProject.ecliptic_seasons_fabric_version}"
+    // NeoForge's ModConfigSpec, which Forge Config API Port gives it on Fabric: one of its client settings is read
+    compileOnly "maven.modrinth:forge-config-api-port:${rootProject.forge_config_api_port_fabric_version}"
 
     // Referencing the Fabric project for API
     api("me.shedaniel.cloth:cloth-config-fabric:${rootProject.clothapi_version}") {

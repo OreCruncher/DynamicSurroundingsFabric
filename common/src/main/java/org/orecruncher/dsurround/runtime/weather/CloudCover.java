@@ -56,6 +56,19 @@ public record CloudCover(float coverage, float baseDrop, float minThickness, flo
     static final float FAIR_LEAST = 0.15F;
     static final float FAIR_MOST = 0.6F;
 
+    /**
+     * Times of day for fair weather clouds, as the sun's angle in degrees (0 at noon, 180 at midnight): building up
+     * from {@link #BUILDS_FROM}, highest at {@link #BUILT_AT}, settled by {@link #SETTLED_AT}. By the sun, not the
+     * clock, so they keep to the afternoon where a mod changes how long the day is (Ecliptic Seasons' short winter days
+     * peaked near sunset by the clock). With vanilla's day these are where its sun is at 1000, 8000 and 14000 ticks
+     * (7 am, 2 pm and 8 pm), when they always built and settled.
+     */
+    static final float BUILDS_FROM = 297.55F;
+    static final float BUILT_AT = 22.06F;
+    static final float SETTLED_AT = 110.04F;
+    // How built up they are through the night
+    static final float NIGHT_CONVECTION = 0.1F;
+
     public static final CloudCover CLEAR = new CloudCover(0F, 0F, FLAT, FLAT, 0F, 0F);
 
     /**
@@ -63,18 +76,18 @@ public record CloudCover(float coverage, float baseDrop, float minThickness, flo
      *
      * @param rainLevel the storm's strength, 0 to 1 (see {@link IWeatherSimulation#rainLevel})
      * @param thunder   the thunder level, 0 to 1
-     * @param dayTime   the level's time of day, in ticks
+     * @param sunAngle  the sun's angle, in degrees: 0 at noon, 180 at midnight (the environment attribute's)
      * @param downfall  the biome's downfall, 0 (a desert) to 1 (a jungle)
      * @param dayCover  how cloudy the day is, 0 to 1 (see {@link #dayCover})
      */
-    public static CloudCover of(float rainLevel, float thunder, long dayTime, float downfall, float dayCover) {
+    public static CloudCover of(float rainLevel, float thunder, float sunAngle, float downfall, float dayCover) {
         rainLevel = Mth.clamp(rainLevel, 0F, 1F);
         thunder = Mth.clamp(thunder, 0F, 1F);
         float wet = Mth.clamp(downfall, 0F, 1F);
 
         // Fair weather: more clouds on cloudy days and in wet places, building up through the afternoon
         float fairCoverage = Mth.clamp(Mth.lerp(dayCover, FAIR_LEAST, FAIR_MOST) * Mth.lerp(wet, 0.6F, 1.2F), 0F, 1F);
-        float building = convection(dayTime) * Mth.lerp(wet, 0.4F, 1F);
+        float building = convection(sunAngle) * Mth.lerp(wet, 0.4F, 1F);
         float fairMax = FLAT + (FAIR_TOWER - FLAT) * building;
 
         // A storm closes them over, lowers their base and thickens them; thunder raises towers above the deck
@@ -93,16 +106,20 @@ public record CloudCover(float coverage, float baseDrop, float minThickness, flo
     /**
      * How far fair weather clouds have built up for the time of day, 0 to 1: little at night, rising through the
      * morning to the most in the afternoon, and settling through the evening
+     *
+     * @param sunAngle the sun's angle, in degrees, as {@link #of} takes it
      */
-    static float convection(long dayTime) {
-        // 0 is sunrise (6 am); 8000 is 2 pm
-        float hours = Math.floorMod(dayTime, 24000L) / 1000F;
-        float night = 0.1F;
-        if (hours < 1F || hours >= 14F)
-            return night;
-        if (hours < 8F)
-            return Mth.lerp(smoothstep((hours - 1F) / 7F), night, 1F);
-        return Mth.lerp(smoothstep((hours - 8F) / 6F), 1F, night);
+    static float convection(float sunAngle) {
+        // How far the sun has come since they began to build, through noon
+        float since = sunAngle - BUILDS_FROM;
+        since -= 360F * Mth.floor(since / 360F);
+        float rising = BUILT_AT + 360F - BUILDS_FROM;
+        float settling = SETTLED_AT - BUILT_AT;
+        if (since < rising)
+            return Mth.lerp(smoothstep(since / rising), NIGHT_CONVECTION, 1F);
+        if (since < rising + settling)
+            return Mth.lerp(smoothstep((since - rising) / settling), 1F, NIGHT_CONVECTION);
+        return NIGHT_CONVECTION;
     }
 
     /**

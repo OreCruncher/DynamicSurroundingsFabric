@@ -78,7 +78,7 @@ public class VariableTests {
     void biomeRulesSeeTheBiomesOwnPrecipitation() {
         // Regression: biome rules looked precipitation up where the player stood when the libraries reloaded, so
         // altitude (or being at the menu) changed what a rule decided
-        var variables = BiomeVariables.forBiomeRules(null);
+        var variables = BiomeVariables.forBiomeRules(null, Biome::hasPrecipitation);
 
         variables.setBiome(biome(true, 0.8F), null);
         assertEquals("RAIN", variables.getPrecipitationType());
@@ -94,13 +94,16 @@ public class VariableTests {
     void biomeRulePrecipitationNeedsNoWorld() {
         // Seasons mods change Biome.getPrecipitationAt() to read the client's level, which isn't there at the menu
         // (or in this test, which has Serene Seasons on the classpath). Rules work from the biome alone.
-        assertDoesNotThrow(() -> BiomeVariables.biomePrecipitation(biome(true, 0.8F)));
+        var variables = BiomeVariables.forBiomeRules(null, Biome::hasPrecipitation);
+        variables.setBiome(biome(true, 0.8F), null);
+        assertDoesNotThrow(variables::getPrecipitationType);
     }
 
     @Test
     void rainThresholdMatchesVanilla() {
-        assertEquals(Biome.Precipitation.RAIN, BiomeVariables.biomePrecipitation(biome(true, 0.15F)));
-        assertEquals(Biome.Precipitation.SNOW, BiomeVariables.biomePrecipitation(biome(true, 0.14F)));
+        assertEquals(Biome.Precipitation.RAIN, BiomeVariables.biomePrecipitation(true, 0.15F));
+        assertEquals(Biome.Precipitation.SNOW, BiomeVariables.biomePrecipitation(true, 0.14F));
+        assertEquals(Biome.Precipitation.NONE, BiomeVariables.biomePrecipitation(false, 0.8F));
     }
 
     @Test

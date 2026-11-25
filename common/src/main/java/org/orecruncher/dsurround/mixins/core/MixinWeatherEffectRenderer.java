@@ -18,7 +18,8 @@ public class MixinWeatherEffectRenderer {
      * The storm's strength in place of the world's rain level where the rain and snow are set up for drawing (how
      * opaque they are). The world's level itself is left alone, so the sky, isRaining() and everything else reading it
      * are unchanged. Ticked rain is in MixinClientLevel. A dimension that draws its own weather (NeoForge) is left to
-     * it before this is read.
+     * it before this is read. Not scaled by a season's lighter rain: Ecliptic Seasons gives vanilla's drawing a thinner
+     * texture for it, which is lighter already.
      */
     @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/client/multiplayer/ClientLevel;FLnet/minecraft/world/phys/Vec3;Lnet/minecraft/client/renderer/state/level/WeatherRenderState;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)

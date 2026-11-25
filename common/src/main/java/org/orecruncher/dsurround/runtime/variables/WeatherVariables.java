@@ -61,8 +61,9 @@ public final class WeatherVariables extends VariableSet {
     public void tick() {
         if (GameUtils.isInGame()) {
             final var player = GameUtils.getPlayer().orElseThrow();
-            // The storm's strength. Whether it is raining at all is the world's: a light storm is still rain.
-            this.rainIntensity = this.weatherSimulation.rainLevel(this.levelOracle.getRainLevel());
+            // How much falls: the storm's strength, no heavier than a season's lighter rain. Whether it is raining at
+            // all is the world's: a light storm is still rain.
+            this.rainIntensity = this.weatherSimulation.precipitationLevel(this.levelOracle.getRainLevel());
             this.thunderIntensity = this.levelOracle.getThunderLevel();
             this.isRaining = this.levelOracle.isRaining();
             this.isThundering = this.levelOracle.isThundering();

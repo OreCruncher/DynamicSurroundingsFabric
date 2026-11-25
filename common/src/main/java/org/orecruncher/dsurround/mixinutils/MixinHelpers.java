@@ -101,10 +101,6 @@ public class MixinHelpers {
     }
 
     /**
-     * The storm's strength in place of the world's rain level, where vanilla draws and ticks its rain and snow. The
-     * game's level, if working it out fails. Read a few times a frame and a tick: no lambda.
-     */
-    /**
      * Whether vanilla's rain is being ticked, on this thread (see {@link #rainTickThread})
      */
     public static boolean inRainTick() {
@@ -112,9 +108,28 @@ public class MixinHelpers {
         return thread != null && thread == Thread.currentThread();
     }
 
+    /**
+     * The storm's strength in place of the world's rain level, where vanilla ticks its rain and snow. Not scaled by a
+     * season's lighter rain: Ecliptic Seasons scales the tick's level and its rain sound itself. The game's level, if
+     * working it out fails. Read a few times a tick: no lambda.
+     */
     public static float stormRainLevel(float vanillaLevel) {
         try {
             return weatherSimulation().rainLevel(vanillaLevel);
+        } catch (Throwable t) {
+            STORM_RAIN_LEVEL_GUARD.failed(t);
+            return vanillaLevel;
+        }
+    }
+
+    /**
+     * How much falls, in place of the world's rain level, where vanilla draws its rain and snow and thickens its rain
+     * fog: the storm's strength, no heavier than a season's lighter rain (see IWeatherSimulation.precipitationLevel). The
+     * game's level, if working it out fails. Read a few times a frame: no lambda.
+     */
+    public static float fallingRainLevel(float vanillaLevel) {
+        try {
+            return weatherSimulation().precipitationLevel(vanillaLevel);
         } catch (Throwable t) {
             STORM_RAIN_LEVEL_GUARD.failed(t);
             return vanillaLevel;

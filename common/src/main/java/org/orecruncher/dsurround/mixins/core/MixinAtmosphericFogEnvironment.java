@@ -26,11 +26,12 @@ public class MixinAtmosphericFogEnvironment {
 
     /**
      * The storm's strength in place of the world's rain level for the game's own rain fog, which closes in out in the
-     * open (the mod's weather fog adds only a dust storm's): a light storm thickens it less than a downpour.
+     * open (the mod's weather fog adds only a dust storm's): a light storm thickens it less than a downpour, and so does
+     * a season's lighter rain.
      */
     @ModifyExpressionValue(method = "updateRainFogState(Lnet/minecraft/client/Camera;Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/DeltaTracker;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"), require = 0)
     private float dsurround$stormRainFog(float vanillaLevel) {
-        return MixinHelpers.stormRainLevel(vanillaLevel);
+        return MixinHelpers.fallingRainLevel(vanillaLevel);
     }
 }

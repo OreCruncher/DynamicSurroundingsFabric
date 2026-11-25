@@ -3,6 +3,7 @@
 
 package org.orecruncher.dsurround.runtime.variables;
 
+import dev.architectury.hooks.level.biome.BiomeHooks;
 import net.minecraft.world.level.biome.Biome;
 import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -15,6 +16,7 @@ import org.orecruncher.dsurround.lib.scripting.VariableSet;
 import org.orecruncher.dsurround.lib.scripting.IConfigureDefinition;
 
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public final class BiomeVariables extends VariableSet {
 
@@ -60,17 +62,38 @@ public final class BiomeVariables extends VariableSet {
      * to be when the libraries reload, or at the main menu.
      */
     public static BiomeVariables forBiomeRules(IBiomeLibrary biomeLibrary) {
-        return new BiomeVariables(biomeLibrary, BiomeVariables::biomePrecipitation);
+        return forBiomeRules(biomeLibrary, BiomeVariables::climateHasPrecipitation);
     }
 
     /**
-     * What falls in the biome itself, from its own settings, the way vanilla decides at sea level. Doesn't call
-     * Biome.getPrecipitationAt(): seasons mods change that to read the current world, which there may not be.
+     * As {@link #forBiomeRules(IBiomeLibrary)}, with whether a biome has precipitation at all read by the given test.
+     * Tests give it vanilla's Biome.hasPrecipitation(), as Architectury's reading of the climate settings needs its
+     * access widener, which only the game applies.
      */
-    static Biome.Precipitation biomePrecipitation(Biome biome) {
-        if (!biome.hasPrecipitation())
+    static BiomeVariables forBiomeRules(IBiomeLibrary biomeLibrary, Predicate<Biome> hasPrecipitation) {
+        return new BiomeVariables(biomeLibrary, biome -> biomePrecipitation(hasPrecipitation.test(biome), biome.getBaseTemperature()));
+    }
+
+    /**
+     * Whether the biome has precipitation at all, from its climate settings, as the biome traits read them
+     * (BiomeEvidence). Not Biome.hasPrecipitation(): Ecliptic Seasons answers that from a climate tag of its own, which
+     * says no rain anywhere until its tags are bound.
+     */
+    private static boolean climateHasPrecipitation(Biome biome) {
+        return BiomeHooks.getBiomeProperties(biome).getClimateProperties().hasPrecipitation();
+    }
+
+    /**
+     * What falls in a biome itself, from its own settings, the way vanilla decides at sea level. Doesn't call
+     * Biome.getPrecipitationAt(): seasons mods change that to read the current world, which there may not be.
+     *
+     * @param hasPrecipitation whether the biome's climate has precipitation at all
+     * @param baseTemperature  the biome's own temperature
+     */
+    static Biome.Precipitation biomePrecipitation(boolean hasPrecipitation, float baseTemperature) {
+        if (!hasPrecipitation)
             return Biome.Precipitation.NONE;
-        return biome.getBaseTemperature() >= RAIN_TEMPERATURE ? Biome.Precipitation.RAIN : Biome.Precipitation.SNOW;
+        return baseTemperature >= RAIN_TEMPERATURE ? Biome.Precipitation.RAIN : Biome.Precipitation.SNOW;
     }
 
     @Override

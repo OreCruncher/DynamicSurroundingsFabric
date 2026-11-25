@@ -15,6 +15,7 @@ import org.orecruncher.dsurround.eventing.ICollectDiagnostics;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.random.Mixers;
 import org.orecruncher.dsurround.lib.random.Randomizer;
+import org.orecruncher.dsurround.lib.seasons.SeasonManager;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -31,6 +32,11 @@ public final class WeatherSimulation implements IWeatherSimulation {
     static final int SURGE_TICKS = 600;
     // A storm's maximum is never quite nothing, so a storm still shows
     static final float MIN_STORM_LEVEL = 0.01F;
+    /**
+     * How far the season's cap on what falls moves toward the season's a tick: across a light rain's change from a
+     * full one (0.65) in about three seconds, so crossing a biome's edge or a solar term doesn't snap the rain
+     */
+    static final float CAP_STEP = 0.01F;
 
     private final Configuration.WeatherOptions options;
 
@@ -48,6 +54,10 @@ public final class WeatherSimulation implements IWeatherSimulation {
     // Whether this storm has thundered, and whether its thunder has since ended: from then on it only winds down
     private boolean thundered;
     private boolean waning;
+    // The season's cap on what falls, eased (see precipitationLevel); read from the render and sound threads
+    private volatile float seasonalCap = 1F;
+    // Whether the cap has been taken since joining: the first one is taken as it is, not eased into
+    private boolean seasonalCapTaken;
 
     public WeatherSimulation(Configuration.WeatherOptions options) {
         this.options = options;
@@ -56,6 +66,8 @@ public final class WeatherSimulation implements IWeatherSimulation {
         IClientDisconnect.EVENT.register(client -> {
             this.reset();
             this.clearStrength();
+            this.seasonalCap = 1F;
+            this.seasonalCapTaken = false;
         });
         ICollectDiagnostics.EVENT.register(this::gatherDiagnostics);
     }
@@ -66,6 +78,16 @@ public final class WeatherSimulation implements IWeatherSimulation {
         if (!Float.isNaN(this.strengthSet))
             return Math.min(vanillaLevel, this.strengthSet);
         return this.options.storms.enableStormSimulation ? Math.min(vanillaLevel, this.cap) : vanillaLevel;
+    }
+
+    @Override
+    public float precipitationLevel(float vanillaLevel) {
+        return Math.min(this.rainLevel(vanillaLevel), this.seasonalCap);
+    }
+
+    @Override
+    public float seasonalCap() {
+        return this.seasonalCap;
     }
 
     @Override
@@ -118,6 +140,7 @@ public final class WeatherSimulation implements IWeatherSimulation {
             var world = level.get();
             this.update(world.getRainLevel(1F), world.getThunderLevel(1F), world.getDefaultClockTime() / SharedConstants.TICKS_PER_GAME_DAY,
                     world.getGameTime());
+            this.updateSeasonalCap(SeasonManager.HANDLER.getRainCap());
         } else {
             this.reset();
         }
@@ -163,6 +186,23 @@ public final class WeatherSimulation implements IWeatherSimulation {
             this.maxIntensity = this.cap = this.strengthSet;
         }
         this.intensity = this.rainLevel(vanillaLevel);
+    }
+
+    /**
+     * Moves the season's cap on what falls toward the season's, by {@link #CAP_STEP} a tick; the first since
+     * joining is taken as it is
+     *
+     * @param target the season's cap where the player is, 0 to 1
+     */
+    void updateSeasonalCap(float target) {
+        target = Float.isFinite(target) ? Mth.clamp(target, 0F, 1F) : 1F;
+        if (!this.seasonalCapTaken) {
+            this.seasonalCapTaken = true;
+            this.seasonalCap = target;
+        } else {
+            var current = this.seasonalCap;
+            this.seasonalCap = current + Mth.clamp(target - current, -CAP_STEP, CAP_STEP);
+        }
     }
 
     private void reset() {
@@ -224,7 +264,10 @@ public final class WeatherSimulation implements IWeatherSimulation {
         }
         if (set)
             text += String.format(Locale.ROOT, " (set to %.2f)", this.strengthSet);
-        return text + String.format(Locale.ROOT, " (vanilla %.2f)", this.vanillaLevel);
+        text += String.format(Locale.ROOT, " (vanilla %.2f)", this.vanillaLevel);
+        if (this.seasonalCap < 0.995F)
+            text += String.format(Locale.ROOT, " (season cap %.2f)", this.seasonalCap);
+        return text;
     }
 
     private void gatherDiagnostics(CollectDiagnosticsEvent event) {

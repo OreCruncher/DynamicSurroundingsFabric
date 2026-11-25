@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.effects.clouds;
 
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
+import org.orecruncher.dsurround.testing.VanillaSun;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -19,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CloudSectionsTests {
 
     private static final int RADIUS = 20;
-    private static final long AFTERNOON = 8000;
+    // 2 pm, by vanilla's sun
+    private static final float AFTERNOON = VanillaSun.angle(8000);
 
     /**
      * A vertex, without its change's start (which counts from a different tick in each)

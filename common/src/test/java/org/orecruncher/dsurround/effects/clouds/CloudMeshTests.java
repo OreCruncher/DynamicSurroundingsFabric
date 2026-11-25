@@ -6,6 +6,7 @@ package org.orecruncher.dsurround.effects.clouds;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
+import org.orecruncher.dsurround.testing.VanillaSun;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,7 @@ public class CloudMeshTests {
     @Test
     void everyQuadFacesOutOfItsCloud() {
         var field = new CloudField();
-        field.update(CloudCover.of(1F, 1F, 8000, 1F, 1F), 3, -2, 6, 2, 0.6F, 0.8F);
+        field.update(CloudCover.of(1F, 1F, VanillaSun.angle(8000), 1F, 1F), 3, -2, 6, 2, 0.6F, 0.8F);
         var vertices = build(field);
         assertFalse(vertices.isEmpty());
         for (int q = 0; q < vertices.size(); q += 4) {

@@ -88,7 +88,9 @@ public class MixinClientLevel {
      * come through here (Level.playLocalSound at a BlockPos calls this); each keeps vanilla's volume and pitch for where
      * it is, scaled. Only while vanilla's rain is ticked (see MixinHelpers.rainTickThread). With rain on surfaces, each
      * sound sounds like the block it plays on (RainSurface): through its filter where enhanced sound processing can set
-     * one, played as a RainSoundInstance that carries it, otherwise by volume and pitch alone.
+     * one, played as a RainSoundInstance that carries it, otherwise by volume and pitch alone. The mix follows how much
+     * falls (a season's lighter rain is a calmer rain); Ecliptic Seasons has already turned the volume handed in down
+     * for its lighter rain.
      */
     @Inject(method = "playLocalSound(DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FFZ)V", at = @At("HEAD"), cancellable = true, require = 0)
     private void dsurround$rainSound(double x, double y, double z, SoundEvent sound, SoundSource source, float volume, float pitch, boolean distanceDelay, CallbackInfo ci) {
@@ -106,7 +108,7 @@ public class MixinClientLevel {
             SoundEvent mediumRain;
             SoundEvent layer;
             try {
-                var rainLevel = MixinHelpers.weatherSimulation().rainLevel(level.getRainLevel(1F));
+                var rainLevel = MixinHelpers.weatherSimulation().precipitationLevel(level.getRainLevel(1F));
                 calm = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN);
                 mediumRain = MixinHelpers.SOUND_LIBRARY.getSound(StormSounds.RAIN_MEDIUM);
                 // Vanilla plays it at the center of the block the rain lands on (see RainSurface)

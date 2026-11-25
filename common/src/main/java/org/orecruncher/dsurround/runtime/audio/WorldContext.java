@@ -79,7 +79,7 @@ public final class WorldContext {
 
             this.submersion = Submersion.of(this.player);
 
-            this.precipitationStrength = WEATHER.get().rainLevel(this.world.getRainLevel(1F));
+            this.precipitationStrength = WEATHER.get().precipitationLevel(this.world.getRainLevel(1F));
             this.mc = GameUtils.getMC();
         } else {
             this.mc = null;

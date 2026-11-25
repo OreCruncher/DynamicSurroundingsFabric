@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.runtime.weather;
 
 import org.junit.jupiter.api.Test;
+import org.orecruncher.dsurround.testing.VanillaSun;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class CloudCoverTests {
 
-    // 2 pm and 2 am
-    private static final long AFTERNOON = 8000;
-    private static final long NIGHT = 20000;
+    // 2 pm and 2 am, by vanilla's sun
+    private static final float AFTERNOON = VanillaSun.angle(8000);
+    private static final float NIGHT = VanillaSun.angle(20000);
 
     @Test
     void fairWeatherCloudsBuildUpThroughTheAfternoon() {
@@ -29,13 +30,33 @@ public class CloudCoverTests {
 
     @Test
     void convectionChangesSmoothlyThroughTheDay() {
-        float last = CloudCover.convection(0);
+        float last = CloudCover.convection(VanillaSun.angle(0));
         for (long t = 50; t < 24000; t += 50) {
-            float now = CloudCover.convection(t);
+            float now = CloudCover.convection(VanillaSun.angle(t));
             assertTrue(Math.abs(now - last) < 0.05F, "a jump at " + t);
             last = now;
         }
-        assertEquals(CloudCover.convection(AFTERNOON), CloudCover.convection(AFTERNOON + 24000), 1e-6F);
+        // Angles past a full turn, or below 0, are the same time of day
+        assertEquals(CloudCover.convection(AFTERNOON), CloudCover.convection(AFTERNOON + 360F), 1e-6F);
+        assertEquals(CloudCover.convection(300F), CloudCover.convection(-60F), 1e-6F);
+    }
+
+    @Test
+    void theTimesAreVanillasTimes() {
+        // Where vanilla's sun is when the clouds used to start building, peak and settle, by the clock
+        assertEquals(VanillaSun.angle(1000), CloudCover.BUILDS_FROM, 0.01F);
+        assertEquals(VanillaSun.angle(8000), CloudCover.BUILT_AT, 0.01F);
+        assertEquals(VanillaSun.angle(14000), CloudCover.SETTLED_AT, 0.01F);
+        assertEquals(1F, CloudCover.convection(CloudCover.BUILT_AT), 1e-6F);
+        assertEquals(CloudCover.NIGHT_CONVECTION, CloudCover.convection(VanillaSun.angle(18000)), 1e-6F, "midnight");
+    }
+
+    @Test
+    void followsTheSunWhereTheDayIsShorter() {
+        // A short winter day (Ecliptic Seasons): near sunset the sun is far past where vanilla's is at 2 pm, so the
+        // clouds are settling, not at their height
+        float nearSunset = 80F;
+        assertTrue(CloudCover.convection(nearSunset) < 0.5F, "near sunset: " + CloudCover.convection(nearSunset));
     }
 
     @Test
@@ -86,7 +107,7 @@ public class CloudCoverTests {
         // The same for everyone
         assertEquals(day0, CloudCover.cloudinessOf(0));
         // Through the day, that day's; by the next sunrise, the next's; no jumps between
-        assertEquals(day0, CloudCover.dayCover(AFTERNOON - 4000), 1e-6F);
+        assertEquals(day0, CloudCover.dayCover(4000), 1e-6F);
         assertEquals(day1, CloudCover.dayCover(24000), 1e-6F);
         float last = CloudCover.dayCover(0);
         for (long t = 100; t < 48000; t += 100) {

@@ -83,7 +83,7 @@ public class WeatherFogRangeCalculator extends VanillaFogRangeCalculator {
         var world = GameUtils.getWorld().orElseThrow();
         var pos = BlockPos.containing(GameUtils.getPlayer().orElseThrow().getEyePosition());
         var biome = world.getBiome(pos).value();
-        var rainLevel = this.weatherSimulation.rainLevel(world.getRainLevel(1F));
+        var rainLevel = this.weatherSimulation.precipitationLevel(world.getRainLevel(1F));
         // Out in the weather: caves and buildings keep its fog out
         var exposure = Shelter.exposure(world, pos);
 

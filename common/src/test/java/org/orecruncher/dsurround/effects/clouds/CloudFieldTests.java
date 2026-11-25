@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.effects.clouds;
 
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
+import org.orecruncher.dsurround.testing.VanillaSun;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,7 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CloudFieldTests {
 
     private static final int RADIUS = 20;
-    private static final long AFTERNOON = 8000;
+    // 2 pm, by vanilla's sun
+    private static final float AFTERNOON = VanillaSun.angle(8000);
 
     private static CloudField fieldFor(CloudCover cover, int centerX, int centerZ, double time) {
         var field = new CloudField();

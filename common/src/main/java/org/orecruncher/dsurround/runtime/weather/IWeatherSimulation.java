@@ -21,6 +21,20 @@ public interface IWeatherSimulation {
     float rainLevel(float vanillaLevel);
 
     /**
+     * How much falls: {@link #rainLevel}, no heavier than the season's rain where the player is (a light rain in
+     * Ecliptic Seasons' solar terms, see {@link org.orecruncher.dsurround.lib.seasons.ISeasonalInformation#getRainCap}),
+     * eased as that changes. A weaker storm falls as it is. For the rain and snow, their sounds, their fog and what they wet. The sky, clouds and wind keep
+     * the storm's own strength, {@link #rainLevel}.
+     */
+    float precipitationLevel(float vanillaLevel);
+
+    /**
+     * The season's cap on what falls, eased, as {@link #precipitationLevel} applies it; 1 without a seasons mod that
+     * has lighter rain
+     */
+    float seasonalCap();
+
+    /**
      * The rain level as of the last tick, capped; 0 when it isn't raining
      */
     float intensity();

@@ -25,6 +25,7 @@ import org.orecruncher.dsurround.eventing.IWorldRender;
 import org.orecruncher.dsurround.lib.GameUtils;
 import org.orecruncher.dsurround.lib.logging.IModLog;
 import org.orecruncher.dsurround.lib.platform.FeatureConflict;
+import org.orecruncher.dsurround.lib.time.DayCycle;
 import org.orecruncher.dsurround.runtime.oracle.IDimensionOracle;
 import org.orecruncher.dsurround.runtime.weather.CloudCover;
 import org.orecruncher.dsurround.runtime.weather.IWeatherSimulation;
@@ -179,11 +180,13 @@ public class CloudHandler extends AbstractClientHandler {
         }
 
         // What the clouds are like for each step of a biome's wetness, and over the player
+        // (they build up by the sun, which a mod may move off the clock)
         long dayTime = level.getDefaultClockTime();
         float dayCover = CloudCover.dayCover(dayTime);
-        this.covers.prepare(level, this.rainLevel, this.thunder, dayTime, dayCover, held, this.dimensionInformation.seaLevel(),
+        float sunAngle = DayCycle.getCelestialAngle(level, player.position());
+        this.covers.prepare(level, this.rainLevel, this.thunder, sunAngle, dayCover, held, this.dimensionInformation.seaLevel(),
                 player.blockPosition());
-        var target = CloudCover.of(rain, thunder, dayTime, this.covers.playerWetness(), dayCover);
+        var target = CloudCover.of(rain, thunder, sunAngle, this.covers.playerWetness(), dayCover);
         this.targetCoverage = held == null ? target.coverage() : target.held(held.coverage(), held.thickness()).coverage();
 
         // Where the wind up high has carried them, and the way the streaks run today: the same for everyone
@@ -408,7 +411,7 @@ public class CloudHandler extends AbstractClientHandler {
          * @param held    what /dsweather clouds holds, or null
          * @param sampleY the height biomes are read at: the dimension's sea level, the surface's biomes
          */
-        void prepare(ClientLevel level, float rainLevel, float thunder, long dayTime, float dayCover, @Nullable Forced held,
+        void prepare(ClientLevel level, float rainLevel, float thunder, float sunAngle, float dayCover, @Nullable Forced held,
                      int sampleY, BlockPos player) {
             if (level != this.level || sampleY != this.sampleY || this.wetness.size() > MAX_WETNESS)
                 this.wetness.clear();
@@ -416,7 +419,7 @@ public class CloudHandler extends AbstractClientHandler {
             this.sampleY = sampleY;
             this.playerWetness = this.wetnessAt(player.getX(), player.getZ(), 0.5F);
             for (int w = 0; w <= WETNESS_STEPS; w++) {
-                var cover = CloudCover.of(rainLevel, thunder, dayTime, w / (float) WETNESS_STEPS, dayCover);
+                var cover = CloudCover.of(rainLevel, thunder, sunAngle, w / (float) WETNESS_STEPS, dayCover);
                 this.byWetness[w] = held == null ? cover : cover.held(held.coverage(), held.thickness());
             }
         }

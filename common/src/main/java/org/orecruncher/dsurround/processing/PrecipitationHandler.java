@@ -204,7 +204,7 @@ public class PrecipitationHandler extends AbstractClientHandler {
             return;
 
         var pos = camera.position();
-        var rainLevel = this.weatherSimulation.rainLevel(level.getRainLevel(1F));
+        var rainLevel = this.weatherSimulation.precipitationLevel(level.getRainLevel(1F));
         this.columns.setLevel(level);
         // Vanilla's own particles: they need no drops drawn, so drip even when the drops are off
         if (this.config.weatherOptions.precipitation.enableAfterRainDrips)
