@@ -6,6 +6,7 @@ package org.orecruncher.dsurround.effects.rainbow;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.orecruncher.dsurround.effects.FrameBlock;
 
 import static org.orecruncher.dsurround.effects.FrameBlock.put;
@@ -49,9 +50,38 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) implements Fram
     static final Vector3f MOONLIGHT = new Vector3f(0.8F, 0.87F, 1F);
 
     /**
+     * How bright a clear day's sky is: vanilla's plains sky at noon (0x78A7FF), as the eye weighs its colors
+     */
+    static final float CLEAR_SKY = 0.64F;
+    /**
+     * The least of its brightness the sky leaves a rainbow: under vanilla's full rain the sky is a quarter as bright,
+     * and a bow dimmed as far would barely show
+     */
+    static final float DIMMEST = 0.3F;
+
+    /**
+     * How much of its brightness the sky allows a rainbow, {@link #DIMMEST} to 1: as bright as the sky is next to a clear
+     * day's. The bow's light is added to the sky, so on a sky the rain or the hour has grayed it would glow; and a dim
+     * sky is one the sun is barely lighting, nor the drops. A moonbow is already set against the night's sky
+     * ({@link #MOONBOW_BRIGHTNESS}): 1.
+     *
+     * @param skyColor the sky's color as drawn, red, green and blue from 0 to 1
+     */
+    public static float skyLight(Vector3fc skyColor, boolean moonbow) {
+        if (moonbow)
+            return 1F;
+        // Rec. 709's weights: green is most of what the eye sees as brightness
+        float luminance = 0.2126F * skyColor.x() + 0.7152F * skyColor.y() + 0.0722F * skyColor.z();
+        if (!Float.isFinite(luminance))
+            return 1F;
+        return Math.clamp(luminance / CLEAR_SKY, DIMMEST, 1F);
+    }
+
+    /**
      * @param celestialAngle the sun's celestial angle in degrees (noon 0, midnight 180)
      * @param strength       how strongly it shows, 0 to 1
      * @param secondary      how strongly the secondary bow shows, 0 to 1
+     * @param skyLight       how much of its brightness the sky allows it ({@link #skyLight}), 0 to 1
      * @param projection     the frame's projection (see {@code LevelProjection})
      * @param viewMatrix     the camera's rotation, from the sky rendering
      * @param time           seconds, for the drifting of the patches
@@ -59,7 +89,7 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) implements Fram
      * @param blocky         whether it is drawn as flat stripes in blocks rather than its real colors
      * @param moonbow        whether it is a moonbow, opposite the moon (which is opposite the sun), in moonlight
      */
-    public static RainbowFrame of(float celestialAngle, float strength, float secondary, Matrix4fc projection,
+    public static RainbowFrame of(float celestialAngle, float strength, float secondary, float skyLight, Matrix4fc projection,
                                   Matrix4fc viewMatrix, float time, float seed, boolean blocky, boolean moonbow) {
         var invViewProj = new Matrix4f(projection).mul(viewMatrix).invert();
         // The light's own angle: the moon's is half a turn from the sun's
@@ -70,6 +100,7 @@ public record RainbowFrame(Matrix4fc invViewProj, float[] vec4s) implements Fram
         var tint = sunlight(RainbowConditions.sunElevation(lightAngle));
         if (moonbow)
             tint.mul(MOONLIGHT).mul(MOONBOW_BRIGHTNESS);
+        tint.mul(Math.clamp(skyLight, 0F, 1F));
 
         var v = new float[VECTORS * 4];
         put(v, 0, antisolar.x, antisolar.y, antisolar.z, Math.clamp(strength, 0F, 1F));

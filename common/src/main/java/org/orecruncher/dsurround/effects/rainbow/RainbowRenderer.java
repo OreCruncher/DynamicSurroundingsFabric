@@ -97,14 +97,15 @@ public final class RainbowRenderer {
      * @param celestialAngle the sun's celestial angle in degrees (noon 0, midnight 180)
      * @param strength       how strongly, 0 to 1
      * @param secondary      how strongly the secondary bow shows, 0 to 1
+     * @param skyLight       how much of its brightness the sky allows it (see {@link RainbowFrame#skyLight})
      * @param viewMatrix     the camera's rotation, from the sky rendering
      * @param time           seconds, for the drifting of its patches
      * @param seed           where its patches are
      * @param blocky         whether it is drawn as flat stripes in blocks rather than its real colors
      * @param moonbow        whether it is a moonbow, in moonlight opposite the moon
      */
-    public static void render(float celestialAngle, float strength, float secondary, Matrix4f viewMatrix, float time, float seed,
-                              boolean blocky, boolean moonbow) {
+    public static void render(float celestialAngle, float strength, float secondary, float skyLight, Matrix4f viewMatrix,
+                              float time, float seed, boolean blocky, boolean moonbow) {
         if (strength <= 0F || !isAvailable())
             return;
         prepare();
@@ -114,16 +115,17 @@ public final class RainbowRenderer {
         RENDER_TIMER.begin();
         try {
             // join rethrows a spectrum that failed to be made: the fail-safe logs it once and turns the rainbow off
-            SHADER.run(() -> draw(colors.join(), celestialAngle, strength, secondary, viewMatrix, time, seed, blocky, moonbow), () -> {});
+            SHADER.run(() -> draw(colors.join(), celestialAngle, strength, secondary, skyLight, viewMatrix, time, seed, blocky, moonbow),
+                    () -> {});
         } finally {
             RENDER_TIMER.end();
         }
     }
 
-    private static void draw(RainbowSpectrum colors, float celestialAngle, float strength, float secondary, Matrix4f viewMatrix,
-                             float time, float seed, boolean blocky, boolean moonbow) {
-        var frame = RainbowFrame.of(celestialAngle, strength, secondary, LevelProjection.get(), viewMatrix, time, seed, blocky,
-                moonbow);
+    private static void draw(RainbowSpectrum colors, float celestialAngle, float strength, float secondary, float skyLight,
+                             Matrix4f viewMatrix, float time, float seed, boolean blocky, boolean moonbow) {
+        var frame = RainbowFrame.of(celestialAngle, strength, secondary, skyLight, LevelProjection.get(), viewMatrix, time, seed,
+                blocky, moonbow);
         BLOCK.write(frame);
         // Made the first time it is used, which can't be while a render pass is open
         var view = texture(colors).getTextureView();

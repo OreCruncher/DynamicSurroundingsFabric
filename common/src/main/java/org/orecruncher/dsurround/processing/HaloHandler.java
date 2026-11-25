@@ -7,6 +7,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.biome.Biome;
 import org.joml.Matrix4f;
+import org.joml.Vector3fc;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.SkyStyle;
 import org.orecruncher.dsurround.effects.halo.HaloConditions;
@@ -97,7 +98,7 @@ public class HaloHandler extends AbstractClientHandler {
         this.status = "none";
     }
 
-    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness) {
+    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness, Vector3fc skyColor) {
         if (this.strength <= 0F && this.prevStrength <= 0F)
             return;
 

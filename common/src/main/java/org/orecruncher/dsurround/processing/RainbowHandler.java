@@ -8,9 +8,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector3fc;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.SkyStyle;
 import org.orecruncher.dsurround.effects.rainbow.RainbowConditions;
+import org.orecruncher.dsurround.effects.rainbow.RainbowFrame;
 import org.orecruncher.dsurround.effects.rainbow.RainbowRenderer;
 import org.orecruncher.dsurround.eventing.CollectDiagnosticsEvent;
 import org.orecruncher.dsurround.eventing.ISkyRender;
@@ -51,6 +53,8 @@ public class RainbowHandler extends AbstractClientHandler {
     private final RainbowConditions conditions = new RainbowConditions();
 
     private float strength;
+    // How much of its brightness the sky allows the bow, as last drawn (see RainbowFrame.skyLight)
+    private float skyLight = 1F;
     private float prevStrength;
     private float secondary;
     private float prevSecondary;
@@ -170,7 +174,7 @@ public class RainbowHandler extends AbstractClientHandler {
         this.status = "none";
     }
 
-    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness) {
+    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness, Vector3fc skyColor) {
         if (this.strength <= 0F && this.prevStrength <= 0F)
             return;
 
@@ -186,7 +190,9 @@ public class RainbowHandler extends AbstractClientHandler {
         var celestialAngle = this.levelOracle.currentCelestialAngle();
         var time = ((level.getGameTime() & TIME_WRAP) + partialTick) / 20F;
         var blocky = this.config.weatherOptions.sky.skyStyle == SkyStyle.BLOCKY;
-        RainbowRenderer.render(celestialAngle, alpha, secondary, viewMatrix, time, this.conditions.seed(), blocky, this.moonbow);
+        this.skyLight = RainbowFrame.skyLight(skyColor, this.moonbow);
+        RainbowRenderer.render(celestialAngle, alpha, secondary, this.skyLight, viewMatrix, time, this.conditions.seed(), blocky,
+                this.moonbow);
     }
 
     // ---- /dsweather rainbow
@@ -235,8 +241,8 @@ public class RainbowHandler extends AbstractClientHandler {
     protected void gatherDiagnostics(CollectDiagnosticsEvent event) {
         var text = "Rainbow: " + this.status;
         if (this.strength > 0F || this.conditions.isClearing())
-            text += ", strength %.2f, secondary %.2f, storm peak %.2f%s".formatted(this.strength, this.secondary,
-                    this.conditions.stormPeak(), this.moonbow ? ", moonbow" : "");
+            text += ", strength %.2f, secondary %.2f, sky light %.2f, storm peak %.2f%s".formatted(this.strength, this.secondary,
+                    this.skyLight, this.conditions.stormPeak(), this.moonbow ? ", moonbow" : "");
         event.add(CollectDiagnosticsEvent.Section.Systems, text);
     }
 }

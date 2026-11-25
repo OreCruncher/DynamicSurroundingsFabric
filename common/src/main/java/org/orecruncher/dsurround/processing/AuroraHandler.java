@@ -8,6 +8,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector3fc;
 import org.orecruncher.dsurround.Configuration;
 import org.orecruncher.dsurround.config.AuroraStyle;
 import org.orecruncher.dsurround.config.BiomeTrait;
@@ -228,7 +229,7 @@ public class AuroraHandler extends AbstractClientHandler {
         return info.hasTrait(BiomeTrait.COLD) || info.hasTrait(BiomeTrait.TAIGA) || info.hasTrait(BiomeTrait.SNOWY) || info.hasTrait(BiomeTrait.ICY);
     }
 
-    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness) {
+    private void renderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness, Vector3fc skyColor) {
         var classic = this.aurora;
         var realistic = this.realistic;
         if (classic == null && realistic == null)

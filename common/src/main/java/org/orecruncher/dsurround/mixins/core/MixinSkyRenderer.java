@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.mixins.core;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -45,12 +46,13 @@ public class MixinSkyRenderer {
      * world, as part of the sky. The model view matrix is the camera's rotation here.
      */
     @Inject(method = "render(Lcom/mojang/renderpearl/api/buffers/GpuBufferSlice;Lnet/minecraft/client/renderer/state/level/SkyRenderState;)V", at = @At("TAIL"))
-    private void dsurround$renderSky(CallbackInfo ci) {
+    private void dsurround$renderSky(GpuBufferSlice fog, SkyRenderState state, CallbackInfo ci) {
         if (!this.dsurround$sunMoonAndStarsDrawn)
             return;
         this.dsurround$sunMoonAndStarsDrawn = false;
         var partialTick = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
-        ISkyRender.EVENT.invoker().onRenderSky(RenderSystem.getModelViewMatrixCopy(), partialTick, this.dsurround$starBrightness, this.dsurround$rainBrightness);
+        ISkyRender.EVENT.invoker().onRenderSky(RenderSystem.getModelViewMatrixCopy(), partialTick, this.dsurround$starBrightness,
+                this.dsurround$rainBrightness, state.skyColor);
     }
 
     /**

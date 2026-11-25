@@ -4,6 +4,7 @@
 package org.orecruncher.dsurround.eventing;
 
 import org.joml.Matrix4f;
+import org.joml.Vector3fc;
 import org.orecruncher.dsurround.lib.events.EventingFactory;
 import org.orecruncher.dsurround.lib.events.GenerateInvoker;
 import org.orecruncher.dsurround.lib.events.IPhasedEvent;
@@ -23,6 +24,8 @@ public interface ISkyRender {
      * @param partialTick     how far into the current tick
      * @param starBrightness  how bright the stars were drawn, 0 to 1
      * @param rainBrightness  how much the rain lets through, 1 when clear
+     * @param skyColor        the sky's color as it was drawn, red, green and blue from 0 to 1: darkened by the time of
+     *                        day and the weather, turned toward the dust's in a dust storm
      */
-    void onRenderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness);
+    void onRenderSky(Matrix4f viewMatrix, float partialTick, float starBrightness, float rainBrightness, Vector3fc skyColor);
 }
