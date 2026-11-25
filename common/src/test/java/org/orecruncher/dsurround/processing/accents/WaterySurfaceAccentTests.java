@@ -74,6 +74,33 @@ public class WaterySurfaceAccentTests {
     }
 
     @Test
+    void waterSplashesByItsDepthOverTheFeet() {
+        // On top of upside-down stairs, a top slab or the upper step: the water in the block is below the feet
+        assertEquals(Wading.DRY, wading(0F, false));
+        assertEquals(Wading.DRY, wading(WET_FEET, false));
+        // A bottom slab or the lower half of stairs: water in a water-logged block stands 0.89 high, 0.39 over the feet
+        assertEquals(Wading.SHALLOW, wading(0.89F - 0.5F, false));
+        // A closed trapdoor (0.19 high), a pool's floor
+        assertEquals(Wading.WADE, wading(0.89F - 0.1875F, false));
+        assertEquals(Wading.WADE, wading(0.89F, false));
+        assertEquals(Wading.WADE, wading(1.3F, false));
+        // The head under: nothing, at any depth
+        assertEquals(Wading.UNDER, wading(1.8F, true));
+        assertEquals(Wading.UNDER, wading(0F, true));
+        // A broken depth is dry
+        assertEquals(Wading.DRY, wading(Float.NaN, false));
+    }
+
+    @Test
+    void wadingIsLouderDeeperShallowWaterIsLighter() {
+        assertEquals(WADE_QUIETEST, wadeVolume(WADING_FROM), 1e-6F);
+        assertEquals(1F, wadeVolume(WADE_LOUDEST_AT), 1e-6F);
+        assertEquals(1F, wadeVolume(2F), 1e-6F);
+        assertTrue(wadeVolume(0.6F) < wadeVolume(0.8F));
+        assertTrue(SHALLOW_VOLUME < WADE_QUIETEST);
+    }
+
+    @Test
     void accentsKeepTheirVolumesPitchesAndFilters() {
         var accents = new StepAccents();
         var factories = new ArrayList<ISoundFactory>();

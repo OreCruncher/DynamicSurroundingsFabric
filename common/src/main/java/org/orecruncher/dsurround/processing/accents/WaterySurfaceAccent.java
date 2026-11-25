@@ -5,6 +5,7 @@ package org.orecruncher.dsurround.processing.accents;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.orecruncher.dsurround.Configuration;
@@ -20,8 +21,10 @@ import org.orecruncher.dsurround.runtime.weather.RainSurface;
 import org.orecruncher.dsurround.tags.BlockEffectTags;
 
 /**
- * What a step on something wet adds to it, by what is underfoot. Water-logged blocks and watery ones (a lily pad, the
- * {@code watery_step} tag) splash at full volume. Ground in the rain answers as it is soaked
+ * What a step on something wet adds to it, by what is underfoot. Watery blocks (a lily pad, the {@code watery_step}
+ * tag) splash at full volume. Water over the feet splashes by its depth ({@link #wading}): lightly over the shoes,
+ * louder wading deeper, nothing with the head under; a water-logged block counts only where its water is over the
+ * feet (the lower half of stairs, not their top). Ground in the rain answers as it is soaked
  * ({@link GroundWetness}, so not under a roof or an overhang): ground that turns to mud (grass, dirt: what leaves mud
  * prints) squelches once it is muddy; hard ground (stone, wood, metal, glass) gives a light wet slap, the splash
  * thinned by a filter; sand, gravel, snow and leaves take the rain in and add nothing. Every step sounds, louder the
@@ -45,6 +48,37 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
         // Sand, gravel, snow, leaves, and anything else: nothing
         NONE
     }
+
+    /**
+     * What water at the feet makes of a step
+     */
+    enum Wading {
+        // No water over the feet: the ground decides
+        DRY,
+        // Over the shoes (a bottom slab, the lower half of stairs): a light, thinned splash
+        SHALLOW,
+        // Deeper (a closed trapdoor, a pool's floor): a splash, louder the deeper
+        WADE,
+        // The head under water: nothing, the game's own sounds have it
+        UNDER
+    }
+
+    /**
+     * Water over the feet, in blocks, from which a step is in it: a little over nothing, so the edge of a surface
+     * doesn't count
+     */
+    static final float WET_FEET = 0.02F;
+    /**
+     * From this depth a step wades. Water in a water-logged block stands 0.89 high, so it is 0.39 over the feet on a
+     * bottom slab or the lower half of stairs (shallow), 0.70 on a closed trapdoor and 0.89 on a pool's floor (wading).
+     */
+    static final float WADING_FROM = 0.45F;
+    static final float WADE_LOUDEST_AT = 0.9F;
+    static final float WADE_QUIETEST = 0.6F;
+    /**
+     * Shallow water's splash, thinned as a slap is ({@link #SLAP_FILTER}): its volume, as a share of the splash's
+     */
+    static final float SHALLOW_VOLUME = 0.5F;
 
     /**
      * Below this wetness, ground in the rain is too lightly wet to sound
@@ -97,11 +131,36 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
         var level = entity.level();
         var up = pos.above();
 
-        // Water underfoot, or something watery on top of the block (a lily pad): a splash
-        if (isWaterLogged || this.tagLibrary.is(BlockEffectTags.WATERY_STEP, state)
+        // Something watery on top of the block (a lily pad): the pad pressed into the water splashes, though the feet
+        // are just above it
+        if (this.tagLibrary.is(BlockEffectTags.WATERY_STEP, state)
                 || this.tagLibrary.is(BlockEffectTags.WATERY_STEP, level.getBlockState(up))) {
             this.soundLibrary.getSoundFactory(WETSURFACE_FACTORY).ifPresent(acoustics::add);
             return;
+        }
+
+        // Water at the feet, by how deep it is over them: whether the block is water-logged says nothing of that (the
+        // top of mangrove roots or of upside-down stairs is above the water in them; a pool's floor isn't water-logged)
+        float depth = (float) entity.getFluidHeight(FluidTags.WATER);
+        switch (wading(depth, entity.isEyeInFluid(FluidTags.WATER))) {
+            case SHALLOW -> {
+                boolean filtered = EnhancedSoundProcessor.isAvailable();
+                float volume = SHALLOW_VOLUME * (filtered ? 1F : SLAP_VOLUME_UNFILTERED);
+                float pitch = filtered ? SLAP_PITCH : SLAP_PITCH_UNFILTERED;
+                this.soundLibrary.getSoundFactory(WETSURFACE_FACTORY)
+                        .ifPresent(factory -> acoustics.add(factory, volume, pitch, SLAP_FILTER));
+                return;
+            }
+            case WADE -> {
+                float volume = wadeVolume(depth);
+                this.soundLibrary.getSoundFactory(WETSURFACE_FACTORY).ifPresent(factory -> acoustics.add(factory, volume));
+                return;
+            }
+            case UNDER -> {
+                return;
+            }
+            case DRY -> {
+            }
         }
 
         float wetness = GroundWetness.at(this.weatherSimulation, level, up);
@@ -124,6 +183,26 @@ class WaterySurfaceAccent implements IFootstepAccentProvider {
             case NONE -> {
             }
         }
+    }
+
+    /**
+     * What water at the feet makes of a step, by how deep it is over them (blocks) and whether the head is under it
+     */
+    static Wading wading(float depth, boolean eyeInWater) {
+        if (eyeInWater)
+            return Wading.UNDER;
+        if (!(depth > WET_FEET))
+            return Wading.DRY;
+        return depth < WADING_FROM ? Wading.SHALLOW : Wading.WADE;
+    }
+
+    /**
+     * How loud wading is, as a share of the splash's volume: from {@link #WADE_QUIETEST} where wading starts, all of it
+     * by {@link #WADE_LOUDEST_AT}
+     */
+    static float wadeVolume(float depth) {
+        float t = Math.clamp((depth - WADING_FROM) / (WADE_LOUDEST_AT - WADING_FROM), 0F, 1F);
+        return WADE_QUIETEST + (1F - WADE_QUIETEST) * t;
     }
 
     /**
