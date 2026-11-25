@@ -118,16 +118,16 @@ public class ShoreFoam extends SingleQuadParticle {
     }
 
     /**
-     * The height of what foam lies on here: the water's surface, or the top of the ground
+     * The height of what foam lies on here: the water's surface, or the top of the ground. A water-logged block is
+     * whichever is higher: a top slab's top, the water over a bottom slab.
      */
     private double groundAt(double x, double z) {
         int top = this.level.getHeight(Heightmap.Types.MOTION_BLOCKING, Mth.floor(x), Mth.floor(z));
         this.probe.set(x, top - 1, z);
         var fluid = this.level.getFluidState(this.probe);
-        if (!fluid.isEmpty())
-            return this.probe.getY() + fluid.getHeight(this.level, this.probe);
+        double water = fluid.isEmpty() ? 0D : fluid.getHeight(this.level, this.probe);
         var shape = this.level.getBlockState(this.probe).getShape(this.level, this.probe);
-        return this.probe.getY() + (shape.isEmpty() ? 0D : shape.max(Direction.Axis.Y));
+        return this.probe.getY() + Math.max(water, shape.isEmpty() ? 0D : shape.max(Direction.Axis.Y));
     }
 
     @Override

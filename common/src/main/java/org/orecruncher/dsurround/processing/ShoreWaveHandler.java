@@ -143,14 +143,18 @@ public class ShoreWaveHandler extends AbstractClientHandler {
         }
     }
 
+    /**
+     * Water itself, not a water-logged block: a dock of water-logged slabs or stairs is land, or the shore is the bank
+     * behind it, and waves roll foam over the dock onto the grass
+     */
     private boolean isOpenWater(Level level, int x, int y, int z) {
         var fluid = level.getFluidState(this.probe.set(x, y, z));
-        return fluid.isSource() && this.tags.is(FluidTags.WATER_RIPPLES, fluid);
+        return fluid.isSource() && this.tags.is(FluidTags.WATER_RIPPLES, fluid) && level.getBlockState(this.probe).liquid();
     }
 
     private boolean isLand(Level level, int x, int y, int z) {
         int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z) - 1;
-        return Math.abs(top - y) <= SHORE_RISE && level.getFluidState(this.probe.set(x, top, z)).isEmpty();
+        return Math.abs(top - y) <= SHORE_RISE && !level.getBlockState(this.probe.set(x, top, z)).liquid();
     }
 
     /**

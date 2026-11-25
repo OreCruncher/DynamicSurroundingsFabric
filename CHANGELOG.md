@@ -64,6 +64,7 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 * Serene Seasons is asked through its API and the game's own methods for whether rain or snow falls; only the season's temperature still goes through its own code, and a Serene Seasons version without it no longer crashes the game: temperatures then stop following the season, and the log says so
 
 **Fixes**
+* Beach waves took water-logged blocks at the water's edge (a dock of slabs or stairs) for water, and rolled foam over them onto the grass and stone behind
 * Books in the hotbar play the book sound, and bookshelves no longer do
 * Fixed an error from a mod's item that can be worn but has no equip sound: selecting it in the hotbar, or `/dsdump items`, threw an exception
 * `/dsprofile` recordings redact more paths: on NeoForge they kept the folders of the game and its mods (which can name a modpack or instance), and a home folder written in another form (a short name, another case) could get through. They now keep only the events known to hold nothing private, so another mod's events, or Minecraft's chunk events (coordinates and the save's name, recorded if vanilla's `/jfr` runs at the same time), are left out too, as are JVM text flags and heap dump paths
