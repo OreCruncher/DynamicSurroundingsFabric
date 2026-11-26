@@ -801,9 +801,28 @@ def main():
         mine = first_ours(frames)
         if mine:
             ours_alloc[mine] += weight
+    tlab = False
+    if not samples:
+        # Java 8 (the 1.12.2 line's recordings) has no allocation samples: its TLAB events instead. A thread taking a
+        # new TLAB has filled its last one, so the event stands for about that much (its TLAB's size); an object too
+        # big for a TLAB is its own size. No first-sample weight to leave out
+        tlab = True
+        for kind, fields, frames in events(jfr, recording, ["jdk.ObjectAllocationInNewTLAB",
+                                                             "jdk.ObjectAllocationOutsideTLAB"], 32):
+            weight = size_bytes(fields.get("tlabSize" if kind == "jdk.ObjectAllocationInNewTLAB" else "allocationSize"))
+            classes[fields.get("objectClass", "?").split(" ")[0]] += weight
+            if frames:
+                sites[first_owner(frames)] += weight
+            mine = first_ours(frames)
+            if mine:
+                ours_alloc[mine] += weight
     allocated = sum(classes.values())
-    print(f"\n== Allocation (sampled weight {allocated / 1024 ** 3:.1f} GB; each thread's first sample, "
-          f"{before / 1024 ** 3:.1f} GB from before the recording, left out)")
+    if tlab:
+        print(f"\n== Allocation (Java 8 TLAB events, estimated {allocated / 1024 ** 3:.1f} GB: each new TLAB counted at "
+              f"its size, the object it was taken for standing for what filled the last)")
+    else:
+        print(f"\n== Allocation (sampled weight {allocated / 1024 ** 3:.1f} GB; each thread's first sample, "
+              f"{before / 1024 ** 3:.1f} GB from before the recording, left out)")
     table("  by class", classes, allocated, args.top, "MB")
     table("  by mod package", sites, allocated, args.top, "MB")
     if ours_alloc:

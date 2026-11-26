@@ -189,7 +189,8 @@ is known of 26.4.
   `RandomBlockSampler` means (its constants are copied into the script: keep them in step), `--shell-width` rows; the
   classic aurora's shape and coverage against its GPU time (ns a covered pixel); the realistic aurora's against the pixels
   marched (ns a marched pixel); particles by kind (alive, drawn, tick and extract time, share); enhanced sounds' work a second; threads,
-  mod packages, our frames, allocation, GC;
+  mod packages, our frames, allocation (from Java 8's TLAB events in a 1.12.2 recording, which has no allocation
+  samples), GC;
   `--callers <method>` for who calls something).
   Each zip also holds a short summary (`ProfileSummary`, made from the finished recording, under 1900 characters to
   fit a Discord message), which chat offers as a [Copy summary] button with a headline (fps, costliest effect's share).
