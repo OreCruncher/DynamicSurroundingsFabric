@@ -60,6 +60,8 @@ This release brings rainbows after the rain, a cinematic aurora, rain that rings
 * `/dsactor <kind> [seed]` summons the same actor every time for the same seed, and names the seed it picked when none is given
 * `/dsprofile` recordings include each kind of particle's cost and the realistic aurora's state, name the installed mods by id and version, with the loader's version, and give what the mod's block and biome queries cost a block or lookup, for telling which kind of query a modpack slows down
 * Play biome music while creative and Display music toast messages have moved from the Sound options to the Music Manager options. The settings carry over
+* Play creative music while not creative, in the Music Manager options (off by default): the game's creative music joins the songs that can play in survival and adventure mode in the Overworld, chosen alongside the biome's music
+* The game's own background music for each biome is now listed with the configured music in `/dsdump biomes` and diagnostics, under the comment "Game music", with the conditions it plays under
 * The Attributions screen (Sound options, and a new Dynamic Surroundings button in Options' Credits & Attribution) lists the credits of every active resource pack and mod that has its own beside Dynamic Surroundings', picked from a list on the left: a resource pack's `CREDITS.md` at its root, a mod's `assets/<mod id>/credits.md`. Credits files can break a line with two trailing spaces
 * Serene Seasons is asked through its API and the game's own methods for whether rain or snow falls; only the season's temperature still goes through its own code, and a Serene Seasons version without it no longer crashes the game: temperatures then stop following the season, and the log says so
 

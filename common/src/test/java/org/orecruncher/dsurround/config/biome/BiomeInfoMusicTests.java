@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.attribute.BackgroundMusic;
 import org.junit.jupiter.api.Test;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.SoundEventType;
@@ -34,8 +35,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The background music a biome offers: the configured music alongside the track the game offers for the biome.
- * Which of them plays is up to {@link BiomeMusicSelector}.
+ * The background music a biome offers: the configured music alongside the game's, which the library adds as a rule
+ * of its own ({@link GameMusicRule}). Which of them plays is up to {@link BiomeMusicSelector}.
  */
 public class BiomeInfoMusicTests {
 
@@ -63,7 +64,7 @@ public class BiomeInfoMusicTests {
                 "createAsMusic", args -> asMusic));
     }
 
-    private static final ISoundLibrary SOUNDS = Fakes.of(ISoundLibrary.class, Map.of(
+    static final ISoundLibrary SOUNDS = Fakes.of(ISoundLibrary.class, Map.of(
             "getSoundFactoryOrDefault", args -> soundFactory((Identifier) args[0]),
             "getSoundFactoryForMusic", args -> soundFactory(location((Music) args[0]))));
 
@@ -90,75 +91,68 @@ public class BiomeInfoMusicTests {
                 Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), acoustics, List.of());
     }
 
-    private static Set<Identifier> choices(BiomeInfo info, Optional<Music> vanilla) {
-        return info.getMusicChoices(vanilla).stream()
+    /**
+     * The rule the library makes from the game's music for a biome that sets its own track
+     */
+    static BiomeConfigRule gameMusic(String track) {
+        var own = new BackgroundMusic(Optional.of(music(id(track))), Optional.empty(), Optional.empty());
+        return GameMusicRule.of(own, null, SOUNDS).orElseThrow();
+    }
+
+    private static Set<Identifier> choices(BiomeInfo info) {
+        return info.getMusicChoices().stream()
                 .map(e -> e.getAcoustic().getLocation())
                 .collect(Collectors.toSet());
     }
 
     @Test
     void noMusicAnywhereGivesNoChoices() {
-        assertTrue(info().getMusicChoices(Optional.empty()).isEmpty());
+        assertTrue(info().getMusicChoices().isEmpty());
     }
 
     @Test
-    void withoutConfiguredMusicTheGameTrackIsTheChoice() {
-        assertEquals(Set.of(id("vanilla")), choices(info(), Optional.of(music(id("vanilla")))));
+    void theGameTrackAloneIsTheChoice() {
+        assertEquals(Set.of(id("vanilla")), choices(info(gameMusic("vanilla"))));
     }
 
     @Test
     void configuredMusicAloneWhenTheGameOffersNone() {
         var info = info(musicRule(false, "one", "two"));
-        assertEquals(Set.of(id("one"), id("two")), choices(info, Optional.empty()));
+        assertEquals(Set.of(id("one"), id("two")), choices(info));
     }
 
     @Test
     void configuredMusicIsOfferedAlongsideTheGameTrack() {
-        var info = info(musicRule(false, "one"));
-        assertEquals(Set.of(id("one"), id("vanilla")), choices(info, Optional.of(music(id("vanilla")))));
+        var info = info(musicRule(false, "one"), gameMusic("vanilla"));
+        assertEquals(Set.of(id("one"), id("vanilla")), choices(info));
     }
 
     @Test
-    void clearingSoundsKeepsTheGameTrack() {
-        var info = info(musicRule(false, "one"), musicRule(true, "two"));
-        assertEquals(Set.of(id("two"), id("vanilla")), choices(info, Optional.of(music(id("vanilla")))));
+    void clearingSoundsBeforeTheGameMusicKeepsIt() {
+        // The library applies the game's music after the configured rules
+        var info = info(musicRule(false, "one"), musicRule(true, "two"), gameMusic("vanilla"));
+        assertEquals(Set.of(id("two"), id("vanilla")), choices(info));
     }
 
     @Test
-    void theGameTrackIsNotListedWithTheConfiguredMusic() {
-        var info = info(musicRule(false, "one"));
-        info.getMusicChoices(Optional.of(music(id("vanilla"))));
-        assertEquals(1, info.getSounds(SoundEventType.MUSIC).size());
-    }
-
-    @Test
-    void choicesFollowAChangeInTheGameTrack() {
-        var info = info(musicRule(false, "one"));
-        assertEquals(Set.of(id("one"), id("first")), choices(info, Optional.of(music(id("first")))));
-        assertEquals(Set.of(id("one"), id("second")), choices(info, Optional.of(music(id("second")))));
+    void theGameTrackIsListedWithTheConfiguredMusic() {
+        // So the biome dump and diagnostics show it
+        var info = info(musicRule(false, "one"), gameMusic("vanilla"));
+        assertEquals(2, info.getSounds(SoundEventType.MUSIC).size());
+        assertTrue(info.getComments().contains(GameMusicRule.COMMENT));
     }
 
     @Test
     void musicFromEachRuleIsOffered() {
-        var info = info(musicRule(false, "one"), musicRule(false, "two"));
-        assertEquals(Set.of(id("one"), id("two"), id("vanilla")), choices(info, Optional.of(music(id("vanilla")))));
+        var info = info(musicRule(false, "one"), musicRule(false, "two"), gameMusic("vanilla"));
+        assertEquals(Set.of(id("one"), id("two"), id("vanilla")), choices(info));
     }
 
     @Test
-    void theSameChoicesAreReturnedWhileTheGameTrackIsTheSame() {
+    void theSameChoicesAreReturnedUntilAReload() {
         // How the selector knows the choices haven't changed
-        var info = info(musicRule(false, "one"));
-        var vanilla = music(id("vanilla"));
-        assertSame(info.getMusicChoices(Optional.of(vanilla)), info.getMusicChoices(Optional.of(vanilla)));
-        assertSame(info.getMusicChoices(Optional.empty()), info.getMusicChoices(Optional.empty()));
-    }
-
-    @Test
-    void newChoicesAfterAChangeInTheGameTrack() {
-        var info = info();
-        var first = info.getMusicChoices(Optional.of(music(id("first"))));
-        var second = info.getMusicChoices(Optional.of(music(id("second"))));
-        assertNotSame(first, second);
+        var info = info(musicRule(false, "one"), gameMusic("vanilla"));
+        assertSame(info.getMusicChoices(), info.getMusicChoices());
     }
 
     @Test

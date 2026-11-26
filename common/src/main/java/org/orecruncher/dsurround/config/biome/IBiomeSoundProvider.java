@@ -3,7 +3,6 @@
 
 package org.orecruncher.dsurround.config.biome;
 
-import net.minecraft.sounds.Music;
 import org.orecruncher.dsurround.config.AcousticEntry;
 import org.orecruncher.dsurround.config.AcousticEntryCollection;
 import org.orecruncher.dsurround.config.SoundEventType;
@@ -34,10 +33,8 @@ public interface IBiomeSoundProvider {
     Optional<ISoundFactory> getExtraSound(SoundEventType type, IRandomizer random);
 
     /**
-     * The music that can be chosen for the biome: the configured music plus the game's track. The same collection is
-     * returned while the game offers the same track, so a different collection means the choices have changed.
-     *
-     * @param vanilla The music the game would play for the biome
+     * The music that can be chosen for the biome: the configured music and the game's (see {@link GameMusicRule}),
+     * each entry with its conditions. The same collection until the configuration reloads.
      */
-    AcousticEntryCollection getMusicChoices(Optional<Music> vanilla);
+    AcousticEntryCollection getMusicChoices();
 }

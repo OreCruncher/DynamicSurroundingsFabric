@@ -14,7 +14,7 @@ import java.util.Optional;
 /**
  * Chooses the background music for the biome the player is in. The music manager asks every tick, but the choice
  * only matters when a track starts, so it is kept until asked to choose again or the choices change: a different
- * biome, a different track offered by the game, or a configuration reload.
+ * biome or a configuration reload.
  */
 public final class BiomeMusicSelector {
 
@@ -25,12 +25,11 @@ public final class BiomeMusicSelector {
 
     /**
      * @param biome       The biome the music is for
-     * @param vanilla     The music the game would play for the biome, folded into the choices
      * @param random      Randomizer to use
      * @param chooseAgain Make a new choice even if one is kept
      */
-    public Optional<Music> select(IBiomeSoundProvider biome, Optional<Music> vanilla, IRandomizer random, boolean chooseAgain) {
-        var choices = biome.getMusicChoices(vanilla);
+    public Optional<Music> select(IBiomeSoundProvider biome, IRandomizer random, boolean chooseAgain) {
+        var choices = biome.getMusicChoices();
         if (chooseAgain || this.chosen == null || this.chosenFrom != choices) {
             this.chosen = choices.makeSelection(random).map(ISoundFactory::createAsMusic).orElse(null);
             this.chosenFrom = choices;

@@ -812,6 +812,10 @@ public class Configuration extends ConfigurationData {
         public boolean playBiomeMusicWhileCreative = false;
 
         @Property
+        @Comment("Adds the creative music to the songs that can play while not in creative")
+        public boolean playCreativeMusicWhileSurvival = false;
+
+        @Property
         @MovedFrom("soundOptions.displayToastMessagesForMusic")
         @Comment("Enables display of toast messages for credited music")
         public boolean displayToastMessagesForMusic = true;

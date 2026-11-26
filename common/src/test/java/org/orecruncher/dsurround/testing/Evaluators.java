@@ -40,12 +40,19 @@ public final class Evaluators {
      * @param clock the platform functions' clock (the time of day and date scripts see)
      */
     public static ConditionEvaluator conditions(IModLog log, ISystemClock clock) {
+        return conditions(log, clock, new Configuration());
+    }
+
+    /**
+     * @param config what the global variables read
+     */
+    public static ConditionEvaluator conditions(IModLog log, ISystemClock clock, Configuration config) {
         var oracle = Fakes.of(ILevelOracle.class, Map.of());
         var seasons = Fakes.of(ISeasonalInformation.class, Map.of());
         return new ConditionEvaluator(log, new PlatformFunctions(clock),
                 new BiomeVariables(Fakes.of(IBiomeLibrary.class, Map.of())), new DimensionVariables(),
                 new DiurnalVariables(oracle), new PlayerVariables(oracle),
                 new WeatherVariables(oracle, seasons, Fakes.of(IWeatherSimulation.class, Map.of()), null, new RainbowState()),
-                new EnvironmentState(null), new GlobalVariables(new Configuration()), new SeasonVariables(seasons));
+                new EnvironmentState(null), new GlobalVariables(config), new SeasonVariables(seasons));
     }
 }

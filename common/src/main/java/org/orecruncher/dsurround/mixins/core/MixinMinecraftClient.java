@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.sounds.Music;
 import net.minecraft.world.attribute.BackgroundMusic;
-import net.minecraft.world.attribute.EnvironmentAttributes;
+import org.orecruncher.dsurround.config.biome.GameMusicRule;
 import org.orecruncher.dsurround.lib.music.DSurroundMusicManager;
 import org.orecruncher.dsurround.lib.random.Randomizer;
 import org.orecruncher.dsurround.mixinutils.MixinHelpers;
@@ -44,13 +44,15 @@ public class MixinMinecraftClient {
     /**
      * Hooks the choice of background music when Minecraft picks the situational music for the player in a world.
      * The game's background music (from the dimension and biome) has a track for each of default, creative and
-     * underwater; music configured for the biome is chosen alongside the default one.
+     * underwater. The biome's music choices hold the configured music and the game's (see {@link GameMusicRule}, which
+     * also offers the creative music outside creative when playCreativeMusicWhileSurvival is on).
      * <p>
      * Underwater and creative music the game offers still play. With playBiomeMusicWhileCreative the player is not
      * treated as in creative, so the biome's music plays instead of the creative music.
      * <p>
-     * The game's track is one of the choices only if the biome sets its own background music, as in 1.21.1. Otherwise,
-     * the dimension's track (Musics.GAME in the overworld) plays only when the configured music gives nothing.
+     * The game's track for a biome without music of its own (Musics.GAME in the overworld) plays only when the
+     * biome's choices give nothing. The choices are read from the biome's and dimension's data, not through the
+     * camera's attribute probe as the game does, so a data pack changing the music by the time of day isn't followed.
      * <p>
      * The music manager asks every tick, but the choice only matters when a track starts. Our music manager says
      * when that is, and the choice is kept until then; with the game's music manager a choice is made each time.
@@ -73,9 +75,8 @@ public class MixinMinecraftClient {
         if (info == null)
             return vanilla;
 
-        var biomeTrack = biome.getAttributes().contains(EnvironmentAttributes.BACKGROUND_MUSIC) ? vanilla : Optional.<Music>empty();
         var chooseAgain = !(minecraft.getMusicManager() instanceof DSurroundMusicManager mm) || mm.isTrackStarting();
-        var chosen = MixinHelpers.BIOME_MUSIC.select(info, biomeTrack, Randomizer.current(), chooseAgain);
+        var chosen = MixinHelpers.BIOME_MUSIC.select(info, Randomizer.current(), chooseAgain);
         return chosen.isPresent() ? chosen : vanilla;
     }
 

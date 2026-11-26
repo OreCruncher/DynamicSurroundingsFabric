@@ -28,49 +28,37 @@ public class BiomeMusicSelectorTests {
 
     @Test
     void noMusicAnywhereGivesNone() {
-        assertTrue(new BiomeMusicSelector().select(info(), Optional.empty(), Randomizer.create(42), true).isEmpty());
+        assertTrue(new BiomeMusicSelector().select(info(), Randomizer.create(42), true).isEmpty());
     }
 
     @Test
     void theChoiceIsKeptUntilAskedToChooseAgain() {
-        var info = info(musicRule(false, "one", "two", "three"));
-        var vanilla = Optional.of(music(id("vanilla")));
+        var info = info(musicRule(false, "one", "two", "three"), gameMusic("vanilla"));
         var selector = new BiomeMusicSelector();
         IRandomizer random = Randomizer.create(42);
-        var first = selector.select(info, vanilla, random, true);
+        var first = selector.select(info, random, true);
         assertTrue(first.isPresent());
         for (int i = 0; i < DRAWS; i++)
-            assertEquals(first, selector.select(info, vanilla, random, false));
+            assertEquals(first, selector.select(info, random, false));
     }
 
     @Test
     void askingToChooseAgainMakesANewChoice() {
-        var info = info(musicRule(false, "one", "two", "three"));
-        var vanilla = Optional.of(music(id("vanilla")));
+        var info = info(musicRule(false, "one", "two", "three"), gameMusic("vanilla"));
         var selector = new BiomeMusicSelector();
         IRandomizer random = Randomizer.create(42);
-        var first = selector.select(info, vanilla, random, true);
+        var first = selector.select(info, random, true);
         var changed = false;
         for (int i = 0; i < DRAWS && !changed; i++)
-            changed = !first.equals(selector.select(info, vanilla, random, true));
+            changed = !first.equals(selector.select(info, random, true));
         assertTrue(changed);
     }
 
     @Test
     void aChoiceIsMadeWhenNoneIsKept() {
         assertEquals(Optional.of(id("vanilla")),
-                new BiomeMusicSelector().select(info(), Optional.of(music(id("vanilla"))), Randomizer.create(42), false)
+                new BiomeMusicSelector().select(info(gameMusic("vanilla")), Randomizer.create(42), false)
                         .map(BiomeInfoMusicTests::location));
-    }
-
-    @Test
-    void aChangeInTheGameTrackMakesANewChoice() {
-        var info = info();
-        var selector = new BiomeMusicSelector();
-        IRandomizer random = Randomizer.create(42);
-        selector.select(info, Optional.of(music(id("first"))), random, true);
-        assertEquals(Optional.of(id("second")),
-                selector.select(info, Optional.of(music(id("second"))), random, false).map(BiomeInfoMusicTests::location));
     }
 
     @Test
@@ -79,7 +67,7 @@ public class BiomeMusicSelectorTests {
         IRandomizer random = Randomizer.create(42);
         var one = info(musicRule(false, "one"));
         var two = info(musicRule(false, "two"));
-        assertEquals(Optional.of(id("one")), selector.select(one, Optional.empty(), random, true).map(BiomeInfoMusicTests::location));
-        assertEquals(Optional.of(id("two")), selector.select(two, Optional.empty(), random, false).map(BiomeInfoMusicTests::location));
+        assertEquals(Optional.of(id("one")), selector.select(one, random, true).map(BiomeInfoMusicTests::location));
+        assertEquals(Optional.of(id("two")), selector.select(two, random, false).map(BiomeInfoMusicTests::location));
     }
 }

@@ -9,12 +9,19 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.locale.Language;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.attribute.BackgroundMusic;
+import net.minecraft.world.attribute.EnvironmentAttributeMap;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.Nullable;
+import org.orecruncher.dsurround.config.BiomeTrait;
 import org.orecruncher.dsurround.config.ConfigServices;
 import org.orecruncher.dsurround.config.SyntheticBiome;
 import org.orecruncher.dsurround.config.biome.BiomeInfo;
 import org.orecruncher.dsurround.config.biome.BiomeInfoBuilder;
+import org.orecruncher.dsurround.config.biome.GameMusicRule;
 import org.orecruncher.dsurround.config.biome.biometraits.BiomeTraits;
 import org.orecruncher.dsurround.config.data.BiomeConfigRule;
 import org.orecruncher.dsurround.config.libraries.IBiomeLibrary;
@@ -201,6 +208,9 @@ public final class BiomeLibrary implements IBiomeLibrary {
         // Apply rule configs
         this.applyRules.run(() -> this.applyRuleConfigs(biome, builder), id);
 
+        // The game's music last, so a rule clearing sounds doesn't take it away
+        this.applyRules.run(() -> this.applyGameMusic(biome, builder), id);
+
         final var result = builder.build();
         this.biomes.put(biome, result);
         return result;
@@ -239,6 +249,28 @@ public final class BiomeLibrary implements IBiomeLibrary {
                         builder.apply(rule);
                 },
                 (rule, t) -> this.ruleFailures.error(rule, t, "Unable to process biome rule [%s]", rule));
+    }
+
+    private void applyGameMusic(Biome biome, BiomeInfoBuilder builder) {
+        var own = backgroundMusic(biome.getAttributes());
+        // Of the dimensions, only the overworld has creative music
+        var dimension = builder.getTraits().contains(BiomeTrait.OVERWORLD) ? overworldMusic() : null;
+        GameMusicRule.of(own, dimension, this.soundLibrary).ifPresent(builder::apply);
+    }
+
+    private static @Nullable BackgroundMusic backgroundMusic(EnvironmentAttributeMap attributes) {
+        return attributes.contains(EnvironmentAttributes.BACKGROUND_MUSIC)
+                ? attributes.applyModifier(EnvironmentAttributes.BACKGROUND_MUSIC, BackgroundMusic.EMPTY)
+                : null;
+    }
+
+    // From the registry, as a data pack may change it
+    private static BackgroundMusic overworldMusic() {
+        return RegistryUtils.getRegistry(Registries.DIMENSION_TYPE)
+                .flatMap(registry -> registry.getOptional(BuiltinDimensionTypes.OVERWORLD))
+                .map(DimensionType::attributes)
+                .map(BiomeLibrary::backgroundMusic)
+                .orElse(BackgroundMusic.OVERWORLD);
     }
 
     private Iterable<BiomeConfigRule> getNonSyntheticBiomeRules(Predicate<BiomeConfigRule> filter) {

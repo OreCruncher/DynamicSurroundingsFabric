@@ -21,5 +21,6 @@ public final class GlobalVariables extends VariableSet {
     public void configure(IConfigureDefinition config) {
         config.property(id("allowScary"), () -> this.config.scaryContent.allowScaryContent);
         config.property(id("allowLightning"), () -> this.config.scaryContent.lightningAllowed());
+        config.property(id("playCreativeMusic"), () -> this.config.musicManagerOptions.playCreativeMusicWhileSurvival);
     }
 }

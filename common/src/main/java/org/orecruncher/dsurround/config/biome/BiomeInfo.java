@@ -7,7 +7,6 @@ import dev.architectury.hooks.level.biome.BiomeProperties;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
-import net.minecraft.sounds.Music;
 import net.minecraft.world.level.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.orecruncher.dsurround.config.AcousticEntry;
@@ -56,11 +55,6 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     private final FogDensity groundFog;
     private final Script additionalSoundChance;
     private final Script moodSoundChance;
-    // Built from the configured music and the game's track for the biome, which doesn't change
-    @Nullable
-    private AcousticEntryCollection musicChoices;
-    @Nullable
-    private Music musicChoicesVanilla;
 
     BiomeInfo(BiomeInfoBuilder builder) {
         this.version = builder.version;
@@ -180,20 +174,8 @@ public final class BiomeInfo implements Comparable<BiomeInfo>, IBiomeIdentity, I
     }
 
     @Override
-    public AcousticEntryCollection getMusicChoices(Optional<Music> vanilla) {
-        var offered = vanilla.orElse(null);
-        if (this.musicChoices == null || this.musicChoicesVanilla != offered) {
-            var choices = new AcousticEntryCollection();
-            if (offered != null) {
-                var factory = this.services.soundLibrary().getSoundFactoryForMusic(offered);
-                choices.add(new AcousticEntry(factory, null, this.services.conditionEvaluator()));
-            }
-            choices.addAll(this.musicSounds);
-            choices.trim();
-            this.musicChoices = choices;
-            this.musicChoicesVanilla = offered;
-        }
-        return this.musicChoices;
+    public AcousticEntryCollection getMusicChoices() {
+        return this.musicSounds;
     }
 
     /**
