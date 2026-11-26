@@ -1,14 +1,14 @@
-### Sounds
+> ### Sounds
 The sounds provided with Dynamic Surroundings are from the public domain or have Creative Commons restrictions. These
 restrictions may impact whether LPs can be monetized on the various streaming services.
 
-##### Modifications (if any)
+### Modifications (if any)
 * Sounds converted to OGG format as necessary.
 * Moonlight Sonata trimmed of the silence before it, faded out, leveled to the loudness of the recording it replaces,
   and re-encoded as Ogg Vorbis (2026-11-23).
 * Canon in D Major trimmed of the silence before and after it, leveled, and re-encoded as Ogg Vorbis (2026-11-23).
 
-##### Credits
+### Credits
 
 *dsurround_ex:music.wintersong*
 * [Wintersong](https://www.chosic.com/download-audio/29631/) by [Alexander Nakarada](https://creatorchords.com); music

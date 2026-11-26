@@ -1,12 +1,12 @@
-### Sounds
+> ### Sounds
 The music in this pack is a recording licensed under Creative Commons Attribution-ShareAlike. That license may affect
 whether videos and streams using it can be monetized on some services.
 
-##### Modifications
+### Modifications
 * Each movement trimmed of the room noise and applause before and after it, faded in and out, leveled to the loudness
   of the recording it replaces, and re-encoded as Ogg Vorbis (2026-11-23).
 
-##### Credits
+### Credits
 
 *dsurround_seasons:music.season.spring.early / dsurround_seasons:music.season.spring.mid / dsurround_seasons:music.season.spring.late*  
 *dsurround_seasons:music.season.summer.early / dsurround_seasons:music.season.summer.mid / dsurround_seasons:music.season.summer.late*  
