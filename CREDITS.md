@@ -83,7 +83,7 @@ Others:
 
 *dsurround:biome.ocean / dsurround:biome.ocean.deep*
 
-* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/)
+* S: [ocean waves surround me.wav](https://freesound.org/people/bohitomi/sounds/240219/) by [bohitomi](https://freesound.org/people/bohitomi/) | License: [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/) | Modified: the loop's last second crossfaded into its start, so it repeats without a click
 
 *dsurround:biome.bog*
 
